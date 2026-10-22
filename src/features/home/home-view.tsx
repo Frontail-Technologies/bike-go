@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowCounterClockwiseIcon, HeadsetIcon, SealCheckIcon, TimerIcon } from "@phosphor-icons/react";
+import { ArrowCounterClockwiseIcon, BellIcon, HeadsetIcon, SealCheckIcon, TimerIcon } from "@phosphor-icons/react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -11,6 +12,9 @@ import { RentalDatesButton } from "@/components/customer/rental-dates-button";
 import { SectionHeading } from "@/components/customer/section-heading";
 import { AnimatedGrid } from "@/components/motion/animated-grid";
 import { Reveal } from "@/components/motion/reveal";
+import { AppBar } from "@/components/shared/app-bar";
+import { Screen } from "@/components/shared/screen";
+import { IconButton } from "@/components/ui/button";
 import { AppSearchField } from "@/components/ui/search-field";
 import { type BikeCategory, motorcycles } from "@/features/mock/data";
 import { CategoryCircles } from "./category-circles";
@@ -41,7 +45,9 @@ export function HomeView() {
   }
 
   return (
-    <div className="flex flex-col gap-6 md:gap-10">
+    <>
+      <AppBar leading="logo" actions={<IconButton label="Notifications" icon={<BellIcon size={24} />} />} />
+      <Screen bottom="nav" className="flex flex-col gap-6 md:gap-10">
       {/* Top of the screen follows the reference: city, banner, search, categories, popular bikes. */}
       <div className="flex flex-col gap-4">
         <div className="lg:hidden">
@@ -57,10 +63,9 @@ export function HomeView() {
             onSubmit={() => search(query.trim() ? { q: query.trim() } : {})}
             placeholder="Search bikes or brands"
             iconClassName="text-brand!"
-            groupClassName="border-transparent bg-surface-secondary shadow-none"
             className="flex-1"
           />
-          <RentalDatesButton iconOnly onChange={(start, end) => search({ start, end })} />
+          <RentalDatesButton iconOnly triggerProps={{ className: "border border-line bg-surface" }} onChange={(start, end) => search({ start, end })} />
         </div>
       </div>
 
@@ -88,14 +93,15 @@ export function HomeView() {
       </Reveal>
 
       <Reveal>
-        <section aria-label="Offer" className="flex items-center justify-between gap-4 rounded-overlay bg-brand p-5 text-ink md:p-6">
+        <section aria-label="Offer" className="relative isolate flex items-center justify-start gap-4 overflow-hidden min-h-36 rounded-overlay bg-brand p-5 text-ink md:min-h-52 md:p-10">
+          <Image src="/hero/offer-banner.jpg" alt="" fill sizes="(min-width: 1280px) 1216px, 100vw" className="-z-10 object-cover object-left md:object-right" />
           <div>
-            <p className="text-lg font-extrabold">Free helmet on 3+ days</p>
-            <p className="text-sm text-ink/75">Applied automatically at checkout.</p>
+            <p className="text-lg font-extrabold md:text-3xl">Free helmet on 3+ days</p>
+            <p className="text-sm text-ink/75 md:mt-1 md:text-base">Applied automatically at checkout.</p>
           </div>
           <Link
             href="/bikes"
-            className="flex h-11 shrink-0 items-center rounded-control bg-ink px-4 text-sm font-semibold text-white outline-none transition-transform duration-150 focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 active:scale-[0.97] motion-reduce:transition-none"
+            className="flex h-11 shrink-0 items-center rounded-control bg-ink px-4 text-sm md:h-12 md:px-6 md:text-base font-semibold text-white outline-none transition-transform duration-150 focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 active:scale-[0.97] motion-reduce:transition-none"
           >
             Browse
           </Link>
@@ -117,6 +123,7 @@ export function HomeView() {
           </ul>
         </section>
       </Reveal>
-    </div>
+      </Screen>
+    </>
   );
 }
