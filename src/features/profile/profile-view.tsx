@@ -2,25 +2,27 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  CaretRightIcon,
-  ChatCircleDotsIcon,
   FileTextIcon,
   HeartIcon,
   IdentificationCardIcon,
   PencilSimpleIcon,
   PhoneIcon,
+  LifebuoyIcon,
   QuestionIcon,
+  ReceiptIcon,
   SealCheckIcon,
   ShieldCheckIcon,
   SignOutIcon,
   WarningIcon,
 } from "@phosphor-icons/react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
-import { PageHeader } from "@/components/shared/page-header";
+import { AppBar } from "@/components/shared/app-bar";
+import { ListRow, SectionCard } from "@/components/shared/list-row";
+import { ResponsiveDialog } from "@/components/shared/responsive-dialog";
+import { DesktopTitle, Screen } from "@/components/shared/screen";
 import { Button } from "@/components/ui/button";
 import { ModalDialog } from "@/components/ui/modal-dialog";
 import { Switch } from "@/components/ui/selection-controls";
@@ -32,51 +34,7 @@ import { authStore } from "@/features/auth/store";
 import { maskLicence } from "@/features/bookings/use-booking";
 import { favoritesStore, initials, profileStore } from "./store";
 
-type ModalKey = "edit" | "licence" | "terms" | "logout" | null;
-
-function Card({ title, id, children }: { title: string; id: string; children: React.ReactNode }) {
-  return (
-    <section aria-labelledby={id} className="rounded-card border border-line bg-surface p-4 shadow-card">
-      <h2 id={id} className="mb-2 text-base font-bold">
-        {title}
-      </h2>
-      {children}
-    </section>
-  );
-}
-
-const rowClass =
-  "flex min-h-12 w-full items-center gap-3 rounded-control px-1 text-left text-sm outline-none transition-colors duration-150 hover:bg-surface-secondary focus-visible:ring-2 focus-visible:ring-ink";
-
-function Row({ icon, label, trailing, onPress, href }: { icon: React.ReactNode; label: string; trailing?: React.ReactNode; onPress?: () => void; href?: string }) {
-  const content = (
-    <>
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-surface-secondary">{icon}</span>
-      <span className="flex-1 font-medium">{label}</span>
-      {trailing}
-      <CaretRightIcon size={16} className="shrink-0 text-subtle" />
-    </>
-  );
-  if (href?.startsWith("/")) {
-    return (
-      <Link href={href} className={rowClass}>
-        {content}
-      </Link>
-    );
-  }
-  if (href) {
-    return (
-      <a href={href} className={rowClass}>
-        {content}
-      </a>
-    );
-  }
-  return (
-    <button type="button" onClick={onPress} className={rowClass}>
-      {content}
-    </button>
-  );
-}
+type ModalKey = "edit" | "licence" | "logout" | null;
 
 const detailsSchema = z.object({
   name: z.string().trim().min(2, "Enter your full name."),
@@ -100,8 +58,10 @@ export function ProfileView() {
   const licence = useForm({ resolver: zodResolver(licenceSchema), mode: "onBlur", values: { number: profile.licence?.number ?? "" } });
 
   return (
-    <div className="flex flex-col gap-4 md:gap-6">
-      <PageHeader title="Profile" />
+    <>
+      <AppBar title="Profile" />
+      <Screen bottom="nav" className="flex flex-col gap-4 md:gap-6">
+        <DesktopTitle title="Profile" />
 
       <div className="grid gap-4 md:grid-cols-2 md:gap-6">
         <div className="flex flex-col gap-4">
@@ -126,7 +86,7 @@ export function ProfileView() {
             </section>
           </Reveal>
 
-          <Card id="licence-title" title="Driving licence">
+          <SectionCard id="licence-title" title="Driving licence">
             {profile.licence ? (
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-3">
@@ -151,9 +111,9 @@ export function ProfileView() {
                 </Button>
               </div>
             )}
-          </Card>
+          </SectionCard>
 
-          <Card id="saved-title" title="Saved details">
+          <SectionCard id="saved-title" title="Saved details">
             <dl className="flex flex-col gap-3 py-1 text-sm">
               <div className="flex justify-between gap-4">
                 <dt className="text-subtle">Phone</dt>
@@ -165,13 +125,13 @@ export function ProfileView() {
               </div>
             </dl>
             <div className="mt-2 border-t border-line pt-2">
-              <Row icon={<HeartIcon size={20} />} label="Saved bikes" href="/bikes?saved=1" trailing={<span className="tabular text-sm text-subtle">{savedCount}</span>} />
+              <ListRow icon={<HeartIcon size={20} />} label="Saved bikes" href="/bikes?saved=1" trailing={<span className="tabular text-sm text-subtle">{savedCount}</span>} />
             </div>
-          </Card>
+          </SectionCard>
         </div>
 
         <div className="flex flex-col gap-4">
-          <Card id="notifications-title" title="Notifications">
+          <SectionCard id="notifications-title" title="Notifications">
             <div className="flex flex-col">
               <Switch isSelected={profile.notifications.reminders} onChange={(reminders) => profileStore.update((p) => ({ ...p, notifications: { ...p.notifications, reminders } }))}>
                 Booking reminders
@@ -183,19 +143,20 @@ export function ProfileView() {
                 Offers and news
               </Switch>
             </div>
-          </Card>
+          </SectionCard>
 
-          <Card id="help-title" title="Help and support">
-            <Row icon={<ChatCircleDotsIcon size={20} />} label="Chat with us" onPress={() => toast.info("Support will join in a moment")} />
-            <Row icon={<PhoneIcon size={20} />} label="Call support" href="tel:+911800000000" />
-            <Row icon={<QuestionIcon size={20} />} label="FAQ" onPress={() => toast.info("FAQ opens in a later phase")} />
-            <Row icon={<WarningIcon size={20} />} label="Report an issue" onPress={() => toast.info("Tell us what happened in chat")} />
-          </Card>
+          <SectionCard id="help-title" title="Help and support">
+            <ListRow icon={<LifebuoyIcon size={20} />} label="Help center" description="Chat, call or email us" href="/help" />
+            <ListRow icon={<QuestionIcon size={20} />} label="Questions" description="Booking, payments, pickup and riding" href="/help/faq" />
+            <ListRow icon={<WarningIcon size={20} />} label="Report an issue" href="/help/report" />
+            <ListRow icon={<PhoneIcon size={20} />} label="Call support" href="tel:+911800000000" />
+          </SectionCard>
 
-          <Card id="legal-title" title="Legal">
-            <Row icon={<FileTextIcon size={20} />} label="Terms and privacy" onPress={() => setModal("terms")} />
-            <Row icon={<ShieldCheckIcon size={20} />} label="Rental and cancellation policy" onPress={() => setModal("terms")} />
-          </Card>
+          <SectionCard id="legal-title" title="Legal">
+            <ListRow icon={<FileTextIcon size={20} />} label="Terms of service" href="/legal/terms" />
+            <ListRow icon={<ShieldCheckIcon size={20} />} label="Privacy policy" href="/legal/privacy" />
+            <ListRow icon={<ReceiptIcon size={20} />} label="Rental and cancellation policy" href="/legal/rental-policy" />
+          </SectionCard>
 
           <Button variant="outline" fullWidth size="lg" onPress={() => setModal("logout")}>
             <SignOutIcon size={20} />
@@ -204,14 +165,14 @@ export function ProfileView() {
         </div>
       </div>
 
-      <ModalDialog
+      <ResponsiveDialog
         isOpen={modal === "edit"}
         onOpenChange={(open) => !open && close()}
         title="Edit details"
         footer={
           <>
-            <Button variant="secondary" slot="close">Cancel</Button>
-            <Button type="submit" form="details-form">Save</Button>
+            <Button variant="secondary" slot="close" fullWidth>Cancel</Button>
+            <Button type="submit" form="details-form" fullWidth>Save</Button>
           </>
         }
       >
@@ -245,16 +206,16 @@ export function ProfileView() {
             />
           ))}
         </form>
-      </ModalDialog>
+      </ResponsiveDialog>
 
-      <ModalDialog
+      <ResponsiveDialog
         isOpen={modal === "licence"}
         onOpenChange={(open) => !open && close()}
         title={profile.licence ? "Update licence" : "Add licence"}
         footer={
           <>
-            <Button variant="secondary" slot="close">Cancel</Button>
-            <Button type="submit" form="licence-form">Submit</Button>
+            <Button variant="secondary" slot="close" fullWidth>Cancel</Button>
+            <Button type="submit" form="licence-form" fullWidth>Submit</Button>
           </>
         }
       >
@@ -284,16 +245,7 @@ export function ProfileView() {
             )}
           />
         </form>
-      </ModalDialog>
-
-      <ModalDialog isOpen={modal === "terms"} onOpenChange={(open) => !open && close()} title="Terms and policies" footer={<Button slot="close">Got it</Button>}>
-        <ul className="flex list-disc flex-col gap-2 pl-5 text-sm text-subtle">
-          <li>Riders must be 18+ with a valid driving licence.</li>
-          <li>Free cancellation up to 24 hours before pickup.</li>
-          <li>Security deposit is refunded within 48 hours of return.</li>
-          <li>Fuel, tolls and fines are the rider&apos;s responsibility.</li>
-        </ul>
-      </ModalDialog>
+      </ResponsiveDialog>
 
       <ModalDialog
         isOpen={modal === "logout"}
@@ -317,6 +269,7 @@ export function ProfileView() {
       >
         <p className="text-sm text-subtle">Your bookings stay saved on this device in this preview.</p>
       </ModalDialog>
-    </div>
+      </Screen>
+    </>
   );
 }
