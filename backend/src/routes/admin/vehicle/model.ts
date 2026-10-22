@@ -61,7 +61,7 @@ export const VehiclePost = {
     status: t.Optional(Writable.status),
     specifications: t.Optional(Writable.specifications),
     images: t.Optional(t.Array(ImageInput, { maxItems: 20 })),
-  }),
+  }, { additionalProperties: false }),
   Response: Envelope(AdminVehicle),
 };
 
@@ -73,7 +73,7 @@ export const VehiclePatch = {
     ...t.Partial(t.Object(Writable)).properties,
     slug: t.Optional(Slug),
     images: t.Optional(t.Array(ImageInput, { maxItems: 20, description: "When present, replaces all images" })),
-  }),
+  }, { additionalProperties: false }),
   Response: Envelope(AdminVehicle),
 };
 

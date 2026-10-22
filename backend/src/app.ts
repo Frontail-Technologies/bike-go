@@ -8,6 +8,7 @@ import { adminRoutes } from "@/routes/admin";
 import { availabilityRoutes } from "@/routes/availability";
 import { addonRoutes, bookingRoutes } from "@/routes/booking";
 import { health } from "@/routes/health";
+import { loanRoutes } from "@/routes/loan";
 import { locationRoutes } from "@/routes/location";
 import { userRoutes } from "@/routes/user";
 import { vehicleRoutes } from "@/routes/vehicle";
@@ -29,6 +30,7 @@ export const app = new Elysia({ name: "RideGo.App" })
   .use(availabilityRoutes)
   .use(addonRoutes)
   .use(bookingRoutes)
+  .use(loanRoutes)
   .use(adminRoutes);
 
 export type App = typeof app;

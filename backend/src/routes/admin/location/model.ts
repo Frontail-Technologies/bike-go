@@ -12,12 +12,12 @@ export const LocationPost = {
     latitude: t.Optional(t.Nullable(t.Number({ minimum: -90, maximum: 90 }))),
     longitude: t.Optional(t.Nullable(t.Number({ minimum: -180, maximum: 180 }))),
     active: t.Optional(t.Boolean()),
-  }),
+  }, { additionalProperties: false }),
   Response: Envelope(Location),
 };
 
 export const LocationPatch = {
   Params: t.Object({ id: t.String({ format: "uuid" }) }),
-  Body: t.Partial(LocationPost.Body),
+  Body: t.Object({ ...t.Partial(LocationPost.Body).properties }, { additionalProperties: false }),
   Response: Envelope(Location),
 };
