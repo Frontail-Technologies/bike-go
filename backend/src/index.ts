@@ -3,7 +3,7 @@ import { env } from "./env";
 
 export { app };
 
-app.listen(env.PORT);
+app.listen({ port: env.PORT, hostname: env.HOST });
 console.log(`RideGo API listening on http://localhost:${env.PORT} (${env.NODE_ENV})`);
 console.log(`OpenAPI docs: http://localhost:${env.PORT}/api/v1/docs`);
 

@@ -1,22 +1,18 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "lib": ["ESNext"],
-    "module": "ESNext",
+    "target": "ESNext",
+    "module": "Preserve",
     "moduleResolution": "bundler",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "types": ["bun"],
     "strict": true,
     "noUncheckedIndexedAccess": true,
-    "noFallthroughCasesInSwitch": true,
-    "verbatimModuleSyntax": true,
-    "isolatedModules": true,
-    "skipLibCheck": true,
+    "exactOptionalPropertyTypes": true,
     "noEmit": true,
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "paths": { "@/*": ["./src/*"] }
   },
-  "include": ["src", "tests", "drizzle.config.ts", "eslint.config.mjs"]
+  "include": ["src/**/*.ts", "tests/**/*.ts", "drizzle.config.ts"]
 }

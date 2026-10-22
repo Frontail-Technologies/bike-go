@@ -1,53 +1,33 @@
 import { z } from "zod";
 
-/** Validated process environment. Outside production a few secrets get dev-only defaults. */
-const schema = z.object({
+const rawEnv = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-  PORT: z.coerce.number().int().min(1).max(65535).default(4000),
-  DATABASE_URL: z.string().min(1).optional(),
-  BETTER_AUTH_SECRET: z.string().min(32).optional(),
-  BETTER_AUTH_URL: z.string().url().default("http://localhost:4000"),
-  WEB_ORIGINS: z
-    .string()
-    .default("http://localhost:3000")
-    .transform((value) =>
-      value
-        .split(",")
-        .map((origin) => origin.trim())
-        .filter(Boolean),
-    ),
+  PORT: z.coerce.number().int().min(1).max(65_535).default(3001),
+  HOST: z.string().default("0.0.0.0"),
+  DATABASE_URL: z.string().url().default("postgres://ridego:ridego@localhost:5432/ridego"),
+  BETTER_AUTH_SECRET: z.string().min(32).default("development-secret-change-before-production"),
+  BETTER_AUTH_URL: z.string().url().default("http://localhost:3001"),
+  FRONTEND_ORIGINS: z.string().default("http://localhost:3000"),
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   TELEGRAM_BOT_TOKEN: z.string().optional(),
-  STORAGE_DIR: z.string().default("./storage"),
-  TAX_RATE_BPS: z.coerce.number().int().min(0).max(10_000).default(1000),
-});
+  TELEGRAM_AUTH_MAX_AGE_SECONDS: z.coerce.number().int().positive().default(300),
+  STORAGE_ROOT: z.string().default("./storage"),
+  PLATFORM_FEE_MINOR: z.coerce.number().int().nonnegative().default(100),
+  TAX_RATE_BPS: z.coerce.number().int().min(0).max(10_000).default(1800)
+}).parse(process.env);
 
-const parsed = schema.safeParse({
-  ...process.env,
-  // Treat empty strings from a copied .env.example as unset.
-  ...Object.fromEntries(Object.entries(process.env).filter(([, value]) => value === "").map(([key]) => [key, undefined])),
-});
-
-if (!parsed.success) {
-  console.error("Invalid environment:", z.prettifyError(parsed.error));
-  throw new Error("Invalid environment configuration");
-}
-
-const value = parsed.data;
-const production = value.NODE_ENV === "production";
-
-if (production) {
-  const missing = (["DATABASE_URL", "BETTER_AUTH_SECRET"] as const).filter((key) => !value[key]);
-  if (missing.length) throw new Error(`Missing required production environment variables: ${missing.join(", ")}`);
+if (rawEnv.NODE_ENV === "production") {
+  if (rawEnv.BETTER_AUTH_SECRET === "development-secret-change-before-production") {
+    throw new Error("BETTER_AUTH_SECRET must be configured in production");
+  }
+  if (!rawEnv.GOOGLE_CLIENT_ID || !rawEnv.GOOGLE_CLIENT_SECRET) {
+    throw new Error("Google OAuth credentials must be configured in production");
+  }
+  if (!rawEnv.TELEGRAM_BOT_TOKEN) throw new Error("TELEGRAM_BOT_TOKEN must be configured in production");
 }
 
 export const env = {
-  ...value,
-  isProduction: production,
-  isTest: value.NODE_ENV === "test",
-  /** Dev and test fall back to a fixed secret. Production refuses to start without a real one. */
-  BETTER_AUTH_SECRET: value.BETTER_AUTH_SECRET ?? "dev-only-secret-that-is-never-used-in-production-0000",
+  ...rawEnv,
+  FRONTEND_ORIGINS: rawEnv.FRONTEND_ORIGINS.split(",").map((origin) => origin.trim()).filter(Boolean)
 };
-
-export type Env = typeof env;

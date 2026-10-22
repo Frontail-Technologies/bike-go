@@ -1,0 +1,3 @@
+[test]
+# Runs before any test file: points the app at an in-memory PGlite database and applies the migrations.
+preload = ["./tests/setup.ts"]
