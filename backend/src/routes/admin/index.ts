@@ -1,0 +1,16 @@
+import { Elysia, t } from "elysia";
+import { Envelope, ok } from "@/libs/api";
+import { authPlugin } from "@/plugins/auth";
+
+/** Staff-only API. Every route sets `admin: true`, so a missing session is 401 and a customer is 403. */
+export const adminRoutes = new Elysia({ name: "RideGo.Admin", prefix: "/api/v1/admin", tags: ["Admin"] })
+  .use(authPlugin)
+  .get(
+    "/me",
+    {
+      admin: true,
+      response: { 200: Envelope(t.Object({ id: t.String(), role: t.UnionEnum(["admin", "super_admin"]) })) },
+      detail: { summary: "The signed-in staff member", security: [{ sessionCookie: [] }] },
+    },
+    ({ user }) => ok({ id: user.id, role: user.role as "admin" | "super_admin" }),
+  );
