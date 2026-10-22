@@ -1,10 +1,10 @@
-import { CalendarCheckIcon, CurrencyInrIcon, MotorcycleIcon, UsersIcon } from "@phosphor-icons/react/ssr";
+import { CalendarCheckIcon, CurrencyDollarIcon, MotorcycleIcon, UsersIcon } from "@phosphor-icons/react/ssr";
 import { DashboardStatCard } from "@/components/admin/dashboard-stat-card";
 import { RecentBookings } from "@/components/admin/recent-bookings";
 import { dashboardStats } from "@/features/mock/data";
 
 const icons = {
-  revenue: <CurrencyInrIcon size={20} />,
+  revenue: <CurrencyDollarIcon size={20} />,
   bookings: <CalendarCheckIcon size={20} />,
   active: <MotorcycleIcon size={20} />,
   customers: <UsersIcon size={20} />,

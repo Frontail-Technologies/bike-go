@@ -15,9 +15,9 @@ import { Demo, Section } from "../section";
 
 const prices = [
   { id: "any", label: "Any price" },
-  { id: "under-1000", label: "Under ₹1,000 / day" },
-  { id: "1000-1500", label: "₹1,000 – ₹1,500 / day" },
-  { id: "over-1500", label: "Over ₹1,500 / day" },
+  { id: "under-12", label: "Under $12 / day" },
+  { id: "12-18", label: "$12 – $18 / day" },
+  { id: "over-18", label: "Over $18 / day" },
 ];
 const brands = ["Royal Enfield", "Yamaha", "KTM", "Honda", "TVS", "Hero", "BMW"].map((b) => ({ id: b, label: b }));
 

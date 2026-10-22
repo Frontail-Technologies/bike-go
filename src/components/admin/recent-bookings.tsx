@@ -3,7 +3,7 @@
 import { BookingStatusBadge } from "@/components/customer/booking-status-badge";
 import { AnimatedActivityList } from "@/components/motion/animated-activity-list";
 import { bookings } from "@/features/mock/data";
-import { formatDate, formatPrice } from "@/lib/format";
+import { formatDate, formatMoney } from "@/lib/format";
 
 export function RecentBookings() {
   return (
@@ -25,7 +25,7 @@ export function RecentBookings() {
               </p>
             </div>
             <div className="flex shrink-0 flex-col items-end gap-1">
-              <span className="tabular text-sm font-semibold">{formatPrice(booking.total)}</span>
+              <span className="tabular text-sm font-semibold">{formatMoney(booking.total)}</span>
               <BookingStatusBadge status={booking.status} />
             </div>
           </div>

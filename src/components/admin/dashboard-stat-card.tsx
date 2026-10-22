@@ -3,7 +3,7 @@ import { MetricTicker } from "@/components/motion/metric-ticker";
 import { cn } from "@/lib/cn";
 
 const formats = {
-  currency: { style: "currency", currency: "INR", maximumFractionDigits: 0 },
+  currency: { style: "currency", currency: "USD", maximumFractionDigits: 0 },
   number: { maximumFractionDigits: 0 },
 } as const satisfies Record<string, Intl.NumberFormatOptions>;
 

@@ -8,7 +8,7 @@ import { cn } from "@/lib/cn";
 
 type MetricTickerProps = {
   value: number;
-  /** Intl.NumberFormat options, e.g. `{ style: "currency", currency: "INR" }`. */
+  /** Intl.NumberFormat options, e.g. `{ style: "currency", currency: "USD" }`. */
   format?: Intl.NumberFormatOptions;
   className?: string;
 };
@@ -25,7 +25,7 @@ export function MetricTicker({ value, format, className }: MetricTickerProps) {
   const inView = useInView(ref, { once: true, amount: 0.6 });
   const motionValue = useMotionValue(value);
   const formatKey = JSON.stringify(format ?? {});
-  const formatter = useMemo(() => new Intl.NumberFormat("en-IN", format), [formatKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  const formatter = useMemo(() => new Intl.NumberFormat("en-US", format), [formatKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const text = formatter.format(value);
 
   // Before first paint, rewind to 0 so the first reveal counts up instead of flashing the final value.

@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarCheckIcon, CurrencyInrIcon, MotorcycleIcon, UsersIcon } from "@phosphor-icons/react";
+import { CalendarCheckIcon, CurrencyDollarIcon, MotorcycleIcon, UsersIcon } from "@phosphor-icons/react";
 import { CalendarDate } from "@internationalized/date";
 import { useState } from "react";
 import { DashboardStatCard } from "@/components/admin/dashboard-stat-card";
@@ -16,7 +16,7 @@ import { dashboardStats, motorcycles } from "@/features/mock/data";
 import { Demo, Section } from "../section";
 
 const statIcons = {
-  revenue: <CurrencyInrIcon size={20} />,
+  revenue: <CurrencyDollarIcon size={20} />,
   bookings: <CalendarCheckIcon size={20} />,
   active: <MotorcycleIcon size={20} />,
   customers: <UsersIcon size={20} />,
@@ -54,10 +54,10 @@ export function RideGoSection() {
         <div className="flex flex-col gap-8">
           <Demo title="PriceDisplay">
             <div className="flex flex-wrap items-end gap-6">
-              <PriceDisplay amount={1200} size="lg" />
-              <PriceDisplay amount={1200} />
-              <PriceDisplay amount={7500} unit="week" size="sm" />
-              <PriceDisplay amount={2600} unit={null} size="lg" />
+              <PriceDisplay amount={15} size="lg" />
+              <PriceDisplay amount={15} />
+              <PriceDisplay amount={90} unit="week" size="sm" />
+              <PriceDisplay amount={118.4} unit={null} size="lg" precise />
             </div>
           </Demo>
           <Demo title="BookingStatusBadge">
@@ -85,7 +85,7 @@ export function RideGoSection() {
             <BookingSummary
               lines={[
                 { label: `Bike rental (${hasRange ? days : 0} ${days === 1 ? "day" : "days"})`, amount: hasRange ? bike.pricePerDay * days : 0 },
-                { label: "Helmet", amount: hasRange ? 100 * days : 0 },
+                { label: "Helmet", amount: hasRange ? 2 * days : 0 },
               ]}
             />
           </Demo>
