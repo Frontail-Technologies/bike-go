@@ -1,5 +1,5 @@
+import type { Currency } from "./types";
 export const CURRENCIES = ["USD", "KHR"] as const;
-export type Currency = (typeof CURRENCIES)[number];
 
 export const MINOR_EXPONENT: Record<Currency, number> = { USD: 2, KHR: 2 };
 

@@ -1,4 +1,5 @@
 import { t } from "elysia";
+import type { ErrorBody, ErrorCode } from "./types";
 
 export const ERROR_CODES = [
   "AUTH_REQUIRED",
@@ -16,8 +17,6 @@ export const ERROR_CODES = [
   "INTERNAL_ERROR",
 ] as const;
 
-export type ErrorCode = (typeof ERROR_CODES)[number];
-
 export class AppError extends Error {
   constructor(
     readonly code: ErrorCode,
@@ -30,6 +29,8 @@ export class AppError extends Error {
   }
 }
 
+export const invalid = (path: string, message: string, detail: string = message) => new AppError("VALIDATION_ERROR", 422, message, [{ path, message: detail }]);
+
 export const notFound = (what: string) => new AppError("NOT_FOUND", 404, `${what} not found.`);
 export const forbidden = (message = "You do not have access to this resource.") => new AppError("FORBIDDEN", 403, message);
 
@@ -37,11 +38,9 @@ export function ok<T>(data: T, meta: Record<string, unknown> = {}) {
   return { success: true as const, data, meta };
 }
 
-export type ErrorBody = {
-  success: false;
-  error: { code: ErrorCode; message: string; details: unknown };
-  requestId: string;
-};
+export const okPage = <T>(page: { data: T; meta: Record<string, unknown> }) => ok(page.data, page.meta);
+
+export const sessionSecurity = [{ sessionCookie: [] }];
 
 export function errorBody(code: ErrorCode, message: string, requestId: string, details: unknown = null): ErrorBody {
   return { success: false, error: { code, message, details }, requestId };

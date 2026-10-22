@@ -17,3 +17,8 @@ export function ageOn(dateOfBirth: string, today = new Date()) {
   if (beforeBirthday) age -= 1;
   return age;
 }
+
+export function isRealDate(value: string) {
+  const parsed = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}

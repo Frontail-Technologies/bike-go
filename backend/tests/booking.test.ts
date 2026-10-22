@@ -7,19 +7,12 @@ import { priceBooking } from "../src/routes/booking/pricing";
 import { json } from "./helpers/http";
 import { postJson, request, signInAdmin, signInCustomer } from "./helpers/auth";
 import { cleanupExtraVehicles, insertBooking, vehicleBySlug } from "./helpers/db";
+import { postBooking, rentalWindow } from "./helpers/booking";
 
 beforeAll(async () => {
   await seedCatalog();
 });
 afterAll(cleanupExtraVehicles);
-
-let nextYear = 2060;
-const window = (days = 3) => {
-  const y = nextYear++;
-  return { pickupAt: `${y}-03-10T10:00:00.000Z`, returnAt: `${y}-03-${10 + days}T10:00:00.000Z`, y };
-};
-
-const book = (cookie: string, body: Record<string, unknown>, key?: string) => postJson("/api/v1/bookings", body, { cookie, headers: key ? { "idempotency-key": key } : {} });
 
 describe("pricing (pure)", () => {
   const base = { currency: "USD" as const, days: 3, dailyRateMinor: 2500, securityDepositMinor: 30000, taxRateBps: 1000, platformFeeMinor: 0 };
@@ -63,9 +56,9 @@ describe("pricing (pure)", () => {
 describe("creating a booking", () => {
   test("creates a pending, unpaid booking with a hold and a server-side price snapshot", async () => {
     const { cookie } = await signInCustomer();
-    const w = window(3);
+    const w = rentalWindow(3);
     const before = Date.now();
-    const response = await book(cookie, { vehicle: "royal-enfield-classic-350", pickupAt: w.pickupAt, returnAt: w.returnAt, addons: [{ code: "helmet" }, { code: "riding-jacket" }] });
+    const response = await postBooking(cookie, { vehicle: "royal-enfield-classic-350", pickupAt: w.pickupAt, returnAt: w.returnAt, addons: [{ code: "helmet" }, { code: "riding-jacket" }] });
     expect(response.status).toBe(201);
     const booking = (await json(response)).data;
     expect(booking.reference).toMatch(/^RG\d{8}$/);
@@ -87,8 +80,8 @@ describe("creating a booking", () => {
 
   test("totals, prices and status sent by the client are ignored", async () => {
     const { cookie } = await signInCustomer();
-    const w = window(2);
-    const response = await book(cookie, {
+    const w = rentalWindow(2);
+    const response = await postBooking(cookie, {
       vehicle: "yamaha-mt-15",
       pickupAt: w.pickupAt,
       returnAt: w.returnAt,
@@ -111,8 +104,8 @@ describe("creating a booking", () => {
 
   test("later price changes never rewrite an existing booking", async () => {
     const { cookie } = await signInCustomer();
-    const w = window(2);
-    const created = (await json(await book(cookie, { vehicle: "ktm-duke-200", pickupAt: w.pickupAt, returnAt: w.returnAt }))).data;
+    const w = rentalWindow(2);
+    const created = (await json(await postBooking(cookie, { vehicle: "ktm-duke-200", pickupAt: w.pickupAt, returnAt: w.returnAt }))).data;
     const bike = await vehicleBySlug("ktm-duke-200");
     await db.update(vehicles).set({ dailyRentalPriceMinor: 9999, securityDepositMinor: 99999 }).where(eq(vehicles.id, bike.id));
     try {
@@ -126,13 +119,13 @@ describe("creating a booking", () => {
 
   test("the quote endpoint prices exactly like the booking, without creating one", async () => {
     const { cookie } = await signInCustomer();
-    const w = window(3);
+    const w = rentalWindow(3);
     const body = { vehicle: "royal-enfield-himalayan", pickupAt: w.pickupAt, returnAt: w.returnAt, addons: [{ code: "helmet", quantity: 2 }] };
     const quoted = await json(await postJson("/api/v1/bookings/quote", body));
     expect(quoted.data.rentalDays).toBe(3);
     const before = (await db.select().from(bookings)).length;
     expect((await db.select().from(bookings)).length).toBe(before);
-    const created = (await json(await book(cookie, body))).data;
+    const created = (await json(await postBooking(cookie, body))).data;
     expect(created.pricing).toEqual(quoted.data.pricing);
     expect(created.addons[0]).toMatchObject({ code: "helmet", quantity: 2, days: 3, totalMinor: 200 * 2 * 3 });
   });
@@ -159,9 +152,9 @@ describe("creating a booking", () => {
       { cookie: adminCookie },
     );
     const slug = (await json(created)).data.slug as string;
-    const w = window(2);
+    const w = rentalWindow(2);
 
-    const noAddons = await book(cookie, { vehicle: slug, pickupAt: w.pickupAt, returnAt: w.returnAt });
+    const noAddons = await postBooking(cookie, { vehicle: slug, pickupAt: w.pickupAt, returnAt: w.returnAt });
     expect(noAddons.status).toBe(201);
     const booking = (await json(noAddons)).data;
     expect(booking.currency).toBe("KHR");
@@ -171,8 +164,8 @@ describe("creating a booking", () => {
     expect(booking.pricing.taxesMinor).toBe(656_000);
     expect(booking.pricing.totalPayableMinor).toBe(3_280_000 * 2 + 656_000 + 41_000_000);
 
-    const w2 = window(2);
-    const withUsdAddon = await book(cookie, { vehicle: slug, pickupAt: w2.pickupAt, returnAt: w2.returnAt, addons: [{ code: "helmet" }] });
+    const w2 = rentalWindow(2);
+    const withUsdAddon = await postBooking(cookie, { vehicle: slug, pickupAt: w2.pickupAt, returnAt: w2.returnAt, addons: [{ code: "helmet" }] });
     expect(withUsdAddon.status).toBe(422);
   });
 });
@@ -181,10 +174,10 @@ describe("double booking", () => {
   test("an overlapping booking is refused with BOOKING_CONFLICT", async () => {
     const first = await signInCustomer();
     const second = await signInCustomer();
-    const w = window(3);
-    expect((await book(first.cookie, { vehicle: "honda-activa", pickupAt: w.pickupAt, returnAt: w.returnAt })).status).toBe(201);
+    const w = rentalWindow(3);
+    expect((await postBooking(first.cookie, { vehicle: "honda-activa", pickupAt: w.pickupAt, returnAt: w.returnAt })).status).toBe(201);
 
-    const clash = await book(second.cookie, { vehicle: "honda-activa", pickupAt: `${w.y}-03-11T10:00:00.000Z`, returnAt: `${w.y}-03-14T10:00:00.000Z` });
+    const clash = await postBooking(second.cookie, { vehicle: "honda-activa", pickupAt: `${w.y}-03-11T10:00:00.000Z`, returnAt: `${w.y}-03-14T10:00:00.000Z` });
     expect(clash.status).toBe(409);
     expect(await json(clash)).toMatchObject({ success: false, error: { code: "BOOKING_CONFLICT" } });
   });
@@ -192,34 +185,34 @@ describe("double booking", () => {
   test("starting exactly when another rental ends is fine", async () => {
     const first = await signInCustomer();
     const second = await signInCustomer();
-    const w = window(3);
-    expect((await book(first.cookie, { vehicle: "honda-activa", pickupAt: w.pickupAt, returnAt: w.returnAt })).status).toBe(201);
-    expect((await book(second.cookie, { vehicle: "honda-activa", pickupAt: w.returnAt, returnAt: `${w.y}-03-16T10:00:00.000Z` })).status).toBe(201);
+    const w = rentalWindow(3);
+    expect((await postBooking(first.cookie, { vehicle: "honda-activa", pickupAt: w.pickupAt, returnAt: w.returnAt })).status).toBe(201);
+    expect((await postBooking(second.cookie, { vehicle: "honda-activa", pickupAt: w.returnAt, returnAt: `${w.y}-03-16T10:00:00.000Z` })).status).toBe(201);
   });
 
   test("a cancelled booking no longer blocks the vehicle", async () => {
     const first = await signInCustomer();
     const second = await signInCustomer();
-    const w = window(3);
-    const created = (await json(await book(first.cookie, { vehicle: "ktm-duke-200", pickupAt: w.pickupAt, returnAt: w.returnAt }))).data;
-    expect((await book(second.cookie, { vehicle: "ktm-duke-200", pickupAt: w.pickupAt, returnAt: w.returnAt })).status).toBe(409);
+    const w = rentalWindow(3);
+    const created = (await json(await postBooking(first.cookie, { vehicle: "ktm-duke-200", pickupAt: w.pickupAt, returnAt: w.returnAt }))).data;
+    expect((await postBooking(second.cookie, { vehicle: "ktm-duke-200", pickupAt: w.pickupAt, returnAt: w.returnAt })).status).toBe(409);
 
     expect((await postJson(`/api/v1/bookings/${created.reference}/cancel`, {}, { cookie: first.cookie })).status).toBe(200);
-    expect((await book(second.cookie, { vehicle: "ktm-duke-200", pickupAt: w.pickupAt, returnAt: w.returnAt })).status).toBe(201);
+    expect((await postBooking(second.cookie, { vehicle: "ktm-duke-200", pickupAt: w.pickupAt, returnAt: w.returnAt })).status).toBe(201);
   });
 
   test("a maintenance block and a vehicle in maintenance both refuse bookings", async () => {
     const { cookie: adminCookie } = await signInAdmin();
     const { cookie } = await signInCustomer();
     const bike = await vehicleBySlug("royal-enfield-hunter-350");
-    const w = window(3);
+    const w = rentalWindow(3);
     await postJson(`/api/v1/admin/vehicles/${bike.id}/blocks`, { startAt: w.pickupAt, endAt: w.returnAt, reason: "Service" }, { cookie: adminCookie });
-    expect((await book(cookie, { vehicle: "royal-enfield-hunter-350", pickupAt: w.pickupAt, returnAt: w.returnAt })).status).toBe(409);
+    expect((await postBooking(cookie, { vehicle: "royal-enfield-hunter-350", pickupAt: w.pickupAt, returnAt: w.returnAt })).status).toBe(409);
 
-    const w2 = window(2);
+    const w2 = rentalWindow(2);
     await db.update(vehicles).set({ status: "maintenance" }).where(eq(vehicles.id, bike.id));
     try {
-      const response = await book(cookie, { vehicle: "royal-enfield-hunter-350", pickupAt: w2.pickupAt, returnAt: w2.returnAt });
+      const response = await postBooking(cookie, { vehicle: "royal-enfield-hunter-350", pickupAt: w2.pickupAt, returnAt: w2.returnAt });
       expect(response.status).toBe(409);
       expect(await json(response)).toMatchObject({ error: { code: "VEHICLE_UNAVAILABLE" } });
     } finally {
@@ -232,8 +225,8 @@ describe("ownership", () => {
   test("another customer cannot read or cancel a booking, and lists show only their own", async () => {
     const owner = await signInCustomer();
     const stranger = await signInCustomer();
-    const w = window(2);
-    const created = (await json(await book(owner.cookie, { vehicle: "yamaha-mt-15", pickupAt: w.pickupAt, returnAt: w.returnAt }))).data;
+    const w = rentalWindow(2);
+    const created = (await json(await postBooking(owner.cookie, { vehicle: "yamaha-mt-15", pickupAt: w.pickupAt, returnAt: w.returnAt }))).data;
 
     expect((await request(`/api/v1/bookings/${created.reference}`, { cookie: owner.cookie })).status).toBe(200);
     expect((await request(`/api/v1/bookings/${created.reference}`, { cookie: stranger.cookie })).status).toBe(404);
@@ -258,8 +251,8 @@ describe("ownership", () => {
 describe("cancelling", () => {
   test("cancel records the time and reason, clears the hold, and cancelling twice is harmless", async () => {
     const { cookie } = await signInCustomer();
-    const w = window(2);
-    const created = (await json(await book(cookie, { vehicle: "honda-activa", pickupAt: w.pickupAt, returnAt: w.returnAt }))).data;
+    const w = rentalWindow(2);
+    const created = (await json(await postBooking(cookie, { vehicle: "honda-activa", pickupAt: w.pickupAt, returnAt: w.returnAt }))).data;
     const first = await postJson(`/api/v1/bookings/${created.reference}/cancel`, { reason: "Plans changed" }, { cookie });
     expect(first.status).toBe(200);
     expect((await json(first)).data).toMatchObject({ bookingStatus: "cancelled", cancellationReason: "Plans changed", holdExpiresAt: null, paymentStatus: "unpaid" });
@@ -271,7 +264,7 @@ describe("cancelling", () => {
   test("cancelling never touches the payment state, so no refund is implied", async () => {
     const { cookie, userId } = await signInCustomer();
     const bike = await vehicleBySlug("honda-activa");
-    const w = window(2);
+    const w = rentalWindow(2);
     const row = await insertBooking({ vehicleId: bike.id, userId, pickupAt: w.pickupAt, returnAt: w.returnAt, status: "confirmed" });
     await db.update(bookings).set({ paymentStatus: "paid" }).where(eq(bookings.id, row.id));
     const response = await postJson(`/api/v1/bookings/${row.reference}/cancel`, {}, { cookie });
@@ -282,7 +275,7 @@ describe("cancelling", () => {
     const { cookie, userId } = await signInCustomer();
     const bike = await vehicleBySlug("honda-activa");
     for (const status of ["active", "completed"] as const) {
-      const w = window(2);
+      const w = rentalWindow(2);
       const row = await insertBooking({ vehicleId: bike.id, userId, pickupAt: w.pickupAt, returnAt: w.returnAt, status });
       const response = await postJson(`/api/v1/bookings/${row.reference}/cancel`, {}, { cookie });
       expect(response.status).toBe(409);
@@ -294,7 +287,7 @@ describe("cancelling", () => {
 describe("validation", () => {
   test("bad requests are 422 with the standard envelope", async () => {
     const { cookie } = await signInCustomer();
-    const w = window(2);
+    const w = rentalWindow(2);
     const ok = { vehicle: "honda-activa", pickupAt: w.pickupAt, returnAt: w.returnAt };
     const cases: Record<string, Record<string, unknown>> = {
       "pickup in the past": { ...ok, pickupAt: "2020-01-01T10:00:00Z", returnAt: "2020-01-03T10:00:00Z" },
@@ -306,11 +299,11 @@ describe("validation", () => {
       "wrong pickup location": { ...ok, pickupLocationId: "00000000-0000-4000-8000-000000000000" },
     };
     for (const [name, body] of Object.entries(cases)) {
-      const response = await book(cookie, body);
+      const response = await postBooking(cookie, body);
       expect({ name, status: response.status }).toEqual({ name, status: 422 });
       expect((await json(response)).error.code).toBe("VALIDATION_ERROR");
     }
-    expect((await book(cookie, { ...ok, vehicle: "no-such-bike" })).status).toBe(404);
+    expect((await postBooking(cookie, { ...ok, vehicle: "no-such-bike" })).status).toBe(404);
     expect((await request("/api/v1/bookings/not-a-reference", { cookie })).status).toBe(422);
   });
 

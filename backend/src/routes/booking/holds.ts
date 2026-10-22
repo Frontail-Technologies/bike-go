@@ -1,10 +1,10 @@
 import { and, eq, lte } from "drizzle-orm";
-import { db, type Executor } from "@/libs/db";
+import { db } from "@/libs/db";
 import { bookings } from "@/libs/db/schema";
+import type { Executor } from "@/libs/db/types";
+import type { HoldScope } from "./types";
 
-type Scope = { vehicleId?: string; userId?: string; reference?: string };
-
-export async function expireStaleHolds(executor: Executor, scope: Scope = {}, now: Date = new Date()) {
+export async function expireStaleHolds(executor: Executor, scope: HoldScope = {}, now: Date = new Date()) {
   const expired = await executor
     .update(bookings)
     .set({ bookingStatus: "expired" })

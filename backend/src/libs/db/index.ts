@@ -1,15 +1,12 @@
-import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
+
 import { drizzle as drizzlePostgres } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { env } from "@/env";
 import * as relations from "./relations";
 import * as schema from "./schema";
+import type { Db } from "./types";
 
 export const fullSchema = { ...schema, ...relations };
-
-export type Db = PgDatabase<PgQueryResultHKT, typeof fullSchema>;
-export type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
-export type Executor = Db | Tx;
 
 const isPglite = env.DATABASE_URL.startsWith("pglite:");
 

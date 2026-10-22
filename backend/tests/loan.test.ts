@@ -2,10 +2,11 @@ import { describe, expect, test } from "bun:test";
 import { eq } from "drizzle-orm";
 import { db } from "../src/libs/db";
 import { loanApplications, loanStatusHistory } from "../src/libs/db/schema";
-import { assertTransition, loanLimits, LOAN_STATUSES, STAFF_TRANSITIONS, type LoanStatus } from "../src/routes/loan/rules";
+import { assertTransition, loanLimits, LOAN_STATUSES, STAFF_TRANSITIONS } from "../src/routes/loan/rules";
 import { json } from "./helpers/http";
 import { patchJson, postJson, request, signInAdmin, signInCustomer } from "./helpers/auth";
 import { addDocuments, completeFields, createDraft, draftBody, fillDraft, submittedLoan } from "./helpers/loan";
+import type { LoanStatus } from "../src/routes/loan/types";
 
 const setStatus = (cookie: string, reference: string, status: string, note?: string) => patchJson(`/api/v1/admin/loans/${reference}/status`, { status, ...(note ? { note } : {}) }, { cookie });
 const getLoan = async (cookie: string, reference: string) => (await json(await request(`/api/v1/loans/${reference}`, { cookie }))).data;

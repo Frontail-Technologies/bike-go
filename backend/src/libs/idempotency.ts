@@ -1,12 +1,12 @@
 import { and, eq, lt } from "drizzle-orm";
 import { AppError } from "@/libs/api";
-import { db, type Tx } from "@/libs/db";
+import { db } from "@/libs/db";
 import { idempotencyKeys } from "@/libs/db/schema";
 import { requestHash } from "@/libs/hash";
+import type { Tx } from "@/libs/db/types";
+import type { Idempotent } from "./types";
 
 const TTL_MS = 24 * 60 * 60 * 1000;
-
-export type Idempotent<T> = { status: number; body: T };
 
 export async function idempotently<T>(
   options: { scope: string; key: string | undefined; userId: string; payload: unknown },

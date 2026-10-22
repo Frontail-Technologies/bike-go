@@ -1,4 +1,4 @@
-import { t, type UnwrapSchema } from "elysia";
+import { t } from "elysia";
 import { Currency, Envelope, PaginationQuery } from "@/libs/api";
 
 export const FxRateItem = t.Object({
@@ -34,5 +34,3 @@ export const FxPost = {
   ),
   Response: Envelope(FxRateItem),
 };
-
-export type FxRateView = UnwrapSchema<typeof FxRateItem>;

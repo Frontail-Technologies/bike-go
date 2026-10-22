@@ -1,31 +1,13 @@
 import { eq } from "drizzle-orm";
 import { env } from "@/env";
-import { closeDb, db, type Executor } from "./index";
+import { closeDb, db } from "./index";
 import { bookingAddons, customerProfiles, locations, user, vehicleImages, vehicles } from "./schema";
+import type { Executor, SeedVehicle } from "./types";
 
 export const seedLocations = [
   { key: "phnom-penh", name: "RideGo Phnom Penh Riverside", address: "No. 12, Sisowath Quay, Daun Penh", city: "Phnom Penh", latitude: 11.5662, longitude: 104.9283 },
   { key: "siem-reap", name: "RideGo Siem Reap Old Market", address: "Street 9, near Old Market, Svay Dangkum", city: "Siem Reap", latitude: 13.3622, longitude: 103.8553 },
 ] as const;
-
-type SeedVehicle = {
-  slug: string;
-  vehicleType: "motorcycle" | "scooter";
-  name: string;
-  brand: string;
-  model: string;
-  category: string;
-  description: string;
-  engineCc: number;
-  transmission: string;
-  fuelType: string;
-  seats: number;
-  dailyRentalPriceMinor: number;
-  securityDepositMinor: number;
-  registrationNumber: string;
-  location: (typeof seedLocations)[number]["key"];
-  specifications: Record<string, unknown>;
-};
 
 export const seedVehicles: SeedVehicle[] = [
   {

@@ -1,4 +1,4 @@
-import { t, type UnwrapModels, type UnwrapSchema } from "elysia";
+import { t } from "elysia";
 import { Currency, Envelope, PaginationQuery } from "@/libs/api";
 
 export const VehicleType = t.UnionEnum(["motorcycle", "scooter", "car", "other"]);
@@ -58,6 +58,3 @@ export const VehicleByIdGet = {
   Params: t.Object({ idOrSlug: t.String({ description: "Vehicle slug or UUID" }) }),
   Response: Envelope(Vehicle),
 };
-
-export type VehiclesGet = UnwrapModels<typeof VehiclesGet>;
-export type PublicVehicle = UnwrapSchema<typeof Vehicle>;

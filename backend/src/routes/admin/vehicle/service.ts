@@ -1,12 +1,15 @@
-import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray } from "drizzle-orm";
 import { AppError } from "@/libs/api";
-import { db, type Executor } from "@/libs/db";
+import { db } from "@/libs/db";
 import { PG, pgConstraint, pgErrorCode } from "@/libs/db/errors";
 import { bookings, locations, vehicleBlocks, vehicleImages, vehicles } from "@/libs/db/schema";
-import { pageMeta, pageOf } from "@/libs/pagination";
+import { paginate } from "@/libs/pagination";
 import { assertInterval, busyPeriods } from "@/routes/availability/service";
 import { vehicleSearch } from "@/routes/vehicle/service";
-import type { BlockPost, VehiclePatch, VehiclePost, VehiclesGet } from "./model";
+import type { Executor } from "@/libs/db/types";
+import type { BlockPost, VehiclePatch, VehiclePost, VehiclesGet } from "./types";
+import { lockRows } from "@/libs/db/lock";
+import { compact } from "@/libs/object";
 
 async function adminShape(executor: Executor, ids: string[]) {
   if (ids.length === 0) return [];
@@ -48,20 +51,20 @@ function mapWriteError(error: unknown): never {
 }
 
 export async function adminListVehicles(query: VehiclesGet["Query"]) {
-  const paging = pageOf(query);
   const where = and(
     query.q ? vehicleSearch(query.q) : undefined,
     query.status ? eq(vehicles.status, query.status) : undefined,
     query.locationId ? eq(vehicles.locationId, query.locationId) : undefined,
     query.vehicleType ? eq(vehicles.vehicleType, query.vehicleType) : undefined,
   );
-  const [ids, [total]] = await Promise.all([
-    db.select({ id: vehicles.id }).from(vehicles).where(where).orderBy(desc(vehicles.createdAt)).limit(paging.limit).offset(paging.offset),
-    db.select({ n: count() }).from(vehicles).where(where),
-  ]);
-  const shaped = await adminShape(db, ids.map((r) => r.id));
-  const order = new Map(ids.map((r, i) => [r.id, i]));
-  return { data: shaped.sort((a, b) => order.get(a.id)! - order.get(b.id)!), meta: pageMeta(paging, total?.n ?? 0) };
+  return paginate(query, {
+    rows: (page) => db.select({ id: vehicles.id }).from(vehicles).where(where).orderBy(desc(vehicles.createdAt)).limit(page.limit).offset(page.offset),
+    total: () => db.select({ n: count() }).from(vehicles).where(where),
+    map: async (ids) => {
+      const order = new Map(ids.map((r, i) => [r.id, i]));
+      return (await adminShape(db, ids.map((r) => r.id))).sort((a, b) => order.get(a.id)! - order.get(b.id)!);
+    },
+  });
 }
 
 export async function adminGetVehicle(id: string) {
@@ -88,7 +91,7 @@ export async function createVehicle(input: VehiclePost["Body"]) {
 
 export async function updateVehicle(id: string, patch: VehiclePatch["Body"]) {
   const { images, ...fields } = patch;
-  const changes = Object.fromEntries(Object.entries(fields).filter(([, value]) => value !== undefined));
+  const changes = compact(fields);
   try {
     await db.transaction(async (tx) => {
       const [existing] = await tx.select({ id: vehicles.id }).from(vehicles).where(eq(vehicles.id, id)).limit(1);
@@ -132,8 +135,8 @@ export async function createBlock(vehicleId: string, input: BlockPost["Body"]) {
   assertInterval(startAt, endAt);
 
   return db.transaction(async (tx) => {
-    const locked = await tx.execute(sql`select id from ${vehicles} where ${vehicles.id} = ${vehicleId} for update`);
-    if (!(Array.isArray(locked) ? locked : (locked as { rows: unknown[] }).rows).length) throw new AppError("NOT_FOUND", 404, "Vehicle not found.");
+    const locked = await lockRows(tx, vehicles, eq(vehicles.id, vehicleId));
+    if (locked.length === 0) throw new AppError("NOT_FOUND", 404, "Vehicle not found.");
 
     const clashes = (await busyPeriods(tx, vehicleId, startAt, endAt)).filter((p) => p.kind === "booking");
     if (clashes.length > 0) {

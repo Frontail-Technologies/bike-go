@@ -1,11 +1,16 @@
-import { and, asc, count, desc, eq, gte, ilike, lt, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, ilike, lt, or, type SQL } from "drizzle-orm";
 import { AppError } from "@/libs/api";
-import { db, type Executor } from "@/libs/db";
+import { db } from "@/libs/db";
 import { customerProfiles, loanApplications, loanStatusHistory, user } from "@/libs/db/schema";
-import { pageMeta, pageOf } from "@/libs/pagination";
+import { paginate } from "@/libs/pagination";
 import { loanView, recordTransition } from "@/routes/loan/service";
-import { assertTransition, STAFF_TRANSITIONS, type LoanStatus } from "@/routes/loan/rules";
-import type { AdminLoanView, LoansGet } from "./model";
+import { assertTransition, STAFF_TRANSITIONS } from "@/routes/loan/rules";
+import type { Executor } from "@/libs/db/types";
+import type { LoanStatus } from "@/routes/loan/types";
+import type { AdminLoanView, LoansGet } from "./types";
+import { lockRows } from "@/libs/db/lock";
+import { idByReference } from "@/libs/db/lookup";
+import { publicEmail } from "@/libs/identity";
 
 export async function adminLoanView(executor: Executor, id: string): Promise<AdminLoanView> {
   const base = await loanView(executor, id);
@@ -23,7 +28,7 @@ export async function adminLoanView(executor: Executor, id: string): Promise<Adm
     .where(eq(loanStatusHistory.applicationId, id))
     .orderBy(asc(loanStatusHistory.createdAt), asc(loanStatusHistory.id));
 
-  const email = (row!.profileEmail ?? row!.email).endsWith("@users.ridego.invalid") ? null : (row!.profileEmail ?? row!.email);
+  const email = publicEmail(row!.profileEmail, row!.email);
   return {
     ...base,
     userId: row!.userId,
@@ -33,18 +38,11 @@ export async function adminLoanView(executor: Executor, id: string): Promise<Adm
   };
 }
 
-async function idOf(reference: string) {
-  const [row] = await db.select({ id: loanApplications.id }).from(loanApplications).where(eq(loanApplications.reference, reference)).limit(1);
-  if (!row) throw new AppError("NOT_FOUND", 404, "Application not found.");
-  return row.id;
-}
-
 export async function adminGetLoan(reference: string) {
-  return adminLoanView(db, await idOf(reference));
+  return adminLoanView(db, await idByReference(loanApplications, reference, "Application"));
 }
 
 export async function adminListLoans(query: LoansGet["Query"]) {
-  const paging = pageOf(query);
   const search = query.q ? `%${query.q}%` : undefined;
   const where = and(
     query.status ? eq(loanApplications.status, query.status) : undefined,
@@ -60,16 +58,16 @@ export async function adminListLoans(query: LoansGet["Query"]) {
     amount_asc: asc(loanApplications.requestedAmountMinor),
   }[query.sort ?? "newest"];
 
-  const [rows, [total]] = await Promise.all([
-    db.select({ id: loanApplications.id }).from(loanApplications).where(where).orderBy(order, asc(loanApplications.reference)).limit(paging.limit).offset(paging.offset),
-    db.select({ n: count() }).from(loanApplications).where(where),
-  ]);
-  return { data: await Promise.all(rows.map((r) => adminLoanView(db, r.id))), meta: pageMeta(paging, total?.n ?? 0) };
+  return paginate(query, {
+    rows: (page) => db.select({ id: loanApplications.id }).from(loanApplications).where(where).orderBy(order, asc(loanApplications.reference)).limit(page.limit).offset(page.offset),
+    total: () => db.select({ n: count() }).from(loanApplications).where(where),
+    map: (rows) => Promise.all(rows.map((r) => adminLoanView(db, r.id))),
+  });
 }
 
 export async function changeLoanStatus(reference: string, staffUserId: string, to: LoanStatus, note: string | undefined) {
   return db.transaction(async (tx) => {
-    await tx.execute(sql`select id from ${loanApplications} where ${loanApplications.reference} = ${reference} for update`);
+    await lockRows(tx, loanApplications, eq(loanApplications.reference, reference));
     const [current] = await tx.select().from(loanApplications).where(eq(loanApplications.reference, reference)).limit(1);
     if (!current) throw new AppError("NOT_FOUND", 404, "Application not found.");
     assertTransition(current.status, to, "staff", note);

@@ -1,4 +1,4 @@
-import { t, type UnwrapModels } from "elysia";
+import { t } from "elysia";
 import { Envelope, PaginationQuery } from "@/libs/api";
 
 const Customer = t.Object({
@@ -40,5 +40,3 @@ export const CustomerGet = {
     }),
   ),
 };
-
-export type CustomersGet = UnwrapModels<typeof CustomersGet>;

@@ -1,12 +1,13 @@
 import { and, count, desc, eq, lte } from "drizzle-orm";
 import { AppError } from "@/libs/api";
-import { db, type Executor } from "@/libs/db";
+import { db } from "@/libs/db";
 import { PG, pgErrorCode } from "@/libs/db/errors";
 import { fxRates } from "@/libs/db/schema";
 import { parseRate } from "@/libs/fx";
-import type { Currency } from "@/libs/money";
-import { pageMeta, pageOf } from "@/libs/pagination";
-import type { FxRateView } from "./model";
+import { paginate } from "@/libs/pagination";
+import type { Executor } from "@/libs/db/types";
+import type { Currency } from "@/libs/types";
+import type { FxRateView } from "./types";
 
 const view = (row: typeof fxRates.$inferSelect): FxRateView => ({
   id: row.id,
@@ -35,13 +36,12 @@ export async function getCurrentRate(base: Currency, quote: Currency) {
 }
 
 export async function listRates(query: { page?: number | undefined; pageSize?: number | undefined; base?: Currency | undefined; quote?: Currency | undefined }) {
-  const paging = pageOf(query);
   const where = and(query.base ? eq(fxRates.baseCurrency, query.base) : undefined, query.quote ? eq(fxRates.quoteCurrency, query.quote) : undefined);
-  const [rows, [total]] = await Promise.all([
-    db.select().from(fxRates).where(where).orderBy(desc(fxRates.effectiveAt)).limit(paging.limit).offset(paging.offset),
-    db.select({ n: count() }).from(fxRates).where(where),
-  ]);
-  return { data: rows.map(view), meta: pageMeta(paging, total?.n ?? 0) };
+  return paginate(query, {
+    rows: (page) => db.select().from(fxRates).where(where).orderBy(desc(fxRates.effectiveAt)).limit(page.limit).offset(page.offset),
+    total: () => db.select({ n: count() }).from(fxRates).where(where),
+    map: (rows) => rows.map(view),
+  });
 }
 
 export async function createRate(staffUserId: string, input: { baseCurrency: Currency; quoteCurrency: Currency; rate: string; source: string; effectiveAt: string }) {

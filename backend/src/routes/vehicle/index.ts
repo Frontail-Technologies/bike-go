@@ -1,5 +1,5 @@
 import { Elysia } from "elysia";
-import { ok, publicErrors } from "@/libs/api";
+import { ok, okPage, publicErrors } from "@/libs/api";
 import * as VehicleModel from "./model";
 import { getVehicle, listVehicles } from "./service";
 
@@ -15,10 +15,7 @@ export const vehicleRoutes = new Elysia({ name: "RideGo.Vehicle", prefix: "/api/
           "Filter by location, type, category, brand, transmission, daily price and engine size (prices in minor units). Send `pickupAt` and `returnAt` together to keep only vehicles free for the whole period.",
       },
     },
-    async ({ query }) => {
-      const { data, meta } = await listVehicles(query);
-      return ok(data, meta);
-    },
+    async ({ query }) => okPage(await listVehicles(query)),
   )
   .get(
     "/:idOrSlug",

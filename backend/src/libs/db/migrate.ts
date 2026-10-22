@@ -1,7 +1,8 @@
 import { migrate as migratePglite } from "drizzle-orm/pglite/migrator";
 import { migrate as migratePostgres } from "drizzle-orm/postgres-js/migrator";
 import { env } from "@/env";
-import { closeDb, db, type Db } from "./index";
+import { closeDb, db } from "./index";
+import type { Db } from "./types";
 
 const migrationsFolder = new URL("../../../drizzle", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1");
 

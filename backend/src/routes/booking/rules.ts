@@ -1,6 +1,5 @@
 import { AppError } from "@/libs/api";
-
-export type BookingStatus = "pending" | "confirmed" | "ready_for_pickup" | "active" | "completed" | "cancelled" | "expired";
+import type { BookingStatus } from "./types";
 
 export const STAFF_BOOKING_TRANSITIONS: Record<BookingStatus, readonly BookingStatus[]> = {
   pending: ["confirmed", "cancelled"],

@@ -1,4 +1,4 @@
-import { t, type UnwrapModels, type UnwrapSchema } from "elysia";
+import { t } from "elysia";
 import { Currency, Envelope, PaginationQuery } from "@/libs/api";
 
 const IsoDateTime = t.String({ format: "date-time", description: "ISO-8601 with an offset, for example 2026-11-01T10:00:00+07:00" });
@@ -77,8 +77,3 @@ export const BookingCancelPost = {
   Body: t.Optional(t.Object({ reason: t.Optional(t.String({ maxLength: 300 })) })),
   Response: Envelope(Booking),
 };
-
-export type BookingRequest = UnwrapModels<typeof BookingPost>["Body"];
-export type BookingsGet = UnwrapModels<typeof BookingsGet>;
-export type BookingView = UnwrapSchema<typeof Booking>;
-export type QuoteView = UnwrapSchema<typeof Quote>;

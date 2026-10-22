@@ -1,4 +1,4 @@
-import { t, type UnwrapModels, type UnwrapSchema } from "elysia";
+import { t } from "elysia";
 import { Currency, Envelope, PaginationQuery } from "@/libs/api";
 import { DOCUMENT_TYPES, EMPLOYMENT_TYPES, LOAN_STATUSES, LOAN_TYPES, RESIDENCE_STATUSES } from "./rules";
 
@@ -133,8 +133,3 @@ export const LoanSubmitPost = {
 };
 
 export const LoanResubmitPost = { Params: LoanReferenceParams, Response: Envelope(Loan) };
-
-export type LoanView = UnwrapSchema<typeof Loan>;
-export type LoanPost = UnwrapModels<typeof LoanPost>;
-export type LoanPatch = UnwrapModels<typeof LoanPatch>;
-export type LoansGet = UnwrapModels<typeof LoansGet>;

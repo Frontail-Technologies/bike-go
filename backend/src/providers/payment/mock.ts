@@ -1,4 +1,4 @@
-import type { PaymentIntent, PaymentProvider } from "./index";
+import type { PaymentIntent, PaymentProvider } from "./types";
 
 export class MockPaymentProvider implements PaymentProvider {
   async createPayment(input: Parameters<PaymentProvider["createPayment"]>[0]): Promise<PaymentIntent> {

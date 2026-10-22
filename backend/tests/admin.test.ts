@@ -5,25 +5,20 @@ import { json } from "./helpers/http";
 import { patchJson, postJson, request, signInAdmin, signInCustomer } from "./helpers/auth";
 import { cleanupExtraVehicles } from "./helpers/db";
 import { submittedLoan } from "./helpers/loan";
+import { bookVehicle, rentalWindow } from "./helpers/booking";
 
 beforeAll(async () => {
   await seedCatalog();
 });
 afterAll(cleanupExtraVehicles);
 
-let nextYear = 2080;
-const window = (days = 2) => {
-  const y = nextYear++;
-  return { pickupAt: `${y}-04-10T10:00:00.000Z`, returnAt: `${y}-04-${10 + days}T10:00:00.000Z` };
-};
-
-const book = async (cookie: string, vehicle: string, w = window()) => {
-  const response = await postJson("/api/v1/bookings", { vehicle, ...w }, { cookie });
+const book = async (cookie: string, vehicle: string, w = rentalWindow()) => {
+  const response = await bookVehicle(cookie, vehicle, w);
   expect(response.status).toBe(201);
   return (await json(response)).data as { reference: string };
 };
 
-const bookConfirmed = async (customerCookie: string, staffCookie: string, vehicle: string, w = window()) => {
+const bookConfirmed = async (customerCookie: string, staffCookie: string, vehicle: string, w = rentalWindow()) => {
   const created = await book(customerCookie, vehicle, w);
   const confirmed = await patchJson(`/api/v1/admin/bookings/${created.reference}/status`, { bookingStatus: "confirmed" }, { cookie: staffCookie });
   expect(confirmed.status).toBe(200);
@@ -127,7 +122,7 @@ describe("bookings", () => {
     const staff = await signInAdmin();
     const customer = await signInCustomer();
     const other = await signInCustomer();
-    const w = window();
+    const w = rentalWindow();
     const { reference } = await book(customer.cookie, "ktm-duke-200", w);
     expect((await postJson("/api/v1/bookings", { vehicle: "ktm-duke-200", ...w }, { cookie: other.cookie })).status).toBe(409);
 

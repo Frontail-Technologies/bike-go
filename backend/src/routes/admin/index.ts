@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { Envelope, ok, staffErrors } from "@/libs/api";
+import { Envelope, ok, sessionSecurity, staffErrors } from "@/libs/api";
 import { authPlugin } from "@/plugins/auth";
 import { adminBookingRoutes } from "./booking";
 import { adminCustomerRoutes } from "./customer";
@@ -16,7 +16,7 @@ export const adminRoutes = new Elysia({ name: "RideGo.Admin", prefix: "/api/v1/a
     {
       admin: true,
       response: { 200: Envelope(t.Object({ id: t.String(), role: t.UnionEnum(["admin", "super_admin"]) })), ...staffErrors },
-      detail: { summary: "The signed-in staff member", security: [{ sessionCookie: [] }] },
+      detail: { summary: "The signed-in staff member", security: sessionSecurity },
     },
     ({ user }) => ok({ id: user.id, role: user.role as "admin" | "super_admin" }),
   )

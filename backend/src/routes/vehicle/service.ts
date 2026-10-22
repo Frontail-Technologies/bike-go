@@ -1,12 +1,13 @@
 import { and, asc, count, desc, eq, gte, ilike, inArray, lte, not, or, type SQL } from "drizzle-orm";
 import { AppError } from "@/libs/api";
-import { db, type Executor } from "@/libs/db";
+import { db } from "@/libs/db";
 import { locations, vehicleImages, vehicles } from "@/libs/db/schema";
-import { pageMeta, pageOf } from "@/libs/pagination";
+import { paginate } from "@/libs/pagination";
 import { assertInterval, blockOverlap, bookingOverlap } from "../availability/service";
-import type { PublicVehicle, VehiclesGet } from "./model";
-
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+import type { Executor } from "@/libs/db/types";
+import type { PublicVehicle, VehiclesGet } from "./types";
+import { matchIdOrSlug } from "@/libs/uuid";
+import type { VehicleListRow } from "./types";
 
 const columns = {
   id: vehicles.id,
@@ -33,9 +34,8 @@ const columns = {
 };
 
 const selectJoined = () => db.select(columns).from(vehicles).innerJoin(locations, eq(vehicles.locationId, locations.id));
-type Row = Awaited<ReturnType<ReturnType<typeof selectJoined>["limit"]>>[number];
 
-async function present(executor: Executor, rows: Row[]): Promise<PublicVehicle[]> {
+async function present(executor: Executor, rows: VehicleListRow[]): Promise<PublicVehicle[]> {
   if (rows.length === 0) return [];
   const images = await executor
     .select({ id: vehicleImages.id, vehicleId: vehicleImages.vehicleId, url: vehicleImages.publicUrl, altText: vehicleImages.altText, sortOrder: vehicleImages.sortOrder })
@@ -51,7 +51,6 @@ async function present(executor: Executor, rows: Row[]): Promise<PublicVehicle[]
 }
 
 export async function listVehicles(query: VehiclesGet["Query"], options: { includeInactive?: boolean } = {}) {
-  const paging = pageOf(query);
   const conditions: (SQL | undefined)[] = [
     options.includeInactive ? undefined : not(eq(vehicles.status, "inactive")),
     query.locationId ? eq(vehicles.locationId, query.locationId) : undefined,
@@ -81,21 +80,19 @@ export async function listVehicles(query: VehiclesGet["Query"], options: { inclu
     newest: [desc(vehicles.createdAt), asc(vehicles.name)],
   }[query.sort ?? "name"];
 
-  const [rows, [total]] = await Promise.all([
-    selectJoined().where(where).orderBy(...order).limit(paging.limit).offset(paging.offset),
-    db.select({ n: count() }).from(vehicles).where(where),
-  ]);
-
-  return { data: await present(db, rows), meta: pageMeta(paging, total?.n ?? 0) };
+  return paginate(query, {
+    rows: (page) => selectJoined().where(where).orderBy(...order).limit(page.limit).offset(page.offset),
+    total: () => db.select({ n: count() }).from(vehicles).where(where),
+    map: (rows) => present(db, rows),
+  });
 }
 
 export async function getVehicle(idOrSlug: string, options: { includeInactive?: boolean } = {}) {
-  const key = UUID.test(idOrSlug) ? eq(vehicles.id, idOrSlug) : eq(vehicles.slug, idOrSlug);
   const [row] = await db
     .select(columns)
     .from(vehicles)
     .innerJoin(locations, eq(vehicles.locationId, locations.id))
-    .where(and(key, options.includeInactive ? undefined : not(eq(vehicles.status, "inactive"))))
+    .where(and(matchIdOrSlug(vehicles.id, vehicles.slug, idOrSlug), options.includeInactive ? undefined : not(eq(vehicles.status, "inactive"))))
     .limit(1);
   if (!row) throw new AppError("NOT_FOUND", 404, "Vehicle not found.");
   return (await present(db, [row]))[0]!;

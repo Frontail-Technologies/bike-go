@@ -8,6 +8,7 @@ import * as z from "zod";
 import { env } from "@/env";
 import { db, schema } from "@/libs/db";
 import { verifyTelegramLogin } from "@/libs/telegram";
+import { placeholderEmail } from "@/libs/identity";
 
 const telegram = (): BetterAuthPlugin => ({
   id: "telegram",
@@ -34,7 +35,7 @@ const telegram = (): BetterAuthPlugin => ({
           const name = [identity.firstName, identity.lastName].filter(Boolean).join(" ");
           user = await adapter.createUser({
             name,
-            email: `telegram-${identity.telegramId}@users.ridego.invalid`,
+            email: placeholderEmail(identity.telegramId),
             emailVerified: false,
             image: identity.photoUrl,
           }, { method: "telegram" });
@@ -80,5 +81,3 @@ export const auth = betterAuth({
     : {},
   plugins: [telegram(), openAPI({ disableDefaultReference: true })],
 });
-
-export type Session = typeof auth.$Infer.Session;

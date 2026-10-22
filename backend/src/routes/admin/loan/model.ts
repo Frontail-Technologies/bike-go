@@ -1,4 +1,4 @@
-import { t, type UnwrapModels, type UnwrapSchema } from "elysia";
+import { t } from "elysia";
 import { Envelope, PaginationQuery } from "@/libs/api";
 import { Loan, LoanReferenceParams, LoanStatus, LoanType } from "@/routes/loan/model";
 import { LOAN_STATUSES } from "@/routes/loan/rules";
@@ -43,7 +43,3 @@ export const LoanStatusPatch = {
   }),
   Response: Envelope(AdminLoan),
 };
-
-export type AdminLoanView = UnwrapSchema<typeof AdminLoan>;
-export type LoansGet = UnwrapModels<typeof LoansGet>;
-export type LoanStatusPatch = UnwrapModels<typeof LoanStatusPatch>;

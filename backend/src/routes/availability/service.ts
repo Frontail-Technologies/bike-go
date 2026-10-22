@@ -1,11 +1,12 @@
 import { and, asc, eq, exists, gt, inArray, lt, or, type SQL } from "drizzle-orm";
 import { AppError } from "@/libs/api";
-import { db, type Executor } from "@/libs/db";
+import { db } from "@/libs/db";
 import { BLOCKING_BOOKING_STATUSES, bookings, vehicleBlocks, vehicles } from "@/libs/db/schema";
+import type { Executor } from "@/libs/db/types";
+import type { Availability } from "./types";
+import { matchIdOrSlug } from "@/libs/uuid";
 
 export const UNRENTABLE_STATUSES = ["maintenance", "inactive"] as const;
-
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function holdingCondition(now: Date = new Date()): SQL {
   return or(inArray(bookings.bookingStatus, [...BLOCKING_BOOKING_STATUSES]), and(eq(bookings.bookingStatus, "pending"), gt(bookings.holdExpiresAt, now)))!;
@@ -53,15 +54,6 @@ export async function busyPeriods(executor: Executor, vehicleId: string, start: 
   ].sort((a, b) => a.start.getTime() - b.start.getTime());
 }
 
-export type Availability = {
-  vehicleId: string;
-  from: string;
-  to: string;
-  bookable: boolean;
-  reason: "vehicle_unavailable" | "period_taken" | null;
-  unavailablePeriods: { start: string; end: string; kind: "booking" | "block" }[];
-};
-
 export async function getAvailability(vehicleId: string, from: Date, to: Date): Promise<Availability> {
   assertInterval(from, to);
   const [vehicle] = await db.select({ id: vehicles.id, status: vehicles.status }).from(vehicles).where(eq(vehicles.id, vehicleId)).limit(1);
@@ -80,8 +72,7 @@ export async function getAvailability(vehicleId: string, from: Date, to: Date): 
 }
 
 export async function resolveVehicleId(idOrSlug: string) {
-  const key = UUID.test(idOrSlug) ? eq(vehicles.id, idOrSlug) : eq(vehicles.slug, idOrSlug);
-  const [row] = await db.select({ id: vehicles.id, status: vehicles.status }).from(vehicles).where(key).limit(1);
+  const [row] = await db.select({ id: vehicles.id, status: vehicles.status }).from(vehicles).where(matchIdOrSlug(vehicles.id, vehicles.slug, idOrSlug)).limit(1);
   if (!row || row.status === "inactive") throw new AppError("NOT_FOUND", 404, "Vehicle not found.");
   return row.id;
 }

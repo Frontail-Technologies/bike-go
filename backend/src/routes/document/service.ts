@@ -5,7 +5,8 @@ import { db } from "@/libs/db";
 import { loanApplications, loanDocuments } from "@/libs/db/schema";
 import { storage } from "@/providers/storage";
 import { findOwned } from "@/routes/loan/service";
-import { DOCUMENT_TYPES, type DocumentType } from "@/routes/loan/rules";
+import { DOCUMENT_TYPES } from "@/routes/loan/rules";
+import type { DocumentType } from "@/routes/loan/types";
 
 export const MAX_FILE_BYTES = 5 * 1024 * 1024;
 const MAX_PER_TYPE = 5;

@@ -1,4 +1,4 @@
-import { t, type UnwrapModels } from "elysia";
+import { t } from "elysia";
 import { Envelope } from "@/libs/api";
 import { DocumentItem, DocumentVerificationStatus, LoanReferenceParams } from "@/routes/loan/model";
 
@@ -29,6 +29,4 @@ export const DocumentReviewPatch = {
   ),
   Response: Envelope(DocumentItem),
 };
-
-export type DocumentReviewPatch = UnwrapModels<typeof DocumentReviewPatch>;
 export { DocumentVerificationStatus };

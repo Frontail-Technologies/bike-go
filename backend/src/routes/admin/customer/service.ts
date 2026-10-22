@@ -3,12 +3,11 @@ import type { UnwrapSchema } from "elysia";
 import { AppError } from "@/libs/api";
 import { db } from "@/libs/db";
 import { account, bookings, customerProfiles, loanApplications, user, vehicles } from "@/libs/db/schema";
-import { pageMeta, pageOf } from "@/libs/pagination";
-import type { CustomerGet, CustomersGet } from "./model";
-
-const PLACEHOLDER = "@users.ridego.invalid";
-
-type CustomerRow = { id: string; role: "customer" | "admin" | "super_admin"; name: string; email: string; profileName: string | null; profileEmail: string | null; phone: string | null; city: string | null; createdAt: Date };
+import { paginate } from "@/libs/pagination";
+import type { CustomerGet } from "./model";
+import type { CustomersGet } from "./types";
+import { publicEmail } from "@/libs/identity";
+import type { CustomerRow } from "./types";
 
 async function summarise(rows: CustomerRow[]) {
   const ids = rows.map((r) => r.id);
@@ -19,7 +18,7 @@ async function summarise(rows: CustomerRow[]) {
     db.select({ userId: loanApplications.userId, n: count() }).from(loanApplications).where(inArray(loanApplications.userId, ids)).groupBy(loanApplications.userId),
   ]);
   return rows.map((r) => {
-    const email = r.profileEmail ?? (r.email.endsWith(PLACEHOLDER) ? null : r.email);
+    const email = publicEmail(r.profileEmail, r.email);
     return {
       id: r.id,
       role: r.role,
@@ -42,16 +41,15 @@ const selectCustomers = () =>
     .leftJoin(customerProfiles, eq(customerProfiles.userId, user.id));
 
 export async function adminListCustomers(query: CustomersGet["Query"]) {
-  const paging = pageOf(query);
   const search = query.q ? `%${query.q}%` : undefined;
   const where = and(eq(user.role, "customer"), search ? or(ilike(user.name, search), ilike(user.email, search), ilike(customerProfiles.fullName, search), ilike(customerProfiles.phone, search)) : undefined);
   const order = { newest: desc(user.createdAt), oldest: asc(user.createdAt), name: asc(user.name) }[query.sort ?? "newest"];
 
-  const [rows, [total]] = await Promise.all([
-    selectCustomers().where(where).orderBy(order, asc(user.id)).limit(paging.limit).offset(paging.offset),
-    db.select({ n: count() }).from(user).leftJoin(customerProfiles, eq(customerProfiles.userId, user.id)).where(where),
-  ]);
-  return { data: await summarise(rows), meta: pageMeta(paging, total?.n ?? 0) };
+  return paginate(query, {
+    rows: (page) => selectCustomers().where(where).orderBy(order, asc(user.id)).limit(page.limit).offset(page.offset),
+    total: () => db.select({ n: count() }).from(user).leftJoin(customerProfiles, eq(customerProfiles.userId, user.id)).where(where),
+    map: summarise,
+  });
 }
 
 export async function adminGetCustomer(id: string): Promise<UnwrapSchema<typeof CustomerGet.Response>["data"]> {

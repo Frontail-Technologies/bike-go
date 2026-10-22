@@ -1,4 +1,4 @@
-import { t, type UnwrapModels } from "elysia";
+import { t } from "elysia";
 import { Envelope } from "@/libs/api";
 
 const Date_ = t.String({ pattern: "^\\d{4}-\\d{2}-\\d{2}$", description: "YYYY-MM-DD" });
@@ -33,5 +33,3 @@ export const MePatch = {
   }),
   Response: Envelope(Me),
 };
-
-export type MePatch = UnwrapModels<typeof MePatch>;

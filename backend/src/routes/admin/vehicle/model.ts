@@ -1,4 +1,4 @@
-import { t, type UnwrapModels } from "elysia";
+import { t } from "elysia";
 import { Currency, Envelope, PaginationQuery } from "@/libs/api";
 import { Vehicle, VehicleStatus, VehicleType } from "@/routes/vehicle/model";
 
@@ -92,8 +92,3 @@ export const BlockPost = {
 };
 
 export const Block = t.Object({ id: t.String({ format: "uuid" }), vehicleId: t.String({ format: "uuid" }), startAt: t.String({ format: "date-time" }), endAt: t.String({ format: "date-time" }), reason: t.String() });
-
-export type VehiclePost = UnwrapModels<typeof VehiclePost>;
-export type VehiclePatch = UnwrapModels<typeof VehiclePatch>;
-export type VehiclesGet = UnwrapModels<typeof VehiclesGet>;
-export type BlockPost = UnwrapModels<typeof BlockPost>;

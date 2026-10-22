@@ -1,4 +1,4 @@
-import { t, type UnwrapModels, type UnwrapSchema } from "elysia";
+import { t } from "elysia";
 import { Envelope, PaginationQuery } from "@/libs/api";
 import { Booking, BookingStatus, BookingByReferenceGet, PaymentStatus } from "@/routes/booking/model";
 
@@ -37,7 +37,3 @@ export const BookingStatusPatch = {
   ),
   Response: Envelope(AdminBooking),
 };
-
-export type AdminBookingView = UnwrapSchema<typeof AdminBooking>;
-export type BookingsGet = UnwrapModels<typeof BookingsGet>;
-export type BookingStatusPatch = UnwrapModels<typeof BookingStatusPatch>;

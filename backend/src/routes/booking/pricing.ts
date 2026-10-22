@@ -1,27 +1,5 @@
-import { addMinor, multiplyMinor, percentOfMinor, type Currency } from "@/libs/money";
-
-export type PricingInput = {
-  currency: Currency;
-  days: number;
-  dailyRateMinor: number;
-  securityDepositMinor: number;
-  addons: { addonId: string; name: string; unitPriceMinor: number; quantity: number }[];
-  taxRateBps: number;
-  platformFeeMinor: number;
-};
-
-export type PricingResult = {
-  currency: Currency;
-  days: number;
-  dailyRateMinor: number;
-  rentalSubtotalMinor: number;
-  addons: { addonId: string; name: string; unitPriceMinor: number; quantity: number; days: number; totalMinor: number }[];
-  addonsTotalMinor: number;
-  platformFeeMinor: number;
-  taxesMinor: number;
-  securityDepositMinor: number;
-  totalPayableMinor: number;
-};
+import { addMinor, multiplyMinor, percentOfMinor } from "@/libs/money";
+import type { PricingInput, PricingResult } from "./types";
 
 export function priceBooking(input: PricingInput): PricingResult {
   const rentalSubtotalMinor = multiplyMinor(input.dailyRateMinor, input.days);

@@ -42,8 +42,8 @@ src/
   app.ts             composition root, exports the typed app
   env.ts             validated environment
   plugins/           request id, errors, CORS, OpenAPI, auth macros, security headers, access log
-  routes/<feature>/  index.ts (HTTP), model.ts (schemas), service.ts (rules + queries)
-  libs/              db + schema, money, dates, references, pagination, hashing, idempotency, Telegram verification
+  routes/<feature>/  index.ts (HTTP), model.ts (schemas), types.ts (types), service.ts (rules + queries)
+  libs/              db + schema + row locks, money, dates, references, pagination (paginate), hashing, idempotency, id-or-slug lookup, identity (placeholder emails), FX, Telegram verification, shared types.ts
   providers/         storage (local disk) and payment (pending-only mock) interfaces
 drizzle/             migrations
 tests/

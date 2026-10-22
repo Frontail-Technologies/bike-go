@@ -1,7 +1,8 @@
 import { Elysia } from "elysia";
 import { AppError } from "@/libs/api";
-import { auth, type Session } from "@/libs/auth";
+import { auth } from "@/libs/auth";
 import { requestMeta } from "./request-meta";
+import type { Session } from "@/libs/types";
 
 const STAFF = new Set(["admin", "super_admin"]);
 const unauthenticated = () => new AppError("AUTH_REQUIRED", 401, "Sign in to continue.");

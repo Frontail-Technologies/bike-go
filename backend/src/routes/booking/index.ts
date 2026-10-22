@@ -1,13 +1,11 @@
 import { asc, eq } from "drizzle-orm";
 import { Elysia } from "elysia";
-import { customerErrors, ok, publicErrors } from "@/libs/api";
+import { customerErrors, ok, okPage, publicErrors, sessionSecurity } from "@/libs/api";
 import { db } from "@/libs/db";
 import { bookingAddons } from "@/libs/db/schema";
 import { authPlugin } from "@/plugins/auth";
 import * as BookingModel from "./model";
 import { cancelMyBooking, createBooking, getMyBooking, listMyBookings, quote } from "./service";
-
-const security = [{ sessionCookie: [] }];
 
 export const addonRoutes = new Elysia({ name: "RideGo.Addons", prefix: "/api/v1/addons", tags: ["Bookings"] }).get(
   "",
@@ -35,15 +33,12 @@ export const bookingRoutes = new Elysia({ name: "RideGo.Booking", prefix: "/api/
   )
   .get(
     "",
-    { auth: true, query: BookingModel.BookingsGet.Query, response: { 200: BookingModel.BookingsGet.Response, ...customerErrors }, detail: { summary: "My bookings, newest first", security } },
-    async ({ user, query }) => {
-      const { data, meta } = await listMyBookings(user.id, query);
-      return ok(data, meta);
-    },
+    { auth: true, query: BookingModel.BookingsGet.Query, response: { 200: BookingModel.BookingsGet.Response, ...customerErrors }, detail: { summary: "My bookings, newest first", security: sessionSecurity } },
+    async ({ user, query }) => okPage(await listMyBookings(user.id, query)),
   )
   .get(
     "/:reference",
-    { auth: true, params: BookingModel.BookingByReferenceGet.Params, response: { 200: BookingModel.BookingByReferenceGet.Response, ...customerErrors }, detail: { summary: "One of my bookings", security } },
+    { auth: true, params: BookingModel.BookingByReferenceGet.Params, response: { 200: BookingModel.BookingByReferenceGet.Response, ...customerErrors }, detail: { summary: "One of my bookings", security: sessionSecurity } },
     async ({ user, params }) => ok(await getMyBooking(user.id, params.reference)),
   )
   .post(
@@ -57,7 +52,7 @@ export const bookingRoutes = new Elysia({ name: "RideGo.Booking", prefix: "/api/
         summary: "Create a booking",
         description:
           "The server checks availability inside a transaction and prices the booking itself; any totals sent are ignored. Send an `Idempotency-Key` header and retry safely: the same key and request returns the original booking. A taken period is `409 BOOKING_CONFLICT`.",
-        security,
+        security: sessionSecurity,
       },
     },
     async ({ user, body, headers, status, set }) => {
@@ -73,7 +68,7 @@ export const bookingRoutes = new Elysia({ name: "RideGo.Booking", prefix: "/api/
       params: BookingModel.BookingCancelPost.Params,
       body: BookingModel.BookingCancelPost.Body,
       response: { 200: BookingModel.BookingCancelPost.Response, ...customerErrors },
-      detail: { summary: "Cancel my booking", description: "Allowed while pending, confirmed or ready for pickup. Cancelled bookings stop holding the vehicle immediately.", security },
+      detail: { summary: "Cancel my booking", description: "Allowed while pending, confirmed or ready for pickup. Cancelled bookings stop holding the vehicle immediately.", security: sessionSecurity },
     },
     async ({ user, params, body }) => ok(await cancelMyBooking(user.id, params.reference, body?.reason)),
   );

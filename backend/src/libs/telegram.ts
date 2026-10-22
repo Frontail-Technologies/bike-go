@@ -1,17 +1,6 @@
 import { createHash } from "node:crypto";
 import { hmacSha256Hex, safeEqual } from "./hash";
-
-export type TelegramLoginPayload = Record<string, string | number | boolean | null | undefined>;
-
-export type TelegramIdentity = {
-  telegramId: string;
-  firstName: string;
-  lastName: string | null;
-  username: string | null;
-  photoUrl: string | null;
-};
-
-export type TelegramVerification = { ok: true; identity: TelegramIdentity } | { ok: false; reason: "missing_fields" | "bad_signature" | "expired" };
+import type { TelegramLoginPayload, TelegramVerification } from "./types";
 
 const FUTURE_SKEW_SECONDS = 60;
 

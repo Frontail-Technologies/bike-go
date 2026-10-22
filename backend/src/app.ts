@@ -37,5 +37,3 @@ export const app = new Elysia({ name: "RideGo.App", serve: { maxRequestBodySize:
   .use(loanRoutes)
   .use(documentRoutes)
   .use(adminRoutes);
-
-export type App = typeof app;

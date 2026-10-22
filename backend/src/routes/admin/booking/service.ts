@@ -1,13 +1,17 @@
-import { and, asc, count, desc, eq, gte, ilike, inArray, lt, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, ilike, inArray, lt, or } from "drizzle-orm";
 import { AppError } from "@/libs/api";
 import { db } from "@/libs/db";
 import { PG, pgErrorCode } from "@/libs/db/errors";
 import { bookings, customerProfiles, user, vehicles } from "@/libs/db/schema";
-import { pageMeta, pageOf } from "@/libs/pagination";
+import { paginate } from "@/libs/pagination";
 import { expireStaleHolds } from "@/routes/booking/holds";
 import { bookingViews } from "@/routes/booking/service";
-import { assertBookingTransition, STAFF_BOOKING_TRANSITIONS, type BookingStatus } from "@/routes/booking/rules";
-import type { AdminBookingView, BookingsGet, BookingStatusPatch } from "./model";
+import { assertBookingTransition, STAFF_BOOKING_TRANSITIONS } from "@/routes/booking/rules";
+import type { BookingStatus } from "@/routes/booking/types";
+import type { AdminBookingView, BookingStatusPatch, BookingsGet } from "./types";
+import { lockRows } from "@/libs/db/lock";
+import { idByReference } from "@/libs/db/lookup";
+import { publicEmail } from "@/libs/identity";
 
 async function adminViews(ids: string[]): Promise<AdminBookingView[]> {
   if (ids.length === 0) return [];
@@ -23,25 +27,18 @@ async function adminViews(ids: string[]): Promise<AdminBookingView[]> {
   const byId = new Map(owners.map((o) => [o.id, o]));
   return views.map((view, i) => {
     const owner = byId.get(ids[i]!)!;
-    const email = owner.profileEmail ?? (owner.email.endsWith("@users.ridego.invalid") ? null : owner.email);
+    const email = publicEmail(owner.profileEmail, owner.email);
     return { ...view, customer: { id: owner.userId, name: owner.profileName ?? owner.name, email, phone: owner.phone }, allowedNextStatuses: [...STAFF_BOOKING_TRANSITIONS[view.bookingStatus as BookingStatus]] };
   });
 }
 
-async function idOf(reference: string) {
-  const [row] = await db.select({ id: bookings.id }).from(bookings).where(eq(bookings.reference, reference)).limit(1);
-  if (!row) throw new AppError("NOT_FOUND", 404, "Booking not found.");
-  return row.id;
-}
-
 export async function adminGetBooking(reference: string) {
   await expireStaleHolds(db, { reference });
-  return (await adminViews([await idOf(reference)]))[0]!;
+  return (await adminViews([await idByReference(bookings, reference, "Booking")]))[0]!;
 }
 
 export async function adminListBookings(query: BookingsGet["Query"]) {
   await expireStaleHolds(db);
-  const paging = pageOf(query);
   const search = query.q ? `%${query.q}%` : undefined;
   const where = and(
     query.status ? eq(bookings.bookingStatus, query.status) : undefined,
@@ -54,18 +51,26 @@ export async function adminListBookings(query: BookingsGet["Query"]) {
   );
   const order = { newest: desc(bookings.createdAt), pickup_asc: asc(bookings.pickupAt), pickup_desc: desc(bookings.pickupAt), total_desc: desc(bookings.totalPayableMinor) }[query.sort ?? "newest"];
 
-  const base = db.select({ id: bookings.id }).from(bookings).innerJoin(user, eq(user.id, bookings.userId)).innerJoin(vehicles, eq(vehicles.id, bookings.vehicleId));
-  const [rows, [total]] = await Promise.all([
-    base.where(where).orderBy(order, asc(bookings.reference)).limit(paging.limit).offset(paging.offset),
-    db.select({ n: count() }).from(bookings).innerJoin(user, eq(user.id, bookings.userId)).innerJoin(vehicles, eq(vehicles.id, bookings.vehicleId)).where(where),
-  ]);
-  return { data: await adminViews(rows.map((r) => r.id)), meta: pageMeta(paging, total?.n ?? 0) };
+  return paginate(query, {
+    rows: (page) =>
+      db
+        .select({ id: bookings.id })
+        .from(bookings)
+        .innerJoin(user, eq(user.id, bookings.userId))
+        .innerJoin(vehicles, eq(vehicles.id, bookings.vehicleId))
+        .where(where)
+        .orderBy(order, asc(bookings.reference))
+        .limit(page.limit)
+        .offset(page.offset),
+    total: () => db.select({ n: count() }).from(bookings).innerJoin(user, eq(user.id, bookings.userId)).innerJoin(vehicles, eq(vehicles.id, bookings.vehicleId)).where(where),
+    map: (rows) => adminViews(rows.map((r) => r.id)),
+  });
 }
 
 export async function updateBookingStatus(reference: string, input: BookingStatusPatch["Body"]) {
   try {
     await db.transaction(async (tx) => {
-      await tx.execute(sql`select id from ${bookings} where ${bookings.reference} = ${reference} for update`);
+      await lockRows(tx, bookings, eq(bookings.reference, reference));
       await expireStaleHolds(tx, { reference });
       const [current] = await tx.select().from(bookings).where(eq(bookings.reference, reference)).limit(1);
       if (!current) throw new AppError("NOT_FOUND", 404, "Booking not found.");

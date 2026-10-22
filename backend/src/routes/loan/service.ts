@@ -1,24 +1,19 @@
-import { and, asc, count, desc, eq, sql } from "drizzle-orm";
-import { AppError } from "@/libs/api";
-import { ageOn } from "@/libs/date";
-import { db, rowsOf, type Executor, type Tx } from "@/libs/db";
+import { and, asc, count, desc, eq } from "drizzle-orm";
+import { AppError, invalid } from "@/libs/api";
+import { ageOn, isRealDate } from "@/libs/date";
+import { db } from "@/libs/db";
 import { loanApplications, loanDocuments, loanStatusHistory } from "@/libs/db/schema";
 import { idempotently } from "@/libs/idempotency";
-import { pageMeta, pageOf } from "@/libs/pagination";
+import { paginate } from "@/libs/pagination";
 import { currentRate } from "@/routes/fx/service";
 import { newReference } from "@/libs/reference";
-import type { Currency } from "@/libs/money";
-import type { LoanPatch, LoanPost, LoansGet, LoanView } from "./model";
-import { assertTransition, isEditableByCustomer, loanLimits, MAX_AGE, MIN_AGE, REQUIRED_DOCUMENTS, TENURES_MONTHS, type LoanStatus, type LoanTypeId } from "./rules";
-
-type Application = typeof loanApplications.$inferSelect;
-
-const invalid = (path: string, message: string) => new AppError("VALIDATION_ERROR", 422, message, [{ path, message }]);
-
-function assertRealDate(value: string, path: string) {
-  const parsed = new Date(`${value}T00:00:00Z`);
-  if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== value) throw invalid(path, "That is not a real date.");
-}
+import { assertTransition, isEditableByCustomer, loanLimits, MAX_AGE, MIN_AGE, REQUIRED_DOCUMENTS, TENURES_MONTHS } from "./rules";
+import type { Executor, Tx } from "@/libs/db/types";
+import type { Currency } from "@/libs/types";
+import type { LoanPatch, LoanPost, LoanView, LoansGet, LoanStatus, LoanTypeId } from "./types";
+import { lockRows } from "@/libs/db/lock";
+import { pickDefined } from "@/libs/object";
+import type { Application } from "./types";
 
 async function assertValues(executor: Executor, values: Pick<Application, "loanType" | "currency" | "requestedAmountMinor" | "tenureMonths" | "dateOfBirth">) {
   const fx = values.currency === "USD" ? null : await currentRate(executor, "USD", values.currency as Currency);
@@ -32,7 +27,7 @@ async function assertValues(executor: Executor, values: Pick<Application, "loanT
     throw invalid("tenureMonths", `Choose one of ${TENURES_MONTHS.filter((m) => m <= limits.maxTenure).join(", ")} months for this loan.`);
   }
   if (values.dateOfBirth) {
-    assertRealDate(values.dateOfBirth, "dateOfBirth");
+    if (!isRealDate(values.dateOfBirth)) throw invalid("dateOfBirth", "That is not a real date.");
     const age = ageOn(values.dateOfBirth);
     if (age < MIN_AGE || age > MAX_AGE) throw invalid("dateOfBirth", `Applicants must be between ${MIN_AGE} and ${MAX_AGE} years old.`);
   }
@@ -43,11 +38,6 @@ const WRITABLE = [
   "fullName", "mobile", "email", "dateOfBirth", "nationality", "currentCity", "residenceStatus",
   "employmentType", "employerName", "jobTitle", "monthlyIncomeMinor", "workExperienceMonths", "hasActiveBankAccount",
 ] as const;
-
-function definedOnly<T extends object>(value: T) {
-  const source = value as Record<string, unknown>;
-  return Object.fromEntries(WRITABLE.filter((key) => source[key] !== undefined).map((key) => [key, source[key]])) as Partial<Pick<Application, (typeof WRITABLE)[number]>>;
-}
 
 export async function loanView(executor: Executor, id: string): Promise<LoanView> {
   const [app] = await executor.select().from(loanApplications).where(eq(loanApplications.id, id)).limit(1);
@@ -112,9 +102,7 @@ export async function loanView(executor: Executor, id: string): Promise<LoanView
 
 export async function findOwned(executor: Executor, userId: string, reference: string, options: { lock?: boolean } = {}) {
   if (options.lock) {
-    const locked = rowsOf<{ id: string }>(
-      await executor.execute(sql`select id from ${loanApplications} where ${loanApplications.reference} = ${reference} and ${loanApplications.userId} = ${userId} for update`),
-    );
+    const locked = await lockRows(executor, loanApplications, and(eq(loanApplications.reference, reference), eq(loanApplications.userId, userId))!);
     if (locked.length === 0) throw new AppError("NOT_FOUND", 404, "Application not found.");
   }
   const [row] = await executor.select().from(loanApplications).where(and(eq(loanApplications.reference, reference), eq(loanApplications.userId, userId))).limit(1);
@@ -123,13 +111,12 @@ export async function findOwned(executor: Executor, userId: string, reference: s
 }
 
 export async function listMyLoans(userId: string, query: LoansGet["Query"]) {
-  const paging = pageOf(query);
   const where = and(eq(loanApplications.userId, userId), query.status ? eq(loanApplications.status, query.status) : undefined);
-  const [rows, [total]] = await Promise.all([
-    db.select({ id: loanApplications.id }).from(loanApplications).where(where).orderBy(desc(loanApplications.createdAt), asc(loanApplications.reference)).limit(paging.limit).offset(paging.offset),
-    db.select({ n: count() }).from(loanApplications).where(where),
-  ]);
-  return { data: await Promise.all(rows.map((r) => loanView(db, r.id))), meta: pageMeta(paging, total?.n ?? 0) };
+  return paginate(query, {
+    rows: (page) => db.select({ id: loanApplications.id }).from(loanApplications).where(where).orderBy(desc(loanApplications.createdAt), asc(loanApplications.reference)).limit(page.limit).offset(page.offset),
+    total: () => db.select({ n: count() }).from(loanApplications).where(where),
+    map: (rows) => Promise.all(rows.map((r) => loanView(db, r.id))),
+  });
 }
 
 export async function getMyLoan(userId: string, reference: string) {
@@ -149,7 +136,7 @@ export async function createLoan(userId: string, input: LoanPost["Body"]) {
     for (let attempt = 0; attempt < 5; attempt++) {
       const [created] = await tx
         .insert(loanApplications)
-        .values({ ...definedOnly(input), loanType: input.loanType, requestedAmountMinor: input.requestedAmountMinor, tenureMonths: input.tenureMonths, currency, reference: newReference("LN"), userId, status: "draft" })
+        .values({ ...pickDefined(input, WRITABLE), loanType: input.loanType, requestedAmountMinor: input.requestedAmountMinor, tenureMonths: input.tenureMonths, currency, reference: newReference("LN"), userId, status: "draft" })
         .onConflictDoNothing({ target: loanApplications.reference })
         .returning();
       if (created) {
@@ -167,7 +154,7 @@ export async function updateLoan(userId: string, reference: string, patch: LoanP
     if (!isEditableByCustomer(current.status)) {
       throw new AppError("LOAN_NOT_EDITABLE", 409, "A submitted application can no longer be changed. Contact support if something is wrong.");
     }
-    const changes = definedOnly(patch);
+    const changes = pickDefined(patch, WRITABLE);
     await assertValues(tx, { ...current, ...changes });
     if (Object.keys(changes).length > 0) await tx.update(loanApplications).set(changes).where(eq(loanApplications.id, current.id));
     return loanView(tx, current.id);

@@ -1,12 +1,12 @@
 import { AppError } from "@/libs/api";
-import { convertMinor, noRateOnFile, type FxRate } from "@/libs/fx";
-import { MINOR_EXPONENT, type Currency } from "@/libs/money";
+import { convertMinor, noRateOnFile } from "@/libs/fx";
+import { MINOR_EXPONENT } from "@/libs/money";
+import type { Currency, FxRate } from "@/libs/types";
+import type { DocumentType, LoanLimits, LoanStatus, LoanTypeId } from "./types";
 
 export const LOAN_TYPES = ["personal", "vehicle", "emergency"] as const;
-export type LoanTypeId = (typeof LOAN_TYPES)[number];
 
 export const LOAN_STATUSES = ["draft", "submitted", "documents_under_review", "additional_documents_required", "eligibility_review", "approved", "rejected"] as const;
-export type LoanStatus = (typeof LOAN_STATUSES)[number];
 
 const USD_LIMITS: Record<LoanTypeId, { min: number; max: number; maxTenure: number }> = {
   personal: { min: 1000, max: 25000, maxTenure: 48 },
@@ -15,13 +15,6 @@ const USD_LIMITS: Record<LoanTypeId, { min: number; max: number; maxTenure: numb
 };
 
 export const TENURES_MONTHS = [6, 12, 24, 36, 48, 60] as const;
-
-export type LoanLimits = {
-  minMinor: number;
-  maxMinor: number;
-  maxTenure: number;
-  derivedFrom: { rate: string; source: string; effectiveAt: Date } | null;
-};
 
 export function loanLimits(type: LoanTypeId, currency: Currency, fx: Pick<FxRate, "rate" | "source" | "effectiveAt"> | null = null): LoanLimits {
   const usd = USD_LIMITS[type];
@@ -40,7 +33,6 @@ export const EMPLOYMENT_TYPES = ["salaried", "self_employed", "business_owner", 
 export const RESIDENCE_STATUSES = ["employment_visa", "investor_visa", "dependent_visa", "residence_permit", "other"] as const;
 
 export const DOCUMENT_TYPES = ["passport", "visa_or_residence_permit", "employment_proof", "salary_or_income_proof", "address_proof", "bank_statement", "other"] as const;
-export type DocumentType = (typeof DOCUMENT_TYPES)[number];
 
 export const REQUIRED_DOCUMENTS: readonly DocumentType[] = ["passport", "visa_or_residence_permit", "employment_proof", "salary_or_income_proof", "address_proof", "bank_statement"];
 

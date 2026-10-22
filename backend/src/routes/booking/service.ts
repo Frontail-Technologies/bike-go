@@ -1,40 +1,31 @@
-import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray } from "drizzle-orm";
 import { env } from "@/env";
-import { AppError } from "@/libs/api";
+import { AppError, invalid } from "@/libs/api";
 import { rentalDays } from "@/libs/date";
-import { db, rowsOf, type Executor, type Tx } from "@/libs/db";
+import { db } from "@/libs/db";
 import { PG, pgErrorCode } from "@/libs/db/errors";
 import { bookingAddonItems, bookingAddons, bookings, locations, vehicles } from "@/libs/db/schema";
 import { idempotently } from "@/libs/idempotency";
-import type { Currency } from "@/libs/money";
-import { pageMeta, pageOf } from "@/libs/pagination";
+import { paginate } from "@/libs/pagination";
 import { newReference } from "@/libs/reference";
 import { busyPeriods, UNRENTABLE_STATUSES } from "../availability/service";
 import { expireStaleHolds } from "./holds";
-import type { BookingRequest, BookingsGet, BookingView, QuoteView } from "./model";
 import { priceBooking } from "./pricing";
+import type { Executor, Tx } from "@/libs/db/types";
+import type { Currency } from "@/libs/types";
+import type { BookingRequest, BookingView, BookingsGet, QuoteView } from "./types";
+import { matchIdOrSlug } from "@/libs/uuid";
+import { lockRows } from "@/libs/db/lock";
+import type { PreparedBooking } from "./types";
 
 export const MAX_RENTAL_DAYS = 90;
 const PICKUP_SKEW_MS = 5 * 60 * 1000;
 const CANCELLABLE = ["pending", "confirmed", "ready_for_pickup"] as const;
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const invalid = (path: string, message: string) => new AppError("VALIDATION_ERROR", 422, message, [{ path, message }]);
 
 const platformFee = (currency: Currency) => (currency === "KHR" ? env.PLATFORM_FEE_KHR_MINOR : env.PLATFORM_FEE_USD_MINOR);
 
-type Prepared = {
-  vehicle: typeof vehicles.$inferSelect;
-  pickupLocationId: string;
-  returnLocationId: string;
-  pickupAt: Date;
-  returnAt: Date;
-  days: number;
-  pricing: ReturnType<typeof priceBooking>;
-  addonCodes: Map<string, string>;
-};
-
-async function prepare(executor: Executor, request: BookingRequest, options: { forUpdate: boolean }): Promise<Prepared> {
+async function prepare(executor: Executor, request: BookingRequest, options: { forUpdate: boolean }): Promise<PreparedBooking> {
   const pickupAt = new Date(request.pickupAt);
   const returnAt = new Date(request.returnAt);
   if (!(returnAt > pickupAt)) throw invalid("returnAt", "The return must be after the pickup.");
@@ -42,12 +33,11 @@ async function prepare(executor: Executor, request: BookingRequest, options: { f
   const days = rentalDays(pickupAt, returnAt);
   if (days > MAX_RENTAL_DAYS) throw invalid("returnAt", `Rentals are limited to ${MAX_RENTAL_DAYS} days.`);
 
-  const key = UUID.test(request.vehicle) ? eq(vehicles.id, request.vehicle) : eq(vehicles.slug, request.vehicle);
-  const [found] = await executor.select({ id: vehicles.id }).from(vehicles).where(key).limit(1);
+  const [found] = await executor.select({ id: vehicles.id }).from(vehicles).where(matchIdOrSlug(vehicles.id, vehicles.slug, request.vehicle)).limit(1);
   if (!found) throw new AppError("NOT_FOUND", 404, "Vehicle not found.");
 
   if (options.forUpdate) {
-    const locked = rowsOf<{ id: string }>(await executor.execute(sql`select id from ${vehicles} where ${vehicles.id} = ${found.id} for update`));
+    const locked = await lockRows(executor, vehicles, eq(vehicles.id, found.id));
     if (locked.length === 0) throw new AppError("NOT_FOUND", 404, "Vehicle not found.");
   }
   const vehicle = (await executor.select().from(vehicles).where(eq(vehicles.id, found.id)).limit(1))[0]!;
@@ -86,7 +76,7 @@ async function prepare(executor: Executor, request: BookingRequest, options: { f
   return { vehicle, pickupLocationId, returnLocationId, pickupAt, returnAt, days, pricing, addonCodes: new Map(addonRows.map((a) => [a.id, a.code])) };
 }
 
-const quoteView = (prepared: Prepared): QuoteView => ({
+const quoteView = (prepared: PreparedBooking): QuoteView => ({
   currency: prepared.pricing.currency,
   rentalDays: prepared.days,
   pricing: pricingView(prepared.pricing),
@@ -107,7 +97,7 @@ const pricingView = (p: ReturnType<typeof priceBooking>) => ({
   totalPayableMinor: p.totalPayableMinor,
 });
 
-async function insertBooking(tx: Tx, userId: string, p: Prepared) {
+async function insertBooking(tx: Tx, userId: string, p: PreparedBooking) {
   for (let attempt = 0; attempt < 5; attempt++) {
     const [created] = await tx
       .insert(bookings)
@@ -217,13 +207,12 @@ export async function bookingView(executor: Executor, id: string) {
 
 export async function listMyBookings(userId: string, query: BookingsGet["Query"]) {
   await expireStaleHolds(db, { userId });
-  const paging = pageOf(query);
   const where = and(eq(bookings.userId, userId), query.status ? eq(bookings.bookingStatus, query.status) : undefined);
-  const [ids, [total]] = await Promise.all([
-    db.select({ id: bookings.id }).from(bookings).where(where).orderBy(desc(bookings.createdAt), asc(bookings.reference)).limit(paging.limit).offset(paging.offset),
-    db.select({ n: count() }).from(bookings).where(where),
-  ]);
-  return { data: await bookingViews(db, ids.map((r) => r.id)), meta: pageMeta(paging, total?.n ?? 0) };
+  return paginate(query, {
+    rows: (page) => db.select({ id: bookings.id }).from(bookings).where(where).orderBy(desc(bookings.createdAt), asc(bookings.reference)).limit(page.limit).offset(page.offset),
+    total: () => db.select({ n: count() }).from(bookings).where(where),
+    map: (rows) => bookingViews(db, rows.map((r) => r.id)),
+  });
 }
 
 export async function getMyBooking(userId: string, reference: string) {

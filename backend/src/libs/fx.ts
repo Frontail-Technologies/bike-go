@@ -1,10 +1,9 @@
 import { AppError } from "./api";
-import { MINOR_EXPONENT, type Currency } from "./money";
+import { MINOR_EXPONENT } from "./money";
+import type { Currency } from "./types";
 
 const RATE_SCALE = 8;
 const RATE_PATTERN = /^\d{1,12}(\.\d{1,8})?$/;
-
-export type FxRate = { baseCurrency: Currency; quoteCurrency: Currency; rate: string; source: string; effectiveAt: Date };
 
 export function parseRate(rate: string) {
   if (!RATE_PATTERN.test(rate)) throw new RangeError(`Not a valid exchange rate: "${rate}"`);
