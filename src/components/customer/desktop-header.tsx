@@ -4,7 +4,7 @@ import { BellIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LocationPicker } from "@/components/customer/location-picker";
-import { customerNav, isActive } from "@/components/customer/nav-items";
+import { headerNav, isActive } from "@/components/customer/nav-items";
 import {
   AnimatedSelection,
   SelectionIndicator,
@@ -41,7 +41,7 @@ export function CustomerHeader({ className }: { className?: string }) {
         <nav aria-label="Primary" className="ml-6 hidden md:block">
           <AnimatedSelection>
             <div className="flex items-center gap-1">
-              {customerNav.map(({ href, label }) => {
+              {headerNav.map(({ href, label }) => {
                 const active = isActive(current, href);
                 return (
                   <Link

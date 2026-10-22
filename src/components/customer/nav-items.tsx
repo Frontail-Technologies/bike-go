@@ -7,6 +7,8 @@ export const customerNav = [
   { href: "/profile", label: "Profile", Icon: UserIcon },
 ] as const;
 
+export const headerNav = [...customerNav.slice(0, 3), { href: "/loans", label: "Expat Loan" }, customerNav[3]] as const;
+
 export function isActive(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
 }
