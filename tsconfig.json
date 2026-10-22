@@ -39,6 +39,7 @@
     ".next-qa/dev/types/**/*.ts"
   ],
   "exclude": [
+    "backend",
     "node_modules"
   ]
 }
