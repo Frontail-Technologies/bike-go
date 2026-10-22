@@ -1,26 +1,233 @@
+/* Order matters: Tailwind first, then HeroUI v3 styles. */
 @import "tailwindcss";
+@import "@heroui/styles";
+
+/* ---------------------------------------------------------------------------
+ * RideGo semantic tokens.
+ * Added alongside Tailwind defaults (nothing is reset), exposed as utilities
+ * such as `rounded-control`, `rounded-card`, `rounded-overlay`, `px-page`.
+ * ------------------------------------------------------------------------- */
+@theme {
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+
+  --color-brand: #ffc400;
+  --color-brand-foreground: #111111;
+  --color-brand-soft: #fff6d6;
+  --color-ink: #111111;
+  --color-canvas: #f7f8fa;
+  --color-line: #e5e7eb;
+  --color-subtle: #6b7280;
+  --color-success-soft: #e8f6ec;
+  --color-danger-soft: #fdecec;
+  --color-info-soft: #e8f0fe;
+  --color-info-ink: #1d4ed8;
+
+  --radius-control: 12px;
+  --radius-card: 16px;
+  --radius-overlay: 24px;
+
+  --shadow-card: 0 1px 2px rgb(17 17 17 / 0.04), 0 4px 16px rgb(17 17 17 / 0.05);
+  --shadow-nav: 0 -4px 24px rgb(17 17 17 / 0.06);
+
+  --breakpoint-xs: 22.5rem;
+}
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Spacing scale: 4, 8, 12, 16, 24, 32, 48 (Tailwind 1, 2, 3, 4, 6, 8, 12). */
+  --page-padding-mobile: 16px;
+  --page-padding-desktop: 32px;
+  --page-padding: var(--page-padding-mobile);
+  --touch-target: 44px;
+  --bottom-nav-height: 64px;
+  --header-height: 64px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+
+  /* Map RideGo palette onto HeroUI's supported variables. */
+  --background: #f7f8fa;
+  --foreground: #111111;
+  --surface: #ffffff;
+  --surface-foreground: #111111;
+  --surface-secondary: #f3f4f6;
+  --surface-secondary-foreground: #111111;
+  --surface-tertiary: #eceef1;
+  --surface-tertiary-foreground: #111111;
+  --overlay: #ffffff;
+  --overlay-foreground: #111111;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --separator: #eef0f3;
+  --default: #f3f4f6;
+  --default-foreground: #111111;
+  --segment: #ffc400;
+  --segment-foreground: #111111;
+  --field-background: #ffffff;
+  --field-foreground: #111111;
+  --field-placeholder: #6b7280;
+  --field-border: #e5e7eb;
+  --field-border-width: 1px;
+  --focus: #111111;
+  --link: #111111;
+
+  --accent: #ffc400;
+  --accent-foreground: #111111;
+  /* Soft accent (secondary buttons, today marker): yellow tint, black text. */
+  --accent-soft: #fff3c4;
+  --accent-soft-foreground: #111111;
+  --accent-soft-hover: #ffe9a0;
+  --success: #16a34a;
+  --success-foreground: #111111;
+  --danger: #ef4444;
+  --danger-foreground: #111111;
+
+  /* HeroUI: field radius = radius * 1.5, so 8px -> 12px inputs. */
+  --radius: 0.5rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@media (min-width: 768px) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --page-padding: var(--page-padding-desktop);
   }
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-padding-top: calc(var(--header-height) + 16px);
+}
+
 body {
+  min-height: 100dvh;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+@layer utilities {
+  .px-page {
+    padding-inline: var(--page-padding);
+  }
+  .pb-safe {
+    padding-bottom: var(--safe-bottom);
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * HeroUI component overrides: reference-driven shapes and sizes.
+ * Only radii, heights and weights change; HeroUI keeps its native states,
+ * animations and reduced-motion handling.
+ * ------------------------------------------------------------------------- */
+@layer components {
+  .button {
+    height: 48px;
+    min-height: var(--touch-target);
+    border-radius: var(--radius-control);
+    font-weight: 600;
+    font-size: 0.9375rem;
+    padding-inline: 20px;
+  }
+  .button--sm {
+    height: var(--touch-target);
+    padding-inline: 16px;
+    font-size: 0.875rem;
+  }
+  .button--lg {
+    height: 52px;
+    font-size: 1rem;
+  }
+  .button--icon-only {
+    width: var(--touch-target);
+    padding-inline: 0;
+  }
+  .button svg:not([data-slot="spinner"] svg) {
+    width: 20px;
+    height: 20px;
+  }
+  .button--primary {
+    box-shadow: 0 1px 0 rgb(17 17 17 / 0.08);
+  }
+
+  .card {
+    border-radius: var(--radius-card);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-card);
+  }
+
+  .modal__dialog,
+  .alert-dialog__dialog {
+    border-radius: var(--radius-overlay);
+  }
+
+  .popover,
+  .select__popover,
+  .dropdown__popover {
+    border-radius: var(--radius-card);
+    border: 1px solid var(--border);
+    box-shadow: 0 12px 32px rgb(17 17 17 / 0.14);
+  }
+
+  .input,
+  .textarea {
+    min-height: var(--touch-target);
+    border-radius: var(--radius-control);
+    font-size: 1rem; /* 16px avoids iOS zoom-on-focus */
+  }
+
+  .chip {
+    border-radius: 9999px;
+  }
+}
+
+/* Bottom sheet (HeroUI Drawer, bottom placement): reference shape + safe area. */
+@layer components {
+  .drawer__content--bottom .drawer__dialog {
+    border-start-start-radius: var(--radius-overlay);
+    border-start-end-radius: var(--radius-overlay);
+    max-height: 85dvh;
+  }
+  .rgo-sheet-footer {
+    padding-bottom: max(0px, var(--safe-bottom));
+  }
+}
+
+/* Reduced motion: HeroUI components already opt out; this is the global safety net. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Page enter transition (see PageTransition). Backwards fill: no transform left behind. */
+@keyframes rgo-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.rgo-page-in {
+  animation: rgo-page-in 200ms var(--ease-out-quart) backwards;
+}
+
+/* Design-system "preview reduced motion" switch: makes CSS-driven motion instant. */
+.rgo-force-reduced *,
+.rgo-force-reduced *::before,
+.rgo-force-reduced *::after {
+  transition-duration: 0.01ms !important;
+  animation-duration: 0.01ms !important;
 }
