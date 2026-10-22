@@ -49,9 +49,10 @@ export function Tabs({ items, selectedKey, defaultSelectedKey, onSelectionChange
           </HeroTabs.List>
         </AnimatedSelection>
       </HeroTabs.ListContainer>
+      {/* HeroUI pads panels by 8px; zero it so content lines up with the tab bar above (only the gap stays). */}
       {items.map((item) =>
         item.content ? (
-          <HeroTabs.Panel key={item.id} id={item.id} className="pt-4">
+          <HeroTabs.Panel key={item.id} id={item.id} className="p-0 pt-4">
             {item.content}
           </HeroTabs.Panel>
         ) : null,

@@ -27,7 +27,7 @@ export function LocationPicker({ variant = "header", className }: LocationPicker
         size: "sm",
         fullWidth: row,
         className: cn(
-          row ? "justify-start gap-2 bg-surface-secondary px-3 font-medium" : "max-w-[11rem] gap-1 px-2",
+          row ? "justify-start gap-2 border border-line bg-surface px-3 font-medium" : "max-w-[11rem] gap-1 px-2",
           className,
         ),
         "aria-label": `Pickup city: ${label}. Change`,

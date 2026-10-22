@@ -7,7 +7,7 @@ import { cn } from "@/lib/cn";
 type AppSearchFieldProps = Omit<SearchFieldProps, "children"> & { placeholder?: string; iconClassName?: string; groupClassName?: string };
 
 export function AppSearchField({
-  placeholder = "Search bikes, brands or locations",
+  placeholder = "Search bikes or brands",
   "aria-label": ariaLabel = "Search",
   className,
   iconClassName,

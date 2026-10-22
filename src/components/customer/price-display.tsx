@@ -1,5 +1,5 @@
 import { cn } from "@/lib/cn";
-import { formatPrice } from "@/lib/format";
+import { formatMoney, formatPrice } from "@/lib/format";
 
 type PriceDisplayProps = {
   amount: number;
@@ -7,15 +7,17 @@ type PriceDisplayProps = {
   size?: "sm" | "md" | "lg";
   /** Amber price, as in the reference cards (#A16207 keeps 4.5:1 on white). */
   accent?: boolean;
+  /** Always show cents. Use for totals that are the sum of itemised lines. */
+  precise?: boolean;
   className?: string;
 };
 
 const sizes = { sm: "text-sm", md: "text-base", lg: "text-2xl" } as const;
 
-export function PriceDisplay({ amount, unit = "day", size = "md", accent = false, className }: PriceDisplayProps) {
+export function PriceDisplay({ amount, unit = "day", size = "md", accent = false, precise = false, className }: PriceDisplayProps) {
   return (
     <span className={cn("tabular inline-flex items-baseline gap-1", className)}>
-      <span className={cn("font-extrabold tracking-tight", sizes[size], accent && "text-[#A16207]")}>{formatPrice(amount)}</span>
+      <span className={cn("font-extrabold tracking-tight", sizes[size], accent && "text-[#A16207]")}>{precise ? formatMoney(amount) : formatPrice(amount)}</span>
       {unit ? <span className="text-xs font-medium text-subtle">/ {unit}</span> : null}
     </span>
   );

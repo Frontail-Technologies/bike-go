@@ -61,11 +61,12 @@ export function Switch({
 }: Omit<SwitchProps, "children"> & { children: React.ReactNode }) {
   return (
     <HeroSwitch className={cn("min-h-11", className)} {...props}>
-      <HeroSwitch.Control>
-        <HeroSwitch.Thumb />
-      </HeroSwitch.Control>
+      {/* Control and label share one row inside Content (per the HeroUI usage example). */}
       <HeroSwitch.Content>
-        <Label className="text-sm font-medium">{children}</Label>
+        <HeroSwitch.Control>
+          <HeroSwitch.Thumb />
+        </HeroSwitch.Control>
+        {children}
       </HeroSwitch.Content>
     </HeroSwitch>
   );

@@ -92,6 +92,10 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  /* App feel: no rubber-band or pull-to-refresh bounce, no grey tap flash, no double-tap delay. */
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   scroll-padding-top: calc(var(--header-height) + 16px);
 }
 
@@ -106,6 +110,14 @@ body {
 }
 
 @layer utilities {
+  /* Chrome (bars, nav, buttons) should not be text-selectable by an accidental long press. */
+  [role="button"],
+  button,
+  nav,
+  header {
+    -webkit-user-select: none;
+    user-select: none;
+  }
   .px-page {
     padding-inline: var(--page-padding);
   }
@@ -213,15 +225,31 @@ body {
   }
 }
 
-/* Page enter transition (see PageTransition). Backwards fill: no transform left behind. */
+/*
+ * Tab screens: a 200ms fade (see PageTransition). Opacity only on purpose: a transform here would become
+ * the containing block of position:fixed descendants (pinned CTAs) and make them jump when it ends.
+ */
 @keyframes rgo-page-in {
   from {
     opacity: 0;
-    transform: translateY(6px);
   }
 }
 .rgo-page-in {
   animation: rgo-page-in 200ms var(--ease-out-quart) backwards;
+}
+
+/*
+ * Stack screens: a 220ms shared-axis slide in from the right, applied to the screen body only (never to
+ * the AppBar or pinned footer, which are position:fixed/sticky siblings). Enter-only, so Back is instant.
+ */
+@keyframes rgo-stack-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+.rgo-stack-in {
+  animation: rgo-stack-in 220ms var(--ease-out-quart) backwards;
 }
 
 /* Design-system "preview reduced motion" switch: makes CSS-driven motion instant. */

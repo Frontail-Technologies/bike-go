@@ -1,6 +1,7 @@
 "use client";
 
 import { Drawer } from "@heroui/react";
+import { useBackToClose } from "@/hooks/use-back-to-close";
 import { cn } from "@/lib/cn";
 
 type BottomSheetProps = {
@@ -17,6 +18,9 @@ type BottomSheetProps = {
  * trapping and enter/exit animation are all HeroUI-native.
  */
 export function BottomSheet({ isOpen, onOpenChange, title, children, footer, className }: BottomSheetProps) {
+  // Android Back closes the sheet before it leaves the page.
+  useBackToClose(isOpen, () => onOpenChange(false));
+
   return (
     <Drawer.Backdrop isOpen={isOpen} onOpenChange={onOpenChange}>
       <Drawer.Content placement="bottom">
