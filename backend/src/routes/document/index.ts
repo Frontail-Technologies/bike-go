@@ -1,5 +1,5 @@
 import { Elysia } from "elysia";
-import { ok } from "@/libs/api";
+import { customerErrors, ok } from "@/libs/api";
 import { authPlugin } from "@/plugins/auth";
 import * as DocumentModel from "./model";
 import { deleteDocument, downloadOwnDocument, listDocuments, uploadDocument } from "./service";
@@ -11,7 +11,7 @@ export const documentRoutes = new Elysia({ name: "RideGo.Document", prefix: "/ap
   .use(authPlugin)
   .get(
     "/:reference/documents",
-    { auth: true, params: DocumentModel.DocumentsGet.Params, response: { 200: DocumentModel.DocumentsGet.Response }, detail: { summary: "Documents on my application", description: "Storage keys are never returned.", security } },
+    { auth: true, params: DocumentModel.DocumentsGet.Params, response: { 200: DocumentModel.DocumentsGet.Response, ...customerErrors }, detail: { summary: "Documents on my application", description: "Storage keys are never returned.", security } },
     async ({ user, params }) => ok(await listDocuments(user.id, params.reference)),
   )
   .post(
@@ -20,7 +20,7 @@ export const documentRoutes = new Elysia({ name: "RideGo.Document", prefix: "/ap
       auth: true,
       params: DocumentModel.DocumentPost.Params,
       body: DocumentModel.DocumentPost.Body,
-      response: { 201: DocumentModel.DocumentPost.Response },
+      response: { 201: DocumentModel.DocumentPost.Response, ...customerErrors },
       detail: {
         summary: "Upload a document (multipart/form-data)",
         description:
@@ -37,6 +37,6 @@ export const documentRoutes = new Elysia({ name: "RideGo.Document", prefix: "/ap
   )
   .delete(
     "/:reference/documents/:documentId",
-    { auth: true, params: DocumentModel.DocumentDelete.Params, response: { 200: DocumentModel.DocumentDelete.Response }, detail: { summary: "Remove one of my documents", description: "Not allowed once a document is verified.", security } },
+    { auth: true, params: DocumentModel.DocumentDelete.Params, response: { 200: DocumentModel.DocumentDelete.Response, ...customerErrors }, detail: { summary: "Remove one of my documents", description: "Not allowed once a document is verified.", security } },
     async ({ user, params }) => ok(await deleteDocument(user.id, params.reference, params.documentId)),
   );

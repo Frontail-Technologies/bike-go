@@ -1,5 +1,5 @@
 import { Elysia } from "elysia";
-import { ok } from "@/libs/api";
+import { ok, publicErrors } from "@/libs/api";
 import * as AvailabilityModel from "./model";
 import { getAvailability, resolveVehicleId } from "./service";
 
@@ -9,7 +9,7 @@ export const availabilityRoutes = new Elysia({ name: "RideGo.Availability", pref
   {
     params: AvailabilityModel.AvailabilityGet.Params,
     query: AvailabilityModel.AvailabilityGet.Query,
-    response: { 200: AvailabilityModel.AvailabilityGet.Response },
+    response: { 200: AvailabilityModel.AvailabilityGet.Response, ...publicErrors },
     detail: {
       summary: "Is this vehicle free for a period?",
       description:

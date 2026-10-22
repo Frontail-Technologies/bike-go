@@ -1,5 +1,5 @@
 import { Elysia } from "elysia";
-import { ok } from "@/libs/api";
+import { ok, staffErrors } from "@/libs/api";
 import { authPlugin } from "@/plugins/auth";
 import * as DashboardModel from "./model";
 import { getDashboard } from "./service";
@@ -10,7 +10,7 @@ export const adminDashboardRoutes = new Elysia({ name: "RideGo.Admin.Dashboard",
     "",
     {
       admin: true,
-      response: { 200: DashboardModel.DashboardGet.Response },
+      response: { 200: DashboardModel.DashboardGet.Response, ...staffErrors },
       detail: { summary: "Dashboard numbers", description: "Counts by status, upcoming pickups, per-currency revenue (never mixed across currencies), loans awaiting review and recent activity.", security: [{ sessionCookie: [] }] },
     },
     async () => ok(await getDashboard()),

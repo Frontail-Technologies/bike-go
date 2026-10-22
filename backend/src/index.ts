@@ -1,4 +1,5 @@
 import { app } from "./app";
+import { closeDb } from "./libs/db";
 import { env } from "./env";
 
 export { app };
@@ -12,6 +13,7 @@ for (const signal of ["SIGINT", "SIGTERM"] as const) {
   process.on(signal, async () => {
     console.log(`${signal} received, shutting down`);
     await app.stop();
+    await closeDb();
     process.exit(0);
   });
 }

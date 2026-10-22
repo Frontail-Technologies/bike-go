@@ -74,3 +74,11 @@ export const PaginationQuery = t.Object({
   page: t.Optional(t.Numeric({ minimum: 1, default: 1 })),
   pageSize: t.Optional(t.Numeric({ minimum: 1, maximum: 100, default: 20 })),
 });
+
+/**
+ * Error responses for the OpenAPI document. Spread into a route's `response` map next to its success schema.
+ * Thrown errors (AppError) are formatted by the error plugin; these entries document what a client can receive.
+ */
+export const publicErrors = { 404: ErrorEnvelope, 422: ErrorEnvelope } as const;
+export const customerErrors = { 401: ErrorEnvelope, 404: ErrorEnvelope, 409: ErrorEnvelope, 422: ErrorEnvelope } as const;
+export const staffErrors = { 401: ErrorEnvelope, 403: ErrorEnvelope, 404: ErrorEnvelope, 409: ErrorEnvelope, 422: ErrorEnvelope } as const;

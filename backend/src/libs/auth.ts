@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthEndpoint } from "better-auth/api";
 import { setSessionCookie } from "better-auth/cookies";
+import { openAPI } from "better-auth/plugins";
 import type { BetterAuthPlugin } from "better-auth";
 import * as z from "zod";
 import { env } from "@/env";
@@ -85,7 +86,8 @@ export const auth = betterAuth({
   socialProviders: googleConfigured
     ? { google: { clientId: env.GOOGLE_CLIENT_ID!, clientSecret: env.GOOGLE_CLIENT_SECRET! } }
     : {},
-  plugins: [telegram()],
+  // Generates the OpenAPI description of the auth endpoints; the docs page itself is served by our own OpenAPI plugin.
+  plugins: [telegram(), openAPI({ disableDefaultReference: true })],
 });
 
 export type Session = typeof auth.$Infer.Session;

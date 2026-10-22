@@ -1,5 +1,5 @@
 import { Elysia } from "elysia";
-import { ok } from "@/libs/api";
+import { ok, staffErrors } from "@/libs/api";
 import { authPlugin } from "@/plugins/auth";
 import * as DocumentModel from "@/routes/document/model";
 import { downloadAnyDocument, reviewDocument } from "@/routes/document/service";
@@ -10,18 +10,18 @@ const security = [{ sessionCookie: [] }];
 
 export const adminLoanRoutes = new Elysia({ name: "RideGo.Admin.Loan", prefix: "/loans", tags: ["Admin"] })
   .use(authPlugin)
-  .get("", { admin: true, query: LoanModel.LoansGet.Query, response: { 200: LoanModel.LoansGet.Response }, detail: { summary: "Loan applications, with search, filters and sorting", security } }, async ({ query }) => {
+  .get("", { admin: true, query: LoanModel.LoansGet.Query, response: { 200: LoanModel.LoansGet.Response, ...staffErrors }, detail: { summary: "Loan applications, with search, filters and sorting", security } }, async ({ query }) => {
     const { data, meta } = await adminListLoans(query);
     return ok(data, meta);
   })
-  .get("/:reference", { admin: true, params: LoanModel.LoanByReferenceGet.Params, response: { 200: LoanModel.LoanByReferenceGet.Response }, detail: { summary: "One application with the full audit trail", security } }, async ({ params }) => ok(await adminGetLoan(params.reference)))
+  .get("/:reference", { admin: true, params: LoanModel.LoanByReferenceGet.Params, response: { 200: LoanModel.LoanByReferenceGet.Response, ...staffErrors }, detail: { summary: "One application with the full audit trail", security } }, async ({ params }) => ok(await adminGetLoan(params.reference)))
   .patch(
     "/:reference/status",
     {
       admin: true,
       params: LoanModel.LoanStatusPatch.Params,
       body: LoanModel.LoanStatusPatch.Body,
-      response: { 200: LoanModel.LoanStatusPatch.Response },
+      response: { 200: LoanModel.LoanStatusPatch.Response, ...staffErrors },
       detail: {
         summary: "Move an application to a new status",
         description:
@@ -37,7 +37,7 @@ export const adminLoanRoutes = new Elysia({ name: "RideGo.Admin.Loan", prefix: "
       admin: true,
       params: DocumentModel.DocumentReviewPatch.Params,
       body: DocumentModel.DocumentReviewPatch.Body,
-      response: { 200: DocumentModel.DocumentReviewPatch.Response },
+      response: { 200: DocumentModel.DocumentReviewPatch.Response, ...staffErrors },
       detail: { summary: "Review a document", description: "Mark it verified, needs_review or rejected. A note is required for the last two and is shown to the applicant. Reviewing does not itself change the application's status.", security },
     },
     async ({ params, body, user }) => ok(await reviewDocument(params.reference, user.id, params.documentId, body)),

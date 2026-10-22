@@ -1,5 +1,5 @@
 import { Elysia } from "elysia";
-import { ok } from "@/libs/api";
+import { ok, publicErrors } from "@/libs/api";
 import * as VehicleModel from "./model";
 import { getVehicle, listVehicles } from "./service";
 
@@ -8,7 +8,7 @@ export const vehicleRoutes = new Elysia({ name: "RideGo.Vehicle", prefix: "/api/
     "",
     {
       query: VehicleModel.VehiclesGet.Query,
-      response: { 200: VehicleModel.VehiclesGet.Response },
+      response: { 200: VehicleModel.VehiclesGet.Response, ...publicErrors },
       detail: {
         summary: "Search the vehicle catalogue",
         description:
@@ -24,7 +24,7 @@ export const vehicleRoutes = new Elysia({ name: "RideGo.Vehicle", prefix: "/api/
     "/:idOrSlug",
     {
       params: VehicleModel.VehicleByIdGet.Params,
-      response: { 200: VehicleModel.VehicleByIdGet.Response },
+      response: { 200: VehicleModel.VehicleByIdGet.Response, ...publicErrors },
       detail: { summary: "One vehicle by slug or id" },
     },
     async ({ params }) => ok(await getVehicle(params.idOrSlug)),

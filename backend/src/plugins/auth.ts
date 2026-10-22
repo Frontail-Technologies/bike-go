@@ -34,7 +34,8 @@ export const authPlugin = new Elysia({ name: "RideGo.Auth" })
     {
       // Better Auth reads the body itself.
       parse: "none",
-      detail: { tags: ["Auth"], summary: "Better Auth endpoints (Google OAuth, Telegram sign-in, session, sign-out)" },
+      // The individual auth operations are documented from Better Auth's own schema (see plugins/openapi.ts).
+      detail: { hide: true },
     },
     ({ request }) => auth.handler(request),
   )

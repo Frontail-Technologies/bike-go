@@ -2,13 +2,19 @@ import { Elysia } from "elysia";
 
 const MAX_ID_LENGTH = 100;
 
-/**
- * Gives every request an id (the client's `x-request-id` when it is sane, otherwise a new UUID), exposes
- * it to handlers as `requestId`, and echoes it in the response headers for log correlation.
- */
-export const requestMeta = new Elysia({ name: "RideGo.RequestMeta" }).derive("global", ({ request, set }) => {
+/** The client's `x-request-id` when it is short and plain, otherwise a new UUID. */
+function requestIdFrom(request: Request) {
   const supplied = request.headers.get("x-request-id");
-  const requestId = supplied && supplied.length <= MAX_ID_LENGTH && /^[\w.:-]+$/.test(supplied) ? supplied : crypto.randomUUID();
-  set.headers["x-request-id"] = requestId;
-  return { requestId };
-});
+  return supplied && supplied.length <= MAX_ID_LENGTH && /^[\w.:-]+$/.test(supplied) ? supplied : crypto.randomUUID();
+}
+
+/**
+ * Gives every request an id and echoes it in the response headers for log correlation. The header is set in
+ * `onRequest` (before routing), so even 404s, validation failures and auth errors carry it. Handlers get it as `requestId`.
+ */
+export const requestMeta = new Elysia({ name: "RideGo.RequestMeta" })
+  .onRequest(({ request, set }) => {
+    set.headers["x-request-id"] = requestIdFrom(request);
+  })
+  .derive(({ set }) => ({ requestId: String(set.headers["x-request-id"]) }))
+  .as("global");
