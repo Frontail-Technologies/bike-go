@@ -166,7 +166,7 @@ export function BookingFlow({ bike }: { bike: Motorcycle }) {
               {step === 2 ? <RiderStep formId="rider-form" draft={draft} patch={patch} onValid={() => go(3)} /> : null}
               {step === 3 ? <LicenceStep formId="licence-form" draft={draft} patch={patch} onValid={() => go(4)} /> : null}
               {step === 4 ? <ReviewStep bike={bike} draft={draft} quote={quote} agreed={agreed} onAgree={setAgreed} /> : null}
-              {step === 5 ? <PaymentStep draft={draft} patch={patch} /> : null}
+              {step === 5 ? <PaymentStep patch={patch} /> : null}
             </div>
             <div className="mt-6 hidden lg:block">{footer}</div>
           </section>

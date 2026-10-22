@@ -276,7 +276,7 @@ export const paymentMethods = [
   { value: "aba-khqr", label: "ABA KHQR" },
 ];
 
-export function PaymentStep({ draft, patch }: PatchProps) {
+export function PaymentStep({ patch }: Pick<PatchProps, "patch">) {
   return (
     <div className="flex flex-col gap-4">
       <RadioGroup label="Payment method" value="aba-khqr" onChange={(payment) => patch({ payment })} options={paymentMethods} />

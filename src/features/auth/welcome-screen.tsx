@@ -1,14 +1,19 @@
 "use client";
 
-import { ArrowRightIcon } from "@phosphor-icons/react";
+import { GoogleLogoIcon, TelegramLogoIcon } from "@phosphor-icons/react";
 import useEmblaCarousel from "embla-carousel-react";
 import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { BikeArt } from "@/components/shared/bike-art";
 import { Logo } from "@/components/shared/logo";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/cn";
-import { AuthDialog, type AuthMode } from "./auth-dialog";
+import { authStore } from "./store";
+
+type Provider = "google" | "telegram";
 
 /**
  * Sign-in background. Currently the illustration from `bun run art`. To use a real photo instead, replace
@@ -26,7 +31,18 @@ const slides = [
 export function WelcomeScreen() {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false });
   const [selected, setSelected] = useState(0);
-  const [dialog, setDialog] = useState<AuthMode | null>(null);
+  const router = useRouter();
+  const [pending, setPending] = useState<Provider | null>(null);
+
+  /** Simulated: there is no backend, so either provider just starts a demo session. */
+  function continueWith(provider: Provider) {
+    setPending(provider);
+    window.setTimeout(() => {
+      authStore.set({ signedIn: true });
+      toast.success("Welcome to RideGo");
+      router.replace("/");
+    }, 600);
+  }
 
   useEffect(() => {
     if (!emblaApi) return;
@@ -92,19 +108,41 @@ export function WelcomeScreen() {
         </div>
 
         <div className="flex flex-col gap-3">
-          <Button size="lg" fullWidth onPress={() => setDialog("signup")}>
-            Get Started
-            <ArrowRightIcon size={20} weight="bold" />
+          <Button
+            size="lg"
+            fullWidth
+            variant="secondary"
+            className="bg-white text-ink hover:bg-white/90"
+            isPending={pending === "google"}
+            isDisabled={pending !== null}
+            onPress={() => continueWith("google")}
+          >
+            <GoogleLogoIcon size={20} weight="bold" />
+            Continue with Google
           </Button>
           <Button
             size="lg"
             fullWidth
             variant="outline"
             className="border-white/70 bg-transparent text-white hover:bg-white/10"
-            onPress={() => setDialog("signin")}
+            isPending={pending === "telegram"}
+            isDisabled={pending !== null}
+            onPress={() => continueWith("telegram")}
           >
-            Sign In
+            <TelegramLogoIcon size={20} weight="fill" />
+            Continue with Telegram
           </Button>
+          <p className="text-center text-xs text-white/60">
+            By continuing you accept our{" "}
+            <Link href="/legal/terms" className="font-semibold text-white underline underline-offset-2">
+              Terms
+            </Link>{" "}
+            and{" "}
+            <Link href="/legal/privacy" className="font-semibold text-white underline underline-offset-2">
+              Privacy policy
+            </Link>
+            .
+          </p>
         </div>
 
         <div className="flex justify-center gap-0.5" role="group" aria-label="Choose a slide">
@@ -128,7 +166,6 @@ export function WelcomeScreen() {
         </div>
       </div>
 
-      <AuthDialog mode={dialog} onClose={() => setDialog(null)} />
     </main>
   );
 }

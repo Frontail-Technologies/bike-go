@@ -33,9 +33,6 @@ const go = async (path) => {
 try {
   await go("/signin");
   await snap("signin", "Welcome and sign in");
-  await page.getByRole("button", { name: "Sign In" }).tap();
-  await snap("signin-sheet", "Sign in sheet");
-  await page.keyboard.press("Escape");
 
   await go("/");
   await snap("home", "Home");
@@ -46,7 +43,6 @@ try {
   await snap("browse", "Browse");
   await page.getByRole("button", { name: /^Filters/ }).tap();
   await snap("filters", "Filters drawer");
-  await page.keyboard.press("Escape");
 
   await go("/bikes/royal-enfield-classic-350");
   await snap("details", "Motorcycle details");

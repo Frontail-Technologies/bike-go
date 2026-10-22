@@ -119,7 +119,7 @@ export default async function run({ browser, base: BASE, t }) {
           const r = el.getBoundingClientRect();
           return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== "hidden";
         };
-        const headers = [...document.querySelectorAll("header")].filter(visible);
+        const headers = [...document.querySelectorAll("header")].filter((h) => visible(h) && !h.className.includes("range-calendar"));
         return {
           appBar: headers.some((h) => h.className.includes("md:hidden")),
           site: headers.some((h) => !h.className.includes("md:hidden")),
@@ -773,36 +773,21 @@ export default async function run({ browser, base: BASE, t }) {
     await page.waitForTimeout(600);
     check("welcome screen fits the viewport without scrolling", await page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight + 1));
     check(
-      "headline, Get Started and Sign In are visible",
+      "headline, Google and Telegram buttons are visible",
       (await page.getByRole("heading", { level: 1 }).first().isVisible()) &&
-        (await page.getByRole("button", { name: "Get Started" }).isVisible()) &&
-        (await page.getByRole("button", { name: "Sign In" }).isVisible()),
+        (await page.getByRole("button", { name: "Continue with Google" }).isVisible()) &&
+        (await page.getByRole("button", { name: "Continue with Telegram" }).isVisible()),
     );
+    check("no mobile-number field on sign in", (await page.getByLabel("Mobile number").count()) === 0);
     check("four slide dots", (await page.getByRole("group", { name: "Choose a slide" }).getByRole("button").count()) === 4);
     await page.getByRole("button", { name: "Show slide 3" }).tap();
     await page.waitForTimeout(600);
     check("dots change the slide", await page.getByText("MINUTES").first().isVisible());
 
-    await page.getByRole("button", { name: "Sign In" }).tap();
-    await page.waitForTimeout(600);
-    const dlg = page.getByRole("dialog");
-    const box = await dlg.boundingBox();
-    check("Sign In opens a bottom sheet", (await dlg.isVisible()) && Math.abs(box.y + box.height - 844) < 2, JSON.stringify(box));
-    await dlg.getByLabel("Mobile number").fill("12345");
-    await dlg.getByRole("button", { name: "Send code" }).tap();
-    await page.waitForTimeout(400);
-    check("invalid number is rejected", (await dlg.getByText("Enter a 10-digit mobile number.").count()) === 1);
-    await dlg.getByLabel("Mobile number").fill("9876543210");
-    await dlg.getByRole("button", { name: "Send code" }).tap();
-    await page.waitForTimeout(500);
-    check("code step appears", (await dlg.getByText("Verification code").count()) >= 1);
-    await dlg.locator("input").first().fill("111111");
-    await page.waitForTimeout(400);
-    check("wrong code shows an error", (await dlg.getByText("That code is not right. Try again.").count()) === 1);
-    await dlg.locator("input").first().fill("123456");
+    await page.getByRole("button", { name: "Continue with Google" }).tap();
     await page.waitForURL(BASE + "/", { timeout: 8000 });
     await page.waitForTimeout(600);
-    check("correct code signs in and opens Home", (await page.getByText("Popular Bikes").count()) === 1);
+    check("Google sign in opens Home", (await page.getByText("Popular Bikes").count()) === 1);
     check("sign in: no console errors/warnings", logs.length === 0, logs.join(" | "));
     await ctx.close();
   }
@@ -811,11 +796,10 @@ export default async function run({ browser, base: BASE, t }) {
     const page = await ctx.newPage();
     await page.goto(BASE + "/signin", { waitUntil: "networkidle" });
     await page.waitForTimeout(500);
-    await page.getByRole("button", { name: "Get Started" }).click();
-    await page.waitForTimeout(500);
-    const dlg = page.getByRole("dialog");
-    const box = await dlg.boundingBox();
-    check("desktop: Get Started opens a centred dialog with name and phone", (await dlg.getByLabel("Full name").isVisible()) && box.y > 40 && box.width < 600, JSON.stringify(box));
+    check("desktop: both providers are offered", (await page.getByRole("button", { name: "Continue with Google" }).isVisible()) && (await page.getByRole("button", { name: "Continue with Telegram" }).isVisible()));
+    await page.getByRole("button", { name: "Continue with Telegram" }).click();
+    await page.waitForURL(BASE + "/", { timeout: 8000 });
+    check("desktop: Telegram sign in opens Home", page.url() === BASE + "/");
     await ctx.close();
   }
 
