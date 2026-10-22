@@ -18,6 +18,15 @@ process.env.R2_BUCKET = fake.bucket;
 process.env.R2_ACCESS_KEY_ID = "test-access-key";
 process.env.R2_SECRET_ACCESS_KEY = "test-secret-key";
 
+const { startFakePayway, registerFakePayway } = await import("./helpers/fake-payway");
+const payway = startFakePayway("test-merchant", "test-payway-api-key");
+registerFakePayway(payway);
+process.env.PAYMENT_DRIVER = "payway";
+process.env.PAYWAY_MERCHANT_ID = payway.merchantId;
+process.env.PAYWAY_API_KEY = payway.apiKey;
+process.env.PAYWAY_CHECK_URL = `${payway.url}/check-transaction-2`;
+process.env.PAYWAY_CHECKOUT_URL = `${payway.url}/purchase`;
+
 const realDatabase = process.env.TEST_DATABASE_URL;
 process.env.DATABASE_URL = realDatabase ?? "pglite://memory";
 

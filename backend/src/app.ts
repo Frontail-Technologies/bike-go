@@ -15,6 +15,7 @@ import { documentRoutes } from "@/routes/document";
 import { fxRoutes } from "@/routes/fx";
 import { loanRoutes } from "@/routes/loan";
 import { locationRoutes } from "@/routes/location";
+import { paymentRoutes } from "@/routes/payment";
 import { userRoutes } from "@/routes/user";
 import { vehicleRoutes } from "@/routes/vehicle";
 
@@ -34,6 +35,7 @@ export const app = new Elysia({ name: "RideGo.App", serve: { maxRequestBodySize:
   .use(fxRoutes)
   .use(addonRoutes)
   .use(bookingRoutes)
+  .use(paymentRoutes)
   .use(loanRoutes)
   .use(documentRoutes)
   .use(adminRoutes);

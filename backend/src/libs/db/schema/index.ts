@@ -6,5 +6,6 @@ export * from "./fx";
 export * from "./idempotency";
 export * from "./loan";
 export * from "./location";
+export * from "./payment";
 export * from "./user";
 export * from "./vehicle";

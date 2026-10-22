@@ -1,10 +1,27 @@
 import type { Currency } from "@/libs/types";
 
-export type PaymentIntent = { providerReference: string; status: "pending" | "paid" | "failed"; amountMinor: number; currency: Currency };
+export type CheckoutForm = { action: string; method: "POST"; fields: Record<string, string> };
+
+export type CheckoutInput = { transactionId: string; amountMinor: number; currency: Currency; bookingReference: string };
+
+export type TransactionCheck =
+  | { state: "pending" }
+  | { state: "failed"; raw: unknown }
+  | { state: "approved"; amountMinor: number | null; currency: Currency | null; raw: unknown };
 
 export interface PaymentProvider {
-  createPayment(input: { bookingReference: string; amountMinor: number; currency: Currency; expiresAt: Date }): Promise<PaymentIntent>;
-  verifyPayment(providerReference: string): Promise<PaymentIntent>;
-  getPaymentStatus(providerReference: string): Promise<PaymentIntent>;
-  refund(input: { providerReference: string; amountMinor: number; reason: string }): Promise<{ refundReference: string; status: "pending" | "refunded" | "failed" }>;
+  readonly name: string;
+  createCheckout(input: CheckoutInput): CheckoutForm;
+  checkTransaction(transactionId: string): Promise<TransactionCheck>;
 }
+
+export type PaywayConfig = {
+  merchantId: string;
+  apiKey: string;
+  checkoutUrl: string;
+  checkUrl: string;
+  paymentOption: string;
+  callbackUrl: string;
+  continueUrl: (bookingReference: string) => string;
+  cancelUrl: (bookingReference: string) => string;
+};

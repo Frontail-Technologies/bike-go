@@ -104,6 +104,11 @@ describe("storage configuration", () => {
       GOOGLE_CLIENT_ID: "g",
       GOOGLE_CLIENT_SECRET: "g",
       TELEGRAM_BOT_TOKEN: "1:t",
+      PAYMENT_DRIVER: "payway",
+      PAYWAY_MERCHANT_ID: "m",
+      PAYWAY_API_KEY: "k",
+      PAYWAY_CHECKOUT_URL: "https://checkout.payway.com.kh/api/payment-gateway/v1/payments/purchase",
+      PAYWAY_CHECK_URL: "https://checkout.payway.com.kh/api/payment-gateway/v1/payments/check-transaction-2",
     };
     expect(await run({ ...production, STORAGE_DRIVER: "local" })).toContain("STORAGE_DRIVER must be r2 in production");
     expect(await run({ ...production, STORAGE_DRIVER: "r2", R2_ACCOUNT_ID: "a", R2_BUCKET: "b", R2_ACCESS_KEY_ID: "k", R2_SECRET_ACCESS_KEY: "s" })).toContain("ENV OK");

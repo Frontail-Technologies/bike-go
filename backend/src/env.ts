@@ -22,6 +22,12 @@ const rawEnv = z
     R2_BUCKET: optionalText,
     R2_ACCESS_KEY_ID: optionalText,
     R2_SECRET_ACCESS_KEY: optionalText,
+    PAYMENT_DRIVER: z.enum(["disabled", "payway"]).default("disabled"),
+    PAYWAY_MERCHANT_ID: optionalText,
+    PAYWAY_API_KEY: optionalText,
+    PAYWAY_CHECKOUT_URL: z.string().url().default("https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/purchase"),
+    PAYWAY_CHECK_URL: z.string().url().default("https://checkout-sandbox.payway.com.kh/api/payment-gateway/v1/payments/check-transaction-2"),
+    PAYWAY_PAYMENT_OPTION: z.string().default("abapay_khqr"),
     VAT_RATE_BPS: z.coerce.number().int().min(0).max(10_000).default(1000),
     PLATFORM_FEE_USD_MINOR: z.coerce.number().int().nonnegative().default(0),
     PLATFORM_FEE_KHR_MINOR: z.coerce.number().int().nonnegative().default(0),
@@ -38,7 +44,21 @@ if (rawEnv.NODE_ENV === "production") {
     throw new Error("Google OAuth credentials must be configured in production");
   }
   if (!rawEnv.TELEGRAM_BOT_TOKEN) throw new Error("TELEGRAM_BOT_TOKEN must be configured in production");
+  if (rawEnv.PAYMENT_DRIVER !== "payway") throw new Error("PAYMENT_DRIVER must be payway in production");
+  if (rawEnv.PAYWAY_CHECK_URL.includes("sandbox") || rawEnv.PAYWAY_CHECKOUT_URL.includes("sandbox")) {
+    throw new Error("PayWay sandbox URLs cannot be used in production: set PAYWAY_CHECKOUT_URL and PAYWAY_CHECK_URL");
+  }
   if (rawEnv.STORAGE_DRIVER !== "r2") throw new Error("STORAGE_DRIVER must be r2 in production: local disk storage is for development only");
+}
+
+if (rawEnv.PAYMENT_DRIVER === "payway") {
+  const missing = [
+    ["PAYWAY_MERCHANT_ID", rawEnv.PAYWAY_MERCHANT_ID],
+    ["PAYWAY_API_KEY", rawEnv.PAYWAY_API_KEY],
+  ]
+    .filter(([, value]) => !value)
+    .map(([name]) => name);
+  if (missing.length > 0) throw new Error(`PAYMENT_DRIVER=payway needs: ${missing.join(", ")}`);
 }
 
 if (rawEnv.STORAGE_DRIVER === "r2") {

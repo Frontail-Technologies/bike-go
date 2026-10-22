@@ -64,8 +64,20 @@ tests/
 2. Set `STORAGE_DRIVER=r2`, `R2_BUCKET`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, and either `R2_ACCOUNT_ID` (the endpoint becomes `https://<account>.r2.cloudflarestorage.com`) or `R2_ENDPOINT`.
 3. The API uploads and streams files itself, after checking ownership and the real file type, so browsers never get bucket access. Direct browser uploads (`createUploadTarget`) are deliberately not offered because a presigned upload cannot enforce the 5 MB or file-type limits. `getDownloadUrl` can produce short-lived presigned links if a use for them appears.
 4. Tests run the real R2 provider against an in-process S3-compatible fake, so no Cloudflare account is needed to run them.
+## ABA PayWay (KHQR)
+
+Payment goes through PayWay's hosted checkout, limited to `abapay_khqr`.
+
+1. `POST /api/v1/bookings/:reference/payments` (customer) creates a payment attempt for the booking's stored total and returns a signed form: `{ checkout: { action, method: "POST", fields } }`. The frontend submits it as a browser form POST to open the PayWay page. A repeat call while an attempt is open returns the same transaction.
+2. PayWay notifies `POST /api/v1/payments/payway/callback` and sends the customer back to `<first FRONTEND_ORIGINS>/bookings/:reference/confirmation`. The callback body is never trusted: only the transaction id is read, then the server asks PayWay (`check-transaction-2`, signed) and checks the approved amount and currency against the stored attempt before confirming the booking.
+3. `GET /api/v1/bookings/:reference/payment` returns the state and settles an open attempt the same way, so the confirmation page can poll it if a callback is missed.
+
+Settling is idempotent and locks the vehicle, payment and booking rows. A payment that cannot confirm its booking is kept as `paid` with `payments.review` set so staff can refund it: `paid_after_hold_expired` (someone else took the vehicle), `booking_cancelled`. An approved transaction for the wrong amount or currency is `failed` with `amount_mismatch`. Refunds are not built.
+
+Set `PAYMENT_DRIVER=payway`, `PAYWAY_MERCHANT_ID` and `PAYWAY_API_KEY`. The sandbox URLs are the defaults; production refuses to start with sandbox URLs, so set `PAYWAY_CHECKOUT_URL` and `PAYWAY_CHECK_URL` to the live ones. `BETTER_AUTH_URL` must be the public address of this API, because PayWay calls `<BETTER_AUTH_URL>/api/v1/payments/payway/callback`. With `PAYMENT_DRIVER=disabled` (the default) the payment endpoints answer `503 PAYMENT_UNAVAILABLE`. Tests run the real provider against an in-process fake PayWay that verifies request signatures.
+
 - Every error is `{ success: false, error: { code, message, details }, requestId }` with a stable code.
 
 ## Not built yet
 
-ABA payments (interface only), SMS/OTP (not wanted), automated KYC, credit scoring and lender APIs (explicitly out of scope), cloud file storage (interface only).
+Refunds, SMS/OTP (not wanted), automated KYC, credit scoring and lender APIs (explicitly out of scope).
