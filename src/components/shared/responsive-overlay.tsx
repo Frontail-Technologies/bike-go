@@ -11,10 +11,13 @@ type ResponsiveOverlayProps = {
   triggerLabel: React.ReactNode;
   triggerProps?: Omit<ButtonProps, "children" | "onPress">;
   title: string;
-  children: React.ReactNode;
+  /** Content, or a function receiving `close` for choices that should dismiss the overlay. */
+  children: React.ReactNode | ((close: () => void) => React.ReactNode);
   /** Sheet footer on mobile; rendered below the content in the popover. */
   footer?: React.ReactNode;
   popoverClassName?: string;
+  /** Called when the overlay opens (e.g. to reset a draft). */
+  onOpen?: () => void;
 };
 
 /** Bottom sheet below 768px, anchored popover from 768px up. */
@@ -25,18 +28,26 @@ export function ResponsiveOverlay({
   children,
   footer,
   popoverClassName,
+  onOpen,
 }: ResponsiveOverlayProps) {
   const isDesktop = useIsDesktop();
-  const sheet = useOverlayState();
+  const state = useOverlayState();
+  const content = typeof children === "function" ? children(state.close) : children;
 
   if (isDesktop) {
     return (
-      <Popover>
+      <Popover
+        isOpen={state.isOpen}
+        onOpenChange={(open) => {
+          if (open) onOpen?.();
+          state.setOpen(open);
+        }}
+      >
         <Button {...triggerProps}>{triggerLabel}</Button>
         <Popover.Content placement="bottom start" className={cn("w-[360px]", popoverClassName)}>
           <Popover.Dialog className="flex flex-col gap-4 p-5">
             <Popover.Heading className="text-base font-bold">{title}</Popover.Heading>
-            {children}
+            {content}
             {footer ? <div className="flex gap-3">{footer}</div> : null}
           </Popover.Dialog>
         </Popover.Content>
@@ -46,11 +57,17 @@ export function ResponsiveOverlay({
 
   return (
     <>
-      <Button {...triggerProps} onPress={sheet.open}>
+      <Button
+        {...triggerProps}
+        onPress={() => {
+          onOpen?.();
+          state.open();
+        }}
+      >
         {triggerLabel}
       </Button>
-      <BottomSheet isOpen={sheet.isOpen} onOpenChange={sheet.setOpen} title={title} footer={footer}>
-        {children}
+      <BottomSheet isOpen={state.isOpen} onOpenChange={state.setOpen} title={title} footer={footer}>
+        {content}
       </BottomSheet>
     </>
   );

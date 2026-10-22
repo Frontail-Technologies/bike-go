@@ -5,7 +5,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { PriceDisplay } from "@/components/customer/price-display";
-import { BikeArt } from "@/components/shared/bike-art";
+import { BikeImage } from "@/components/shared/bike-image";
 import type { Motorcycle } from "@/features/mock/data";
 import { cn } from "@/lib/cn";
 
@@ -14,14 +14,20 @@ type FeaturedBikeCarouselProps = {
   /** Where each slide's call to action goes. */
   hrefFor?: (bike: Motorcycle) => string;
   className?: string;
+  /**
+   * Run the rail to the screen edges while the first card stays inset by the page padding, and let
+   * the last card end inset too. This is the same trailing rail as the Popular Bikes row. Use it
+   * only when the carousel sits directly in the page gutter.
+   */
+  bleed?: boolean;
 };
 
 /**
- * Swipeable showcase of featured bikes. Embla provides drag, momentum and snap;
- * slides are sized by breakpoint (peeking next card on phones) and the active
- * slide is emphasised on phones only. Artwork is `meet`-fitted, never stretched.
+ * Swipeable showcase of featured bikes. Embla provides drag, momentum and snap; slides are sized
+ * by breakpoint (the next card peeks in on phones). Cards are light, like the rest of the
+ * customer UI. Artwork is `meet`-fitted, never stretched.
  */
-export function FeaturedBikeCarousel({ bikes, hrefFor = () => "/bikes", className }: FeaturedBikeCarouselProps) {
+export function FeaturedBikeCarousel({ bikes, hrefFor = (bike) => `/bikes/${bike.id}`, className, bleed = false }: FeaturedBikeCarouselProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({ align: "start", containScroll: "trimSnaps" });
   const [selected, setSelected] = useState(0);
   const [snaps, setSnaps] = useState<number[]>([]);
@@ -51,7 +57,7 @@ export function FeaturedBikeCarousel({ bikes, hrefFor = () => "/bikes", classNam
       role="region"
       aria-roledescription="carousel"
       aria-label="Featured bikes"
-      className={cn("flex flex-col gap-4", className)}
+      className={cn("flex flex-col gap-4", bleed && "-mx-(--page-padding)", className)}
       onKeyDown={(event) => {
         if (event.key === "ArrowLeft") emblaApi?.scrollPrev();
         if (event.key === "ArrowRight") emblaApi?.scrollNext();
@@ -59,7 +65,9 @@ export function FeaturedBikeCarousel({ bikes, hrefFor = () => "/bikes", classNam
     >
       <div className="relative">
         <div ref={emblaRef} className="overflow-hidden">
-          <div className="-ml-3 flex touch-pan-y">
+          {/* Slides carry 12px of left padding as the gap, so the container is pulled back by 12px
+              (or, in a bleed rail, pushed in to the page padding and given the same trailing inset). */}
+          <div className={cn("flex touch-pan-y", bleed ? "ml-[calc(var(--page-padding)-0.75rem)] pr-(--page-padding)" : "-ml-3")}>
             {bikes.map((bike, index) => (
               <div
                 key={bike.id}
@@ -68,42 +76,36 @@ export function FeaturedBikeCarousel({ bikes, hrefFor = () => "/bikes", classNam
                 aria-label={`${index + 1} of ${bikes.length}`}
                 className="min-w-0 flex-[0_0_82%] pl-3 sm:flex-[0_0_46%] lg:flex-[0_0_32%]"
               >
-                <article
-                  className={cn(
-                    "flex h-full flex-col overflow-hidden rounded-overlay bg-ink text-white",
-                    "origin-center transition-[transform,opacity] duration-200 ease-out motion-reduce:transition-none",
-                    index !== selected && "max-sm:scale-[0.96] max-sm:opacity-70",
-                  )}
-                >
+                <article className="flex h-full flex-col overflow-hidden rounded-card border border-line bg-surface shadow-card">
                   <div
-                    className="aspect-4/3 p-4"
-                    style={{ background: `radial-gradient(70% 70% at 50% 60%, ${bike.color}33, transparent 75%)` }}
+                    className="aspect-4/3 bg-canvas p-4"
+                    style={{ background: `radial-gradient(70% 70% at 50% 60%, ${bike.color}2e, var(--color-canvas) 78%)` }}
                   >
-                    <BikeArt color={bike.color} title={bike.name} />
+                    <BikeImage bike={bike} sizes="(min-width: 1024px) 33vw, 82vw" />
                   </div>
-                  <div className="flex flex-1 flex-col gap-3 p-4 pt-0">
+                  <div className="flex flex-1 flex-col gap-3 p-4">
                     <div className="flex items-start justify-between gap-2">
                       <h3 className="text-base leading-5 font-bold">{bike.name}</h3>
-                      <span className="tabular flex shrink-0 items-center gap-1 text-xs font-medium text-white/75">
+                      <span className="tabular flex shrink-0 items-center gap-1 text-xs font-medium text-subtle">
                         <StarIcon size={14} weight="fill" className="text-brand" />
                         {bike.rating.toFixed(1)}
                       </span>
                     </div>
-                    <ul className="flex flex-wrap gap-2 text-xs text-white/75">
-                      <li className="flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1">
+                    <ul className="flex flex-wrap gap-2 text-xs text-ink">
+                      <li className="flex items-center gap-1 rounded-full bg-surface-secondary px-2.5 py-1">
                         <GaugeIcon size={14} />
                         {bike.engineCc}cc
                       </li>
-                      <li className="flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1">
+                      <li className="flex items-center gap-1 rounded-full bg-surface-secondary px-2.5 py-1">
                         <GasPumpIcon size={14} />
                         {bike.mileageKmpl} km/l
                       </li>
                     </ul>
                     <div className="mt-auto flex items-center justify-between gap-3 pt-1">
-                      <PriceDisplay amount={bike.pricePerDay} size="md" className="[&_span:last-child]:text-white/60" />
+                      <PriceDisplay amount={bike.pricePerDay} size="md" accent />
                       <Link
                         href={hrefFor(bike)}
-                        className="flex h-11 items-center rounded-control bg-brand px-4 text-sm font-semibold text-ink outline-none transition-transform duration-150 focus-visible:ring-2 focus-visible:ring-white active:scale-[0.97] motion-reduce:transition-none"
+                        className="flex h-11 items-center rounded-control bg-brand px-4 text-sm font-semibold text-ink outline-none transition-transform duration-150 focus-visible:ring-2 focus-visible:ring-ink active:scale-[0.97] motion-reduce:transition-none"
                       >
                         Book
                       </Link>
@@ -120,7 +122,10 @@ export function FeaturedBikeCarousel({ bikes, hrefFor = () => "/bikes", classNam
           aria-label="Previous bike"
           onClick={() => emblaApi?.scrollPrev()}
           disabled={!canPrev}
-          className="absolute top-1/3 -left-3 hidden size-11 items-center justify-center rounded-full border border-line bg-surface shadow-card transition-opacity disabled:pointer-events-none disabled:opacity-0 md:flex"
+          className={cn(
+            "absolute top-1/3 hidden size-11 items-center justify-center rounded-full border border-line bg-surface shadow-card transition-opacity disabled:pointer-events-none disabled:opacity-0 md:flex",
+            bleed ? "left-(--page-padding)" : "-left-3",
+          )}
         >
           <CaretLeftIcon size={20} />
         </button>
@@ -129,7 +134,10 @@ export function FeaturedBikeCarousel({ bikes, hrefFor = () => "/bikes", classNam
           aria-label="Next bike"
           onClick={() => emblaApi?.scrollNext()}
           disabled={!canNext}
-          className="absolute top-1/3 -right-3 hidden size-11 items-center justify-center rounded-full border border-line bg-surface shadow-card transition-opacity disabled:pointer-events-none disabled:opacity-0 md:flex"
+          className={cn(
+            "absolute top-1/3 hidden size-11 items-center justify-center rounded-full border border-line bg-surface shadow-card transition-opacity disabled:pointer-events-none disabled:opacity-0 md:flex",
+            bleed ? "right-(--page-padding)" : "-right-3",
+          )}
         >
           <CaretRightIcon size={20} />
         </button>

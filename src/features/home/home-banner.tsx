@@ -1,0 +1,35 @@
+import Image from "next/image";
+import { BikeArt } from "@/components/shared/bike-art";
+
+/** Drop a photo at public/hero/home.webp and set this to "/hero/home.webp" to replace the artwork. */
+const BANNER_IMAGE: string | null = null;
+
+/** "FREEDOM STARTS HERE" banner: copy on the left, rider and bike on the right. */
+export function HomeBanner() {
+  return (
+    <section aria-label="Welcome" className="relative isolate h-40 overflow-hidden rounded-card bg-ink text-white md:h-60 md:rounded-overlay">
+      {BANNER_IMAGE ? (
+        <Image src={BANNER_IMAGE} alt="" fill priority sizes="(min-width: 1280px) 1216px, 100vw" className="object-cover object-right" />
+      ) : (
+        <>
+          <div
+            aria-hidden
+            className="absolute inset-0"
+            style={{ background: "radial-gradient(60% 90% at 78% 35%, rgb(255 140 0 / 0.42), transparent 70%)" }}
+          />
+          <div aria-hidden className="absolute -right-10 bottom-0 w-[62%] max-w-md md:right-8 md:w-1/2">
+            <BikeArt color="#FFC400" className="p-0 drop-shadow-[0_18px_28px_rgb(0_0_0/0.5)]" />
+          </div>
+        </>
+      )}
+      <div aria-hidden className="absolute inset-0 bg-linear-to-r from-ink via-ink/75 to-transparent" />
+      <div className="relative z-10 flex h-full max-w-[54%] flex-col justify-center gap-1 p-4 md:max-w-md md:gap-2 md:p-10">
+        <p className="text-2xl leading-[1.05] font-extrabold tracking-tight md:text-5xl">
+          FREEDOM
+          <span className="block text-brand">STARTS HERE</span>
+        </p>
+        <p className="text-xs text-white/80 md:text-base">Rent premium bikes for your next adventure.</p>
+      </div>
+    </section>
+  );
+}

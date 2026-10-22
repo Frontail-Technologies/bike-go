@@ -6,13 +6,48 @@ type BikeArtProps = {
   className?: string;
   /** Accessible description; omit for decorative use. */
   title?: string;
+  variant?: "motorcycle" | "scooter";
 };
+
+function ScooterArt({ color }: { color: string }) {
+  return (
+    <>
+      <ellipse cx="200" cy="268" rx="150" ry="9" fill="#111" opacity="0.1" />
+      <g fill="none">
+        <circle cx="96" cy="222" r="38" stroke="#1a1a1a" strokeWidth="13" />
+        <circle cx="96" cy="222" r="26" stroke="#9ca3af" strokeWidth="2" />
+        <circle cx="304" cy="222" r="38" stroke="#1a1a1a" strokeWidth="13" />
+        <circle cx="304" cy="222" r="26" stroke="#9ca3af" strokeWidth="2" />
+      </g>
+      <circle cx="96" cy="222" r="8" fill="#d1d5db" />
+      <circle cx="304" cy="222" r="8" fill="#d1d5db" />
+      {/* floorboard and body */}
+      <path d="M118 214 H250 L262 190 L252 140 L116 150 C100 156 92 176 96 200 Z" fill={color} />
+      <path d="M96 168 C90 140 112 118 160 116 L206 118 L200 150 L106 156 Z" fill={color} />
+      {/* seat */}
+      <path d="M104 122 C130 104 188 104 214 118 L206 134 C176 126 134 128 108 138 Z" fill="#1a1a1a" />
+      {/* leg shield and front column */}
+      <path d="M262 190 L286 120 L300 124 L282 196 Z" fill={color} />
+      <path d="M304 222 L286 108" stroke="#6b7280" strokeWidth="9" strokeLinecap="round" fill="none" />
+      {/* handlebar and mirror */}
+      <path d="M278 100 L292 92 L312 96" stroke="#1a1a1a" strokeWidth="7" strokeLinecap="round" fill="none" />
+      <path d="M296 92 L290 68" stroke="#6b7280" strokeWidth="3" strokeLinecap="round" />
+      <ellipse cx="289" cy="64" rx="8" ry="5" fill="#374151" />
+      {/* headlight and tail light */}
+      <circle cx="310" cy="124" r="11" fill="#e5e7eb" stroke="#1a1a1a" strokeWidth="4" />
+      <circle cx="310" cy="124" r="5" fill="#fde68a" />
+      <circle cx="92" cy="146" r="5" fill="#ef4444" />
+      {/* engine cover */}
+      <rect x="132" y="190" width="70" height="30" rx="12" fill="#3a3a3a" />
+    </>
+  );
+}
 
 /**
  * Vector placeholder for motorcycle photography. The viewBox is fixed and the
  * SVG scales with `meet`, so it can never stretch inside any aspect ratio.
  */
-export function BikeArt({ color = "#FFC400", className, title }: BikeArtProps) {
+export function BikeArt({ color = "#FFC400", className, title, variant = "motorcycle" }: BikeArtProps) {
   return (
     <svg
       viewBox="0 0 400 300"
@@ -22,6 +57,10 @@ export function BikeArt({ color = "#FFC400", className, title }: BikeArtProps) {
       aria-label={title}
       className={cn("size-full", className)}
     >
+      {variant === "scooter" ? (
+        <ScooterArt color={color} />
+      ) : (
+        <>
       <ellipse cx="200" cy="268" rx="165" ry="9" fill="#111" opacity="0.1" />
       {/* wheels */}
       <g fill="none">
@@ -63,6 +102,8 @@ export function BikeArt({ color = "#FFC400", className, title }: BikeArtProps) {
       <circle cx="288" cy="116" r="7" fill="#fde68a" />
       {/* front fender */}
       <path d="M268 160 C286 150 322 152 340 170" stroke={color} strokeWidth="9" strokeLinecap="round" fill="none" />
+        </>
+      )}
     </svg>
   );
 }

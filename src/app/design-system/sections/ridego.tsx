@@ -40,15 +40,15 @@ export function RideGoSection() {
     <Section id="ridego" title="RideGo components" description="Booking building blocks composed from the system above, using mock data.">
       <Demo title="MotorcycleCard">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-          {motorcycles.slice(0, 4).map((item, i) => (
-            <MotorcycleCard key={item.id} bike={item} defaultFavorite={i === 1} />
+          {motorcycles.slice(0, 4).map((item) => (
+            <MotorcycleCard key={item.id} bike={item} />
           ))}
         </div>
       </Demo>
 
       <div className="grid gap-8 lg:grid-cols-2">
         <Demo title="MotorcycleGallery">
-          <MotorcycleGallery name={bike.name} colors={["#FFC400", "#111111", "#ef4444", "#2563eb"]} />
+          <MotorcycleGallery bike={bike} />
         </Demo>
 
         <div className="flex flex-col gap-8">

@@ -1,0 +1,322 @@
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  CaretRightIcon,
+  ChatCircleDotsIcon,
+  FileTextIcon,
+  HeartIcon,
+  IdentificationCardIcon,
+  PencilSimpleIcon,
+  PhoneIcon,
+  QuestionIcon,
+  SealCheckIcon,
+  ShieldCheckIcon,
+  SignOutIcon,
+  WarningIcon,
+} from "@phosphor-icons/react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
+import { PageHeader } from "@/components/shared/page-header";
+import { Button } from "@/components/ui/button";
+import { ModalDialog } from "@/components/ui/modal-dialog";
+import { Switch } from "@/components/ui/selection-controls";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { TextInput } from "@/components/ui/text-field";
+import { toast } from "@/components/ui/toast";
+import { Reveal } from "@/components/motion/reveal";
+import { authStore } from "@/features/auth/store";
+import { maskLicence } from "@/features/bookings/use-booking";
+import { favoritesStore, initials, profileStore } from "./store";
+
+type ModalKey = "edit" | "licence" | "terms" | "logout" | null;
+
+function Card({ title, id, children }: { title: string; id: string; children: React.ReactNode }) {
+  return (
+    <section aria-labelledby={id} className="rounded-card border border-line bg-surface p-4 shadow-card">
+      <h2 id={id} className="mb-2 text-base font-bold">
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
+}
+
+const rowClass =
+  "flex min-h-12 w-full items-center gap-3 rounded-control px-1 text-left text-sm outline-none transition-colors duration-150 hover:bg-surface-secondary focus-visible:ring-2 focus-visible:ring-ink";
+
+function Row({ icon, label, trailing, onPress, href }: { icon: React.ReactNode; label: string; trailing?: React.ReactNode; onPress?: () => void; href?: string }) {
+  const content = (
+    <>
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-surface-secondary">{icon}</span>
+      <span className="flex-1 font-medium">{label}</span>
+      {trailing}
+      <CaretRightIcon size={16} className="shrink-0 text-subtle" />
+    </>
+  );
+  if (href?.startsWith("/")) {
+    return (
+      <Link href={href} className={rowClass}>
+        {content}
+      </Link>
+    );
+  }
+  if (href) {
+    return (
+      <a href={href} className={rowClass}>
+        {content}
+      </a>
+    );
+  }
+  return (
+    <button type="button" onClick={onPress} className={rowClass}>
+      {content}
+    </button>
+  );
+}
+
+const detailsSchema = z.object({
+  name: z.string().trim().min(2, "Enter your full name."),
+  phone: z.string().regex(/^[6-9]\d{9}$/, "Enter a 10-digit mobile number."),
+  email: z.email("Enter a valid email address."),
+  address: z.string().trim().min(5, "Enter your address."),
+});
+
+const licenceSchema = z.object({
+  number: z.string().regex(/^[A-Za-z]{2}\d{2}[\s-]?\d{4}[\s-]?\d{7}$/, "Use the format RJ14 2021 0012345."),
+});
+
+export function ProfileView() {
+  const router = useRouter();
+  const profile = profileStore.useValue();
+  const savedCount = favoritesStore.useValue().length;
+  const [modal, setModal] = useState<ModalKey>(null);
+  const close = () => setModal(null);
+
+  const details = useForm({ resolver: zodResolver(detailsSchema), mode: "onBlur", values: { name: profile.name, phone: profile.phone, email: profile.email, address: profile.address } });
+  const licence = useForm({ resolver: zodResolver(licenceSchema), mode: "onBlur", values: { number: profile.licence?.number ?? "" } });
+
+  return (
+    <div className="flex flex-col gap-4 md:gap-6">
+      <PageHeader title="Profile" />
+
+      <div className="grid gap-4 md:grid-cols-2 md:gap-6">
+        <div className="flex flex-col gap-4">
+          <Reveal y={8} blur={0}>
+            <section aria-label="Your details" className="flex items-center gap-4 rounded-card border border-line bg-surface p-4 shadow-card">
+              <span className="flex size-14 shrink-0 items-center justify-center rounded-full bg-ink text-lg font-bold text-white">{initials(profile.name)}</span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-base font-bold">{profile.name}</p>
+                <p className="truncate text-sm text-subtle">{profile.email}</p>
+                <div className="mt-1.5">
+                  {profile.licence?.verified ? (
+                    <StatusBadge tone="success" icon={<SealCheckIcon size={14} weight="fill" />}>Verified rider</StatusBadge>
+                  ) : (
+                    <StatusBadge tone="brand" icon={<WarningIcon size={14} weight="fill" />}>Not verified</StatusBadge>
+                  )}
+                </div>
+              </div>
+              <Button variant="secondary" size="sm" onPress={() => setModal("edit")} aria-label="Edit details">
+                <PencilSimpleIcon size={20} />
+                <span className="hidden sm:inline">Edit</span>
+              </Button>
+            </section>
+          </Reveal>
+
+          <Card id="licence-title" title="Driving licence">
+            {profile.licence ? (
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-control bg-brand-soft">
+                    <IdentificationCardIcon size={20} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="tabular text-sm font-bold">{maskLicence(profile.licence.number)}</p>
+                    <p className="text-xs text-subtle">Valid until {new Intl.DateTimeFormat("en-IN", { month: "short", year: "numeric" }).format(new Date(profile.licence.expiry))}</p>
+                  </div>
+                  {profile.licence.verified ? <StatusBadge tone="success">Verified</StatusBadge> : <StatusBadge tone="brand">In review</StatusBadge>}
+                </div>
+                <Button variant="secondary" fullWidth onPress={() => setModal("licence")}>
+                  Update licence
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                <p className="text-sm text-subtle">Add your licence once to speed up every booking.</p>
+                <Button fullWidth onPress={() => setModal("licence")}>
+                  Add licence
+                </Button>
+              </div>
+            )}
+          </Card>
+
+          <Card id="saved-title" title="Saved details">
+            <dl className="flex flex-col gap-3 py-1 text-sm">
+              <div className="flex justify-between gap-4">
+                <dt className="text-subtle">Phone</dt>
+                <dd className="tabular font-semibold">{profile.phone}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="shrink-0 text-subtle">Address</dt>
+                <dd className="text-right font-semibold">{profile.address}</dd>
+              </div>
+            </dl>
+            <div className="mt-2 border-t border-line pt-2">
+              <Row icon={<HeartIcon size={20} />} label="Saved bikes" href="/bikes?saved=1" trailing={<span className="tabular text-sm text-subtle">{savedCount}</span>} />
+            </div>
+          </Card>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <Card id="notifications-title" title="Notifications">
+            <div className="flex flex-col">
+              <Switch isSelected={profile.notifications.reminders} onChange={(reminders) => profileStore.update((p) => ({ ...p, notifications: { ...p.notifications, reminders } }))}>
+                Booking reminders
+              </Switch>
+              <Switch isSelected={profile.notifications.updates} onChange={(updates) => profileStore.update((p) => ({ ...p, notifications: { ...p.notifications, updates } }))}>
+                Trip updates
+              </Switch>
+              <Switch isSelected={profile.notifications.offers} onChange={(offers) => profileStore.update((p) => ({ ...p, notifications: { ...p.notifications, offers } }))}>
+                Offers and news
+              </Switch>
+            </div>
+          </Card>
+
+          <Card id="help-title" title="Help and support">
+            <Row icon={<ChatCircleDotsIcon size={20} />} label="Chat with us" onPress={() => toast.info("Support will join in a moment")} />
+            <Row icon={<PhoneIcon size={20} />} label="Call support" href="tel:+911800000000" />
+            <Row icon={<QuestionIcon size={20} />} label="FAQ" onPress={() => toast.info("FAQ opens in a later phase")} />
+            <Row icon={<WarningIcon size={20} />} label="Report an issue" onPress={() => toast.info("Tell us what happened in chat")} />
+          </Card>
+
+          <Card id="legal-title" title="Legal">
+            <Row icon={<FileTextIcon size={20} />} label="Terms and privacy" onPress={() => setModal("terms")} />
+            <Row icon={<ShieldCheckIcon size={20} />} label="Rental and cancellation policy" onPress={() => setModal("terms")} />
+          </Card>
+
+          <Button variant="outline" fullWidth size="lg" onPress={() => setModal("logout")}>
+            <SignOutIcon size={20} />
+            Log out
+          </Button>
+        </div>
+      </div>
+
+      <ModalDialog
+        isOpen={modal === "edit"}
+        onOpenChange={(open) => !open && close()}
+        title="Edit details"
+        footer={
+          <>
+            <Button variant="secondary" slot="close">Cancel</Button>
+            <Button type="submit" form="details-form">Save</Button>
+          </>
+        }
+      >
+        <form
+          id="details-form"
+          noValidate
+          className="flex flex-col gap-4"
+          onSubmit={details.handleSubmit((values) => {
+            profileStore.update((p) => ({ ...p, ...values }));
+            toast.success("Details saved");
+            close();
+          })}
+        >
+          {(["name", "phone", "email", "address"] as const).map((field) => (
+            <Controller
+              key={field}
+              name={field}
+              control={details.control}
+              render={({ field: f, fieldState }) => (
+                <TextInput
+                  label={{ name: "Full name", phone: "Mobile number", email: "Email", address: "Address" }[field]}
+                  type={field === "email" ? "email" : field === "phone" ? "tel" : "text"}
+                  inputMode={field === "phone" ? "numeric" : field === "email" ? "email" : undefined}
+                  value={f.value}
+                  onChange={f.onChange}
+                  onBlur={f.onBlur}
+                  isInvalid={fieldState.invalid}
+                  error={fieldState.error?.message}
+                />
+              )}
+            />
+          ))}
+        </form>
+      </ModalDialog>
+
+      <ModalDialog
+        isOpen={modal === "licence"}
+        onOpenChange={(open) => !open && close()}
+        title={profile.licence ? "Update licence" : "Add licence"}
+        footer={
+          <>
+            <Button variant="secondary" slot="close">Cancel</Button>
+            <Button type="submit" form="licence-form">Submit</Button>
+          </>
+        }
+      >
+        <form
+          id="licence-form"
+          noValidate
+          className="flex flex-col gap-4"
+          onSubmit={licence.handleSubmit(({ number }) => {
+            profileStore.update((p) => ({ ...p, licence: { number, expiry: p.licence?.expiry ?? "2041-06-30", verified: false } }));
+            toast.success("Submitted for verification", { description: "Usually done within a day." });
+            close();
+          })}
+        >
+          <Controller
+            name="number"
+            control={licence.control}
+            render={({ field, fieldState }) => (
+              <TextInput
+                label="Licence number"
+                description="Photo upload is coming soon."
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                isInvalid={fieldState.invalid}
+                error={fieldState.error?.message}
+              />
+            )}
+          />
+        </form>
+      </ModalDialog>
+
+      <ModalDialog isOpen={modal === "terms"} onOpenChange={(open) => !open && close()} title="Terms and policies" footer={<Button slot="close">Got it</Button>}>
+        <ul className="flex list-disc flex-col gap-2 pl-5 text-sm text-subtle">
+          <li>Riders must be 18+ with a valid driving licence.</li>
+          <li>Free cancellation up to 24 hours before pickup.</li>
+          <li>Security deposit is refunded within 48 hours of return.</li>
+          <li>Fuel, tolls and fines are the rider&apos;s responsibility.</li>
+        </ul>
+      </ModalDialog>
+
+      <ModalDialog
+        isOpen={modal === "logout"}
+        onOpenChange={(open) => !open && close()}
+        title="Log out?"
+        footer={
+          <>
+            <Button variant="secondary" slot="close">Stay signed in</Button>
+            <Button
+              slot="close"
+              onPress={() => {
+                authStore.set({ signedIn: false });
+                toast.success("Logged out");
+                router.push("/signin");
+              }}
+            >
+              Log out
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-subtle">Your bookings stay saved on this device in this preview.</p>
+      </ModalDialog>
+    </div>
+  );
+}

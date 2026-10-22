@@ -51,7 +51,7 @@ export function MobileBottomNav({ activeHref, onNavigate, inline = false, classN
                       radius={4}
                     />
                   ) : null}
-                  <Icon size={24} weight={active ? "fill" : "regular"} className={active ? "text-ink" : "text-subtle"} />
+                  <Icon size={24} weight={active ? "fill" : "regular"} className={active ? "text-brand" : "text-subtle"} />
                   <span className={cn("text-[11px] leading-none", active ? "font-bold text-ink" : "font-medium text-subtle")}>
                     {label}
                   </span>

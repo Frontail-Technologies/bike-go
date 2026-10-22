@@ -4,19 +4,21 @@ import { SearchField, type SearchFieldProps } from "@heroui/react";
 import { MagnifyingGlassIcon, XIcon } from "@phosphor-icons/react";
 import { cn } from "@/lib/cn";
 
-type AppSearchFieldProps = Omit<SearchFieldProps, "children"> & { placeholder?: string };
+type AppSearchFieldProps = Omit<SearchFieldProps, "children"> & { placeholder?: string; iconClassName?: string; groupClassName?: string };
 
 export function AppSearchField({
   placeholder = "Search bikes, brands or locations",
   "aria-label": ariaLabel = "Search",
   className,
+  iconClassName,
+  groupClassName,
   ...props
 }: AppSearchFieldProps) {
   return (
     <SearchField aria-label={ariaLabel} className={cn("w-full", className)} {...props}>
-      <SearchField.Group className="min-h-11 rounded-control border border-line bg-surface">
+      <SearchField.Group className={cn("min-h-11 rounded-control border border-line bg-surface", groupClassName)}>
         <SearchField.SearchIcon>
-          <MagnifyingGlassIcon size={20} />
+          <MagnifyingGlassIcon size={20} className={iconClassName} />
         </SearchField.SearchIcon>
         <SearchField.Input placeholder={placeholder} className="text-base" />
         <SearchField.ClearButton aria-label="Clear search">
