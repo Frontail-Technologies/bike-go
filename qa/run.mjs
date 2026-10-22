@@ -9,7 +9,7 @@
  */
 import { createReporter, ensureShots, launchBrowser, startServer } from "./lib.mjs";
 
-const available = ["design-system", "phase2"];
+const available = ["design-system", "phase2", "loans"];
 const wanted = process.argv.slice(2).filter((a) => !a.startsWith("-"));
 const suites = wanted.length ? wanted : available;
 for (const name of suites) if (!available.includes(name)) throw new Error(`Unknown suite "${name}". Available: ${available.join(", ")}`);

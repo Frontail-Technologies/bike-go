@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { customerNav, isActive } from "@/components/customer/nav-items";
 import { AnimatedSelection, SelectionIndicator } from "@/components/motion/animated-selection";
+import { useOptimisticNav } from "@/hooks/use-optimistic-nav";
 import { cn } from "@/lib/cn";
 
 type MobileBottomNavProps = {
@@ -17,7 +18,8 @@ type MobileBottomNavProps = {
 
 export function MobileBottomNav({ activeHref, onNavigate, inline = false, className }: MobileBottomNavProps) {
   const pathname = usePathname();
-  const current = activeHref ?? pathname;
+  const optimistic = useOptimisticNav(pathname);
+  const current = activeHref ?? optimistic.current;
 
   return (
     <nav
@@ -41,6 +43,8 @@ export function MobileBottomNav({ activeHref, onNavigate, inline = false, classN
                     if (onNavigate) {
                       event.preventDefault();
                       onNavigate(href);
+                    } else {
+                      optimistic.navigate(href);
                     }
                   }}
                   className="relative isolate flex h-full min-h-11 flex-col items-center justify-center gap-1 rounded-control outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-inset active:scale-95 motion-safe:transition-transform motion-safe:duration-150"

@@ -208,7 +208,7 @@ export default async function run({ browser, base: BASE, t }) {
         pickup: [...document.querySelectorAll("main button")].some((b) => /Pickup dates/.test(b.textContent) && vis(b)),
         searchbox: [...document.querySelectorAll("input")].some((i) => i.type === "search" && vis(i)),
         categoryTabs: [...document.querySelectorAll("[role='tablist']")].some((t) => t.getAttribute("aria-label") === "Bike category" && vis(t)),
-        sortOnPage: [...document.querySelectorAll("main button[aria-label^='Sort']")].filter(vis).length,
+        sortOnPage: [...document.querySelectorAll("main button[aria-label^='Sort']")].filter((b) => vis(b) && !b.closest("header")).length,
       };
     });
     check(
@@ -256,7 +256,17 @@ export default async function run({ browser, base: BASE, t }) {
     );
     const sw = await page.evaluate(() => {
       const control = document.querySelector(".switch__control")?.getBoundingClientRect();
-      const label = [...document.querySelectorAll("*")].find((el) => el.children.length === 0 && el.textContent === "Available bikes only")?.getBoundingClientRect();
+      // The label is a bare text node inside the switch content, so measure it with a Range.
+      let label;
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        if (n.textContent.trim() === "Available bikes only") {
+          const range = document.createRange();
+          range.selectNodeContents(n);
+          label = range.getBoundingClientRect();
+          break;
+        }
+      }
       return control && label ? { dy: Math.abs(control.top + control.height / 2 - (label.top + label.height / 2)), beside: label.left >= control.right - 1 } : null;
     });
     check("filter switch label sits beside its toggle", sw !== null && sw.dy < 14 && sw.beside, JSON.stringify(sw));

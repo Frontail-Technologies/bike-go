@@ -134,7 +134,7 @@ export function BikeDetailsView({ bike }: { bike: Motorcycle }) {
         }
       />
 
-      <Screen enter="slide" bottom="footer" className="flex flex-col gap-4 max-md:px-0 max-md:pt-0 md:pb-28 lg:pb-12">
+      <Screen enter="slide" bottom="footer" className="flex flex-col gap-4 max-md:px-0! max-md:pt-0 md:pb-28 lg:pb-12">
         <div className="hidden md:block">
           <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Bikes", href: "/bikes" }, { label: bike.name }]} />
         </div>

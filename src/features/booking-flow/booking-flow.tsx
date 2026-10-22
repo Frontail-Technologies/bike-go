@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { BookingSummary } from "@/components/customer/booking-summary";
 import { AppBar } from "@/components/shared/app-bar";
@@ -31,6 +31,7 @@ const clampStep = (n: number) => Math.max(1, Math.min(LAST_STEP, Number.isFinite
 export function BookingFlow({ bike }: { bike: Motorcycle }) {
   const router = useRouter();
   const params = useSearchParams();
+  const pathname = usePathname();
   const hydrated = useHydrated();
   const profile = profileStore.useValue();
   const stored = draftStore.useValue();
@@ -75,12 +76,19 @@ export function BookingFlow({ bike }: { bike: Motorcycle }) {
 
   // Out-of-range step (typed URL, refresh, or Back after paying): move to where the data allows.
   // Waits for hydration so the persisted draft has loaded before judging.
+  const flowPath = `/bikes/${bike.id}/book`;
+  // The flag only covers the moment between paying and the confirmation page opening. Once the app has left
+  // this route, clear it, so Back (the kept-alive flow becomes visible again) is clamped like a fresh visit.
   useEffect(() => {
-    if (!hydrated || paid.current || step === requested) return;
+    if (pathname !== flowPath) paid.current = false;
+  }, [pathname, flowPath]);
+
+  useEffect(() => {
+    if (!hydrated || pathname !== flowPath || paid.current || step === requested) return;
     if (!hasStored && justBooked) router.replace(`/bookings/${justBooked}`);
     else router.replace(withStep(step), { scroll: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hydrated, step, requested, hasStored, justBooked]);
+  }, [hydrated, pathname, step, requested, hasStored, justBooked]);
 
   function go(next: number) {
     if (!hasStored) {

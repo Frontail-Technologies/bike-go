@@ -1,0 +1,137 @@
+"use client";
+
+import { InfoIcon } from "@phosphor-icons/react";
+import { Label, Slider } from "@heroui/react";
+import { useState } from "react";
+import { ButtonLink } from "@/components/ui/button-link";
+import { ChipGroup } from "@/components/ui/chip-group";
+import { formatMoney, formatPrice } from "@/lib/format";
+import { RATE_MAX, RATE_MIN, calculateEmi, getLoanType, tenuresFor } from "./data";
+
+const type = getLoanType("personal")!;
+const tenures = tenuresFor(type);
+
+function SingleSlider({
+  label,
+  value,
+  min,
+  max,
+  step,
+  display,
+  minLabel,
+  maxLabel,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  display: string;
+  minLabel: string;
+  maxLabel: string;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <Slider className="w-full" minValue={min} maxValue={max} step={step} value={value} onChange={(v) => onChange(Array.isArray(v) ? v[0] : v)}>
+      <Label className="text-sm text-subtle">{label}</Label>
+      <p className="tabular text-2xl font-extrabold" aria-live="polite">
+        {display}
+      </p>
+      <Slider.Track>
+        {({ state }) => (
+          <>
+            <Slider.Fill />
+            {state.values.map((_, i) => (
+              <Slider.Thumb key={i} index={i} />
+            ))}
+          </>
+        )}
+      </Slider.Track>
+      <div className="mt-1 flex justify-between text-xs text-subtle">
+        <span className="tabular">{minLabel}</span>
+        <span className="tabular">{maxLabel}</span>
+      </div>
+    </Slider>
+  );
+}
+
+/** EMI estimate. Illustrative only: the final rate is set by the lender after review. */
+export function LoanCalculator() {
+  const [amount, setAmount] = useState(5000);
+  const [tenure, setTenure] = useState(24);
+  const [rate, setRate] = useState(type.apr);
+
+  const emi = calculateEmi(amount, rate, tenure);
+
+  return (
+    <div className="grid gap-5 md:grid-cols-2 md:gap-8">
+      <div className="flex flex-col gap-6 rounded-card border border-line bg-surface p-4 shadow-card md:p-6">
+        <SingleSlider
+          label="Loan amount"
+          value={amount}
+          min={type.minAmount}
+          max={type.maxAmount}
+          step={500}
+          display={formatPrice(amount)}
+          minLabel={formatPrice(type.minAmount)}
+          maxLabel={formatPrice(type.maxAmount)}
+          onChange={setAmount}
+        />
+
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-subtle">Tenure</p>
+          <p className="tabular text-2xl font-extrabold">{tenure} months</p>
+          <ChipGroup
+            label="Tenure in months"
+            options={tenures.map((t) => ({ id: String(t), label: String(t) }))}
+            value={[String(tenure)]}
+            onChange={(ids) => ids[0] && setTenure(Number(ids[0]))}
+          />
+        </div>
+
+        <SingleSlider
+          label="Interest rate (p.a.)"
+          value={rate}
+          min={RATE_MIN}
+          max={RATE_MAX}
+          step={0.5}
+          display={`${rate}%`}
+          minLabel={`${RATE_MIN}%`}
+          maxLabel={`${RATE_MAX}%`}
+          onChange={setRate}
+        />
+      </div>
+
+      <div className="flex flex-col gap-4 rounded-card border border-line bg-surface p-4 shadow-card md:p-6">
+        <div>
+          <p className="text-sm text-subtle">Estimated monthly EMI</p>
+          <p data-testid="emi" className="tabular text-4xl font-extrabold">
+            {formatMoney(emi.monthly)}
+          </p>
+        </div>
+        <dl className="flex flex-col gap-3 border-t border-line pt-4 text-sm">
+          <div className="flex justify-between gap-4">
+            <dt className="text-subtle">Principal amount</dt>
+            <dd className="tabular font-semibold">{formatMoney(amount)}</dd>
+          </div>
+          <div className="flex justify-between gap-4">
+            <dt className="text-subtle">Estimated interest</dt>
+            <dd className="tabular font-semibold">{formatMoney(emi.interest)}</dd>
+          </div>
+          <div className="flex justify-between gap-4 border-t border-line pt-3">
+            <dt className="font-bold">Total repayment</dt>
+            <dd className="tabular font-bold">{formatMoney(emi.total)}</dd>
+          </div>
+        </dl>
+        <p className="flex items-start gap-2 text-xs leading-5 text-subtle">
+          <InfoIcon size={16} className="mt-0.5 shrink-0" />
+          Estimated only. Final rates depend on eligibility and lender approval.
+        </p>
+        <ButtonLink href={`/loans/apply?type=personal&amount=${amount}&tenure=${tenure}`} size="lg" fullWidth className="mt-auto">
+          Apply for this loan
+        </ButtonLink>
+      </div>
+    </div>
+  );
+}

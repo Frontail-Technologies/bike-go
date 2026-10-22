@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowCounterClockwiseIcon, BellIcon, HeadsetIcon, SealCheckIcon, TimerIcon } from "@phosphor-icons/react";
+import { ArrowCounterClockwiseIcon, ArrowRightIcon, BankIcon, BellIcon, HeadsetIcon, SealCheckIcon, TimerIcon } from "@phosphor-icons/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -84,6 +84,24 @@ export function HomeView() {
           ))}
         </AnimatedGrid>
       </section>
+
+      <Reveal>
+        <Link
+          href="/loans"
+          className="flex items-center gap-4 rounded-card border border-line bg-surface p-4 shadow-card outline-none transition-transform duration-150 focus-visible:ring-2 focus-visible:ring-ink active:scale-[0.99] motion-reduce:transition-none"
+        >
+          <span className="flex size-14 shrink-0 items-center justify-center rounded-control bg-brand-soft">
+            <BankIcon size={28} />
+          </span>
+          <span className="flex min-w-0 flex-1 flex-col">
+            <span className="text-base font-bold">Expat Loan</span>
+            <span className="text-sm text-subtle">Loans made simpler for expats</span>
+          </span>
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand">
+            <ArrowRightIcon size={18} weight="bold" />
+          </span>
+        </Link>
+      </Reveal>
 
       <Reveal>
         <section aria-labelledby="featured" className="flex flex-col gap-4">

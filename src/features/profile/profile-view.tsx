@@ -14,6 +14,7 @@ import {
   ShieldCheckIcon,
   SignOutIcon,
   WarningIcon,
+  BankIcon,
 } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -143,6 +144,10 @@ export function ProfileView() {
                 Offers and news
               </Switch>
             </div>
+          </SectionCard>
+
+          <SectionCard id="loans-title" title="Expat loans">
+            <ListRow icon={<BankIcon size={20} />} label="Loans for expats" description="Check rates, apply and track your application" href="/loans" />
           </SectionCard>
 
           <SectionCard id="help-title" title="Help and support">

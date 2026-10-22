@@ -13,7 +13,7 @@ export function MotorcycleCardSkeleton({ className }: { className?: string }) {
     >
       <Skeleton className="aspect-4/3 w-full rounded-control" />
       <div className="flex flex-col gap-1">
-        <Skeleton className="h-10 w-full rounded-control" />
+        <Skeleton className="h-7 w-full rounded-control" />
         <Skeleton className="h-5 w-2/3 rounded-full" />
         <Skeleton className="h-4 w-1/2 rounded-full" />
       </div>
