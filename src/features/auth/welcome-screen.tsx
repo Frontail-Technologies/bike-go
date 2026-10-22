@@ -10,8 +10,11 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { AuthDialog, type AuthMode } from "./auth-dialog";
 
-/** Drop a photo at public/hero/welcome.webp and set this to "/hero/welcome.webp" to replace the artwork. */
-const HERO_IMAGE: string | null = null;
+/**
+ * Sign-in background. Currently the illustration from `bun run art`. To use a real photo instead, replace
+ * public/hero/welcome.jpg (portrait, dark toward the bottom for the text) or point this at another file.
+ */
+const HERO_IMAGE: string | null = "/hero/welcome.jpg";
 
 const slides = [
   { lines: ["EXPLORE", "ON TWO"], accent: "WHEELS", text: "Premium bikes. Flexible rentals. Unforgettable journeys." },
@@ -39,30 +42,31 @@ export function WelcomeScreen() {
       id="main"
       className="relative isolate flex min-h-dvh flex-col overflow-hidden bg-ink text-white md:flex-row-reverse"
     >
-      {/* Artwork: a photo when one is provided, otherwise the placeholder bike on a warm glow. */}
-      <div className="relative flex min-h-[46dvh] flex-1 items-end justify-center md:min-h-dvh md:items-center">
+      {/* Artwork. Phones: full-bleed behind everything, the text sits on its darkened lower half.
+          Desktop: it fills the right-hand panel. */}
+      <div className="absolute inset-0 md:relative md:inset-auto md:min-h-dvh md:flex-1">
         {HERO_IMAGE ? (
-          <Image src={HERO_IMAGE} alt="" fill priority sizes="(min-width: 768px) 50vw, 100vw" className="object-cover" />
+          <Image src={HERO_IMAGE} alt="" fill priority sizes="(min-width: 768px) 50vw, 100vw" className="object-cover object-[62%_top]" />
         ) : (
-          <>
+          <div className="flex size-full items-end justify-center md:items-center">
             <div
               aria-hidden
               className="absolute inset-0"
               style={{ background: "radial-gradient(70% 55% at 65% 30%, rgb(255 140 0 / 0.38), transparent 70%)" }}
             />
-            <div aria-hidden className="relative w-[118%] max-w-[560px] -translate-y-2 md:w-4/5 md:translate-y-0">
+            <div aria-hidden className="relative mb-[46dvh] w-[118%] max-w-[560px] md:mb-0 md:w-4/5">
               <BikeArt color="#FFC400" className="drop-shadow-[0_24px_40px_rgb(0_0_0/0.5)]" />
             </div>
-          </>
+          </div>
         )}
-        <div aria-hidden className="absolute inset-x-0 bottom-0 h-2/5 bg-linear-to-t from-ink to-transparent md:hidden" />
+        <div aria-hidden className="absolute inset-x-0 bottom-0 h-3/5 bg-linear-to-t from-ink via-ink/85 to-transparent md:hidden" />
       </div>
 
       <div className="absolute inset-x-0 top-0 z-20 flex justify-center pt-[calc(1rem+var(--safe-top))] md:justify-start md:px-12">
         <Logo className="text-white" />
       </div>
 
-      <div className="relative z-10 flex flex-col gap-6 px-6 pb-[calc(1.5rem+var(--safe-bottom))] md:w-[520px] md:shrink-0 md:justify-center md:px-12 md:pb-12">
+      <div className="relative z-10 mt-auto flex flex-col gap-6 px-6 pb-[calc(1.5rem+var(--safe-bottom))] md:mt-0 md:w-[520px] md:shrink-0 md:justify-center md:px-12 md:pb-12">
         <div ref={emblaRef} className="overflow-hidden" role="region" aria-roledescription="carousel" aria-label="Welcome">
           <div className="flex touch-pan-y">
             {slides.map((slide, i) => (

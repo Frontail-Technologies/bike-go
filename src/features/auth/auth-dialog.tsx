@@ -7,13 +7,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
-import { BottomSheet } from "@/components/ui/bottom-sheet";
+import { ResponsiveDialog } from "@/components/shared/responsive-dialog";
 import { Button } from "@/components/ui/button";
-import { ModalDialog } from "@/components/ui/modal-dialog";
 import { TextInput } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { profileStore } from "@/features/profile/store";
-import { useIsDesktop } from "@/hooks/use-media-query";
 import { DEMO_OTP, authStore } from "./store";
 
 export type AuthMode = "signin" | "signup";
@@ -31,7 +29,6 @@ type AuthDialogProps = {
 
 /** Phone + OTP, simulated. Bottom sheet on mobile, centred dialog on desktop. */
 export function AuthDialog({ mode, onClose }: AuthDialogProps) {
-  const isDesktop = useIsDesktop();
   const router = useRouter();
   const [step, setStep] = useState<"details" | "otp">("details");
   const [otp, setOtp] = useState("");
@@ -194,13 +191,9 @@ export function AuthDialog({ mode, onClose }: AuthDialogProps) {
   const open = mode !== null;
   const onOpenChange = (next: boolean) => !next && close();
 
-  return isDesktop ? (
-    <ModalDialog isOpen={open} onOpenChange={onOpenChange} title={title} footer={footer}>
+  return (
+    <ResponsiveDialog isOpen={open} onOpenChange={onOpenChange} title={title} footer={footer}>
       {body}
-    </ModalDialog>
-  ) : (
-    <BottomSheet isOpen={open} onOpenChange={onOpenChange} title={title} footer={footer}>
-      {body}
-    </BottomSheet>
+    </ResponsiveDialog>
   );
 }
