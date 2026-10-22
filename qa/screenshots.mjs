@@ -63,7 +63,7 @@ try {
 
   await page.locator("[data-testid='sticky-cta'] button").tap();
   await page.waitForURL("**/book**");
-  await page.getByText("Helmet · ₹100 / day").tap();
+  await page.getByText("Helmet · $2 / day").tap();
   await snap("book-1-dates", "Booking: dates");
   const next = () => page.locator("[data-testid='flow-footer']:visible button");
   await next().tap();

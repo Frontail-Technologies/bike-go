@@ -72,6 +72,7 @@ export function watch(page) {
   const logs = [];
   page.on("console", (m) => ["error", "warning"].includes(m.type()) && logs.push(`${m.type()}: ${m.text().slice(0, 240)}`));
   page.on("pageerror", (e) => logs.push(`pageerror: ${e.message.slice(0, 240)}`));
+  page.on("response", (r) => r.status() >= 400 && logs.push(`http ${r.status()}: ${r.url()}`));
   return logs;
 }
 

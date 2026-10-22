@@ -57,7 +57,7 @@ export default async function run({ browser, base: BASE, t }) {
     check("options not covered by sheet (z-order)", hit);
     await page.getByRole("option", { name: /Under/ }).tap();
     await page.waitForTimeout(300);
-    check("select value updates", (await dialog.innerText()).includes("Under ₹1,000"));
+    check("select value updates", (await dialog.innerText()).includes("Under $12"));
     await page.keyboard.press("Escape");
     await page.waitForTimeout(500);
     check("Esc closes sheet", (await page.getByRole("dialog").count()) === 0);
@@ -176,11 +176,11 @@ export default async function run({ browser, base: BASE, t }) {
     const ticker = page.locator("#motion p.text-2xl span[aria-hidden]:not(.invisible)").first();
     await ticker.scrollIntoViewIfNeeded();
     await page.waitForTimeout(1500);
-    check("metric ticker ends at the final value", (await ticker.innerText()) === "₹4,82,300", await ticker.innerText());
+    check("metric ticker ends at the final value", (await ticker.innerText()) === "$5,810", await ticker.innerText());
     await page.getByRole("button", { name: "Change values" }).click();
     await page.waitForTimeout(1300);
     const changed = await ticker.innerText();
-    check("metric ticker tweens to the changed value", changed !== "₹4,82,300" && /^₹[\d,]+$/.test(changed), changed);
+    check("metric ticker tweens to the changed value", changed !== "$5,810" && /^\$[\d,]+$/.test(changed), changed);
 
     const car = page.locator("#motion [aria-roledescription=carousel]").first();
     await car.scrollIntoViewIfNeeded();
@@ -241,7 +241,7 @@ export default async function run({ browser, base: BASE, t }) {
     const ticker = page.locator("#motion p.text-2xl span[aria-hidden]:not(.invisible)").first();
     await ticker.scrollIntoViewIfNeeded();
     await page.waitForTimeout(150);
-    check("ticker shows its final value immediately", (await ticker.innerText()) === "₹4,82,300", await ticker.innerText());
+    check("ticker shows its final value immediately", (await ticker.innerText()) === "$5,810", await ticker.innerText());
     const reveal = page.locator("#motion").getByText("Choose your ride");
     await reveal.scrollIntoViewIfNeeded();
     await page.waitForTimeout(200);
