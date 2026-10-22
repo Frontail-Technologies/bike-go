@@ -13,7 +13,9 @@ const rawEnv = z.object({
   TELEGRAM_BOT_TOKEN: z.string().optional(),
   TELEGRAM_AUTH_MAX_AGE_SECONDS: z.coerce.number().int().positive().default(300),
   STORAGE_ROOT: z.string().default("./storage"),
+  // Flat platform fee per booking, in minor units of each currency. Placeholders until the business sets policy.
   PLATFORM_FEE_MINOR: z.coerce.number().int().nonnegative().default(100),
+  PLATFORM_FEE_KHR_MINOR: z.coerce.number().int().nonnegative().default(410000),
   TAX_RATE_BPS: z.coerce.number().int().min(0).max(10_000).default(1800)
 }).parse(process.env);
 
