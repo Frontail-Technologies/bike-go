@@ -39,7 +39,7 @@ export function BikeFilters({ value, onChange }: BikeFiltersProps) {
         label="Price per day"
         min={PRICE_MIN}
         max={PRICE_MAX}
-        step={100}
+        step={1}
         value={value.price}
         onChange={(price) => set("price", price)}
       />

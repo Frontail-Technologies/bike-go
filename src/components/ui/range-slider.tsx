@@ -14,8 +14,8 @@ type RangeSliderProps = {
   className?: string;
 };
 
-/** Two-thumb INR range (HeroUI Slider). Shows the current range above the track. */
-export function RangeSlider({ label, min, max, step = 100, value, onChange, className }: RangeSliderProps) {
+/** Two-thumb dollar range (HeroUI Slider). Shows the current range above the track. */
+export function RangeSlider({ label, min, max, step = 1, value, onChange, className }: RangeSliderProps) {
   return (
     <Slider
       className={cn("w-full", className)}
@@ -24,7 +24,7 @@ export function RangeSlider({ label, min, max, step = 100, value, onChange, clas
       step={step}
       value={value}
       onChange={(next) => Array.isArray(next) && onChange([next[0], next[1]])}
-      formatOptions={{ style: "currency", currency: "INR", maximumFractionDigits: 0 }}
+      formatOptions={{ style: "currency", currency: "USD", maximumFractionDigits: 0 }}
     >
       <div className="flex items-center justify-between gap-3">
         <Label className="text-sm font-semibold">{label}</Label>

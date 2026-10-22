@@ -1,8 +1,8 @@
 import { rangeOverlapsBooking } from "@/features/bookings/dates";
 import type { Motorcycle } from "@/features/mock/data";
 
-export const PRICE_MIN = 400;
-export const PRICE_MAX = 2500;
+export const PRICE_MIN = 5;
+export const PRICE_MAX = 30;
 
 export type SortKey = "popular" | "price-asc" | "price-desc" | "rating";
 
@@ -55,9 +55,13 @@ export function isAvailable(bike: Motorcycle, start?: string | null, end?: strin
   return bike.available;
 }
 
-/** Number of filters differing from the defaults (category excluded: it has its own tabs). */
-export function activeFilterCount(filters: Filters): number {
+/**
+ * Number of filters differing from the defaults. The category is excluded by default because desktop shows
+ * it as tabs; pass `includeCategory` where it only lives inside Filters (the phone app bar badge).
+ */
+export function activeFilterCount(filters: Filters, includeCategory = false): number {
   let count = 0;
+  if (includeCategory && filters.category !== "all") count++;
   if (filters.brands.length) count++;
   if (filters.price[0] !== PRICE_MIN || filters.price[1] !== PRICE_MAX) count++;
   if (filters.transmission.length) count++;
