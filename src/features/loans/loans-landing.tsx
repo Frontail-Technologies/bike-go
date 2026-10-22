@@ -20,15 +20,17 @@ import {
   ShieldCheckIcon,
 } from "@phosphor-icons/react";
 import { Accordion } from "@heroui/react";
+import Image from "next/image";
 import Link from "next/link";
 import { Reveal } from "@/components/motion/reveal";
 import { AppBar } from "@/components/shared/app-bar";
-import { DesktopTitle, Screen } from "@/components/shared/screen";
+import { Screen } from "@/components/shared/screen";
 import { ButtonLink } from "@/components/ui/button-link";
 import { formatDay } from "@/features/bookings/dates";
 import { formatPrice } from "@/lib/format";
-import { type DocumentId, documentTypes, getLoanType, loanTypes } from "./data";
+import { type DocumentId, documentTypes, getLoanType } from "./data";
 import { LoanCalculator } from "./loan-calculator";
+import { LoanOptionsCarousel } from "./loan-options-carousel";
 import { LoanStatusBadge } from "./loan-status-badge";
 import { loansStore } from "./store";
 
@@ -85,40 +87,40 @@ export function LoansLanding() {
   return (
     <>
       <AppBar leading="back" backFallback="/" title="Expat loan" />
-      <Screen bottom="nav" className="flex flex-col gap-8 md:gap-12">
-        <DesktopTitle title="Expat loan" />
 
-        <section aria-label="Overview" className="relative isolate overflow-hidden rounded-overlay bg-ink p-6 text-white md:p-10">
-          <div
-            aria-hidden
-            className="absolute inset-0 -z-10"
-            style={{ background: "radial-gradient(60% 90% at 90% 0%, rgb(255 196 0 / 0.3), transparent 70%)" }}
-          />
-          <p className="text-sm font-bold text-brand">Expat Loan</p>
-          <h1 className="mt-1 max-w-md text-3xl leading-[1.1] font-extrabold tracking-tight md:text-5xl">Loans made simpler for expats</h1>
-          <p className="mt-3 max-w-md text-sm text-white/80 md:text-base">
-            Check your options and submit your application in a few simple steps.
-          </p>
-          <div className="mt-5 flex max-w-sm flex-col gap-3 md:flex-row">
-            <ButtonLink href="/loans/apply" size="lg" fullWidth>
-              Check eligibility
-              <ArrowRightIcon size={18} weight="bold" />
-            </ButtonLink>
-            <ButtonLink href="#how" variant="outline" size="lg" fullWidth className="border-white/70 bg-transparent text-white hover:bg-white/10">
-              How it works
-            </ButtonLink>
+      {/* Edge to edge on phones, flush under the app bar with rounded bottom corners; a contained card from 768px. */}
+      <div className="md:mx-auto md:max-w-7xl md:px-page md:pt-8">
+        <section aria-label="Overview" className="relative isolate overflow-hidden rounded-b-[32px] bg-ink text-white md:rounded-overlay">
+          <Image src="/hero/home-banner.jpg" alt="" fill priority sizes="(min-width: 1280px) 1216px, 100vw" className="-z-20 object-cover object-[78%_top]" />
+          <div aria-hidden className="absolute inset-0 -z-10 bg-linear-to-t from-ink via-ink/85 to-ink/10 md:bg-linear-to-r md:from-ink md:via-ink/80 md:to-transparent" />
+          <div className="flex min-h-[26rem] flex-col justify-end gap-3 px-6 pt-40 pb-8 md:min-h-[24rem] md:max-w-xl md:justify-center md:p-12">
+            <p className="text-sm font-bold text-brand">Expat Loan</p>
+            <h1 className="max-w-md text-[2rem] leading-[1.1] font-extrabold tracking-tight md:text-5xl">Loans made simpler for expats</h1>
+            <p className="max-w-md text-sm text-white/80 md:text-base">Check your options and submit your application in a few simple steps.</p>
+            <div className="mt-2 flex max-w-sm flex-col gap-3 md:flex-row">
+              <ButtonLink href="/loans/apply" size="lg" fullWidth>
+                Check eligibility
+                <ArrowRightIcon size={18} weight="bold" />
+              </ButtonLink>
+              <ButtonLink href="#how" variant="outline" size="lg" fullWidth className="border-white/70 bg-transparent text-white hover:bg-white/10">
+                How it works
+              </ButtonLink>
+            </div>
+            <ul className="mt-1 flex flex-wrap gap-x-5 gap-y-2 text-xs text-white/80">
+              <li className="flex items-center gap-1.5">
+                <ShieldCheckIcon size={16} className="text-brand" />
+                Secure application
+              </li>
+              <li className="flex items-center gap-1.5">
+                <EyeIcon size={16} className="text-brand" />
+                Transparent process
+              </li>
+            </ul>
           </div>
-          <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs text-white/80">
-            <li className="flex items-center gap-1.5">
-              <ShieldCheckIcon size={16} className="text-brand" />
-              Secure application
-            </li>
-            <li className="flex items-center gap-1.5">
-              <EyeIcon size={16} className="text-brand" />
-              Transparent process
-            </li>
-          </ul>
         </section>
+      </div>
+
+      <Screen bottom="nav" className="flex flex-col gap-8 md:gap-12">
 
         {applications.length > 0 ? (
           <section aria-labelledby="mine" className="flex flex-col gap-3">
@@ -148,29 +150,7 @@ export function LoansLanding() {
         <Reveal>
           <section aria-labelledby="types" className="flex flex-col gap-3">
             <Heading id="types" title="Loan options" />
-            <ul className="-mx-4 flex snap-x snap-mandatory scroll-pl-4 gap-3 overflow-x-auto px-4 pb-1 scrollbar-none md:mx-0 md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:px-0">
-              {loanTypes.map((type) => (
-                <li key={type.id} className="w-[62%] shrink-0 snap-start sm:w-[40%] md:w-auto">
-                  <div className="flex h-full flex-col gap-3 rounded-card border border-line bg-surface p-4 shadow-card">
-                    <span className="flex size-11 items-center justify-center rounded-full bg-brand-soft">
-                      <BankIcon size={22} />
-                    </span>
-                    <div>
-                      <p className="text-base font-bold">{type.name}</p>
-                      <p className="tabular text-sm text-subtle">Up to {formatPrice(type.maxAmount)}</p>
-                      <p className="text-xs text-subtle">{type.description}</p>
-                    </div>
-                    <Link
-                      href={`/loans/apply?type=${type.id}`}
-                      className="mt-auto flex min-h-11 items-center gap-1 text-sm font-bold text-[#b45309] outline-none focus-visible:ring-2 focus-visible:ring-ink"
-                    >
-                      View details
-                      <ArrowRightIcon size={14} weight="bold" />
-                    </Link>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <LoanOptionsCarousel />
           </section>
         </Reveal>
 
