@@ -1,6 +1,6 @@
 "use client";
 
-import { Avatar, Button, Dropdown, SearchField } from "@heroui/react";
+import { Avatar, Button, Dropdown, SearchField, Tooltip } from "@heroui/react";
 import { BellIcon, CaretDownIcon } from "@phosphor-icons/react";
 import { adminCopy } from "@/components/admin/config";
 
@@ -11,10 +11,13 @@ export function AdminHeader() {
         <SearchField.Group><SearchField.SearchIcon /><SearchField.Input placeholder={adminCopy.searchPlaceholder} /><SearchField.ClearButton /></SearchField.Group>
       </SearchField>
       <div className="ml-auto flex items-center gap-2">
-        <Button isIconOnly variant="ghost" aria-label="Notifications" className="relative">
-          <BellIcon size={20} aria-hidden />
-          <span className="absolute right-2 top-2 size-2 rounded-full border-2 border-white bg-[var(--admin-danger)]" aria-hidden />
-        </Button>
+        <Tooltip delay={300}>
+          <Button isIconOnly variant="ghost" aria-label="Notifications" className="relative">
+            <BellIcon size={20} aria-hidden />
+            <span className="absolute right-2 top-2 size-2 rounded-full border-2 border-white bg-[var(--admin-danger)]" aria-hidden />
+          </Button>
+          <Tooltip.Content className="adminOverlay">Notifications</Tooltip.Content>
+        </Tooltip>
         <Dropdown>
           <Dropdown.Trigger className="h-12 gap-2 rounded-xl px-2" aria-label="Open profile menu">
               <Avatar size="sm"><Avatar.Fallback>SA</Avatar.Fallback></Avatar>

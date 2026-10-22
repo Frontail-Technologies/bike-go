@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Input, Label, TextField } from "@heroui/react";
+import { Button, Description, Drawer, Dropdown, FieldError, Input, Label, Modal, TextField, useOverlayState } from "@heroui/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { BuildingsIcon, CalendarCheckIcon, CurrencyDollarIcon, DotsThreeIcon, PlusIcon, UsersIcon } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
@@ -37,7 +37,7 @@ const columns: ColumnDef<DemoBooking>[] = [
 ];
 
 function AdminTextField({ label, defaultValue }: { label: string; defaultValue?: string }) {
-  return <TextField defaultValue={defaultValue}><Label className="mb-1 block text-xs font-bold">{label}</Label><Input fullWidth /></TextField>;
+  return <TextField defaultValue={defaultValue}><Label className="mb-1 block text-xs font-bold">{label}</Label><Input fullWidth /><Description className="text-xs text-[var(--admin-muted)]">HeroUI TextField with associated label.</Description><FieldError /></TextField>;
 }
 
 export function AdminUiShowcase() {
@@ -46,6 +46,8 @@ export function AdminUiShowcase() {
   const [location, setLocation] = useState("all");
   const [dates, setDates] = useState({ start: "2026-10-01", end: "2026-10-31" });
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const drawer = useOverlayState();
+  const modal = useOverlayState();
   const filtered = useMemo(() => bookings.filter((booking) => (status === "all" || booking.status === status) && (location === "all" || booking.location === location) && `${booking.id} ${booking.customer} ${booking.vehicle}`.toLowerCase().includes(query.toLowerCase())), [query, status, location]);
 
   return <AdminPage>
@@ -65,7 +67,14 @@ export function AdminUiShowcase() {
         <AdminSelect label="Location" value={location} onChange={setLocation} options={[{ value: "all", label: "All locations" }, { value: "Phnom Penh", label: "Phnom Penh" }, { value: "Siem Reap", label: "Siem Reap" }, { value: "Sihanoukville", label: "Sihanoukville" }]} />
         <CambodiaDateFilter value={dates} onChange={setDates} />
       </FilterBar>
-      <AdminDataTable label="Cambodia bookings" columns={columns} data={filtered} pageSize={4} rowActions={(row) => <TableActions><Button isIconOnly size="sm" variant="ghost" aria-label={`Actions for ${row.id}`}><DotsThreeIcon size={18} /></Button></TableActions>} onRowNavigate={() => undefined} />
+      <AdminDataTable label="Cambodia bookings" columns={columns} data={filtered} pageSize={4} rowActions={(row) => <TableActions><Dropdown><Button isIconOnly size="sm" variant="ghost" aria-label={`Actions for ${row.id}`}><DotsThreeIcon size={18} /></Button><Dropdown.Popover className="adminOverlay"><Dropdown.Menu aria-label={`Actions for ${row.id}`}><Dropdown.Item id="view" textValue="View booking">View booking</Dropdown.Item><Dropdown.Item id="edit" textValue="Edit booking">Edit booking</Dropdown.Item><Dropdown.Item id="cancel" textValue="Cancel booking" variant="danger">Cancel booking</Dropdown.Item></Dropdown.Menu></Dropdown.Popover></Dropdown></TableActions>} onRowNavigate={() => undefined} />
+    </ContentSection>
+
+    <ContentSection title="HeroUI interactive primitives" description="Semantic variants and accessible overlays retain the RideGo admin styling.">
+      <div className="space-y-5 p-5">
+        <div className="flex flex-wrap gap-2"><Button>Primary</Button><Button variant="secondary">Secondary</Button><Button variant="tertiary">Tertiary</Button><Button variant="outline">Outline</Button><Button variant="ghost">Ghost</Button><Button variant="danger">Danger</Button></div>
+        <div className="flex flex-wrap gap-2"><Button variant="outline" onPress={drawer.open}>Open drawer demo</Button><Button variant="outline" onPress={modal.open}>Open modal demo</Button><Button variant="danger" onPress={() => setConfirmOpen(true)}>Open alert dialog</Button></div>
+      </div>
     </ContentSection>
 
     <ContentSection title="Status and money" description="A unified status vocabulary and minor-unit money formatting.">
@@ -75,6 +84,8 @@ export function AdminUiShowcase() {
     <SplitPanel primary={<ContentSection title="Form layout"><div className="space-y-6 p-5"><FormSection title="Basic information" description="Fields retain readable widths across the workspace."><FormGrid columns={2}><AdminTextField label="Vehicle name" defaultValue="Honda Click 125" /><AdminTextField label="Registration number" defaultValue="1AA-1234" /><AdminTextField label="Location" defaultValue="Phnom Penh" /><AdminTextField label="Daily price (USD cents)" defaultValue="1200" /></FormGrid></FormSection><ImageUploader /><DocumentUploader /></div></ContentSection>} secondary={<div className="space-y-5"><InfoCard title="Vehicle details"><DetailList items={[{ label: "Type", value: "Motorcycle" }, { label: "Transmission", value: "Automatic" }, { label: "Fuel", value: "Petrol" }, { label: "Seats", value: "2" }]} columns={2} /></InfoCard><InfoCard title="Application timeline"><ActivityTimeline items={[{ id: "1", title: "Application submitted", detail: "Dara submitted the loan request.", time: "10 Oct 2026, 10:30 ICT", tone: "info" }, { id: "2", title: "Documents verified", time: "12 Oct 2026, 14:15 ICT", tone: "success" }, { id: "3", title: "Under review", time: "Today, 09:40 ICT", tone: "warning" }]} /></InfoCard></div>} />
 
     <ContentSection title="Navigation and feedback"><div className="space-y-6 p-5"><AdminTabs label="Customer record" items={[{ id: "overview", label: "Overview", content: <p className="text-sm text-[var(--admin-muted)]">Personal details and account summary.</p> }, { id: "bookings", label: "Bookings", content: <p className="text-sm text-[var(--admin-muted)]">Customer booking history.</p> }, { id: "documents", label: "Documents", content: <p className="text-sm text-[var(--admin-muted)]">Identity and licence records.</p> }]} /><div className="grid gap-4 lg:grid-cols-3"><div className="rounded-xl border border-[var(--admin-border)]"><AdminLoadingState /></div><div className="rounded-xl border border-[var(--admin-border)]"><AdminEmptyState /></div><div className="rounded-xl border border-[var(--admin-border)]"><AdminErrorState onRetry={() => undefined} /></div></div><AdminSuccessState title="Changes saved" description="The vehicle record was updated." /><Button variant="danger" onPress={() => setConfirmOpen(true)}>Open confirmation dialog</Button></div></ContentSection>
+    <Drawer.Backdrop isOpen={drawer.isOpen} onOpenChange={drawer.setOpen} className="adminOverlay"><Drawer.Content placement="right"><Drawer.Dialog aria-label="Drawer demonstration"><Drawer.CloseTrigger /><Drawer.Header><Drawer.Heading>HeroUI drawer</Drawer.Heading></Drawer.Header><Drawer.Body><p className="text-sm text-[var(--admin-muted)]">Focus is trapped here and restored to the trigger when the drawer closes.</p></Drawer.Body><Drawer.Footer><Button slot="close">Done</Button></Drawer.Footer></Drawer.Dialog></Drawer.Content></Drawer.Backdrop>
+    <Modal.Backdrop isOpen={modal.isOpen} onOpenChange={modal.setOpen} className="adminOverlay"><Modal.Container size="sm"><Modal.Dialog><Modal.CloseTrigger /><Modal.Header><Modal.Heading>Neutral workflow</Modal.Heading></Modal.Header><Modal.Body><p className="text-sm text-[var(--admin-muted)]">HeroUI Modal owns focus management, Escape handling and scroll locking.</p></Modal.Body><Modal.Footer><Button slot="close" variant="tertiary">Cancel</Button><Button slot="close">Continue</Button></Modal.Footer></Modal.Dialog></Modal.Container></Modal.Backdrop>
     <ConfirmationDialog isOpen={confirmOpen} onOpenChange={setConfirmOpen} title="Remove this document?" description="The local preview will be removed. This showcase does not upload or delete server data." confirmLabel="Remove document" danger onConfirm={() => undefined} />
   </AdminPage>;
 }

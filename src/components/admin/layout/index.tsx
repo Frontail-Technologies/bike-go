@@ -1,3 +1,4 @@
+import { Card, Surface } from "@heroui/react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
@@ -20,7 +21,7 @@ export function PageHeader({ title, description, eyebrow, actions, className }: 
 
 export function ContentSection({ title, description, actions, children, className }: { title?: string; description?: string; actions?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <section className={cn("adminSurface overflow-hidden rounded-2xl", className)}>
+    <Surface className={cn("adminSurface overflow-hidden rounded-2xl", className)}>
       {title || description || actions ? (
         <header className="flex flex-col justify-between gap-3 border-b border-[var(--admin-border)] px-5 py-4 sm:flex-row sm:items-center">
           <div>{title ? <h2 className="text-base font-extrabold">{title}</h2> : null}{description ? <p className="mt-0.5 text-sm text-[var(--admin-muted)]">{description}</p> : null}</div>
@@ -28,7 +29,7 @@ export function ContentSection({ title, description, actions, children, classNam
         </header>
       ) : null}
       {children}
-    </section>
+    </Surface>
   );
 }
 
@@ -37,7 +38,7 @@ export function SplitPanel({ primary, secondary, className }: { primary: ReactNo
 }
 
 export function InfoCard({ title, icon, children, className }: { title: string; icon?: ReactNode; children: ReactNode; className?: string }) {
-  return <section className={cn("adminSurface rounded-2xl p-5", className)}><div className="mb-4 flex items-center gap-2">{icon ? <span className="text-[var(--admin-warning)]">{icon}</span> : null}<h3 className="text-sm font-extrabold">{title}</h3></div>{children}</section>;
+  return <Card className={cn("adminSurface rounded-2xl", className)}><Card.Header className="flex flex-row items-center justify-start gap-2 px-5 pb-0 pt-5 text-left">{icon ? <span className="text-[var(--admin-warning)]">{icon}</span> : null}<Card.Title className="text-sm font-extrabold">{title}</Card.Title></Card.Header><Card.Content className="px-5 pb-5 pt-4">{children}</Card.Content></Card>;
 }
 
 export function DetailList({ items, columns = 1 }: { items: ReadonlyArray<{ label: string; value: ReactNode }>; columns?: 1 | 2 }) {

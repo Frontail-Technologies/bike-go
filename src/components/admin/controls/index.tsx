@@ -1,8 +1,9 @@
 "use client";
 
-import { Button, SearchField } from "@heroui/react";
-import { CaretLeftIcon, CaretRightIcon, FunnelIcon } from "@phosphor-icons/react";
-import type { ReactNode } from "react";
+import { DateField, DateRangePicker, Label, ListBox, Pagination, RangeCalendar, SearchField, Select } from "@heroui/react";
+import { parseDate } from "@internationalized/date";
+import { FunnelIcon } from "@phosphor-icons/react";
+import { Fragment, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
 export function AdminSearch({ value, onChange, placeholder = "Search…", className }: { value: string; onChange: (value: string) => void; placeholder?: string; className?: string }) {
@@ -14,12 +15,37 @@ export function FilterBar({ children, search, actions, className }: { children?:
 }
 
 export function AdminSelect({ label, value, onChange, options, className }: { label: string; value: string; onChange: (value: string) => void; options: ReadonlyArray<{ value: string; label: string }>; className?: string }) {
-  return <label className={cn("relative flex min-h-10 items-center gap-2 rounded-xl border border-[var(--admin-border)] bg-white px-3 text-sm", className)}><FunnelIcon size={15} className="text-[var(--admin-muted)]" aria-hidden /><span className="sr-only">{label}</span><select value={value} onChange={(event) => onChange(event.target.value)} className="min-w-28 appearance-none bg-transparent pr-4 font-semibold outline-none">{options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>;
+  return <Select value={value} onChange={(key) => key !== null && onChange(String(key))} placeholder={label} className={cn("min-w-36", className)}>
+    <Label className="sr-only">{label}</Label>
+    <Select.Trigger className="min-h-10 rounded-xl border border-[var(--admin-border)] bg-white px-3 shadow-none">
+      <FunnelIcon size={15} className="shrink-0 text-[var(--admin-muted)]" aria-hidden />
+      <Select.Value className="text-sm font-semibold" />
+      <Select.Indicator />
+    </Select.Trigger>
+    <Select.Popover className="adminOverlay">
+      <ListBox>{options.map((option) => <ListBox.Item key={option.value} id={option.value} textValue={option.label}>{option.label}<ListBox.ItemIndicator /></ListBox.Item>)}</ListBox>
+    </Select.Popover>
+  </Select>;
 }
 
 export type AdminDateRange = { start: string; end: string };
 export function CambodiaDateFilter({ value, onChange }: { value: AdminDateRange; onChange: (range: AdminDateRange) => void }) {
-  return <fieldset className="flex min-h-10 items-center gap-2 rounded-xl border border-[var(--admin-border)] bg-white px-3"><legend className="sr-only">Date range, Cambodia time</legend><input aria-label="Start date" type="date" value={value.start} onChange={(event) => onChange({ ...value, start: event.target.value })} className="bg-transparent text-xs font-semibold outline-none" /><span className="text-[var(--admin-muted)]">–</span><input aria-label="End date" type="date" value={value.end} onChange={(event) => onChange({ ...value, end: event.target.value })} className="bg-transparent text-xs font-semibold outline-none" /><span className="hidden text-[10px] text-[var(--admin-muted)] sm:inline">ICT</span></fieldset>;
+  const range = { start: parseDate(value.start), end: parseDate(value.end) };
+  return <DateRangePicker value={range} onChange={(next) => next && onChange({ start: next.start.toString(), end: next.end.toString() })} startName="startDate" endName="endDate">
+    <Label className="sr-only">Date range, Cambodia time</Label>
+    <DateField.Group className="min-h-10 rounded-xl border border-[var(--admin-border)] bg-white px-2 shadow-none" variant="secondary">
+      <DateField.Input slot="start" className="text-xs font-semibold">{(segment) => <DateField.Segment segment={segment} />}</DateField.Input>
+      <DateRangePicker.RangeSeparator className="text-[var(--admin-muted)]" />
+      <DateField.Input slot="end" className="text-xs font-semibold">{(segment) => <DateField.Segment segment={segment} />}</DateField.Input>
+      <DateField.Suffix><span className="hidden text-[10px] text-[var(--admin-muted)] sm:inline">ICT</span><DateRangePicker.Trigger><DateRangePicker.TriggerIndicator /></DateRangePicker.Trigger></DateField.Suffix>
+    </DateField.Group>
+    <DateRangePicker.Popover className="adminOverlay">
+      <RangeCalendar aria-label="Booking date range">
+        <RangeCalendar.Header><RangeCalendar.Heading /><RangeCalendar.NavButton slot="previous" /><RangeCalendar.NavButton slot="next" /></RangeCalendar.Header>
+        <RangeCalendar.Grid><RangeCalendar.GridHeader>{(day) => <RangeCalendar.HeaderCell>{day}</RangeCalendar.HeaderCell>}</RangeCalendar.GridHeader><RangeCalendar.GridBody>{(date) => <RangeCalendar.Cell date={date} />}</RangeCalendar.GridBody></RangeCalendar.Grid>
+      </RangeCalendar>
+    </DateRangePicker.Popover>
+  </DateRangePicker>;
 }
 
 export function TableActions({ children }: { children: ReactNode }) { return <div className="flex items-center justify-end gap-1">{children}</div>; }
@@ -27,7 +53,15 @@ export function TableActions({ children }: { children: ReactNode }) { return <di
 export function AdminPagination({ page, pageCount, total, pageSize, onPageChange }: { page: number; pageCount: number; total: number; pageSize: number; onPageChange: (page: number) => void }) {
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const to = Math.min(total, page * pageSize);
-  return <div className="flex flex-col items-center justify-between gap-3 border-t border-[var(--admin-border)] px-4 py-3 text-xs text-[var(--admin-muted)] sm:flex-row"><p>Showing {from}–{to} of {total}</p><div className="flex items-center gap-2"><Button isIconOnly size="sm" variant="outline" aria-label="Previous page" isDisabled={page <= 1} onPress={() => onPageChange(page - 1)}><CaretLeftIcon size={15} /></Button><span className="min-w-20 text-center font-semibold text-[var(--admin-text)]">Page {page} of {Math.max(1, pageCount)}</span><Button isIconOnly size="sm" variant="outline" aria-label="Next page" isDisabled={page >= pageCount} onPress={() => onPageChange(page + 1)}><CaretRightIcon size={15} /></Button></div></div>;
+  const visiblePages = Array.from({ length: pageCount }, (_, index) => index + 1).filter((candidate) => pageCount <= 5 || candidate === 1 || candidate === pageCount || Math.abs(candidate - page) <= 1);
+  return <Pagination size="sm" className="w-full px-4 py-3 text-xs text-[var(--admin-muted)]">
+    <Pagination.Summary>Showing {from}–{to} of {total}</Pagination.Summary>
+    <Pagination.Content>
+      <Pagination.Item><Pagination.Previous aria-label="Previous page" isDisabled={page <= 1} onPress={() => onPageChange(page - 1)}><Pagination.PreviousIcon /></Pagination.Previous></Pagination.Item>
+      {visiblePages.map((candidate, index) => <Fragment key={candidate}>{index > 0 && candidate - visiblePages[index - 1] > 1 ? <Pagination.Item><Pagination.Ellipsis /></Pagination.Item> : null}<Pagination.Item><Pagination.Link isActive={candidate === page} aria-label={`Page ${candidate}`} onPress={() => onPageChange(candidate)}>{candidate}</Pagination.Link></Pagination.Item></Fragment>)}
+      <Pagination.Item><Pagination.Next aria-label="Next page" isDisabled={page >= pageCount} onPress={() => onPageChange(page + 1)}><Pagination.NextIcon /></Pagination.Next></Pagination.Item>
+    </Pagination.Content>
+  </Pagination>;
 }
 
 export function formatCambodiaDate(value: string | Date, options?: Intl.DateTimeFormatOptions) {
