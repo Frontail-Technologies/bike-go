@@ -1,13 +1,20 @@
-import { beforeAll, describe, expect, test } from "bun:test";
-import { seedCatalog } from "../src/libs/db/seed";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { seedCatalog, seedVehicles } from "../src/libs/db/seed";
 import { json } from "./helpers/http";
 import { patchJson, postJson, request, signInAdmin, signInCustomer } from "./helpers/auth";
+import { cleanupExtraVehicles } from "./helpers/db";
 
 beforeAll(async () => {
   await seedCatalog();
 });
+afterAll(cleanupExtraVehicles);
 
-const listVehicles = async (query = "") => json(await request(`/api/v1/vehicles${query}`));
+// Assertions are about the seeded vehicles only, so anything another test file leaves behind cannot change them.
+const seeded = new Set(seedVehicles.map((v) => v.slug));
+const listVehicles = async (query = "") => {
+  const body = await json(await request(`/api/v1/vehicles${query}`));
+  return { ...body, data: body.data.filter((v: { slug: string }) => seeded.has(v.slug)) };
+};
 
 describe("public catalogue", () => {
   test("lists active locations", async () => {
@@ -21,7 +28,8 @@ describe("public catalogue", () => {
   test("lists vehicles with pagination meta and no internal fields", async () => {
     const body = await listVehicles();
     expect(body.data.length).toBe(6);
-    expect(body.meta).toMatchObject({ page: 1, pageSize: 20, total: 6, totalPages: 1 });
+    expect(body.meta).toMatchObject({ page: 1, pageSize: 20 });
+    expect(body.meta.total).toBeGreaterThanOrEqual(6);
     const text = JSON.stringify(body);
     expect(text).not.toContain("registrationNumber");
     expect(text).not.toContain("storageKey");
@@ -51,9 +59,10 @@ describe("public catalogue", () => {
     expect(asc).toEqual([...asc].sort((a, b) => a - b));
     const desc = (await listVehicles("?sort=price_desc")).data.map((v: { dailyRentalPriceMinor: number }) => v.dailyRentalPriceMinor);
     expect(desc).toEqual([...desc].sort((a, b) => b - a));
-    const page2 = await listVehicles("?pageSize=4&page=2");
-    expect(page2.data.length).toBe(2);
-    expect(page2.meta).toMatchObject({ page: 2, pageSize: 4, total: 6, totalPages: 2 });
+    const page2 = await json(await request("/api/v1/vehicles?pageSize=4&page=2"));
+    expect(page2.meta).toMatchObject({ page: 2, pageSize: 4 });
+    expect(page2.data.length).toBe(Math.min(4, page2.meta.total - 4));
+    expect(page2.meta.totalPages).toBe(Math.ceil(page2.meta.total / 4));
   });
 
   test("availability filtering needs both dates and a valid period", async () => {

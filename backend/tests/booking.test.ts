@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { eq } from "drizzle-orm";
 import { db } from "../src/libs/db";
 import { bookings, vehicles } from "../src/libs/db/schema";
@@ -6,11 +6,12 @@ import { seedCatalog } from "../src/libs/db/seed";
 import { priceBooking } from "../src/routes/booking/pricing";
 import { json } from "./helpers/http";
 import { postJson, request, signInAdmin, signInCustomer } from "./helpers/auth";
-import { insertBooking, vehicleBySlug } from "./helpers/db";
+import { cleanupExtraVehicles, insertBooking, vehicleBySlug } from "./helpers/db";
 
 beforeAll(async () => {
   await seedCatalog();
 });
+afterAll(cleanupExtraVehicles);
 
 let nextYear = 2060;
 const window = (days = 3) => {

@@ -45,3 +45,17 @@ export async function sqlstateOf(run: () => Promise<unknown>) {
     return pgErrorCode(error);
   }
 }
+
+/** Removes vehicles (and their bookings) that tests created on top of the seed, so files do not affect each other. */
+export async function cleanupExtraVehicles() {
+  const { notInArray } = await import("drizzle-orm");
+  const { seedVehicles } = await import("../../src/libs/db/seed");
+  const extra = await db
+    .select({ id: vehicles.id })
+    .from(vehicles)
+    .where(notInArray(vehicles.slug, seedVehicles.map((v) => v.slug)));
+  for (const { id } of extra) {
+    await db.delete(bookings).where(eq(bookings.vehicleId, id));
+    await db.delete(vehicles).where(eq(vehicles.id, id));
+  }
+}
