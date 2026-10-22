@@ -1,0 +1,50 @@
+.adminRoot,
+.adminOverlay {
+  --admin-sidebar: #08131b;
+  --admin-sidebar-muted: #96a0a7;
+  --admin-canvas: #faf8f2;
+  --admin-surface: #ffffff;
+  --admin-surface-muted: #f5f6f7;
+  --admin-border: #e4e6e8;
+  --admin-text: #14191f;
+  --admin-muted: #69727c;
+  --admin-accent: #f4c900;
+  --admin-accent-strong: #dcae00;
+  --admin-success: #12805c;
+  --admin-success-soft: #e8f7f0;
+  --admin-warning: #a96800;
+  --admin-warning-soft: #fff4d9;
+  --admin-danger: #c43b3b;
+  --admin-danger-soft: #ffebeb;
+  --admin-info: #2563b9;
+  --admin-info-soft: #eaf2ff;
+  color: var(--admin-text);
+}
+
+.adminRoot {
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at 80% -10%, rgb(244 201 0 / 7%), transparent 28rem),
+    var(--admin-canvas);
+}
+
+.adminSurface {
+  border: 1px solid var(--admin-border);
+  background: var(--admin-surface);
+  box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
+}
+
+.adminFocusable:focus-visible {
+  outline: 3px solid rgb(244 201 0 / 45%);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .adminRoot *, .adminRoot *::before, .adminRoot *::after,
+  .adminOverlay *, .adminOverlay *::before, .adminOverlay *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

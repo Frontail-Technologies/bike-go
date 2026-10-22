@@ -1,36 +1,11 @@
 "use client";
 
-import { BookingStatusBadge } from "@/components/customer/booking-status-badge";
+import { formatCambodiaDate } from "@/components/admin/controls";
+import { MoneyDisplay } from "@/components/admin/data-display/misc";
+import { AdminStatusBadge, type AdminStatus } from "@/components/admin/data-display/status-badge";
 import { AnimatedActivityList } from "@/components/motion/animated-activity-list";
 import { bookings } from "@/features/mock/data";
-import { formatDate, formatMoney } from "@/lib/format";
 
 export function RecentBookings() {
-  return (
-    <section aria-labelledby="recent" className="rounded-card border border-line bg-surface p-4 shadow-card">
-      <h2 id="recent" className="mb-1 text-base font-bold">
-        Recent bookings
-      </h2>
-      <AnimatedActivityList
-        aria-label="Recent bookings"
-        items={bookings.slice(0, 5)}
-        getKey={(booking) => booking.id}
-        className="divide-y divide-line"
-        renderItem={(booking) => (
-          <div className="flex items-center justify-between gap-3 py-3">
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold">{booking.customer}</p>
-              <p className="truncate text-xs text-subtle">
-                {booking.bike} · {formatDate(booking.startDate, { year: undefined })}
-              </p>
-            </div>
-            <div className="flex shrink-0 flex-col items-end gap-1">
-              <span className="tabular text-sm font-semibold">{formatMoney(booking.total)}</span>
-              <BookingStatusBadge status={booking.status} />
-            </div>
-          </div>
-        )}
-      />
-    </section>
-  );
+  return <section aria-labelledby="recent" className="rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface)] p-4 shadow-sm"><h2 id="recent" className="mb-1 text-base font-bold">Recent bookings</h2><AnimatedActivityList aria-label="Recent bookings" items={bookings.slice(0, 5)} getKey={(booking) => booking.id} className="divide-y divide-[var(--admin-border)]" renderItem={(booking) => <div className="flex items-center justify-between gap-3 py-3"><div className="min-w-0"><p className="truncate text-sm font-semibold">{booking.customer}</p><p className="truncate text-xs text-[var(--admin-muted)]">{booking.bike} · {formatCambodiaDate(booking.startDate, { year: undefined })}</p></div><div className="flex shrink-0 flex-col items-end gap-1"><MoneyDisplay amount={Math.round(booking.total * 100)} className="text-sm" /><AdminStatusBadge status={booking.status as AdminStatus} /></div></div>} /></section>;
 }

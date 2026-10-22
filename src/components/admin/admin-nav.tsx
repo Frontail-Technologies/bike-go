@@ -1,24 +1,10 @@
 "use client";
 
-import {
-  CalendarCheckIcon,
-  CreditCardIcon,
-  GearIcon,
-  MotorcycleIcon,
-  SquaresFourIcon,
-  UsersIcon,
-} from "@phosphor-icons/react";
 import Link from "next/link";
+import { adminNavigation } from "@/components/admin/config";
 import { cn } from "@/lib/cn";
 
-export const adminNav = [
-  { href: "/admin", label: "Dashboard", Icon: SquaresFourIcon },
-  { href: "/admin/bikes", label: "Fleet", Icon: MotorcycleIcon },
-  { href: "/admin/bookings", label: "Bookings", Icon: CalendarCheckIcon },
-  { href: "/admin/customers", label: "Customers", Icon: UsersIcon },
-  { href: "/admin/payments", label: "Payments", Icon: CreditCardIcon },
-  { href: "/admin/settings", label: "Settings", Icon: GearIcon },
-] as const;
+export const adminNav = adminNavigation;
 
 type AdminNavListProps = {
   activeHref: string;
@@ -29,7 +15,7 @@ type AdminNavListProps = {
 export function AdminNavList({ activeHref, collapsed = false, onNavigate }: AdminNavListProps) {
   return (
     <ul className="flex flex-col gap-1">
-      {adminNav.map(({ href, label, Icon }) => {
+      {adminNavigation.map(({ href, label, Icon }) => {
         const active = href === "/admin" ? activeHref === href : activeHref.startsWith(href);
         return (
           <li key={href}>
@@ -45,13 +31,15 @@ export function AdminNavList({ activeHref, collapsed = false, onNavigate }: Admi
                 }
               }}
               className={cn(
-                "flex min-h-11 items-center gap-3 rounded-control px-3 text-sm outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ink",
+                "flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--admin-accent)]",
                 collapsed && "justify-center px-0",
-                active ? "bg-brand font-bold text-ink" : "font-medium text-subtle hover:bg-surface-secondary hover:text-ink",
+                active
+                  ? "bg-[var(--admin-accent)] font-bold text-[#111820]"
+                  : "font-medium text-[var(--admin-sidebar-muted)] hover:bg-white/8 hover:text-white",
               )}
             >
-              <Icon size={20} weight={active ? "fill" : "regular"} />
-              {collapsed ? null : label}
+              <Icon size={19} weight={active ? "fill" : "regular"} aria-hidden />
+              {collapsed ? null : <span className="truncate">{label}</span>}
             </Link>
           </li>
         );
