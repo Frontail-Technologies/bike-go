@@ -4,9 +4,12 @@ import { createPersistedStore } from "@/lib/persisted-store";
 import { seedBookings } from "./seed";
 import type { BookingDraft, CustomerBooking } from "./types";
 
-export const bookingsStore = createPersistedStore<CustomerBooking[]>("rgo.bookings.v1", seedBookings);
+export const bookingsStore = createPersistedStore<CustomerBooking[]>("rgo.bookings.v2", seedBookings);
 
 export const draftStore = createPersistedStore<BookingDraft | null>("rgo.draft.v1", null, "session");
+
+/** Reference of the booking just paid for. Lets system Back from the confirmation skip the finished flow. */
+export const justBookedStore = createPersistedStore<string | null>("rgo.justbooked.v1", null, "session");
 
 export function newReference(): string {
   return `RG${Math.floor(820500 + Math.random() * 99000)}`;

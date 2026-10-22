@@ -1,6 +1,6 @@
 import { Separator } from "@heroui/react";
 import { PriceDisplay } from "@/components/customer/price-display";
-import { formatPrice } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
 import { cn } from "@/lib/cn";
 
 export type SummaryLine = { label: string; amount: number; hint?: string };
@@ -24,7 +24,7 @@ export function BookingSummary({ lines, totalLabel = "Total amount", className }
               {line.label}
               {line.hint ? <span className="ml-2 rounded-full bg-success-soft px-2 py-0.5 text-[11px] font-semibold text-[#15803d]">{line.hint}</span> : null}
             </dt>
-            <dd className="tabular font-semibold">{formatPrice(line.amount)}</dd>
+            <dd className="tabular font-semibold">{formatMoney(line.amount)}</dd>
           </div>
         ))}
       </dl>
@@ -32,7 +32,7 @@ export function BookingSummary({ lines, totalLabel = "Total amount", className }
       <div className="flex items-center justify-between gap-4">
         <span className="text-sm font-bold">{totalLabel}</span>
         <span data-testid="summary-total">
-          <PriceDisplay amount={total} unit={null} size="lg" />
+          <PriceDisplay amount={Math.round(total * 100) / 100} unit={null} size="lg" precise />
         </span>
       </div>
     </section>

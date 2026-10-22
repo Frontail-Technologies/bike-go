@@ -29,7 +29,7 @@ function seed(
     quote: getQuote(bike, rentalDaysBetween(startDate, endDate), addOns),
     rider,
     licenceNumber: "RJ14 2021 0012345",
-    paymentMethod: "UPI",
+    paymentMethod: "ABA KHQR",
     createdAt: `${startDate}T08:00:00`,
     ...extra,
   };

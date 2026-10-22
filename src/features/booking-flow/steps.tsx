@@ -40,10 +40,10 @@ export function DatesStep({ bike, draft, patch }: PatchProps & { bike: Motorcycl
       <fieldset className="flex flex-col">
         <legend className="mb-1 text-sm font-semibold">Add-ons</legend>
         <Checkbox isSelected={draft.addOns.helmet} onChange={(helmet) => patch({ addOns: { ...draft.addOns, helmet } })}>
-          Helmet · ₹100 / day
+          Helmet · $2 / day
         </Checkbox>
         <Checkbox isSelected={draft.addOns.jacket} onChange={(jacket) => patch({ addOns: { ...draft.addOns, jacket } })}>
-          Riding jacket · ₹150 / day
+          Riding jacket · $2 / day
         </Checkbox>
       </fieldset>
     </div>
@@ -273,18 +273,15 @@ export function ReviewStep({
 // ---------------------------------------------------------------- 5. Payment
 
 export const paymentMethods = [
-  { value: "upi", label: "UPI" },
-  { value: "card", label: "Credit / debit card" },
-  { value: "netbanking", label: "Net banking" },
-  { value: "pickup", label: "Pay at pickup" },
+  { value: "aba-khqr", label: "ABA KHQR" },
 ];
 
 export function PaymentStep({ draft, patch }: PatchProps) {
   return (
     <div className="flex flex-col gap-4">
-      <RadioGroup label="Payment method" value={draft.payment} onChange={(payment) => patch({ payment })} options={paymentMethods} />
+      <RadioGroup label="Payment method" value="aba-khqr" onChange={(payment) => patch({ payment })} options={paymentMethods} />
       <p className="rounded-control bg-surface-secondary px-4 py-3 text-sm text-subtle">
-        Payments are simulated in this preview. No money moves and no card details are collected.
+        Pay by scanning the ABA KHQR code. Payments are simulated in this preview: no money moves.
       </p>
     </div>
   );

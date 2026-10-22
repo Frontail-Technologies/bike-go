@@ -14,9 +14,8 @@ type StickyBookingBarProps = {
 };
 
 /**
- * Primary booking action pinned to the bottom edge.
- * Below 768px it sits directly above the fixed bottom nav; from 768px there is
- * no bottom nav, so it sits on the safe-area edge instead.
+ * Primary booking action pinned to the bottom edge, above the home indicator. Bike details is a pushed
+ * screen, so there is no bottom nav to sit above.
  */
 export function StickyBookingBar({
   amount,
@@ -34,7 +33,7 @@ export function StickyBookingBar({
         "z-30 border-t border-line bg-surface/95 px-page py-3 shadow-nav backdrop-blur-md",
         inline
           ? "sticky bottom-0"
-          : "fixed inset-x-0 bottom-[calc(var(--bottom-nav-height)+var(--safe-bottom))] md:bottom-0 md:pb-[calc(0.75rem+var(--safe-bottom))]",
+          : "fixed inset-x-0 bottom-0 pb-[calc(0.75rem+var(--safe-bottom))]",
         className,
       )}
     >

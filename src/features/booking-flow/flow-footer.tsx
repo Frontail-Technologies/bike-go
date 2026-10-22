@@ -23,7 +23,7 @@ export function FlowFooter({ label, amount, formId, onPress, isDisabled, isPendi
       <div className="mx-auto flex max-w-md items-center justify-between gap-4 lg:max-w-none">
         <div className="lg:hidden">
           <p className="text-xs text-subtle">Total payable</p>
-          <PriceDisplay amount={amount} unit={null} size="md" />
+          <PriceDisplay amount={amount} unit={null} size="md" precise />
         </div>
         {/*
           Always a plain button. Submitting via requestSubmit (not type="submit") means a press that

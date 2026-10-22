@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { toast } from "@/components/ui/toast";
 import type { Motorcycle } from "@/features/mock/data";
-import { formatPrice } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
 import { formatRange } from "./dates";
 import type { CustomerBooking } from "./types";
 
@@ -69,7 +69,7 @@ export function BookingCard({ booking, bike }: { booking: CustomerBooking; bike:
       <div className="flex items-center justify-between gap-3 border-t border-line pt-3">
         <div>
           <p className="text-[11px] text-subtle">{booking.status === "cancelled" ? "Refunded" : "Total paid"}</p>
-          <p className="tabular text-base font-extrabold">{formatPrice(booking.quote.payable)}</p>
+          <p className="tabular text-base font-extrabold">{formatMoney(booking.quote.payable)}</p>
         </div>
         <PrimaryAction booking={booking} bike={bike} />
       </div>

@@ -2,7 +2,8 @@
 
 import { CalendarXIcon } from "@phosphor-icons/react";
 import { AnimatedGrid } from "@/components/motion/animated-grid";
-import { PageHeader } from "@/components/shared/page-header";
+import { AppBar } from "@/components/shared/app-bar";
+import { DesktopTitle, Screen } from "@/components/shared/screen";
 import { ButtonLink } from "@/components/ui/button-link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Tabs } from "@/components/ui/tabs";
@@ -26,8 +27,10 @@ export function BookingsView() {
   const all = bookingsStore.useValue();
 
   return (
-    <div className="flex flex-col gap-4 md:gap-6">
-      <PageHeader title="My bookings" />
+    <>
+      <AppBar title="My bookings" />
+      <Screen bottom="nav" className="flex flex-col gap-4 md:gap-6">
+        <DesktopTitle title="My bookings" />
       <Tabs
         aria-label="Booking status"
         items={tabs.map((tab) => {
@@ -57,6 +60,7 @@ export function BookingsView() {
           };
         })}
       />
-    </div>
+      </Screen>
+    </>
   );
 }

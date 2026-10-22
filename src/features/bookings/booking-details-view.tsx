@@ -6,7 +6,8 @@ import { useState } from "react";
 import { BookingStatusBadge } from "@/components/customer/booking-status-badge";
 import { BookingSummary } from "@/components/customer/booking-summary";
 import { BikeImage } from "@/components/shared/bike-image";
-import { PageHeader } from "@/components/shared/page-header";
+import { AppBar } from "@/components/shared/app-bar";
+import { DesktopTitle, Screen } from "@/components/shared/screen";
 import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -59,12 +60,17 @@ export function BookingDetailsView({ reference }: { reference: string }) {
 
   if (!found) {
     return (
+      <>
+        <AppBar leading="back" backFallback="/bookings" title="Booking details" />
+        <Screen enter="slide">
       <EmptyState
         icon={<MapPinIcon size={24} />}
         title="Booking not found"
         description="Check the reference, or open it from My bookings."
         action={<ButtonLink href="/bookings" size="sm">My bookings</ButtonLink>}
       />
+        </Screen>
+      </>
     );
   }
 
@@ -72,8 +78,10 @@ export function BookingDetailsView({ reference }: { reference: string }) {
   const hub = pickupHubs[(booking.city as City) in pickupHubs ? (booking.city as City) : "Jaipur"];
 
   return (
-    <div className="flex flex-col gap-4 md:gap-6">
-      <PageHeader title="Booking details" subtitle={<span className="tabular">{booking.reference}</span>} showBack backHref="/bookings" />
+    <>
+      <AppBar leading="back" backFallback="/bookings" title="Booking details" subtitle={<span className="tabular">{booking.reference}</span>} />
+      <Screen enter="slide" className="flex flex-col gap-4 md:gap-6">
+        <DesktopTitle title="Booking details" subtitle={<span className="tabular">{booking.reference}</span>} />
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-8">
         <div className="flex min-w-0 flex-col gap-4">
@@ -206,6 +214,7 @@ export function BookingDetailsView({ reference }: { reference: string }) {
           {bike.name}, {formatDay(booking.startDate, false)} to {formatDay(booking.endDate, false)}. Free cancellation applies up to 24 hours before pickup.
         </p>
       </ModalDialog>
-    </div>
+      </Screen>
+    </>
   );
 }

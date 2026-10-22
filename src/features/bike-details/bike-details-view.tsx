@@ -1,8 +1,8 @@
 "use client";
 
-import { ArrowLeftIcon, CalendarBlankIcon, CaretRightIcon, HeartIcon, ShareNetworkIcon, StarIcon } from "@phosphor-icons/react";
+import { CalendarBlankIcon, CaretRightIcon, CheckIcon, HeartIcon, ShareNetworkIcon, StarIcon } from "@phosphor-icons/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BookingSummary } from "@/components/customer/booking-summary";
 import { MotorcycleGallery } from "@/components/customer/motorcycle-gallery";
 import { PriceDisplay } from "@/components/customer/price-display";
@@ -10,30 +10,55 @@ import { RentalDateSelector, type RentalSelection, rentalDays } from "@/componen
 import { SpecTiles } from "@/components/customer/spec-tiles";
 import { StickyBookingBar } from "@/components/customer/sticky-booking-bar";
 import { Reveal } from "@/components/motion/reveal";
+import { AppBar } from "@/components/shared/app-bar";
+import { Screen } from "@/components/shared/screen";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Button, IconButton } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { toast } from "@/components/ui/toast";
-import { formatRange, isBooked, toISO, toRange } from "@/features/bookings/dates";
+import { formatDay, formatRange, isBooked, toISO, toRange } from "@/features/bookings/dates";
 import { getQuote, quoteLines } from "@/features/bookings/pricing";
 import { draftStore } from "@/features/bookings/store";
 import type { Motorcycle } from "@/features/mock/data";
 import { favoritesStore, toggleFavorite } from "@/features/profile/store";
-import { formatDay } from "@/features/bookings/dates";
+import { formatMoney } from "@/lib/format";
 import { PickupCard } from "./pickup-card";
 import { RentalTerms } from "./rental-terms";
+
+/** Section wrapper: one heading size and one heading-to-content gap, so the page has a clear rhythm. */
+function DetailSection({ id, title, className, children }: { id: string; title: string; className?: string; children: React.ReactNode }) {
+  return (
+    <section aria-labelledby={id} className={className}>
+      <h2 id={id} className="mb-3 text-lg leading-7 font-bold">
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
+}
 
 export function BikeDetailsView({ bike }: { bike: Motorcycle }) {
   const router = useRouter();
   const params = useSearchParams();
   const favorite = favoritesStore.useValue().includes(bike.id);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [solidBar, setSolidBar] = useState(false);
+  const heroRef = useRef<HTMLDivElement>(null);
   const [selection, setSelection] = useState<RentalSelection>({
     range: toRange(params.get("start") ?? undefined, params.get("end") ?? undefined),
     pickupTime: params.get("pt") ?? "10:00 AM",
     dropTime: params.get("dt") ?? "10:00 AM",
   });
+
+  // The floating app bar turns solid once the hero has scrolled under it. One observer, no scroll listener.
+  useEffect(() => {
+    const hero = heroRef.current;
+    if (!hero) return;
+    const observer = new IntersectionObserver(([entry]) => setSolidBar(!entry.isIntersecting), { rootMargin: "-64px 0px 0px 0px" });
+    observer.observe(hero);
+    return () => observer.disconnect();
+  }, []);
 
   const range = selection.range;
   const days = rentalDays(range);
@@ -68,13 +93,20 @@ export function BikeDetailsView({ bike }: { bike: Motorcycle }) {
     }
   }
 
-  const selector = (
-    <RentalDateSelector
-      value={selection}
-      onChange={setSelection}
-      isDateUnavailable={(date) => isBooked(bike, date)}
+  const saveButton = (className?: string) => (
+    <IconButton
+      label={favorite ? "Remove from saved" : "Save bike"}
+      aria-pressed={favorite}
+      icon={<HeartIcon size={24} weight={favorite ? "fill" : "regular"} className={favorite ? "text-danger" : undefined} />}
+      className={className}
+      onPress={() => toggleFavorite(bike.id)}
     />
   );
+  const shareButton = (className?: string) => (
+    <IconButton label="Share" icon={<ShareNetworkIcon size={24} />} className={className} onPress={share} />
+  );
+
+  const selector = <RentalDateSelector value={selection} onChange={setSelection} isDateUnavailable={(date) => isBooked(bike, date)} />;
 
   const summary = quote ? (
     <BookingSummary lines={quoteLines(quote)} totalLabel="Total payable" />
@@ -82,135 +114,136 @@ export function BikeDetailsView({ bike }: { bike: Motorcycle }) {
     <p className="rounded-control bg-surface-secondary px-4 py-3 text-sm text-subtle">Select dates to see your total.</p>
   );
 
+  const overHeroButton = "bg-surface/90 shadow-card backdrop-blur-sm";
+
   return (
-    <div className="flex flex-col gap-4 pb-20 lg:pb-0">
-      <div className="hidden md:block">
-        <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Bikes", href: "/bikes" }, { label: bike.name }]} />
-      </div>
+    <>
+      {/* Phones: back, save and share float over the hero and the bar turns solid after scrolling. */}
+      <AppBar
+        floating
+        solid={solidBar}
+        leading="back"
+        backFallback="/bikes"
+        title={bike.name}
+        titleAs="p"
+        actions={
+          <>
+            {saveButton(solidBar ? undefined : overHeroButton)}
+            {shareButton(solidBar ? undefined : overHeroButton)}
+          </>
+        }
+      />
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-10">
-        <div className="flex min-w-0 flex-col gap-6">
-          <MotorcycleGallery
-            bike={bike}
-            overlay={
-              <div className="pointer-events-none absolute inset-x-2 top-2 flex items-start justify-between">
-                <IconButton
-                  label="Go back"
-                  icon={<ArrowLeftIcon size={20} />}
-                  className="pointer-events-auto bg-surface/90 backdrop-blur-sm md:hidden"
-                  onPress={() => router.back()}
-                />
-                <span className="hidden md:block" />
-                <div className="pointer-events-auto flex gap-2">
-                  <IconButton
-                    label={favorite ? "Remove from saved" : "Save bike"}
-                    aria-pressed={favorite}
-                    icon={<HeartIcon size={20} weight={favorite ? "fill" : "regular"} className={favorite ? "text-danger" : undefined} />}
-                    className="bg-surface/90 backdrop-blur-sm"
-                    onPress={() => toggleFavorite(bike.id)}
-                  />
-                  <IconButton label="Share" icon={<ShareNetworkIcon size={20} />} className="bg-surface/90 backdrop-blur-sm" onPress={share} />
-                </div>
-              </div>
-            }
-          />
-
-          <Reveal y={8} blur={0}>
-            <section aria-labelledby="bike-title" className="flex flex-col gap-4">
-              <div className="flex flex-col gap-2">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h1 id="bike-title" className="text-xl leading-tight font-extrabold tracking-tight md:text-2xl">
-                      {bike.name}
-                    </h1>
-                    <p className="text-sm text-subtle">{bike.model}</p>
-                  </div>
-                  <PriceDisplay amount={bike.pricePerDay} size="lg" className="shrink-0" />
-                </div>
-                <div className="flex flex-wrap items-center gap-3 text-sm">
-                  <span className="tabular flex items-center gap-1 font-semibold">
-                    <StarIcon size={16} weight="fill" className="text-brand" />
-                    {bike.rating.toFixed(1)}
-                    <span className="font-normal text-subtle">({bike.reviews} reviews)</span>
-                  </span>
-                  {bike.available ? (
-                    <StatusBadge tone="success">Available</StatusBadge>
-                  ) : (
-                    <StatusBadge tone="danger">On rent{bike.availableFrom ? ` · back ${formatDay(bike.availableFrom, false)}` : ""}</StatusBadge>
-                  )}
-                </div>
-              </div>
-              <SpecTiles bike={bike} />
-            </section>
-          </Reveal>
-
-          {/* Dates and total stay high on the page for mobile; desktop shows them in the side panel. */}
-          <section aria-labelledby="dates-title" className="flex flex-col gap-3 lg:hidden">
-            <h2 id="dates-title" className="text-base font-bold">
-              Rental dates
-            </h2>
-            <button
-              type="button"
-              onClick={() => setSheetOpen(true)}
-              className="flex min-h-14 items-center gap-3 rounded-card border border-line bg-surface px-4 text-left outline-none transition-transform duration-150 focus-visible:ring-2 focus-visible:ring-ink active:scale-[0.99] motion-reduce:transition-none"
-            >
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-control bg-brand-soft">
-                <CalendarBlankIcon size={20} />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-bold">{dateLabel ?? "Select pickup and drop dates"}</span>
-                <span className="block text-xs text-subtle">
-                  {range ? `${days} ${days === 1 ? "day" : "days"} · ${selection.pickupTime} pickup` : "See availability and your total"}
-                </span>
-              </span>
-              <CaretRightIcon size={20} className="shrink-0 text-subtle" />
-            </button>
-            {summary}
-          </section>
-
-          <section aria-labelledby="about-title">
-            <h2 id="about-title" className="mb-2 text-base font-bold">
-              About this bike
-            </h2>
-            <p className="text-sm text-subtle">{bike.description}</p>
-            <ul className="mt-3 flex flex-wrap gap-2">
-              {bike.highlights.map((h) => (
-                <li key={h} className="rounded-full bg-surface-secondary px-3 py-1.5 text-xs font-medium">
-                  {h}
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          <section aria-labelledby="pickup-title">
-            <h2 id="pickup-title" className="mb-3 text-base font-bold">
-              Pickup location
-            </h2>
-            <PickupCard />
-          </section>
-
-          <section aria-labelledby="terms-title">
-            <h2 id="terms-title" className="mb-3 text-base font-bold">
-              Rental terms
-            </h2>
-            <RentalTerms />
-          </section>
+      <Screen enter="slide" bottom="footer" className="flex flex-col gap-4 max-md:px-0 max-md:pt-0 md:pb-28 lg:pb-12">
+        <div className="hidden md:block">
+          <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Bikes", href: "/bikes" }, { label: bike.name }]} />
         </div>
 
-        <aside aria-label="Book this bike" className="hidden lg:block">
-          <div className="sticky top-24 flex flex-col gap-4 rounded-card border border-line bg-surface p-5 shadow-card">
-            <div className="flex items-baseline justify-between">
-              <PriceDisplay amount={bike.pricePerDay} size="lg" />
-              <span className="text-xs text-subtle">Free cancellation 24h before</span>
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-10">
+          <div className="flex min-w-0 flex-col gap-6">
+            <div ref={heroRef}>
+              <MotorcycleGallery bike={bike} bleed />
             </div>
-            {selector}
-            {summary}
-            <Button size="lg" fullWidth onPress={goBook} isDisabled={!range}>
-              Book now
-            </Button>
+
+            <div className="flex flex-col gap-8 max-md:px-page">
+              <Reveal y={8} blur={0}>
+                <section aria-labelledby="bike-title" className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h1 id="bike-title" className="text-xl leading-tight font-extrabold tracking-tight md:text-2xl">
+                          {bike.name}
+                        </h1>
+                        <p className="text-sm text-subtle">{bike.model}</p>
+                      </div>
+                      <div className="flex shrink-0 flex-col items-end gap-2">
+                        <PriceDisplay amount={bike.pricePerDay} size="lg" />
+                        {/* Desktop has no app bar, so save and share live here. */}
+                        <div className="hidden gap-2 md:flex">
+                          {saveButton("border border-line")}
+                          {shareButton("border border-line")}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3 text-sm">
+                      <span className="tabular flex items-center gap-1 font-semibold">
+                        <StarIcon size={16} weight="fill" className="text-brand" />
+                        {bike.rating.toFixed(1)}
+                        <span className="font-normal text-subtle">({bike.reviews} reviews)</span>
+                      </span>
+                      {bike.available ? (
+                        <StatusBadge tone="success">Available</StatusBadge>
+                      ) : (
+                        <StatusBadge tone="danger">On rent{bike.availableFrom ? ` · back ${formatDay(bike.availableFrom, false)}` : ""}</StatusBadge>
+                      )}
+                    </div>
+                  </div>
+                  <SpecTiles bike={bike} />
+                </section>
+              </Reveal>
+
+              {/* Dates and total stay high on the page for mobile; desktop shows them in the side panel. */}
+              <DetailSection id="dates-title" title="Rental dates" className="lg:hidden">
+                <button
+                  type="button"
+                  onClick={() => setSheetOpen(true)}
+                  className="flex min-h-14 items-center gap-3 rounded-card border border-line bg-surface px-4 text-left outline-none transition-transform duration-150 focus-visible:ring-2 focus-visible:ring-ink active:scale-[0.99] motion-reduce:transition-none"
+                >
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-control bg-brand-soft">
+                    <CalendarBlankIcon size={20} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-bold">{dateLabel ?? "Select pickup and drop dates"}</span>
+                    <span className="block text-xs text-subtle">
+                      {range ? `${days} ${days === 1 ? "day" : "days"} · ${selection.pickupTime} pickup` : "See availability and your total"}
+                    </span>
+                  </span>
+                  <CaretRightIcon size={20} className="shrink-0 text-subtle" />
+                </button>
+                <div className="mt-3">{summary}</div>
+              </DetailSection>
+
+              <DetailSection id="about-title" title="About this bike">
+                <div className="flex flex-col gap-4 rounded-card border border-line bg-surface p-4">
+                  <p className="text-[15px] leading-7 text-ink/80">{bike.description}</p>
+                  <ul className="flex flex-col gap-3 border-t border-line pt-4">
+                    {bike.highlights.map((highlight) => (
+                      <li key={highlight} className="flex items-start gap-3 text-sm leading-6 font-medium">
+                        <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-brand text-ink">
+                          <CheckIcon size={12} weight="bold" />
+                        </span>
+                        {highlight}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </DetailSection>
+
+              <DetailSection id="pickup-title" title="Pickup location">
+                <PickupCard />
+              </DetailSection>
+
+              <DetailSection id="terms-title" title="Rental terms">
+                <RentalTerms />
+              </DetailSection>
+            </div>
           </div>
-        </aside>
-      </div>
+
+          <aside aria-label="Book this bike" className="hidden lg:block">
+            <div className="sticky top-24 flex flex-col gap-4 rounded-card border border-line bg-surface p-5 shadow-card">
+              <div className="flex items-baseline justify-between">
+                <PriceDisplay amount={bike.pricePerDay} size="lg" />
+                <span className="text-xs text-subtle">Free cancellation 24h before</span>
+              </div>
+              {selector}
+              {summary}
+              <Button size="lg" fullWidth onPress={goBook} isDisabled={!range}>
+                Book now
+              </Button>
+            </div>
+          </aside>
+        </div>
+      </Screen>
 
       <BottomSheet
         isOpen={sheetOpen}
@@ -224,16 +257,15 @@ export function BikeDetailsView({ bike }: { bike: Motorcycle }) {
       >
         <div className="flex flex-col gap-4">
           {selector}
-          {quote ? <p className="tabular text-center text-sm text-subtle">Total payable {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(quote.payable)}</p> : null}
+          {quote ? (
+            <p className="tabular text-center text-sm text-subtle">
+              Total payable {formatMoney(quote.payable)}
+            </p>
+          ) : null}
         </div>
       </BottomSheet>
 
-      <StickyBookingBar
-        className="lg:hidden"
-        amount={bike.pricePerDay}
-        label={range ? "Book now" : "Select dates"}
-        onPress={goBook}
-      />
-    </div>
+      <StickyBookingBar className="lg:hidden" amount={bike.pricePerDay} label={range ? "Book now" : "Select dates"} onPress={goBook} />
+    </>
   );
 }

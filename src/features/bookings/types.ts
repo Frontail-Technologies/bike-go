@@ -34,6 +34,4 @@ export type BookingDraft = {
   licenceNumber: string;
   licenceLater: boolean;
   payment: string;
-  /** Zero-based step index. */
-  step: number;
 };

@@ -16,12 +16,12 @@ export function PickupCard() {
           <MapPinIcon size={20} weight="fill" />
         </span>
         <div className="min-w-0">
-          <p className="text-sm font-bold">{hub.name}</p>
-          <p className="text-sm text-subtle">{hub.address}</p>
+          <p className="text-[15px] leading-6 font-bold">{hub.name}</p>
+          <p className="text-sm leading-6 text-ink/75">{hub.address}</p>
         </div>
       </div>
-      <p className="flex items-center gap-2 text-sm text-subtle">
-        <ClockIcon size={20} className="shrink-0 text-ink" />
+      <p className="flex items-start gap-2 border-t border-line pt-3 text-sm leading-6 text-ink/75">
+        <ClockIcon size={20} className="mt-0.5 shrink-0 text-ink" />
         Open {hub.hours}. Change your city on the home screen.
       </p>
     </div>

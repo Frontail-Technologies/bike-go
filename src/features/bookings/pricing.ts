@@ -1,9 +1,11 @@
 import type { Motorcycle } from "@/features/mock/data";
 
-export const HELMET_PER_DAY = 100;
-export const JACKET_PER_DAY = 150;
-export const GST_RATE = 0.18;
-export const PLATFORM_FEE = 49;
+export const HELMET_PER_DAY = 2;
+export const JACKET_PER_DAY = 2;
+export const TAX_RATE = 0.18;
+export const PLATFORM_FEE = 1;
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
 
 export type AddOns = { helmet: boolean; jacket: boolean };
 
@@ -12,8 +14,8 @@ export type Quote = {
   rental: number;
   helmet: number;
   jacket: number;
-  /** GST on rental and add-ons. */
-  gst: number;
+  /** Tax on rental and add-ons. */
+  tax: number;
   fee: number;
   /** Refundable security deposit, held until the bike is returned. */
   deposit: number;
@@ -25,10 +27,10 @@ export function getQuote(bike: Motorcycle, days: number, addOns: AddOns): Quote 
   const rental = bike.pricePerDay * days;
   const helmet = addOns.helmet ? HELMET_PER_DAY * days : 0;
   const jacket = addOns.jacket ? JACKET_PER_DAY * days : 0;
-  const gst = Math.round((rental + helmet + jacket) * GST_RATE);
+  const tax = round2((rental + helmet + jacket) * TAX_RATE);
   const fee = PLATFORM_FEE;
   const deposit = bike.deposit;
-  return { days, rental, helmet, jacket, gst, fee, deposit, payable: rental + helmet + jacket + gst + fee + deposit };
+  return { days, rental, helmet, jacket, tax, fee, deposit, payable: round2(rental + helmet + jacket + tax + fee + deposit) };
 }
 
 export type QuoteLine = { label: string; amount: number; hint?: string };
@@ -40,7 +42,7 @@ export function quoteLines(quote: Quote): QuoteLine[] {
   if (quote.helmet) lines.push({ label: "Helmet", amount: quote.helmet });
   if (quote.jacket) lines.push({ label: "Riding jacket", amount: quote.jacket });
   lines.push(
-    { label: "GST (18%)", amount: quote.gst },
+    { label: "Taxes (18%)", amount: quote.tax },
     { label: "Platform fee", amount: quote.fee },
     { label: "Security deposit", amount: quote.deposit, hint: "Refundable" },
   );
