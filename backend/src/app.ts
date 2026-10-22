@@ -5,6 +5,7 @@ import { errorPlugin } from "@/plugins/error";
 import { openapiPlugin } from "@/plugins/openapi";
 import { requestMeta } from "@/plugins/request-meta";
 import { adminRoutes } from "@/routes/admin";
+import { availabilityRoutes } from "@/routes/availability";
 import { health } from "@/routes/health";
 import { locationRoutes } from "@/routes/location";
 import { userRoutes } from "@/routes/user";
@@ -24,6 +25,7 @@ export const app = new Elysia({ name: "RideGo.App" })
   .use(userRoutes)
   .use(locationRoutes)
   .use(vehicleRoutes)
+  .use(availabilityRoutes)
   .use(adminRoutes);
 
 export type App = typeof app;

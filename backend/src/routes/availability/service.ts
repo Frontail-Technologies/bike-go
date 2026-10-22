@@ -82,3 +82,13 @@ export async function getAvailability(vehicleId: string, from: Date, to: Date): 
     unavailablePeriods: periods.map((p) => ({ start: p.start.toISOString(), end: p.end.toISOString(), kind: p.kind })),
   };
 }
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Public availability is looked up by slug or id, like the vehicle itself. Inactive vehicles do not exist publicly. */
+export async function resolveVehicleId(idOrSlug: string) {
+  const key = UUID.test(idOrSlug) ? eq(vehicles.id, idOrSlug) : eq(vehicles.slug, idOrSlug);
+  const [row] = await db.select({ id: vehicles.id, status: vehicles.status }).from(vehicles).where(key).limit(1);
+  if (!row || row.status === "inactive") throw new AppError("NOT_FOUND", 404, "Vehicle not found.");
+  return row.id;
+}
