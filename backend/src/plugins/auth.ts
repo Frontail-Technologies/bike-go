@@ -1,19 +1,30 @@
 import { Elysia } from "elysia";
-import { auth } from "@/libs/auth";
-import { errorBody } from "@/libs/api";
+import { AppError } from "@/libs/api";
+import { auth, type Session } from "@/libs/auth";
 import { requestMeta } from "./request-meta";
 
-type Role = "customer" | "admin" | "super_admin";
-const ADMIN_ROLES: readonly Role[] = ["admin", "super_admin"];
+const STAFF = new Set(["admin", "super_admin"]);
+const unauthenticated = () => new AppError("AUTH_REQUIRED", 401, "Sign in to continue.");
 
-const requestIdOf = (set: { headers: Record<string, unknown> }) => String(set.headers["x-request-id"] ?? crypto.randomUUID());
+/** One session lookup per request, shared by the macro's pre-validation check and its typed `derive`. */
+const sessions = new WeakMap<Request, Promise<Session | null>>();
+const sessionOf = (request: Request) => {
+  let found = sessions.get(request);
+  if (!found) {
+    found = auth.api.getSession({ headers: request.headers });
+    sessions.set(request, found);
+  }
+  return found;
+};
 
 /**
  * Authentication for the whole API.
  *
  * - `/api/v1/auth/*` is handed to Better Auth (Google OAuth, Telegram sign-in, session, sign-out).
- * - Route options `auth: true`, `admin: true` and `superAdmin: true` resolve the session from the request cookie
- *   and expose a typed `user` and `session` to the handler, or answer 401/403 in the standard error envelope.
+ * - Route options `auth: true`, `admin: true` and `superAdmin: true` resolve the session from the request cookie,
+ *   answer 401/403 in the standard error envelope, and expose a typed `user` and `session` to the handler.
+ * - The check runs in the `transform` stage, before body validation, so an anonymous or unauthorised caller gets
+ *   401/403 and never learns what the route's schema looks like. `derive` then provides the typed values.
  * - The role always comes from the database through the session, never from a body, query or header.
  */
 export const authPlugin = new Elysia({ name: "RideGo.Auth" })
@@ -29,25 +40,33 @@ export const authPlugin = new Elysia({ name: "RideGo.Auth" })
   )
   .macro({
     auth: {
-      async derive({ request, status, set }) {
-        const session = await auth.api.getSession({ headers: request.headers });
-        if (!session) return status(401, errorBody("AUTH_REQUIRED", "Sign in to continue.", requestIdOf(set)));
+      async transform({ request }) {
+        if (!(await sessionOf(request))) throw unauthenticated();
+      },
+      async derive({ request }) {
+        const session = (await sessionOf(request))!;
         return { user: session.user, session: session.session };
       },
     },
     admin: {
-      async derive({ request, status, set }) {
-        const session = await auth.api.getSession({ headers: request.headers });
-        if (!session) return status(401, errorBody("AUTH_REQUIRED", "Sign in to continue.", requestIdOf(set)));
-        if (!ADMIN_ROLES.includes(session.user.role as Role)) return status(403, errorBody("FORBIDDEN", "This area is for RideGo staff.", requestIdOf(set)));
+      async transform({ request }) {
+        const session = await sessionOf(request);
+        if (!session) throw unauthenticated();
+        if (!STAFF.has(session.user.role as string)) throw new AppError("FORBIDDEN", 403, "This area is for RideGo staff.");
+      },
+      async derive({ request }) {
+        const session = (await sessionOf(request))!;
         return { user: session.user, session: session.session };
       },
     },
     superAdmin: {
-      async derive({ request, status, set }) {
-        const session = await auth.api.getSession({ headers: request.headers });
-        if (!session) return status(401, errorBody("AUTH_REQUIRED", "Sign in to continue.", requestIdOf(set)));
-        if (session.user.role !== "super_admin") return status(403, errorBody("FORBIDDEN", "This action needs a super admin.", requestIdOf(set)));
+      async transform({ request }) {
+        const session = await sessionOf(request);
+        if (!session) throw unauthenticated();
+        if (session.user.role !== "super_admin") throw new AppError("FORBIDDEN", 403, "This action needs a super admin.");
+      },
+      async derive({ request }) {
+        const session = (await sessionOf(request))!;
         return { user: session.user, session: session.session };
       },
     },

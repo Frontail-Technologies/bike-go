@@ -1,8 +1,13 @@
 import { Elysia, t } from "elysia";
 import { Envelope, ok } from "@/libs/api";
 import { authPlugin } from "@/plugins/auth";
+import { adminLocationRoutes } from "./location";
+import { adminVehicleRoutes } from "./vehicle";
 
-/** Staff-only API. Every route sets `admin: true`, so a missing session is 401 and a customer is 403. */
+/**
+ * Staff-only API under /api/v1/admin. Every route sets `admin: true`, so a missing session is 401 and a
+ * customer is 403. Feature areas are child plugins mounted here.
+ */
 export const adminRoutes = new Elysia({ name: "RideGo.Admin", prefix: "/api/v1/admin", tags: ["Admin"] })
   .use(authPlugin)
   .get(
@@ -13,4 +18,6 @@ export const adminRoutes = new Elysia({ name: "RideGo.Admin", prefix: "/api/v1/a
       detail: { summary: "The signed-in staff member", security: [{ sessionCookie: [] }] },
     },
     ({ user }) => ok({ id: user.id, role: user.role as "admin" | "super_admin" }),
-  );
+  )
+  .use(adminVehicleRoutes)
+  .use(adminLocationRoutes);
