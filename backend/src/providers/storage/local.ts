@@ -1,8 +1,7 @@
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, resolve, sep } from "node:path";
+import { assertSafeKey } from "./key";
 import type { StorageProvider } from "./types";
-
-const SAFE_KEY = /^[a-z0-9][a-z0-9/_.-]*$/i;
 
 export class LocalStorageProvider implements StorageProvider {
   private readonly root: string;
@@ -12,8 +11,7 @@ export class LocalStorageProvider implements StorageProvider {
   }
 
   private pathFor(key: string) {
-    if (!SAFE_KEY.test(key) || key.includes("..")) throw new Error(`Refusing unsafe storage key: ${key}`);
-    const full = resolve(this.root, key);
+    const full = resolve(this.root, assertSafeKey(key));
     if (!full.startsWith(this.root + sep)) throw new Error(`Refusing storage key outside the root: ${key}`);
     return full;
   }

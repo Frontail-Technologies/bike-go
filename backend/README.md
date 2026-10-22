@@ -26,7 +26,7 @@ bun run dev                     # http://localhost:3001, docs at /api/v1/docs
 
 The server accepts bodies up to `MAX_REQUEST_BODY_BYTES` (16 MiB) so that a document over the 5 MB limit gets a structured `413 FILE_TOO_LARGE`; only larger bodies are cut off.
 
-Production refuses to start without `BETTER_AUTH_SECRET`, Google OAuth credentials and `TELEGRAM_BOT_TOKEN`.
+Production refuses to start without `BETTER_AUTH_SECRET`, Google OAuth credentials, `TELEGRAM_BOT_TOKEN` and `STORAGE_DRIVER=r2` with its R2 settings.
 
 ## Sign-in
 
@@ -56,7 +56,14 @@ tests/
 - **Booking holds**: a new booking is `pending` and `unpaid` with `hold_expires_at` (`BOOKING_HOLD_MINUTES`, default 15). An unexpired hold blocks the vehicle; once it lapses the booking becomes `expired` and no longer blocks. Cancellation does not calculate any refund yet.
 - **No double booking**: the booking service locks the vehicle row and re-checks inside a transaction, and a `btree_gist` exclusion constraint on `bookings` makes overlapping holds (pending, confirmed, ready_for_pickup, active) impossible even if a race slips through.
 - **Loans** are never decided automatically. Customers can submit a draft and send back requested documents; every other status change is a staff action along an explicit transition map, recorded in `loan_status_history`.
-- **Documents** are private: content-sniffed (PDF, JPG, PNG), 5 MB, stored under server-generated keys that no response ever includes.
+- **Documents** are private: content-sniffed (PDF, JPG, PNG), 5 MB, stored under server-generated keys that no response ever includes. Files go to Cloudflare R2 (`STORAGE_DRIVER=r2`) or, for local development only, to disk (`STORAGE_DRIVER=local`, the default).
+
+## Cloudflare R2
+
+1. Create a **private** bucket (no public access, no custom public domain) and an API token with Object Read and Write on that bucket.
+2. Set `STORAGE_DRIVER=r2`, `R2_BUCKET`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, and either `R2_ACCOUNT_ID` (the endpoint becomes `https://<account>.r2.cloudflarestorage.com`) or `R2_ENDPOINT`.
+3. The API uploads and streams files itself, after checking ownership and the real file type, so browsers never get bucket access. Direct browser uploads (`createUploadTarget`) are deliberately not offered because a presigned upload cannot enforce the 5 MB or file-type limits. `getDownloadUrl` can produce short-lived presigned links if a use for them appears.
+4. Tests run the real R2 provider against an in-process S3-compatible fake, so no Cloudflare account is needed to run them.
 - Every error is `{ success: false, error: { code, message, details }, requestId }` with a stable code.
 
 ## Not built yet

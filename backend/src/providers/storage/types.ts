@@ -5,3 +5,10 @@ export interface StorageProvider {
   createUploadTarget(key: string, options: { contentType: string; maxBytes: number }): Promise<{ url: string; method: "PUT"; headers: Record<string, string> } | null>;
   getDownloadUrl(key: string, options: { expiresInSeconds: number }): Promise<string | null>;
 }
+
+export type R2Config = {
+  endpoint: string;
+  bucket: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+};

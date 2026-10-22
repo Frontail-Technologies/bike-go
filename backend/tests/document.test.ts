@@ -7,6 +7,7 @@ import { storage } from "../src/providers/storage";
 import { LocalStorageProvider } from "../src/providers/storage/local";
 import { MAX_FILE_BYTES, sanitizeFilename } from "../src/routes/document/service";
 import { REQUIRED_DOCUMENTS } from "../src/routes/loan/rules";
+import { fakeS3 } from "./helpers/fake-s3";
 import { json } from "./helpers/http";
 import { patchJson, postJson, request, signInAdmin, signInCustomer } from "./helpers/auth";
 import { createDraft, fillDraft, submittedLoan } from "./helpers/loan";
@@ -63,6 +64,22 @@ describe("uploading", () => {
     const everything = JSON.stringify([bodies, list, await json(await request(`/api/v1/loans/${reference}`, { cookie }))]);
     expect(everything).not.toContain("storageKey");
     expect(everything).not.toContain("loans/");
+  });
+
+  test("documents are stored in R2 under server-generated keys and removed from it on delete", async () => {
+    const { cookie } = await signInCustomer();
+    const { reference } = await createDraft(cookie);
+    const created = (await json(await upload(cookie, reference, "passport", PDF, "my passport.pdf"))).data;
+    const [row] = await db.select().from(loanDocuments).where(eq(loanDocuments.id, created.id));
+
+    expect(row?.storageKey).toMatch(/^loans\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.pdf$/);
+    const stored = fakeS3().objects.get(row!.storageKey);
+    expect(stored?.contentType).toBe("application/pdf");
+    expect(stored?.bytes).toEqual(PDF);
+    expect(JSON.stringify(await json(await request(`/api/v1/loans/${reference}/documents`, { cookie })))).not.toContain(row!.storageKey);
+
+    await request(`/api/v1/loans/${reference}/documents/${created.id}`, { cookie, method: "DELETE" });
+    expect(fakeS3().objects.has(row!.storageKey)).toBe(false);
   });
 
   test("the real file type is checked, not the name", async () => {

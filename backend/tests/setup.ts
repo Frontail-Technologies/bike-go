@@ -9,12 +9,17 @@ process.env.PLATFORM_FEE_USD_MINOR = "0";
 process.env.PLATFORM_FEE_KHR_MINOR = "0";
 process.env.BOOKING_HOLD_MINUTES = "15";
 
+const { startFakeS3, registerFakeS3 } = await import("./helpers/fake-s3");
+const fake = startFakeS3("ridego-test");
+registerFakeS3(fake);
+process.env.STORAGE_DRIVER = "r2";
+process.env.R2_ENDPOINT = fake.url;
+process.env.R2_BUCKET = fake.bucket;
+process.env.R2_ACCESS_KEY_ID = "test-access-key";
+process.env.R2_SECRET_ACCESS_KEY = "test-secret-key";
+
 const realDatabase = process.env.TEST_DATABASE_URL;
 process.env.DATABASE_URL = realDatabase ?? "pglite://memory";
-
-const { tmpdir } = await import("node:os");
-const { join } = await import("node:path");
-process.env.STORAGE_ROOT = join(tmpdir(), `ridego-test-storage-${process.pid}`);
 
 if (realDatabase) {
   const name = new URL(realDatabase).pathname.replace(/^\//, "");
