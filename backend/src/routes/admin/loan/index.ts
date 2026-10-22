@@ -1,6 +1,8 @@
 import { Elysia } from "elysia";
 import { ok } from "@/libs/api";
 import { authPlugin } from "@/plugins/auth";
+import * as DocumentModel from "@/routes/document/model";
+import { downloadAnyDocument, reviewDocument } from "@/routes/document/service";
 import * as LoanModel from "./model";
 import { adminGetLoan, adminListLoans, changeLoanStatus } from "./service";
 
@@ -28,4 +30,20 @@ export const adminLoanRoutes = new Elysia({ name: "RideGo.Admin.Loan", prefix: "
       },
     },
     async ({ params, body, user }) => ok(await changeLoanStatus(params.reference, user.id, body.status as never, body.note)),
+  )
+  .patch(
+    "/:reference/documents/:documentId/review",
+    {
+      admin: true,
+      params: DocumentModel.DocumentReviewPatch.Params,
+      body: DocumentModel.DocumentReviewPatch.Body,
+      response: { 200: DocumentModel.DocumentReviewPatch.Response },
+      detail: { summary: "Review a document", description: "Mark it verified, needs_review or rejected. A note is required for the last two and is shown to the applicant. Reviewing does not itself change the application's status.", security },
+    },
+    async ({ params, body, user }) => ok(await reviewDocument(params.reference, user.id, params.documentId, body)),
+  )
+  .get(
+    "/:reference/documents/:documentId/file",
+    { admin: true, params: DocumentModel.DocumentByIdParams, detail: { summary: "Download any application's document", description: "Sent as a private, uncacheable attachment.", security } },
+    async ({ params }) => downloadAnyDocument(params.reference, params.documentId),
   );
