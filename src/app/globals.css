@@ -109,6 +109,14 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+@utility px-page {
+  padding-inline: var(--page-padding);
+}
+
+@utility pb-safe {
+  padding-bottom: var(--safe-bottom);
+}
+
 @layer utilities {
   /* Chrome (bars, nav, buttons) should not be text-selectable by an accidental long press. */
   [role="button"],
@@ -117,12 +125,6 @@ body {
   header {
     -webkit-user-select: none;
     user-select: none;
-  }
-  .px-page {
-    padding-inline: var(--page-padding);
-  }
-  .pb-safe {
-    padding-bottom: var(--safe-bottom);
   }
   .tabular {
     font-variant-numeric: tabular-nums;

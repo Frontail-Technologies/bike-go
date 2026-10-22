@@ -187,7 +187,7 @@ export function BikeDetailsView({ bike }: { bike: Motorcycle }) {
                 <button
                   type="button"
                   onClick={() => setSheetOpen(true)}
-                  className="flex min-h-14 items-center gap-3 rounded-card border border-line bg-surface px-4 text-left outline-none transition-transform duration-150 focus-visible:ring-2 focus-visible:ring-ink active:scale-[0.99] motion-reduce:transition-none"
+                  className="flex min-h-14 w-full items-center gap-3 rounded-card border border-line bg-surface px-4 text-left outline-none transition-transform duration-150 focus-visible:ring-2 focus-visible:ring-ink active:scale-[0.99] motion-reduce:transition-none"
                 >
                   <span className="flex size-10 shrink-0 items-center justify-center rounded-control bg-brand-soft">
                     <CalendarBlankIcon size={20} />

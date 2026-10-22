@@ -15,6 +15,7 @@ import {
   SignOutIcon,
   WarningIcon,
   BankIcon,
+  FilesIcon,
 } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -33,6 +34,8 @@ import { toast } from "@/components/ui/toast";
 import { Reveal } from "@/components/motion/reveal";
 import { authStore } from "@/features/auth/store";
 import { maskLicence } from "@/features/bookings/use-booking";
+import { ApplicationCard } from "@/features/loans/application-card";
+import { loansStore } from "@/features/loans/store";
 import { favoritesStore, initials, profileStore } from "./store";
 
 type ModalKey = "edit" | "licence" | "logout" | null;
@@ -51,6 +54,7 @@ const licenceSchema = z.object({
 export function ProfileView() {
   const router = useRouter();
   const profile = profileStore.useValue();
+  const applications = loansStore.useValue();
   const savedCount = favoritesStore.useValue().length;
   const [modal, setModal] = useState<ModalKey>(null);
   const close = () => setModal(null);
@@ -146,8 +150,20 @@ export function ProfileView() {
             </div>
           </SectionCard>
 
-          <SectionCard id="loans-title" title="Expat loans">
-            <ListRow icon={<BankIcon size={20} />} label="Loans for expats" description="Check rates, apply and track your application" href="/loans" />
+          <SectionCard id="loans-title" title="Expat loan applications">
+            {applications.length > 0 ? (
+              <div className="flex flex-col gap-3">
+                {applications.slice(0, 3).map((application) => (
+                  <ApplicationCard key={application.reference} application={application} />
+                ))}
+                <ListRow icon={<FilesIcon size={20} />} label="All applications" description={`${applications.length} in total`} href="/loans/applications" />
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <p className="text-sm text-subtle">You have not applied for a loan yet.</p>
+                <ListRow icon={<BankIcon size={20} />} label="Loans for expats" description="Check rates, apply and track your application" href="/loans" />
+              </div>
+            )}
           </SectionCard>
 
           <SectionCard id="help-title" title="Help and support">
