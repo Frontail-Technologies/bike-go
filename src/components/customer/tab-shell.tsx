@@ -12,7 +12,7 @@ export function TabShell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-dvh flex-col">
       <NavTracker />
       <CustomerHeader className="hidden md:block" />
-      <main id="main" className="flex-1">
+      <main id="main" className="min-h-[calc(100dvh-4rem)] flex-1">
         {children}
       </main>
       <SiteFooter />
