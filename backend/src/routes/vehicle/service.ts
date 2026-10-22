@@ -35,8 +35,6 @@ const columns = {
 const selectJoined = () => db.select(columns).from(vehicles).innerJoin(locations, eq(vehicles.locationId, locations.id));
 type Row = Awaited<ReturnType<ReturnType<typeof selectJoined>["limit"]>>[number];
 
-
-/** Attaches images and reshapes rows into the public contract. Registration numbers and storage keys never leave here. */
 async function present(executor: Executor, rows: Row[]): Promise<PublicVehicle[]> {
   if (rows.length === 0) return [];
   const images = await executor
@@ -91,7 +89,6 @@ export async function listVehicles(query: VehiclesGet["Query"], options: { inclu
   return { data: await present(db, rows), meta: pageMeta(paging, total?.n ?? 0) };
 }
 
-/** Finds a vehicle by slug or UUID. Public callers never see inactive vehicles. */
 export async function getVehicle(idOrSlug: string, options: { includeInactive?: boolean } = {}) {
   const key = UUID.test(idOrSlug) ? eq(vehicles.id, idOrSlug) : eq(vehicles.slug, idOrSlug);
   const [row] = await db
@@ -104,5 +101,4 @@ export async function getVehicle(idOrSlug: string, options: { includeInactive?: 
   return (await present(db, [row]))[0]!;
 }
 
-/** Shared by admin routes: free-text search across the fields staff look for. */
 export const vehicleSearch = (term: string) => or(ilike(vehicles.name, `%${term}%`), ilike(vehicles.brand, `%${term}%`), ilike(vehicles.model, `%${term}%`), ilike(vehicles.registrationNumber, `%${term}%`));

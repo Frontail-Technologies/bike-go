@@ -1,16 +1,5 @@
 import { addMinor, multiplyMinor, percentOfMinor, type Currency } from "@/libs/money";
 
-/**
- * Pure booking pricing, in integer minor units. The server owns every number: the client sends a vehicle,
- * dates and add-on codes, never an amount. Rules:
- *
- * - rental = daily rate x days
- * - each add-on = its per-day price x quantity x days
- * - platform fee = a flat configured amount
- * - taxes = rate (basis points) of rental + add-ons, rounded half up. Fee and deposit are not taxed.
- * - deposit = the vehicle's refundable deposit (a snapshot)
- * - total payable = rental + add-ons + fee + taxes + deposit
- */
 export type PricingInput = {
   currency: Currency;
   days: number;

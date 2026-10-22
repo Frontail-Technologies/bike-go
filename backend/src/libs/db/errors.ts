@@ -1,4 +1,3 @@
-/** Postgres SQLSTATE codes the services react to. */
 export const PG = {
   uniqueViolation: "23505",
   foreignKeyViolation: "23503",
@@ -6,7 +5,6 @@ export const PG = {
   exclusionViolation: "23P01",
 } as const;
 
-/** The SQLSTATE of a database error. Drizzle wraps driver errors, so this walks `cause` to find it. */
 export function pgErrorCode(error: unknown): string | undefined {
   let current: unknown = error;
   for (let depth = 0; depth < 5 && current && typeof current === "object"; depth++) {
@@ -17,7 +15,6 @@ export function pgErrorCode(error: unknown): string | undefined {
   return undefined;
 }
 
-/** The violated constraint's name, when the driver reports it. */
 export function pgConstraint(error: unknown): string | undefined {
   let current: unknown = error;
   for (let depth = 0; depth < 5 && current && typeof current === "object"; depth++) {

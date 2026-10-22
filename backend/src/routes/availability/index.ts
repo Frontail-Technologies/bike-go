@@ -3,7 +3,6 @@ import { ok, publicErrors } from "@/libs/api";
 import * as AvailabilityModel from "./model";
 import { getAvailability, resolveVehicleId } from "./service";
 
-/** Same prefix and param name as the vehicle routes, so both plugins share `/vehicles/:idOrSlug`. */
 export const availabilityRoutes = new Elysia({ name: "RideGo.Availability", prefix: "/api/v1/vehicles", tags: ["Vehicles"] }).get(
   "/:idOrSlug/availability",
   {

@@ -1,13 +1,8 @@
 import { Elysia, NotFound, ParseError, ValidationError } from "elysia";
 import { AppError, errorBody } from "@/libs/api";
 
-/** The id was put on the response headers by the request-meta plugin; fall back to a fresh one if it never ran. */
 const idOf = (set: { headers: Record<string, unknown> }) => String(set.headers["x-request-id"] ?? crypto.randomUUID());
 
-/**
- * One error shape for the whole API: `{ success: false, error: { code, message, details }, requestId }`.
- * Business failures throw AppError; Elysia's own validation, parse and routing errors are mapped to stable codes.
- */
 export const errorPlugin = new Elysia({ name: "RideGo.Error" }).onError("global", ({ error, set }) => {
   const requestId = idOf(set);
 

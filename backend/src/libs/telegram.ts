@@ -15,12 +15,6 @@ export type TelegramVerification = { ok: true; identity: TelegramIdentity } | { 
 
 const FUTURE_SKEW_SECONDS = 60;
 
-/**
- * Verifies a Telegram Login Widget payload (https://core.telegram.org/widgets/login#checking-authorization).
- * The data-check-string is every received field except `hash`, as `key=value`, sorted by key and joined by
- * newlines. Its HMAC-SHA256, keyed with SHA-256(bot token), must equal `hash`. Anything the browser sends
- * without a valid signature is rejected, and old signatures expire so a leaked payload cannot be replayed.
- */
 export function verifyTelegramLogin(
   payload: TelegramLoginPayload,
   options: { botToken: string; maxAgeSeconds: number; now?: Date },
@@ -55,7 +49,6 @@ export function verifyTelegramLogin(
   };
 }
 
-/** Test and tooling helper: signs a payload the way Telegram would, given the bot token. */
 export function signTelegramLogin(fields: Record<string, string | number>, botToken: string) {
   const dataCheckString = Object.entries(fields)
     .map(([key, value]) => `${key}=${value}`)

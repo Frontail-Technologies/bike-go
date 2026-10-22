@@ -40,9 +40,8 @@ describe("transition rules (pure)", () => {
     expect(() => assertTransition("eligibility_review", "approved", "staff", undefined)).not.toThrow();
   });
 
-  test("KHR limits scale the USD ones", () => {
-    expect(loanLimits("personal", "USD")).toMatchObject({ minMinor: 100_000, maxMinor: 2_500_000, maxTenure: 48 });
-    expect(loanLimits("personal", "KHR").maxMinor).toBe(2_500_000 * 4100);
+  test("USD loan limits are native", () => {
+    expect(loanLimits("personal", "USD")).toMatchObject({ minMinor: 100_000, maxMinor: 2_500_000, maxTenure: 48, derivedFrom: null });
   });
 });
 
@@ -60,7 +59,6 @@ describe("draft", () => {
     const updated = await patchJson(`/api/v1/loans/${draft.reference}`, { requestedAmountMinor: 800_000, fullName: "Sokha Chan", employerName: "Mekong Logistics" }, { cookie });
     expect(updated.status).toBe(200);
     expect((await json(updated)).data).toMatchObject({ requestedAmountMinor: 800_000, applicant: { fullName: "Sokha Chan" }, employment: { employerName: "Mekong Logistics" } });
-    // It can keep being edited.
     expect((await patchJson(`/api/v1/loans/${draft.reference}`, { tenureMonths: 36 }, { cookie })).status).toBe(200);
   });
 
@@ -97,14 +95,6 @@ describe("draft", () => {
     const loan = await getLoan(cookie, reference);
     expect(loan.status).toBe("draft");
     expect(loan.reference).toBe(reference);
-  });
-
-  test("a KHR application uses KHR limits", async () => {
-    const { cookie } = await signInCustomer();
-    const ok = await postJson("/api/v1/loans", draftBody({ currency: "KHR", requestedAmountMinor: 500_000_000 }), { cookie });
-    expect(ok.status).toBe(201);
-    expect((await json(ok)).data.currency).toBe("KHR");
-    expect((await postJson("/api/v1/loans", draftBody({ currency: "KHR", requestedAmountMinor: 500_000 }), { cookie })).status).toBe(422);
   });
 });
 
@@ -338,5 +328,4 @@ describe("admin list", () => {
   });
 });
 
-// Kept so unused-helper lint stays honest: completeFields is exercised through fillDraft above.
 void completeFields;

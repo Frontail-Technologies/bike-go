@@ -7,7 +7,6 @@ import { loanView, recordTransition } from "@/routes/loan/service";
 import { assertTransition, STAFF_TRANSITIONS, type LoanStatus } from "@/routes/loan/rules";
 import type { AdminLoanView, LoansGet } from "./model";
 
-/** Staff see the customer's identity and who made each status change. */
 export async function adminLoanView(executor: Executor, id: string): Promise<AdminLoanView> {
   const base = await loanView(executor, id);
   const [row] = await executor
@@ -68,13 +67,8 @@ export async function adminListLoans(query: LoansGet["Query"]) {
   return { data: await Promise.all(rows.map((r) => adminLoanView(db, r.id))), meta: pageMeta(paging, total?.n ?? 0) };
 }
 
-/**
- * Staff move an application along the explicit transition map. Approval and rejection are decisions made here,
- * by a person, and nowhere else. Every move is written to the status history with who made it and why.
- */
 export async function changeLoanStatus(reference: string, staffUserId: string, to: LoanStatus, note: string | undefined) {
   return db.transaction(async (tx) => {
-    // Lock first, so two staff members acting on one application are applied one after the other.
     await tx.execute(sql`select id from ${loanApplications} where ${loanApplications.reference} = ${reference} for update`);
     const [current] = await tx.select().from(loanApplications).where(eq(loanApplications.reference, reference)).limit(1);
     if (!current) throw new AppError("NOT_FOUND", 404, "Application not found.");

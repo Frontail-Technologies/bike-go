@@ -9,12 +9,6 @@ import { env } from "@/env";
 import { db, schema } from "@/libs/db";
 import { verifyTelegramLogin } from "@/libs/telegram";
 
-/**
- * Sign in with Telegram (Login Widget). The browser posts the widget's payload; the server verifies the
- * signature with the bot token and only then finds or creates the user, so a forged identity can never get
- * a session. Telegram gives no email, so a reserved-domain placeholder (never routable) fills the required
- * column. The Telegram id is the account's `accountId`, which is what identifies the person from then on.
- */
 const telegram = (): BetterAuthPlugin => ({
   id: "telegram",
   endpoints: {
@@ -75,18 +69,15 @@ export const auth = betterAuth({
   rateLimit: { enabled: env.NODE_ENV !== "test" },
   user: {
     additionalFields: {
-      // Never writable from a client: only the database (seed script, admin tooling) assigns roles.
       role: { type: "string", required: false, defaultValue: "customer", input: false },
     },
   },
   account: {
-    // A Google account whose verified email matches an existing user (for example a pre-created admin) is linked to it.
     accountLinking: { enabled: true, trustedProviders: ["google"] },
   },
   socialProviders: googleConfigured
     ? { google: { clientId: env.GOOGLE_CLIENT_ID!, clientSecret: env.GOOGLE_CLIENT_SECRET! } }
     : {},
-  // Generates the OpenAPI description of the auth endpoints; the docs page itself is served by our own OpenAPI plugin.
   plugins: [telegram(), openAPI({ disableDefaultReference: true })],
 });
 

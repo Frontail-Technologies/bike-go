@@ -16,11 +16,6 @@ export const loanStatus = pgEnum("loan_status", [
 
 export const loanType = pgEnum("loan_type", ["personal", "vehicle", "emergency"]);
 
-/**
- * An Expat Loan application. The personal and employment fields are a snapshot taken from the form: they are
- * nullable only while the application is a draft, and `submit` refuses to proceed until they are all present.
- * Nothing here decides an outcome; approval and rejection are manual admin decisions.
- */
 export const loanApplications = pgTable(
   "loan_applications",
   {
@@ -63,7 +58,6 @@ export const loanApplications = pgTable(
   ],
 );
 
-/** Every status change, with who made it. The current status on the application is a convenience, this is the record. */
 export const loanStatusHistory = pgTable(
   "loan_status_history",
   {

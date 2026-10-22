@@ -15,10 +15,6 @@ export const loanDocumentType = pgEnum("loan_document_type", [
 
 export const documentVerificationStatus = pgEnum("document_verification_status", ["uploaded", "verified", "needs_review", "rejected"]);
 
-/**
- * Metadata for a document file. The bytes live in the storage provider under `storageKey`, which is internal:
- * API responses never include it.
- */
 export const loanDocuments = pgTable(
   "loan_documents",
   {

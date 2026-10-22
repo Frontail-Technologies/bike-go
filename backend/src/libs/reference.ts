@@ -1,4 +1,3 @@
-/** Human-readable references (RG84021977, LN10492038). Random, not sequential, so they leak no volume. Uniqueness is enforced by the database; callers retry on collision. */
 export function newReference(prefix: "RG" | "LN") {
   const digits = new Uint32Array(1);
   crypto.getRandomValues(digits);

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { eq } from "drizzle-orm";
+import { env } from "../src/env";
 import { db } from "../src/libs/db";
 import { loanDocuments } from "../src/libs/db/schema";
 import { storage } from "../src/providers/storage";
@@ -85,6 +86,21 @@ describe("uploading", () => {
     expect((await json(response)).error.code).toBe("FILE_TOO_LARGE");
   });
 
+  test("a moderately oversized upload (9 MB, above the document limit and below the server body cap) is still our structured 413", async () => {
+    const { cookie } = await signInCustomer();
+    const { reference } = await createDraft(cookie);
+    const big = new Uint8Array(9 * 1024 * 1024);
+    big.set(PDF);
+    const response = await upload(cookie, reference, "passport", big, "big.pdf");
+    expect(response.status).toBe(413);
+    expect(await json(response)).toMatchObject({ success: false, error: { code: "FILE_TOO_LARGE" } });
+    expect((await json(await request(`/api/v1/loans/${reference}/documents`, { cookie }))).data).toEqual([]);
+  });
+
+  test("the server body cap sits above the document limit", () => {
+    expect(env.MAX_REQUEST_BODY_BYTES).toBeGreaterThan(MAX_FILE_BYTES * 2);
+  });
+
   test("an unknown document type and a missing file are rejected", async () => {
     const { cookie } = await signInCustomer();
     const { reference } = await createDraft(cookie);
@@ -125,7 +141,6 @@ describe("access", () => {
     expect((await request(`/api/v1/loans/${reference}/documents/${created.id}`, { cookie: stranger.cookie, method: "DELETE" })).status).toBe(404);
     expect((await json(await request(`/api/v1/loans/${reference}/documents`, { cookie: owner.cookie }))).data).toHaveLength(1);
 
-    // Even with a valid document id, naming a different application of one's own does not reach it.
     const mine = await createDraft(stranger.cookie);
     expect((await request(`/api/v1/loans/${mine.reference}/documents/${created.id}/file`, { cookie: stranger.cookie })).status).toBe(404);
   });
@@ -188,7 +203,6 @@ describe("when documents may change", () => {
     expect(await storage.get(row!.storageKey)).toBeNull();
     expect((await request(`/api/v1/loans/${reference}/documents/${created.id}/file`, { cookie })).status).toBe(404);
 
-    // Verified documents are kept.
     const staff = await signInAdmin();
     const loan = await signInCustomer();
     const ref2 = await submittedLoan(loan.cookie);

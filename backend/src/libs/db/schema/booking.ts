@@ -6,13 +6,11 @@ import { currency } from "./enums";
 import { locations } from "./location";
 import { vehicles } from "./vehicle";
 
-export const bookingStatus = pgEnum("booking_status", ["pending", "confirmed", "ready_for_pickup", "active", "completed", "cancelled"]);
+export const bookingStatus = pgEnum("booking_status", ["pending", "confirmed", "ready_for_pickup", "active", "completed", "cancelled", "expired"]);
 export const paymentStatus = pgEnum("payment_status", ["unpaid", "pending", "paid", "failed", "refunded", "partially_refunded"]);
 
-/** Statuses that hold a vehicle for their period. Mirrored by the exclusion constraint in the migration. */
 export const BLOCKING_BOOKING_STATUSES = ["confirmed", "ready_for_pickup", "active"] as const;
 
-/** Optional extras sold per day (helmet, jacket...). Configurable data, not booking logic. */
 export const bookingAddons = pgTable("booking_addons", {
   id: id(),
   code: text("code").notNull().unique(),
@@ -25,10 +23,6 @@ export const bookingAddons = pgTable("booking_addons", {
   updatedAt: updatedAt(),
 });
 
-/**
- * A rental. Every money field is a snapshot taken when the booking was made, so later price changes never
- * rewrite history. Totals are computed by the server; nothing here comes from the client.
- */
 export const bookings = pgTable(
   "bookings",
   {
@@ -59,6 +53,7 @@ export const bookings = pgTable(
     totalPayableMinor: minor("total_payable_minor").notNull(),
     bookingStatus: bookingStatus("booking_status").notNull().default("confirmed"),
     paymentStatus: paymentStatus("payment_status").notNull().default("unpaid"),
+    holdExpiresAt: timestamptz("hold_expires_at"),
     cancelledAt: timestamptz("cancelled_at"),
     cancellationReason: text("cancellation_reason"),
     createdAt: createdAt(),
@@ -68,16 +63,14 @@ export const bookings = pgTable(
     index("bookings_user_created_idx").on(table.userId, table.createdAt),
     index("bookings_vehicle_period_idx").on(table.vehicleId, table.pickupAt, table.returnAt),
     index("bookings_status_idx").on(table.bookingStatus),
+    index("bookings_hold_idx").on(table.bookingStatus, table.holdExpiresAt),
+    check("bookings_pending_has_hold", sql`${table.bookingStatus} <> 'pending' OR ${table.holdExpiresAt} IS NOT NULL`),
     check("bookings_period_valid", sql`${table.returnAt} > ${table.pickupAt}`),
     check("bookings_days_positive", sql`${table.rentalDays} >= 1`),
     check(
       "bookings_money_non_negative",
       sql`${table.rentalSubtotalMinor} >= 0 AND ${table.addonsTotalMinor} >= 0 AND ${table.platformFeeMinor} >= 0 AND ${table.securityDepositSnapshotMinor} >= 0 AND ${table.taxesMinor} >= 0 AND ${table.totalPayableMinor} >= 0`,
     ),
-    // The "no double booking" exclusion constraint (gist) lives in the hand-written migration:
-    //   EXCLUDE USING gist (vehicle_id WITH =, tstzrange(pickup_at, return_at, '[)') WITH &&)
-    //   WHERE (booking_status IN ('confirmed', 'ready_for_pickup', 'active'))
-    // Drizzle cannot express it, and the database is the last line of defence against races.
   ],
 );
 

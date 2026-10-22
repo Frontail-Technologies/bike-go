@@ -21,7 +21,6 @@ export async function createLocation(input: CreateInput) {
   return getLocationOrThrow(created!.id);
 }
 
-/** Locations are switched off with `active: false`, not deleted: vehicles and bookings point at them. */
 export async function updateLocation(id: string, patch: PatchInput) {
   const changes = Object.fromEntries(Object.entries(patch).filter(([, value]) => value !== undefined));
   const [existing] = await db.select({ id: locations.id }).from(locations).where(eq(locations.id, id)).limit(1);

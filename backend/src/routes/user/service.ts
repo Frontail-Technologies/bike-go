@@ -5,7 +5,6 @@ import { db } from "@/libs/db";
 import { account, customerProfiles, user } from "@/libs/db/schema";
 import type { MePatch } from "./model";
 
-/** Fields a customer must fill in before renting or applying. */
 const REQUIRED_FOR_COMPLETION = ["fullName", "phone", "dateOfBirth", "nationality", "city"] as const;
 
 export async function getMe(userId: string) {
@@ -14,7 +13,6 @@ export async function getMe(userId: string) {
 
   let [profile] = await db.select().from(customerProfiles).where(eq(customerProfiles.userId, userId)).limit(1);
   if (!profile) {
-    // Created lazily on first use, seeded from what the sign-in provider told us. A Telegram placeholder email is not real, so it is not copied.
     const email = row.email.endsWith("@users.ridego.invalid") ? null : row.email;
     [profile] = await db
       .insert(customerProfiles)
@@ -45,7 +43,6 @@ export async function getMe(userId: string) {
   };
 }
 
-/** Updates only the whitelisted profile fields. Identity, email and role are never writable here. */
 export async function updateMe(userId: string, patch: MePatch["Body"]) {
   if (patch.dateOfBirth !== undefined) {
     const parsed = new Date(`${patch.dateOfBirth}T00:00:00Z`);
@@ -55,7 +52,7 @@ export async function updateMe(userId: string, patch: MePatch["Body"]) {
     if (ageOn(patch.dateOfBirth) < 18) throw new AppError("VALIDATION_ERROR", 422, "You must be at least 18.", [{ path: "dateOfBirth", message: "Must be at least 18 years ago." }]);
   }
 
-  await getMe(userId); // make sure the profile row exists
+  await getMe(userId);
   const { fullName, phone, dateOfBirth, nationality, address, city } = patch;
   const changes = Object.fromEntries(Object.entries({ fullName, phone, dateOfBirth, nationality, address, city }).filter(([, value]) => value !== undefined));
   if (Object.keys(changes).length > 0) await db.update(customerProfiles).set(changes).where(eq(customerProfiles.userId, userId));

@@ -12,7 +12,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "bun src/libs/db/migrate.ts",
     "db:seed": "bun src/libs/db/seed.ts",
-    "test": "bun test"
+    "test": "bun test",
+    "test:concurrency": "bun test tests/booking-concurrency.test.ts"
   },
   "dependencies": {
     "@elysia/cors": "2.0.0-rc.0",

@@ -1,4 +1,5 @@
 import { Elysia } from "elysia";
+import { env } from "@/env";
 import { accessLog } from "@/plugins/access-log";
 import { authPlugin } from "@/plugins/auth";
 import { corsPlugin } from "@/plugins/cors";
@@ -11,19 +12,13 @@ import { availabilityRoutes } from "@/routes/availability";
 import { addonRoutes, bookingRoutes } from "@/routes/booking";
 import { health } from "@/routes/health";
 import { documentRoutes } from "@/routes/document";
+import { fxRoutes } from "@/routes/fx";
 import { loanRoutes } from "@/routes/loan";
 import { locationRoutes } from "@/routes/location";
 import { userRoutes } from "@/routes/user";
 import { vehicleRoutes } from "@/routes/vehicle";
 
-/**
- * Composition root: global plugins, then feature plugins. It never listens, so tests import it directly
- * and `src/index.ts` is the only place that opens a port.
- */
-/** 5 MB documents plus multipart overhead. Larger bodies are refused by the server before any route runs. */
-const MAX_BODY_BYTES = 8 * 1024 * 1024;
-
-export const app = new Elysia({ name: "RideGo.App", serve: { maxRequestBodySize: MAX_BODY_BYTES } })
+export const app = new Elysia({ name: "RideGo.App", serve: { maxRequestBodySize: env.MAX_REQUEST_BODY_BYTES } })
   .use(securityHeaders)
   .use(accessLog)
   .use(requestMeta)
@@ -36,6 +31,7 @@ export const app = new Elysia({ name: "RideGo.App", serve: { maxRequestBodySize:
   .use(locationRoutes)
   .use(vehicleRoutes)
   .use(availabilityRoutes)
+  .use(fxRoutes)
   .use(addonRoutes)
   .use(bookingRoutes)
   .use(loanRoutes)

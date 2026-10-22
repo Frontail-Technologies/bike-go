@@ -12,7 +12,6 @@ beforeAll(async () => {
   await seedCatalog();
 });
 
-/** Each test works on its own vehicle and its own year, so scenarios never interfere with each other. */
 let nextYear = 2040;
 const freshWindow = () => {
   const year = nextYear++;
@@ -35,10 +34,10 @@ describe("availability", () => {
     await insertBooking({ vehicleId: bike.id, userId, pickupAt: w.at("05-10"), returnAt: w.at("05-15") });
 
     for (const [from, to] of [
-      [w.at("05-08"), w.at("05-11")], // overlaps the start
-      [w.at("05-14"), w.at("05-20")], // overlaps the end
-      [w.at("05-01"), w.at("05-30")], // contains it
-      [w.at("05-11"), w.at("05-12")], // inside it
+      [w.at("05-08"), w.at("05-11")],
+      [w.at("05-14"), w.at("05-20")],
+      [w.at("05-01"), w.at("05-30")],
+      [w.at("05-11"), w.at("05-12")],
     ]) {
       const body = await availability("honda-activa", from!, to!);
       expect(body.data.bookable).toBe(false);
@@ -57,26 +56,29 @@ describe("availability", () => {
     expect((await availability("honda-activa", w.at("06-05"), w.at("06-10"))).data.bookable).toBe(true);
   });
 
-  test("confirmed, ready_for_pickup and active bookings block; pending, completed and cancelled do not", async () => {
+  test("holding statuses block; completed, cancelled, expired and lapsed pending holds do not", async () => {
     const { userId } = await signInCustomer();
     const bike = await vehicleBySlug("yamaha-mt-15");
     const w = freshWindow();
-    const cases: [string, boolean][] = [
-      ["confirmed", false],
-      ["ready_for_pickup", false],
-      ["active", false],
-      ["pending", true],
-      ["completed", true],
-      ["cancelled", true],
+    const lapsed = new Date(Date.now() - 60_000);
+    const cases: [string, boolean, Date | null | undefined][] = [
+      ["confirmed", false, undefined],
+      ["ready_for_pickup", false, undefined],
+      ["active", false, undefined],
+      ["pending", false, undefined],
+      ["pending", true, lapsed],
+      ["completed", true, undefined],
+      ["cancelled", true, undefined],
+      ["expired", true, lapsed],
     ];
     let day = 1;
-    for (const [status, bookable] of cases) {
-      const start = `${String(day).padStart(2, "0")}`;
-      const end = `${String(day + 2).padStart(2, "0")}`;
-      await insertBooking({ vehicleId: bike.id, userId, pickupAt: w.at(`07-${start}`), returnAt: w.at(`07-${end}`), status: status as never });
+    for (const [status, bookable, hold] of cases) {
+      const start = String(day).padStart(2, "0");
+      const end = String(day + 2).padStart(2, "0");
+      await insertBooking({ vehicleId: bike.id, userId, pickupAt: w.at(`07-${start}`), returnAt: w.at(`07-${end}`), status: status as never, holdExpiresAt: hold });
       const body = await availability("yamaha-mt-15", w.at(`07-${start}`, "12:00"), w.at(`07-${end}`, "08:00"));
-      expect({ status, bookable: body.data.bookable }).toEqual({ status, bookable });
-      day += 4;
+      expect({ status, lapsed: hold === lapsed, bookable: body.data.bookable }).toEqual({ status, lapsed: hold === lapsed, bookable });
+      day += 3;
     }
   });
 
@@ -138,7 +140,7 @@ describe("availability", () => {
     expect((await request(`/api/v1/vehicles/no-such-bike/availability?from=${encodeURIComponent(w.at("12-01"))}&to=${encodeURIComponent(w.at("12-02"))}`)).status).toBe(404);
   });
 
-  test("the vehicle list can exclude vehicles that are taken for a period", async () => {
+  test("an unexpired pending hold also hides the vehicle from the list", async () => {
     const w = freshWindow();
     const { userId } = await signInCustomer();
     const bike = await vehicleBySlug("ktm-duke-200");

@@ -108,7 +108,6 @@ export async function updateVehicle(id: string, patch: VehiclePatch["Body"]) {
   return adminGetVehicle(id);
 }
 
-/** A vehicle with any booking history is deactivated, never deleted: bookings and receipts must stay intact. */
 export async function removeVehicle(id: string) {
   const [existing] = await db.select({ id: vehicles.id }).from(vehicles).where(eq(vehicles.id, id)).limit(1);
   if (!existing) throw new AppError("NOT_FOUND", 404, "Vehicle not found.");
@@ -121,25 +120,18 @@ export async function removeVehicle(id: string) {
   return { id, deleted: true, deactivated: false };
 }
 
-// ------------------------------------------------------------------ blocks
-
 export async function listBlocks(vehicleId: string) {
   await adminGetVehicle(vehicleId);
   const rows = await db.select().from(vehicleBlocks).where(eq(vehicleBlocks.vehicleId, vehicleId)).orderBy(asc(vehicleBlocks.startAt));
   return rows.map((b) => ({ id: b.id, vehicleId: b.vehicleId, startAt: b.startAt.toISOString(), endAt: b.endAt.toISOString(), reason: b.reason }));
 }
 
-/**
- * Blocks a vehicle for maintenance. Refuses when a holding booking already overlaps, because silently
- * overriding a customer's confirmed rental is a decision for a human (cancel the booking first).
- */
 export async function createBlock(vehicleId: string, input: BlockPost["Body"]) {
   const startAt = new Date(input.startAt);
   const endAt = new Date(input.endAt);
   assertInterval(startAt, endAt);
 
   return db.transaction(async (tx) => {
-    // Same lock the booking service takes, so a block and a booking cannot both slip through.
     const locked = await tx.execute(sql`select id from ${vehicles} where ${vehicles.id} = ${vehicleId} for update`);
     if (!(Array.isArray(locked) ? locked : (locked as { rows: unknown[] }).rows).length) throw new AppError("NOT_FOUND", 404, "Vehicle not found.");
 

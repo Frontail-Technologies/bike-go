@@ -1,11 +1,7 @@
 import { AppError } from "@/libs/api";
 
-export type BookingStatus = "pending" | "confirmed" | "ready_for_pickup" | "active" | "completed" | "cancelled";
+export type BookingStatus = "pending" | "confirmed" | "ready_for_pickup" | "active" | "completed" | "cancelled" | "expired";
 
-/**
- * Where staff may move a booking. A rental only goes forward (confirmed, ready, active, completed) or is
- * cancelled before it starts. Active and finished rentals cannot be cancelled: they are closed by completing them.
- */
 export const STAFF_BOOKING_TRANSITIONS: Record<BookingStatus, readonly BookingStatus[]> = {
   pending: ["confirmed", "cancelled"],
   confirmed: ["ready_for_pickup", "cancelled"],
@@ -13,6 +9,7 @@ export const STAFF_BOOKING_TRANSITIONS: Record<BookingStatus, readonly BookingSt
   active: ["completed"],
   completed: [],
   cancelled: [],
+  expired: [],
 };
 
 export function assertBookingTransition(from: BookingStatus, to: BookingStatus) {

@@ -3,7 +3,7 @@ import { seedCatalog } from "../src/libs/db/seed";
 import { STAFF_BOOKING_TRANSITIONS } from "../src/routes/booking/rules";
 import { json } from "./helpers/http";
 import { patchJson, postJson, request, signInAdmin, signInCustomer } from "./helpers/auth";
-import { cleanupExtraVehicles, insertBooking, vehicleBySlug } from "./helpers/db";
+import { cleanupExtraVehicles } from "./helpers/db";
 import { submittedLoan } from "./helpers/loan";
 
 beforeAll(async () => {
@@ -22,6 +22,13 @@ const book = async (cookie: string, vehicle: string, w = window()) => {
   expect(response.status).toBe(201);
   return (await json(response)).data as { reference: string };
 };
+
+const bookConfirmed = async (customerCookie: string, staffCookie: string, vehicle: string, w = window()) => {
+  const created = await book(customerCookie, vehicle, w);
+  const confirmed = await patchJson(`/api/v1/admin/bookings/${created.reference}/status`, { bookingStatus: "confirmed" }, { cookie: staffCookie });
+  expect(confirmed.status).toBe(200);
+  return created;
+};
 const setBooking = (cookie: string, reference: string, body: Record<string, unknown>) => patchJson(`/api/v1/admin/bookings/${reference}/status`, body, { cookie });
 
 describe("admin access", () => {
@@ -39,7 +46,7 @@ describe("dashboard", () => {
   test("reports counts, per-currency revenue, awaiting-review loans and recent activity", async () => {
     const staff = await signInAdmin();
     const customer = await signInCustomer();
-    await book(customer.cookie, "honda-activa");
+    await bookConfirmed(customer.cookie, staff.cookie, "honda-activa");
     await submittedLoan(customer.cookie);
 
     const response = await request("/api/v1/admin/dashboard", { cookie: staff.cookie });
@@ -81,7 +88,7 @@ describe("bookings", () => {
     expect(confirmed.data.every((b: { bookingStatus: string }) => b.bookingStatus === "confirmed")).toBe(true);
 
     const detail = await json(await request(`/api/v1/admin/bookings/${a.reference}`, { cookie: staff.cookie }));
-    expect(detail.data).toMatchObject({ reference: a.reference, allowedNextStatuses: ["ready_for_pickup", "cancelled"], customer: { name: "Searchable Rider" } });
+    expect(detail.data).toMatchObject({ reference: a.reference, allowedNextStatuses: ["confirmed", "cancelled"], customer: { name: "Searchable Rider" } });
     expect((await request("/api/v1/admin/bookings/RG00000000", { cookie: staff.cookie })).status).toBe(404);
   });
 
@@ -90,7 +97,7 @@ describe("bookings", () => {
     const customer = await signInCustomer();
     const { reference } = await book(customer.cookie, "honda-activa");
 
-    for (const status of ["ready_for_pickup", "active", "completed"]) {
+    for (const status of ["confirmed", "ready_for_pickup", "active", "completed"]) {
       const response = await setBooking(staff.cookie, reference, { bookingStatus: status });
       expect(response.status).toBe(200);
       expect((await json(response)).data.bookingStatus).toBe(status);
@@ -101,7 +108,7 @@ describe("bookings", () => {
   test("invalid moves are refused: skipping, going back, reopening, cancelling a rental in progress", async () => {
     const staff = await signInAdmin();
     const customer = await signInCustomer();
-    const { reference } = await book(customer.cookie, "honda-activa");
+    const { reference } = await bookConfirmed(customer.cookie, staff.cookie, "honda-activa");
 
     for (const bookingStatus of ["active", "completed", "pending"]) {
       const response = await setBooking(staff.cookie, reference, { bookingStatus });
@@ -132,7 +139,7 @@ describe("bookings", () => {
   test("payment state is recorded by hand, on its own or with a status change", async () => {
     const staff = await signInAdmin();
     const customer = await signInCustomer();
-    const { reference } = await book(customer.cookie, "yamaha-mt-15");
+    const { reference } = await bookConfirmed(customer.cookie, staff.cookie, "yamaha-mt-15");
     const paid = await setBooking(staff.cookie, reference, { paymentStatus: "paid" });
     expect((await json(paid)).data).toMatchObject({ paymentStatus: "paid", bookingStatus: "confirmed" });
     const both = await setBooking(staff.cookie, reference, { bookingStatus: "ready_for_pickup", paymentStatus: "paid" });
@@ -147,20 +154,6 @@ describe("bookings", () => {
     expect((await setBooking(staff.cookie, reference, {})).status).toBe(422);
     expect((await setBooking(staff.cookie, reference, { bookingStatus: "teleported" })).status).toBe(422);
     expect((await setBooking(staff.cookie, reference, { totalPayableMinor: 1 })).status).toBe(422);
-  });
-
-  test("confirming a pending booking onto a taken period is refused, not stored", async () => {
-    const staff = await signInAdmin();
-    const customer = await signInCustomer();
-    const w = window();
-    const bike = await vehicleBySlug("royal-enfield-classic-350");
-    await insertBooking({ vehicleId: bike.id, userId: customer.userId, pickupAt: w.pickupAt, returnAt: w.returnAt, status: "confirmed" });
-    const pending = await insertBooking({ vehicleId: bike.id, userId: customer.userId, pickupAt: w.pickupAt, returnAt: w.returnAt, status: "pending" });
-
-    const response = await setBooking(staff.cookie, pending.reference, { bookingStatus: "confirmed" });
-    expect(response.status).toBe(409);
-    expect((await json(response)).error.code).toBe("BOOKING_CONFLICT");
-    expect((await json(await request(`/api/v1/admin/bookings/${pending.reference}`, { cookie: staff.cookie }))).data.bookingStatus).toBe("pending");
   });
 });
 

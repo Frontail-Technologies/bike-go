@@ -9,7 +9,6 @@ beforeAll(async () => {
 });
 afterAll(cleanupExtraVehicles);
 
-// Assertions are about the seeded vehicles only, so anything another test file leaves behind cannot change them.
 const seeded = new Set(seedVehicles.map((v) => v.slug));
 const listVehicles = async (query = "") => {
   const body = await json(await request(`/api/v1/vehicles${query}`));

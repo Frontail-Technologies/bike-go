@@ -6,7 +6,6 @@ import { deleteDocument, downloadOwnDocument, listDocuments, uploadDocument } fr
 
 const security = [{ sessionCookie: [] }];
 
-/** Shares the `/api/v1/loans/:reference` prefix and param name with the loan routes. */
 export const documentRoutes = new Elysia({ name: "RideGo.Document", prefix: "/api/v1/loans", tags: ["Loan documents"] })
   .use(authPlugin)
   .get(

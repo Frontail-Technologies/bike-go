@@ -1,17 +1,11 @@
 import { openapi } from "@elysia/openapi";
 import { auth } from "@/libs/auth";
 
-/** Better Auth describes its own endpoints; they are re-based onto our /api/v1/auth prefix and merged into one document. */
 const authSchema = await auth.api.generateOpenAPISchema();
 const authPaths = Object.fromEntries(
   Object.entries(authSchema.paths).map(([path, operation]) => [`/api/v1/auth${path}`, Object.fromEntries(Object.entries(operation as Record<string, object>).map(([method, op]) => [method, { ...op, tags: ["Auth"] }]))]),
 );
 
-/**
- * Interactive docs at /api/v1/docs and the raw document at /api/v1/docs/json.
- * A factory, not a wrapper plugin: the OpenAPI plugin documents the routes of the instance it is mounted on,
- * so it has to be `.use()`d on the root app that owns every feature route.
- */
 export const openapiPlugin = () =>
   openapi({
     path: "/api/v1/docs",

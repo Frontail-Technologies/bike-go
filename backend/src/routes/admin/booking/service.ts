@@ -4,6 +4,7 @@ import { db } from "@/libs/db";
 import { PG, pgErrorCode } from "@/libs/db/errors";
 import { bookings, customerProfiles, user, vehicles } from "@/libs/db/schema";
 import { pageMeta, pageOf } from "@/libs/pagination";
+import { expireStaleHolds } from "@/routes/booking/holds";
 import { bookingViews } from "@/routes/booking/service";
 import { assertBookingTransition, STAFF_BOOKING_TRANSITIONS, type BookingStatus } from "@/routes/booking/rules";
 import type { AdminBookingView, BookingsGet, BookingStatusPatch } from "./model";
@@ -34,10 +35,12 @@ async function idOf(reference: string) {
 }
 
 export async function adminGetBooking(reference: string) {
+  await expireStaleHolds(db, { reference });
   return (await adminViews([await idOf(reference)]))[0]!;
 }
 
 export async function adminListBookings(query: BookingsGet["Query"]) {
+  await expireStaleHolds(db);
   const paging = pageOf(query);
   const search = query.q ? `%${query.q}%` : undefined;
   const where = and(
@@ -59,14 +62,11 @@ export async function adminListBookings(query: BookingsGet["Query"]) {
   return { data: await adminViews(rows.map((r) => r.id)), meta: pageMeta(paging, total?.n ?? 0) };
 }
 
-/**
- * Staff move a booking along the allowed path and/or record its payment state (payment is manual until a provider is
- * integrated). Moving to confirmed or ready re-checks the calendar: the database refuses an overlap, reported as BOOKING_CONFLICT.
- */
 export async function updateBookingStatus(reference: string, input: BookingStatusPatch["Body"]) {
   try {
     await db.transaction(async (tx) => {
       await tx.execute(sql`select id from ${bookings} where ${bookings.reference} = ${reference} for update`);
+      await expireStaleHolds(tx, { reference });
       const [current] = await tx.select().from(bookings).where(eq(bookings.reference, reference)).limit(1);
       if (!current) throw new AppError("NOT_FOUND", 404, "Booking not found.");
 
@@ -74,6 +74,7 @@ export async function updateBookingStatus(reference: string, input: BookingStatu
       if (input.bookingStatus && input.bookingStatus !== current.bookingStatus) {
         assertBookingTransition(current.bookingStatus, input.bookingStatus);
         changes.bookingStatus = input.bookingStatus;
+        if (current.bookingStatus === "pending") changes.holdExpiresAt = null;
         if (input.bookingStatus === "cancelled") {
           changes.cancelledAt = new Date();
           changes.cancellationReason = input.note ?? null;

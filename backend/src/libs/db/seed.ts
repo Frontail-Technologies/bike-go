@@ -3,10 +3,6 @@ import { env } from "@/env";
 import { closeDb, db, type Executor } from "./index";
 import { bookingAddons, customerProfiles, locations, user, vehicleImages, vehicles } from "./schema";
 
-/**
- * Seed catalogue for Cambodia: two pickup hubs, six vehicles, two add-ons. Prices are placeholders in USD
- * cents and need business confirmation. Idempotent: rows are matched by natural key and updated in place.
- */
 export const seedLocations = [
   { key: "phnom-penh", name: "RideGo Phnom Penh Riverside", address: "No. 12, Sisowath Quay, Daun Penh", city: "Phnom Penh", latitude: 11.5662, longitude: 104.9283 },
   { key: "siem-reap", name: "RideGo Siem Reap Old Market", address: "Street 9, near Old Market, Svay Dangkum", city: "Siem Reap", latitude: 13.3622, longitude: 103.8553 },
@@ -185,10 +181,6 @@ export async function seedCatalog(executor: Executor = db) {
   }
 }
 
-/**
- * Optional first admin, created only when SEED_ADMIN_EMAIL is set. There is no password login: the person signs
- * in with Google using that same email and the existing user row (with its admin role) is linked.
- */
 export async function seedAdmin(email: string, executor: Executor = db) {
   const existing = (await executor.select({ id: user.id }).from(user).where(eq(user.email, email)).limit(1))[0];
   if (existing) {

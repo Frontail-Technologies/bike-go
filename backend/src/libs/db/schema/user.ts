@@ -2,10 +2,6 @@ import { date, pgTable, text, uuid } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 import { createdAt, id, updatedAt } from "./columns";
 
-/**
- * What the app knows about a customer beyond sign-in. Identity, sessions and provider links stay in the
- * Better Auth tables; this holds only profile data the auth tables do not own.
- */
 export const customerProfiles = pgTable("customer_profiles", {
   id: id(),
   userId: uuid("user_id")

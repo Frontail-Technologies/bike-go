@@ -11,18 +11,14 @@ export const MAX_FILE_BYTES = 5 * 1024 * 1024;
 const MAX_PER_TYPE = 5;
 const MAX_PER_APPLICATION = 20;
 
-/** Only these formats, identified by their content (magic bytes), never by the name or the browser's claim. */
 const ALLOWED: Record<string, string> = { "application/pdf": "pdf", "image/jpeg": "jpg", "image/png": "png" };
 
-/** Customers can add or remove documents while drafting, and when staff asked for more. */
 const OPEN_FOR_DOCUMENTS = ["draft", "additional_documents_required"] as const;
 
-/** A safe display name: no path parts, no control characters, bounded length. The stored key never uses it. */
 export function sanitizeFilename(name: string) {
   const base = name.split(/[\\/]/).pop() ?? "";
   const cleaned = base
-    // eslint-disable-next-line no-control-regex
-    .replace(/[\u0000-\u001f\u007f]/g, "")
+    .replace(/\p{Cc}/gu, "")
     .replace(/[^\w.\- ()]+/g, "_")
     .replace(/\s+/g, " ")
     .replace(/^\.+/, "")
@@ -74,7 +70,6 @@ export async function uploadDocument(userId: string, reference: string, input: {
   if ((totals[0]?.n ?? 0) >= MAX_PER_APPLICATION) throw new AppError("VALIDATION_ERROR", 422, `An application can have at most ${MAX_PER_APPLICATION} documents.`);
   if ((sameType?.n ?? 0) >= MAX_PER_TYPE) throw new AppError("VALIDATION_ERROR", 422, `At most ${MAX_PER_TYPE} files per document type. Remove one first.`);
 
-  // The key is generated here and is never derived from anything the client sent.
   const storageKey = `loans/${application.id}/${crypto.randomUUID()}.${extension}`;
   await storage.put(storageKey, bytes, { contentType: detected.mime });
   try {
@@ -108,14 +103,12 @@ async function readFile(doc: typeof loanDocuments.$inferSelect) {
   const headers = {
     "content-type": doc.mimeType,
     "content-disposition": `attachment; filename="${sanitizeFilename(doc.originalFilename).replaceAll('"', "")}"`,
-    // Documents are private: never cached, never sniffed into another type.
     "cache-control": "private, no-store",
     "x-content-type-options": "nosniff",
   };
   return new Response(bytes as BodyInit, { headers });
 }
 
-/** The owner downloads their own document. */
 export async function downloadOwnDocument(userId: string, reference: string, documentId: string) {
   const application = await findOwned(db, userId, reference);
   const [doc] = await db.select().from(loanDocuments).where(and(eq(loanDocuments.id, documentId), eq(loanDocuments.applicationId, application.id))).limit(1);
@@ -123,7 +116,6 @@ export async function downloadOwnDocument(userId: string, reference: string, doc
   return readFile(doc);
 }
 
-/** Staff download any application's document. */
 export async function downloadAnyDocument(reference: string, documentId: string) {
   const [row] = await db
     .select({ doc: loanDocuments })

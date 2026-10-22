@@ -10,7 +10,6 @@ export const DocumentVerificationStatus = t.UnionEnum(["uploaded", "verified", "
 const Reference = t.String({ pattern: "^LN\\d{8}$", description: "Application reference, for example LN10492038" });
 export const LoanReferenceParams = t.Object({ reference: Reference });
 
-/** Everything the applicant fills in. Money is integer minor units of `currency`. */
 const Fields = {
   loanType: LoanType,
   currency: Currency,
@@ -53,7 +52,6 @@ const Employment = t.Object({
   hasActiveBankAccount: t.Nullable(t.Boolean()),
 });
 
-/** A document as the customer sees it. The storage key is internal and never appears. */
 export const DocumentItem = t.Object({
   id: t.String({ format: "uuid" }),
   type: DocumentType,
@@ -115,10 +113,8 @@ export const LoanPost = {
   Response: Envelope(Loan),
 };
 
-/** Same fields, all optional. There is deliberately no status, reference or user field: those cannot be set by a client. */
 export const LoanPatch = {
   Params: LoanReferenceParams,
-  // Built from the partial's properties so `additionalProperties: false` survives (Partial drops it).
   Body: t.Object({ ...t.Partial(t.Object(Fields)).properties }, { additionalProperties: false }),
   Response: Envelope(Loan),
 };

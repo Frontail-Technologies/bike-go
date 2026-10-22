@@ -26,7 +26,6 @@ describe("Telegram sign-in", () => {
     const me = await json(await request("/api/v1/me", { cookie }));
     expect(me.success).toBe(true);
     expect(me.data).toMatchObject({ id: userId, role: "customer", fullName: "Dara Sok", providers: ["telegram"], profileComplete: false });
-    // The placeholder address Telegram users get is never shown as a real email.
     expect(me.data.email).toBeNull();
     expect(me.data.missingFields).toContain("phone");
   });
@@ -52,7 +51,6 @@ describe("Telegram sign-in", () => {
       expect(response.status).toBeGreaterThanOrEqual(400);
       expect(response.headers.getSetCookie().length).toBe(0);
     }
-    // None of the forged ids became users.
     const created = await db.select().from(account).where(eq(account.providerId, "telegram"));
     expect(created.some((a) => ["888001", "888002", "888003", "888004"].includes(a.accountId))).toBe(false);
   });
@@ -84,7 +82,6 @@ describe("profile", () => {
     expect(viaMe.status).toBe(200);
     expect((await json(viaMe)).data.role).toBe("customer");
 
-    // Better Auth's own update endpoint must not accept it either.
     await postJson("/api/v1/auth/update-user", { name: "Still Honest", role: "super_admin" }, { cookie });
     const [row] = await db.select({ role: user.role }).from(user).where(eq(user.id, userId));
     expect(row?.role).toBe("customer");

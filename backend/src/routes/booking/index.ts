@@ -9,7 +9,6 @@ import { cancelMyBooking, createBooking, getMyBooking, listMyBookings, quote } f
 
 const security = [{ sessionCookie: [] }];
 
-/** Public: what extras exist and what they cost. */
 export const addonRoutes = new Elysia({ name: "RideGo.Addons", prefix: "/api/v1/addons", tags: ["Bookings"] }).get(
   "",
   { response: { 200: BookingModel.AddonsGet.Response, ...publicErrors }, detail: { summary: "Optional add-ons (helmet, jacket...) and their per-day prices" } },

@@ -1,11 +1,5 @@
 import { boolean, index, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
-/**
- * Better Auth tables (user, session, account, verification), with UUID ids to match the rest of the schema.
- * `role` is an additional user field the auth config marks as non-writable by clients.
- *
- * Providers live in `account`: providerId "google" or "telegram" with the provider's own id as accountId.
- */
 export const userRole = pgEnum("user_role", ["customer", "admin", "super_admin"]);
 
 export const user = pgTable("user", {

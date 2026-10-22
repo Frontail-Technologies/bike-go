@@ -5,7 +5,6 @@ import { REQUIRED_DOCUMENTS } from "../../src/routes/loan/rules";
 import { json } from "./http";
 import { patchJson, postJson } from "./auth";
 
-/** A complete, valid set of applicant fields (USD, personal loan). */
 export const completeFields = (overrides: Record<string, unknown> = {}) => ({
   purpose: "Relocation costs",
   fullName: "Sokha Chan",
@@ -37,7 +36,6 @@ export async function fillDraft(cookie: string, reference: string, overrides: Re
   if (response.status !== 200) throw new Error(`fillDraft failed: ${response.status} ${await response.text()}`);
 }
 
-/** Records document metadata directly (the upload route has its own tests), enough to satisfy the submit check. */
 export async function addDocuments(reference: string, types: readonly string[] = REQUIRED_DOCUMENTS) {
   const [application] = await db.select({ id: loanApplications.id }).from(loanApplications).where(eq(loanApplications.reference, reference)).limit(1);
   await db.insert(loanDocuments).values(
@@ -45,7 +43,6 @@ export async function addDocuments(reference: string, types: readonly string[] =
   );
 }
 
-/** Draft -> filled -> documents -> submitted, returning the reference. */
 export async function submittedLoan(cookie: string, overrides: Record<string, unknown> = {}) {
   const { reference } = await createDraft(cookie);
   await fillDraft(cookie, reference, overrides);

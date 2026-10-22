@@ -2,11 +2,6 @@ import { index, integer, jsonb, pgTable, text, unique, uuid } from "drizzle-orm/
 import { user } from "./auth";
 import { createdAt, id, timestamptz } from "./columns";
 
-/**
- * Replay protection for operations a client may retry (creating a booking, submitting a loan). The row is
- * written in the same transaction as the operation, so a retry either sees the stored response or waits on
- * the unique index until the first attempt commits.
- */
 export const idempotencyKeys = pgTable(
   "idempotency_keys",
   {

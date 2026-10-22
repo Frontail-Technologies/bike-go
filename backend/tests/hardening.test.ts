@@ -59,7 +59,6 @@ describe("sessions", () => {
     expect((await request("/api/v1/me", { cookie })).status).toBe(200);
     const out = await postJson("/api/v1/auth/sign-out", {}, { cookie });
     expect(out.status).toBe(200);
-    // The old cookie value no longer authenticates.
     expect((await request("/api/v1/me", { cookie })).status).toBe(401);
   });
 });
@@ -98,6 +97,8 @@ describe("OpenAPI document", () => {
       "/api/v1/vehicles/{idOrSlug}",
       "/api/v1/vehicles/{idOrSlug}/availability",
       "/api/v1/addons",
+      "/api/v1/fx-rates/current",
+      "/api/v1/admin/fx-rates",
       "/api/v1/bookings",
       "/api/v1/bookings/quote",
       "/api/v1/bookings/{reference}",

@@ -1,21 +1,22 @@
-import { and, asc, eq, exists, gt, inArray, lt, type SQL } from "drizzle-orm";
+import { and, asc, eq, exists, gt, inArray, lt, or, type SQL } from "drizzle-orm";
 import { AppError } from "@/libs/api";
 import { db, type Executor } from "@/libs/db";
 import { BLOCKING_BOOKING_STATUSES, bookings, vehicleBlocks, vehicles } from "@/libs/db/schema";
 
-/** Operational states a vehicle cannot be rented in, whatever its calendar looks like. */
 export const UNRENTABLE_STATUSES = ["maintenance", "inactive"] as const;
 
-/**
- * SQL conditions: "this vehicle has a holding booking / a block overlapping [start, end)". Periods are
- * half-open, so a rental may start the instant another ends. Pass the outer query's `vehicles.id` to filter a list.
- */
-export function bookingOverlap(vehicleId: SQL | typeof vehicles.id, start: Date, end: Date) {
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function holdingCondition(now: Date = new Date()): SQL {
+  return or(inArray(bookings.bookingStatus, [...BLOCKING_BOOKING_STATUSES]), and(eq(bookings.bookingStatus, "pending"), gt(bookings.holdExpiresAt, now)))!;
+}
+
+export function bookingOverlap(vehicleId: SQL | typeof vehicles.id, start: Date, end: Date, now: Date = new Date()) {
   return exists(
     db
       .select({ one: bookings.id })
       .from(bookings)
-      .where(and(eq(bookings.vehicleId, vehicleId as typeof vehicles.id), inArray(bookings.bookingStatus, [...BLOCKING_BOOKING_STATUSES]), lt(bookings.pickupAt, end), gt(bookings.returnAt, start))),
+      .where(and(eq(bookings.vehicleId, vehicleId as typeof vehicles.id), holdingCondition(now), lt(bookings.pickupAt, end), gt(bookings.returnAt, start))),
   );
 }
 
@@ -28,20 +29,17 @@ export function blockOverlap(vehicleId: SQL | typeof vehicles.id, start: Date, e
   );
 }
 
-export type Interval = { start: Date; end: Date };
-
 export function assertInterval(start: Date, end: Date) {
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) throw new AppError("VALIDATION_ERROR", 422, "Dates must be valid ISO-8601 timestamps.");
   if (!(end > start)) throw new AppError("VALIDATION_ERROR", 422, "The end must be after the start.", [{ path: "to", message: "Must be after the start." }]);
 }
 
-/** Periods in [start, end) during which the vehicle is held by a booking or a block. Booking details are not exposed. */
-export async function busyPeriods(executor: Executor, vehicleId: string, start: Date, end: Date) {
+export async function busyPeriods(executor: Executor, vehicleId: string, start: Date, end: Date, now: Date = new Date()) {
   const [held, blocked] = await Promise.all([
     executor
-      .select({ start: bookings.pickupAt, end: bookings.returnAt })
+      .select({ start: bookings.pickupAt, end: bookings.returnAt, status: bookings.bookingStatus })
       .from(bookings)
-      .where(and(eq(bookings.vehicleId, vehicleId), inArray(bookings.bookingStatus, [...BLOCKING_BOOKING_STATUSES]), lt(bookings.pickupAt, end), gt(bookings.returnAt, start)))
+      .where(and(eq(bookings.vehicleId, vehicleId), holdingCondition(now), lt(bookings.pickupAt, end), gt(bookings.returnAt, start)))
       .orderBy(asc(bookings.pickupAt)),
     executor
       .select({ start: vehicleBlocks.startAt, end: vehicleBlocks.endAt })
@@ -50,8 +48,8 @@ export async function busyPeriods(executor: Executor, vehicleId: string, start: 
       .orderBy(asc(vehicleBlocks.startAt)),
   ]);
   return [
-    ...held.map((p) => ({ ...p, kind: "booking" as const })),
-    ...blocked.map((p) => ({ ...p, kind: "block" as const })),
+    ...held.map((p) => ({ start: p.start, end: p.end, kind: "booking" as const, hold: p.status === "pending" })),
+    ...blocked.map((p) => ({ ...p, kind: "block" as const, hold: false })),
   ].sort((a, b) => a.start.getTime() - b.start.getTime());
 }
 
@@ -60,12 +58,10 @@ export type Availability = {
   from: string;
   to: string;
   bookable: boolean;
-  /** Why the vehicle cannot be booked at all (status), or that the period is taken. Null when free. */
   reason: "vehicle_unavailable" | "period_taken" | null;
   unavailablePeriods: { start: string; end: string; kind: "booking" | "block" }[];
 };
 
-/** Whether [from, to) is free for the vehicle, and which periods inside the window are taken. */
 export async function getAvailability(vehicleId: string, from: Date, to: Date): Promise<Availability> {
   assertInterval(from, to);
   const [vehicle] = await db.select({ id: vehicles.id, status: vehicles.status }).from(vehicles).where(eq(vehicles.id, vehicleId)).limit(1);
@@ -83,9 +79,6 @@ export async function getAvailability(vehicleId: string, from: Date, to: Date): 
   };
 }
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-/** Public availability is looked up by slug or id, like the vehicle itself. Inactive vehicles do not exist publicly. */
 export async function resolveVehicleId(idOrSlug: string) {
   const key = UUID.test(idOrSlug) ? eq(vehicles.id, idOrSlug) : eq(vehicles.slug, idOrSlug);
   const [row] = await db.select({ id: vehicles.id, status: vehicles.status }).from(vehicles).where(key).limit(1);

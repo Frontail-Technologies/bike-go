@@ -7,11 +7,6 @@ import { locations } from "./location";
 export const vehicleType = pgEnum("vehicle_type", ["motorcycle", "scooter", "car", "other"]);
 export const vehicleStatus = pgEnum("vehicle_status", ["available", "rented", "maintenance", "inactive"]);
 
-/**
- * Generic rental vehicle (motorcycle, scooter, car...). Vehicle-specific attributes that not every type has
- * are nullable columns or live in `specifications`. `status` is the operational state; whether a vehicle is
- * free on given dates comes from bookings and blocks, never from `status` alone.
- */
 export const vehicles = pgTable(
   "vehicles",
   {
@@ -63,7 +58,6 @@ export const vehicleImages = pgTable(
   (table) => [index("vehicle_images_vehicle_idx").on(table.vehicleId, table.sortOrder)],
 );
 
-/** Manual unavailability (maintenance, owner use). Overlapping bookings are refused while one exists. */
 export const vehicleBlocks = pgTable(
   "vehicle_blocks",
   {

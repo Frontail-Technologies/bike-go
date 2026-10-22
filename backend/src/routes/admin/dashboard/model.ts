@@ -15,7 +15,7 @@ export const DashboardGet = {
         revenue: t.Array(
           t.Object({
             currency: Currency,
-            bookedMinor: t.Number({ description: "Rental, add-ons, fees and taxes of non-cancelled bookings. The refundable deposit is excluded." }),
+            bookedMinor: t.Number({ description: "Rental, add-ons, fees and taxes of confirmed, ready, active and completed bookings. Pending holds, cancelled and expired bookings are excluded, and so is the refundable deposit." }),
             paidMinor: t.Number({ description: "The same, for bookings whose payment is marked paid" }),
           }),
         ),

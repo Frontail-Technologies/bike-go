@@ -19,15 +19,15 @@ const window = (days = 3) => {
   return { pickupAt: `${y}-03-10T10:00:00.000Z`, returnAt: `${y}-03-${10 + days}T10:00:00.000Z`, y };
 };
 
-const book = (cookie: string, body: Record<string, unknown>, key?: string) =>
-  postJson("/api/v1/bookings", body, { cookie, headers: key ? { "idempotency-key": key } : {} });
+const book = (cookie: string, body: Record<string, unknown>, key?: string) => postJson("/api/v1/bookings", body, { cookie, headers: key ? { "idempotency-key": key } : {} });
 
 describe("pricing (pure)", () => {
-  const base = { currency: "USD" as const, days: 3, dailyRateMinor: 2500, securityDepositMinor: 30000, taxRateBps: 1800, platformFeeMinor: 100 };
+  const base = { currency: "USD" as const, days: 3, dailyRateMinor: 2500, securityDepositMinor: 30000, taxRateBps: 1000, platformFeeMinor: 0 };
 
   test("adds rental, add-ons, fee, taxes and deposit exactly", () => {
     const result = priceBooking({
       ...base,
+      platformFeeMinor: 100,
       addons: [
         { addonId: "h", name: "Helmet", unitPriceMinor: 200, quantity: 1 },
         { addonId: "j", name: "Riding jacket", unitPriceMinor: 200, quantity: 1 },
@@ -35,13 +35,15 @@ describe("pricing (pure)", () => {
     });
     expect(result.rentalSubtotalMinor).toBe(7500);
     expect(result.addonsTotalMinor).toBe(1200);
-    expect(result.taxesMinor).toBe(1566); // 18% of 8700; fee and deposit are not taxed
-    expect(result.totalPayableMinor).toBe(7500 + 1200 + 100 + 1566 + 30000);
+    expect(result.taxesMinor).toBe(870);
+    expect(result.platformFeeMinor).toBe(100);
+    expect(result.totalPayableMinor).toBe(7500 + 1200 + 100 + 870 + 30000);
   });
 
-  test("a single day is one day's rate, with no add-ons it has no add-on lines", () => {
+  test("a zero platform fee adds nothing", () => {
     const result = priceBooking({ ...base, days: 1, addons: [] });
-    expect(result.totalPayableMinor).toBe(2500 + 0 + 100 + 450 + 30000);
+    expect(result.platformFeeMinor).toBe(0);
+    expect(result.totalPayableMinor).toBe(2500 + 250 + 30000);
     expect(result.addons).toEqual([]);
   });
 
@@ -50,25 +52,35 @@ describe("pricing (pure)", () => {
     expect(result.addons[0]?.totalMinor).toBe(333 * 2 * 2);
     expect(result.taxesMinor).toBe(Math.round(((2500 * 2 + 1332) * 1050) / 10000));
   });
+
+  test("the tax rate is an input, not a constant", () => {
+    expect(priceBooking({ ...base, taxRateBps: 0, addons: [] }).taxesMinor).toBe(0);
+    expect(priceBooking({ ...base, taxRateBps: 1000, addons: [] }).taxesMinor).toBe(750);
+    expect(priceBooking({ ...base, taxRateBps: 2000, addons: [] }).taxesMinor).toBe(1500);
+  });
 });
 
 describe("creating a booking", () => {
-  test("creates a confirmed booking with a server-side price snapshot", async () => {
+  test("creates a pending, unpaid booking with a hold and a server-side price snapshot", async () => {
     const { cookie } = await signInCustomer();
     const w = window(3);
+    const before = Date.now();
     const response = await book(cookie, { vehicle: "royal-enfield-classic-350", pickupAt: w.pickupAt, returnAt: w.returnAt, addons: [{ code: "helmet" }, { code: "riding-jacket" }] });
     expect(response.status).toBe(201);
     const booking = (await json(response)).data;
     expect(booking.reference).toMatch(/^RG\d{8}$/);
-    expect(booking).toMatchObject({ bookingStatus: "confirmed", paymentStatus: "unpaid", rentalDays: 3, currency: "USD", vehicle: { slug: "royal-enfield-classic-350" } });
+    expect(booking).toMatchObject({ bookingStatus: "pending", paymentStatus: "unpaid", rentalDays: 3, currency: "USD", vehicle: { slug: "royal-enfield-classic-350" } });
+    const hold = new Date(booking.holdExpiresAt).getTime();
+    expect(hold).toBeGreaterThan(before + 14 * 60_000);
+    expect(hold).toBeLessThan(Date.now() + 16 * 60_000);
     expect(booking.pricing).toEqual({
       dailyRateMinor: 2500,
       rentalSubtotalMinor: 7500,
       addonsTotalMinor: 1200,
-      platformFeeMinor: 100,
-      taxesMinor: 1566,
+      platformFeeMinor: 0,
+      taxesMinor: 870,
       securityDepositMinor: 30000,
-      totalPayableMinor: 40366,
+      totalPayableMinor: 39570,
     });
     expect(booking.addons.map((a: { code: string }) => a.code).sort()).toEqual(["helmet", "riding-jacket"]);
   });
@@ -87,12 +99,14 @@ describe("creating a booking", () => {
       taxesMinor: 0,
       bookingStatus: "completed",
       paymentStatus: "paid",
+      holdExpiresAt: "2099-01-01T00:00:00Z",
     });
     expect(response.status).toBe(201);
     const booking = (await json(response)).data;
     expect(booking.pricing.dailyRateMinor).toBe(2000);
-    expect(booking.pricing.totalPayableMinor).toBe(2000 * 2 + 100 + Math.round((2000 * 2 * 1800) / 10000) + 20000);
-    expect(booking).toMatchObject({ bookingStatus: "confirmed", paymentStatus: "unpaid" });
+    expect(booking.pricing.totalPayableMinor).toBe(2000 * 2 + 400 + 20000);
+    expect(booking).toMatchObject({ bookingStatus: "pending", paymentStatus: "unpaid" });
+    expect(new Date(booking.holdExpiresAt).getFullYear()).toBeLessThan(2099);
   });
 
   test("later price changes never rewrite an existing booking", async () => {
@@ -123,13 +137,25 @@ describe("creating a booking", () => {
     expect(created.addons[0]).toMatchObject({ code: "helmet", quantity: 2, days: 3, totalMinor: 200 * 2 * 3 });
   });
 
-  test("a vehicle priced in KHR bills in KHR and rejects USD add-ons", async () => {
+  test("a vehicle priced in KHR bills in KHR, with no conversion, and rejects USD add-ons", async () => {
     const { cookie: adminCookie } = await signInAdmin();
     const { cookie } = await signInCustomer();
     const location = (await json(await request("/api/v1/locations"))).data[0] as { id: string };
     const created = await postJson(
       "/api/v1/admin/vehicles",
-      { slug: `khr-bike-${Math.random().toString(36).slice(2, 7)}`, vehicleType: "scooter", name: "KHR Scooter", brand: "Honda", model: "Scoopy", category: "commuter", dailyRentalPriceMinor: 3_280_000, securityDepositMinor: 41_000_000, currency: "KHR", registrationNumber: `KHR-${Math.random().toString(36).slice(2, 7)}`, locationId: location.id },
+      {
+        slug: `khr-bike-${Math.random().toString(36).slice(2, 7)}`,
+        vehicleType: "scooter",
+        name: "KHR Scooter",
+        brand: "Honda",
+        model: "Scoopy",
+        category: "commuter",
+        dailyRentalPriceMinor: 3_280_000,
+        securityDepositMinor: 41_000_000,
+        currency: "KHR",
+        registrationNumber: `KHR-${Math.random().toString(36).slice(2, 7)}`,
+        locationId: location.id,
+      },
       { cookie: adminCookie },
     );
     const slug = (await json(created)).data.slug as string;
@@ -139,9 +165,11 @@ describe("creating a booking", () => {
     expect(noAddons.status).toBe(201);
     const booking = (await json(noAddons)).data;
     expect(booking.currency).toBe("KHR");
-    expect(booking.pricing.platformFeeMinor).toBe(410000);
+    expect(booking.pricing.platformFeeMinor).toBe(0);
+    expect(booking.pricing.dailyRateMinor).toBe(3_280_000);
     expect(booking.pricing.rentalSubtotalMinor).toBe(3_280_000 * 2);
-    expect(Number.isInteger(booking.pricing.totalPayableMinor)).toBe(true);
+    expect(booking.pricing.taxesMinor).toBe(656_000);
+    expect(booking.pricing.totalPayableMinor).toBe(3_280_000 * 2 + 656_000 + 41_000_000);
 
     const w2 = window(2);
     const withUsdAddon = await book(cookie, { vehicle: slug, pickupAt: w2.pickupAt, returnAt: w2.returnAt, addons: [{ code: "helmet" }] });
@@ -198,19 +226,6 @@ describe("double booking", () => {
       await db.update(vehicles).set({ status: "available" }).where(eq(vehicles.id, bike.id));
     }
   });
-
-  test("concurrent requests for the same period: exactly one wins", async () => {
-    const customers = await Promise.all(Array.from({ length: 8 }, () => signInCustomer()));
-    const w = window(3);
-    const responses = await Promise.all(customers.map(({ cookie }) => book(cookie, { vehicle: "royal-enfield-himalayan", pickupAt: w.pickupAt, returnAt: w.returnAt })));
-    const statuses = responses.map((r) => r.status).sort();
-    expect(statuses.filter((s) => s === 201).length).toBe(1);
-    expect(statuses.filter((s) => s === 409).length).toBe(7);
-
-    const bike = await vehicleBySlug("royal-enfield-himalayan");
-    const stored = (await db.select().from(bookings).where(eq(bookings.vehicleId, bike.id))).filter((b) => b.pickupAt.toISOString() === w.pickupAt);
-    expect(stored.length).toBe(1);
-  });
 });
 
 describe("ownership", () => {
@@ -229,8 +244,7 @@ describe("ownership", () => {
     const ownerList = await json(await request("/api/v1/bookings", { cookie: owner.cookie }));
     expect(ownerList.data.map((b: { reference: string }) => b.reference)).toEqual([created.reference]);
 
-    // The stranger's failed cancel changed nothing.
-    expect((await json(await request(`/api/v1/bookings/${created.reference}`, { cookie: owner.cookie }))).data.bookingStatus).toBe("confirmed");
+    expect((await json(await request(`/api/v1/bookings/${created.reference}`, { cookie: owner.cookie }))).data.bookingStatus).toBe("pending");
   });
 
   test("every booking route needs a session", async () => {
@@ -241,77 +255,27 @@ describe("ownership", () => {
   });
 });
 
-describe("idempotency", () => {
-  test("retrying with the same key returns the same booking and creates only one", async () => {
-    const { cookie, userId } = await signInCustomer();
-    const w = window(2);
-    const body = { vehicle: "honda-activa", pickupAt: w.pickupAt, returnAt: w.returnAt };
-    const first = await book(cookie, body, "retry-key-0001");
-    const second = await book(cookie, body, "retry-key-0001");
-    expect(first.status).toBe(201);
-    expect(second.status).toBe(201);
-    expect(second.headers.get("idempotent-replayed")).toBe("true");
-    expect(first.headers.get("idempotent-replayed")).toBeNull();
-    expect((await json(second)).data.reference).toBe((await json(first)).data.reference);
-    expect((await db.select().from(bookings).where(eq(bookings.userId, userId))).length).toBe(1);
-  });
-
-  test("the same key with a different request is IDEMPOTENCY_CONFLICT", async () => {
-    const { cookie } = await signInCustomer();
-    const w = window(2);
-    const w2 = window(2);
-    expect((await book(cookie, { vehicle: "honda-activa", pickupAt: w.pickupAt, returnAt: w.returnAt }, "reused-key-0002")).status).toBe(201);
-    const different = await book(cookie, { vehicle: "honda-activa", pickupAt: w2.pickupAt, returnAt: w2.returnAt }, "reused-key-0002");
-    expect(different.status).toBe(409);
-    expect(await json(different)).toMatchObject({ error: { code: "IDEMPOTENCY_CONFLICT" } });
-  });
-
-  test("concurrent retries with one key create exactly one booking", async () => {
-    const { cookie, userId } = await signInCustomer();
-    const w = window(2);
-    const body = { vehicle: "yamaha-mt-15", pickupAt: w.pickupAt, returnAt: w.returnAt };
-    const responses = await Promise.all(Array.from({ length: 5 }, () => book(cookie, body, "parallel-key-0003")));
-    expect(responses.every((r) => r.status === 201)).toBe(true);
-    const references = new Set(await Promise.all(responses.map(async (r) => (await json(r)).data.reference)));
-    expect(references.size).toBe(1);
-    expect((await db.select().from(bookings).where(eq(bookings.userId, userId))).length).toBe(1);
-  });
-
-  test("keys are per user: another customer reusing a key gets their own booking", async () => {
-    const a = await signInCustomer();
-    const b = await signInCustomer();
-    const wa = window(2);
-    const wb = window(2);
-    const first = await book(a.cookie, { vehicle: "honda-activa", pickupAt: wa.pickupAt, returnAt: wa.returnAt }, "shared-key-0004");
-    const second = await book(b.cookie, { vehicle: "honda-activa", pickupAt: wb.pickupAt, returnAt: wb.returnAt }, "shared-key-0004");
-    expect(first.status).toBe(201);
-    expect(second.status).toBe(201);
-    expect((await json(first)).data.reference).not.toBe((await json(second)).data.reference);
-  });
-
-  test("a failed attempt is not cached: fixing the problem with the same key works", async () => {
-    const a = await signInCustomer();
-    const b = await signInCustomer();
-    const w = window(2);
-    await book(a.cookie, { vehicle: "ktm-duke-200", pickupAt: w.pickupAt, returnAt: w.returnAt });
-    const conflict = await book(b.cookie, { vehicle: "ktm-duke-200", pickupAt: w.pickupAt, returnAt: w.returnAt }, "failed-key-0005");
-    expect(conflict.status).toBe(409);
-    // Same key, same request, still taken: conflict again (not a replayed success).
-    expect((await book(b.cookie, { vehicle: "ktm-duke-200", pickupAt: w.pickupAt, returnAt: w.returnAt }, "failed-key-0005")).status).toBe(409);
-  });
-});
-
 describe("cancelling", () => {
-  test("cancel records the time and reason, and cancelling twice is harmless", async () => {
+  test("cancel records the time and reason, clears the hold, and cancelling twice is harmless", async () => {
     const { cookie } = await signInCustomer();
     const w = window(2);
     const created = (await json(await book(cookie, { vehicle: "honda-activa", pickupAt: w.pickupAt, returnAt: w.returnAt }))).data;
     const first = await postJson(`/api/v1/bookings/${created.reference}/cancel`, { reason: "Plans changed" }, { cookie });
     expect(first.status).toBe(200);
-    expect((await json(first)).data).toMatchObject({ bookingStatus: "cancelled", cancellationReason: "Plans changed" });
+    expect((await json(first)).data).toMatchObject({ bookingStatus: "cancelled", cancellationReason: "Plans changed", holdExpiresAt: null, paymentStatus: "unpaid" });
     const again = await postJson(`/api/v1/bookings/${created.reference}/cancel`, {}, { cookie });
     expect(again.status).toBe(200);
     expect((await json(again)).data.cancellationReason).toBe("Plans changed");
+  });
+
+  test("cancelling never touches the payment state, so no refund is implied", async () => {
+    const { cookie, userId } = await signInCustomer();
+    const bike = await vehicleBySlug("honda-activa");
+    const w = window(2);
+    const row = await insertBooking({ vehicleId: bike.id, userId, pickupAt: w.pickupAt, returnAt: w.returnAt, status: "confirmed" });
+    await db.update(bookings).set({ paymentStatus: "paid" }).where(eq(bookings.id, row.id));
+    const response = await postJson(`/api/v1/bookings/${row.reference}/cancel`, {}, { cookie });
+    expect((await json(response)).data).toMatchObject({ bookingStatus: "cancelled", paymentStatus: "paid" });
   });
 
   test("an active or completed booking cannot be cancelled", async () => {

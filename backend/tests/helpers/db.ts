@@ -1,7 +1,8 @@
-import { eq } from "drizzle-orm";
+import { eq, notInArray } from "drizzle-orm";
 import { db } from "../../src/libs/db";
 import { pgErrorCode } from "../../src/libs/db/errors";
 import { bookings, vehicles } from "../../src/libs/db/schema";
+import { seedVehicles } from "../../src/libs/db/seed";
 import { newReference } from "../../src/libs/reference";
 
 export async function vehicleBySlug(slug: string) {
@@ -10,11 +11,12 @@ export async function vehicleBySlug(slug: string) {
   return row;
 }
 
-type BookingStatus = "pending" | "confirmed" | "ready_for_pickup" | "active" | "completed" | "cancelled";
+type BookingStatus = "pending" | "confirmed" | "ready_for_pickup" | "active" | "completed" | "cancelled" | "expired";
 
-/** Inserts a booking row directly, bypassing the service, to set up availability scenarios. */
-export async function insertBooking(options: { vehicleId: string; userId: string; pickupAt: string; returnAt: string; status?: BookingStatus }) {
+export async function insertBooking(options: { vehicleId: string; userId: string; pickupAt: string; returnAt: string; status?: BookingStatus; holdExpiresAt?: Date | null | undefined }) {
   const vehicle = (await db.select().from(vehicles).where(eq(vehicles.id, options.vehicleId)).limit(1))[0]!;
+  const status = options.status ?? "confirmed";
+  const holdExpiresAt = options.holdExpiresAt !== undefined ? options.holdExpiresAt : status === "pending" ? new Date(Date.now() + 15 * 60_000) : null;
   const [row] = await db
     .insert(bookings)
     .values({
@@ -30,13 +32,13 @@ export async function insertBooking(options: { vehicleId: string; userId: string
       dailyRateSnapshotMinor: vehicle.dailyRentalPriceMinor,
       rentalSubtotalMinor: vehicle.dailyRentalPriceMinor,
       totalPayableMinor: vehicle.dailyRentalPriceMinor,
-      bookingStatus: options.status ?? "confirmed",
+      bookingStatus: status,
+      holdExpiresAt,
     })
     .returning();
   return row!;
 }
 
-/** Runs a promise and returns the Postgres SQLSTATE it failed with, or undefined if it succeeded. */
 export async function sqlstateOf(run: () => Promise<unknown>) {
   try {
     await run();
@@ -46,10 +48,7 @@ export async function sqlstateOf(run: () => Promise<unknown>) {
   }
 }
 
-/** Removes vehicles (and their bookings) that tests created on top of the seed, so files do not affect each other. */
 export async function cleanupExtraVehicles() {
-  const { notInArray } = await import("drizzle-orm");
-  const { seedVehicles } = await import("../../src/libs/db/seed");
   const extra = await db
     .select({ id: vehicles.id })
     .from(vehicles)

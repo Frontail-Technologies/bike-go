@@ -6,7 +6,6 @@ import { requestMeta } from "./request-meta";
 const STAFF = new Set(["admin", "super_admin"]);
 const unauthenticated = () => new AppError("AUTH_REQUIRED", 401, "Sign in to continue.");
 
-/** One session lookup per request, shared by the macro's pre-validation check and its typed `derive`. */
 const sessions = new WeakMap<Request, Promise<Session | null>>();
 const sessionOf = (request: Request) => {
   let found = sessions.get(request);
@@ -17,24 +16,12 @@ const sessionOf = (request: Request) => {
   return found;
 };
 
-/**
- * Authentication for the whole API.
- *
- * - `/api/v1/auth/*` is handed to Better Auth (Google OAuth, Telegram sign-in, session, sign-out).
- * - Route options `auth: true`, `admin: true` and `superAdmin: true` resolve the session from the request cookie,
- *   answer 401/403 in the standard error envelope, and expose a typed `user` and `session` to the handler.
- * - The check runs in the `transform` stage, before body validation, so an anonymous or unauthorised caller gets
- *   401/403 and never learns what the route's schema looks like. `derive` then provides the typed values.
- * - The role always comes from the database through the session, never from a body, query or header.
- */
 export const authPlugin = new Elysia({ name: "RideGo.Auth" })
   .use(requestMeta)
   .all(
     "/api/v1/auth/*",
     {
-      // Better Auth reads the body itself.
       parse: "none",
-      // The individual auth operations are documented from Better Auth's own schema (see plugins/openapi.ts).
       detail: { hide: true },
     },
     ({ request }) => auth.handler(request),

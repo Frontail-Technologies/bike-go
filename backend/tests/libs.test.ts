@@ -13,9 +13,9 @@ describe("money", () => {
   });
   test("percentages round half up", () => {
     expect(percentOfMinor(10_000, 1800)).toBe(1800);
-    expect(percentOfMinor(1, 5000)).toBe(1); // 0.5 rounds up
-    expect(percentOfMinor(333, 1000)).toBe(33); // 33.3
-    expect(percentOfMinor(9_000_000_000_000, 1800)).toBe(1_620_000_000_000); // beyond float-safe multiplication
+    expect(percentOfMinor(1, 5000)).toBe(1);
+    expect(percentOfMinor(333, 1000)).toBe(33);
+    expect(percentOfMinor(9_000_000_000_000, 1800)).toBe(1_620_000_000_000);
   });
   test("decimal strings convert without floats", () => {
     expect(toMinor("12.50", "USD")).toBe(1250);

@@ -8,17 +8,6 @@ const TTL_MS = 24 * 60 * 60 * 1000;
 
 export type Idempotent<T> = { status: number; body: T };
 
-/**
- * Runs `run` once per (scope, key). Without a key it simply runs in a transaction. With one:
- *
- * - First call: the key row is inserted in the SAME transaction as the work, then filled with the response.
- *   If the work fails, everything rolls back, the key is not stored, and a retry runs again.
- * - Retry with the same key and the same request: the stored response is returned and nothing runs again.
- * - Retry with the same key but a different request: IDEMPOTENCY_CONFLICT (409).
- * - Two requests racing with one key: the second blocks on the unique index until the first commits, then replays.
- *
- * `scope` should include the user id so keys never collide or leak between users.
- */
 export async function idempotently<T>(
   options: { scope: string; key: string | undefined; userId: string; payload: unknown },
   run: (tx: Tx) => Promise<Idempotent<T>>,

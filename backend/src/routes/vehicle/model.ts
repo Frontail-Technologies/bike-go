@@ -11,7 +11,6 @@ export const VehicleImage = t.Object({
   sortOrder: t.Number(),
 });
 
-/** What the public API says about a vehicle. Storage keys and registration numbers stay internal. */
 export const Vehicle = t.Object({
   id: t.String({ format: "uuid" }),
   slug: t.String(),

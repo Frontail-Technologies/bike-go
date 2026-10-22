@@ -1,6 +1,5 @@
 import { t } from "elysia";
 
-/** Stable machine-readable error codes. Clients switch on these, never on messages. */
 export const ERROR_CODES = [
   "AUTH_REQUIRED",
   "FORBIDDEN",
@@ -19,7 +18,6 @@ export const ERROR_CODES = [
 
 export type ErrorCode = (typeof ERROR_CODES)[number];
 
-/** An expected business failure. Services throw it; the error plugin turns it into the response envelope. */
 export class AppError extends Error {
   constructor(
     readonly code: ErrorCode,
@@ -35,7 +33,6 @@ export class AppError extends Error {
 export const notFound = (what: string) => new AppError("NOT_FOUND", 404, `${what} not found.`);
 export const forbidden = (message = "You do not have access to this resource.") => new AppError("FORBIDDEN", 403, message);
 
-/** Success envelope: `{ success: true, data, meta? }`. */
 export function ok<T>(data: T, meta: Record<string, unknown> = {}) {
   return { success: true as const, data, meta };
 }
@@ -50,11 +47,8 @@ export function errorBody(code: ErrorCode, message: string, requestId: string, d
   return { success: false, error: { code, message, details }, requestId };
 }
 
-// ------------------------------------------------------------------ shared schemas
-
 export const Meta = t.Object({}, { additionalProperties: true });
 
-/** Wraps a data schema in the success envelope, for responses and OpenAPI. */
 export const Envelope = <T extends ReturnType<typeof t.Object> | ReturnType<typeof t.Array> | ReturnType<typeof t.Null>>(data: T) =>
   t.Object({ success: t.Literal(true), data, meta: Meta });
 
@@ -75,10 +69,6 @@ export const PaginationQuery = t.Object({
   pageSize: t.Optional(t.Numeric({ minimum: 1, maximum: 100, default: 20 })),
 });
 
-/**
- * Error responses for the OpenAPI document. Spread into a route's `response` map next to its success schema.
- * Thrown errors (AppError) are formatted by the error plugin; these entries document what a client can receive.
- */
 export const publicErrors = { 404: ErrorEnvelope, 422: ErrorEnvelope } as const;
 export const customerErrors = { 401: ErrorEnvelope, 404: ErrorEnvelope, 409: ErrorEnvelope, 422: ErrorEnvelope } as const;
 export const staffErrors = { 401: ErrorEnvelope, 403: ErrorEnvelope, 404: ErrorEnvelope, 409: ErrorEnvelope, 422: ErrorEnvelope } as const;

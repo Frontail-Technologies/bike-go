@@ -10,21 +10,18 @@ import type { Currency } from "@/libs/money";
 import { pageMeta, pageOf } from "@/libs/pagination";
 import { newReference } from "@/libs/reference";
 import { busyPeriods, UNRENTABLE_STATUSES } from "../availability/service";
+import { expireStaleHolds } from "./holds";
 import type { BookingRequest, BookingsGet, BookingView, QuoteView } from "./model";
 import { priceBooking } from "./pricing";
 
-/** Booking rules that are policy, not pricing. */
 export const MAX_RENTAL_DAYS = 90;
-/** Customers may submit a pickup a few minutes in the past (clock drift, slow forms). */
 const PICKUP_SKEW_MS = 5 * 60 * 1000;
 const CANCELLABLE = ["pending", "confirmed", "ready_for_pickup"] as const;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const invalid = (path: string, message: string) => new AppError("VALIDATION_ERROR", 422, message, [{ path, message }]);
 
-const platformFee = (currency: Currency) => (currency === "KHR" ? env.PLATFORM_FEE_KHR_MINOR : env.PLATFORM_FEE_MINOR);
-
-// ------------------------------------------------------------------ quoting
+const platformFee = (currency: Currency) => (currency === "KHR" ? env.PLATFORM_FEE_KHR_MINOR : env.PLATFORM_FEE_USD_MINOR);
 
 type Prepared = {
   vehicle: typeof vehicles.$inferSelect;
@@ -37,10 +34,6 @@ type Prepared = {
   addonCodes: Map<string, string>;
 };
 
-/**
- * Validates a request and prices it from the database's current prices. Used by the quote endpoint and, inside the
- * transaction, by booking creation, so a quote and a booking are always computed the same way.
- */
 async function prepare(executor: Executor, request: BookingRequest, options: { forUpdate: boolean }): Promise<Prepared> {
   const pickupAt = new Date(request.pickupAt);
   const returnAt = new Date(request.returnAt);
@@ -53,7 +46,6 @@ async function prepare(executor: Executor, request: BookingRequest, options: { f
   const [found] = await executor.select({ id: vehicles.id }).from(vehicles).where(key).limit(1);
   if (!found) throw new AppError("NOT_FOUND", 404, "Vehicle not found.");
 
-  // Booking creation locks the vehicle row so concurrent requests for it queue up behind this one.
   if (options.forUpdate) {
     const locked = rowsOf<{ id: string }>(await executor.execute(sql`select id from ${vehicles} where ${vehicles.id} = ${found.id} for update`));
     if (locked.length === 0) throw new AppError("NOT_FOUND", 404, "Vehicle not found.");
@@ -87,7 +79,7 @@ async function prepare(executor: Executor, request: BookingRequest, options: { f
     dailyRateMinor: vehicle.dailyRentalPriceMinor,
     securityDepositMinor: vehicle.securityDepositMinor,
     addons: addonRows.map((a) => ({ addonId: a.id, name: a.name, unitPriceMinor: a.pricePerDayMinor, quantity: wanted.get(a.code)! })),
-    taxRateBps: env.TAX_RATE_BPS,
+    taxRateBps: env.VAT_RATE_BPS,
     platformFeeMinor: platformFee(vehicle.currency),
   });
 
@@ -101,7 +93,6 @@ const quoteView = (prepared: Prepared): QuoteView => ({
   addons: prepared.pricing.addons.map((a) => ({ code: prepared.addonCodes.get(a.addonId) ?? null, name: a.name, unitPriceMinor: a.unitPriceMinor, quantity: a.quantity, days: a.days, totalMinor: a.totalMinor })),
 });
 
-/** A price preview. Nothing is stored and availability is not claimed. */
 export async function quote(request: BookingRequest) {
   return quoteView(await prepare(db, request, { forUpdate: false }));
 }
@@ -115,8 +106,6 @@ const pricingView = (p: ReturnType<typeof priceBooking>) => ({
   securityDepositMinor: p.securityDepositMinor,
   totalPayableMinor: p.totalPayableMinor,
 });
-
-// ------------------------------------------------------------------ creating
 
 async function insertBooking(tx: Tx, userId: string, p: Prepared) {
   for (let attempt = 0; attempt < 5; attempt++) {
@@ -139,9 +128,9 @@ async function insertBooking(tx: Tx, userId: string, p: Prepared) {
         securityDepositSnapshotMinor: p.pricing.securityDepositMinor,
         taxesMinor: p.pricing.taxesMinor,
         totalPayableMinor: p.pricing.totalPayableMinor,
-        // Payment is deferred (no ABA yet): the booking holds the vehicle as confirmed-but-unpaid.
-        bookingStatus: "confirmed",
+        bookingStatus: "pending",
         paymentStatus: "unpaid",
+        holdExpiresAt: new Date(Date.now() + env.BOOKING_HOLD_MINUTES * 60_000),
       })
       .onConflictDoNothing({ target: bookings.reference })
       .returning();
@@ -150,16 +139,12 @@ async function insertBooking(tx: Tx, userId: string, p: Prepared) {
   throw new AppError("INTERNAL_ERROR", 500, "Could not allocate a booking reference. Please try again.");
 }
 
-/**
- * Creates a booking. Inside one transaction: lock the vehicle row, re-check status and the period against holding
- * bookings and blocks, price from current database values, insert. The exclusion constraint in the database is the
- * backstop if anything ever slips past those checks.
- */
 export async function createBooking(userId: string, request: BookingRequest, idempotencyKey: string | undefined) {
   try {
     const result = await idempotently<BookingView>({ scope: `booking:create:${userId}`, key: idempotencyKey, userId, payload: request }, async (tx) => {
       const prepared = await prepare(tx, request, { forUpdate: true });
 
+      await expireStaleHolds(tx, { vehicleId: prepared.vehicle.id });
       const taken = await busyPeriods(tx, prepared.vehicle.id, prepared.pickupAt, prepared.returnAt);
       if (taken.length > 0) throw new AppError("BOOKING_CONFLICT", 409, "This vehicle is not available for the selected period.");
 
@@ -182,13 +167,10 @@ export async function createBooking(userId: string, request: BookingRequest, ide
     });
     return result;
   } catch (error) {
-    // Two requests that raced past every check: the database refuses the second.
     if (pgErrorCode(error) === PG.exclusionViolation) throw new AppError("BOOKING_CONFLICT", 409, "This vehicle is not available for the selected period.");
     throw error;
   }
 }
-
-// ------------------------------------------------------------------ reading
 
 export async function bookingViews(executor: Executor, ids: string[]): Promise<BookingView[]> {
   if (ids.length === 0) return [];
@@ -221,6 +203,7 @@ export async function bookingViews(executor: Executor, ids: string[]): Promise<B
         totalPayableMinor: row.totalPayableMinor,
       },
       addons: row.addonItems.map((item) => ({ code: item.addon.code, name: item.nameSnapshot, unitPriceMinor: item.unitPriceSnapshotMinor, quantity: item.quantity, days: item.days, totalMinor: item.totalMinor })),
+      holdExpiresAt: row.holdExpiresAt?.toISOString() ?? null,
       cancelledAt: row.cancelledAt?.toISOString() ?? null,
       cancellationReason: row.cancellationReason,
       createdAt: row.createdAt.toISOString(),
@@ -233,6 +216,7 @@ export async function bookingView(executor: Executor, id: string) {
 }
 
 export async function listMyBookings(userId: string, query: BookingsGet["Query"]) {
+  await expireStaleHolds(db, { userId });
   const paging = pageOf(query);
   const where = and(eq(bookings.userId, userId), query.status ? eq(bookings.bookingStatus, query.status) : undefined);
   const [ids, [total]] = await Promise.all([
@@ -242,26 +226,25 @@ export async function listMyBookings(userId: string, query: BookingsGet["Query"]
   return { data: await bookingViews(db, ids.map((r) => r.id)), meta: pageMeta(paging, total?.n ?? 0) };
 }
 
-/** A customer's own booking. Someone else's reference looks exactly like one that does not exist. */
 export async function getMyBooking(userId: string, reference: string) {
+  await expireStaleHolds(db, { userId, reference });
   const [row] = await db.select({ id: bookings.id }).from(bookings).where(and(eq(bookings.reference, reference), eq(bookings.userId, userId))).limit(1);
   if (!row) throw new AppError("NOT_FOUND", 404, "Booking not found.");
   return bookingView(db, row.id);
 }
 
-// ------------------------------------------------------------------ cancelling
-
 export async function cancelMyBooking(userId: string, reference: string, reason: string | undefined) {
   return db.transaction(async (tx) => {
+    await expireStaleHolds(tx, { userId, reference });
     const [row] = await tx.select().from(bookings).where(and(eq(bookings.reference, reference), eq(bookings.userId, userId))).limit(1);
     if (!row) throw new AppError("NOT_FOUND", 404, "Booking not found.");
-    if (row.bookingStatus === "cancelled") return bookingView(tx, row.id); // already cancelled: cancelling twice is harmless
+    if (row.bookingStatus === "cancelled") return bookingView(tx, row.id);
     if (!(CANCELLABLE as readonly string[]).includes(row.bookingStatus)) {
       throw new AppError("INVALID_BOOKING_STATUS", 409, `A booking that is ${row.bookingStatus.replaceAll("_", " ")} cannot be cancelled.`);
     }
     await tx
       .update(bookings)
-      .set({ bookingStatus: "cancelled", cancelledAt: new Date(), cancellationReason: reason ?? null, paymentStatus: row.paymentStatus === "paid" ? "refunded" : row.paymentStatus })
+      .set({ bookingStatus: "cancelled", holdExpiresAt: null, cancelledAt: new Date(), cancellationReason: reason ?? null })
       .where(eq(bookings.id, row.id));
     return bookingView(tx, row.id);
   });

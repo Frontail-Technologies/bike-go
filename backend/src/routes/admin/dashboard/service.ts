@@ -1,12 +1,13 @@
-import { and, count, desc, eq, gte, inArray, lt, ne, sql } from "drizzle-orm";
+import { and, count, desc, eq, gte, inArray, lt, sql } from "drizzle-orm";
 import { db } from "@/libs/db";
 import { bookings, loanApplications, user, vehicles } from "@/libs/db/schema";
+import { expireStaleHolds } from "@/routes/booking/holds";
 
 const toCounts = (rows: { key: string; n: number }[]) => Object.fromEntries(rows.map((r) => [r.key, Number(r.n)]));
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** One screen's worth of numbers for staff. Revenue is per currency and is never summed across currencies. */
 export async function getDashboard() {
+  await expireStaleHolds(db);
   const now = new Date();
   const soon = new Date(now.getTime() + 7 * DAY_MS);
   const thirtyDaysAgo = new Date(now.getTime() - 30 * DAY_MS);
@@ -23,7 +24,7 @@ export async function getDashboard() {
         paid: sql<string>`coalesce(sum(${taxable}) filter (where ${bookings.paymentStatus} = 'paid'), 0)`,
       })
       .from(bookings)
-      .where(ne(bookings.bookingStatus, "cancelled"))
+      .where(inArray(bookings.bookingStatus, ["confirmed", "ready_for_pickup", "active", "completed"]))
       .groupBy(bookings.currency),
     db.select({ key: loanApplications.status, n: count() }).from(loanApplications).groupBy(loanApplications.status),
     db.select({ n: count() }).from(user).where(eq(user.role, "customer")),

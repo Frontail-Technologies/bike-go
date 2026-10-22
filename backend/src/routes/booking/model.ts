@@ -3,10 +3,9 @@ import { Currency, Envelope, PaginationQuery } from "@/libs/api";
 
 const IsoDateTime = t.String({ format: "date-time", description: "ISO-8601 with an offset, for example 2026-11-01T10:00:00+07:00" });
 
-export const BookingStatus = t.UnionEnum(["pending", "confirmed", "ready_for_pickup", "active", "completed", "cancelled"]);
+export const BookingStatus = t.UnionEnum(["pending", "confirmed", "ready_for_pickup", "active", "completed", "cancelled", "expired"]);
 export const PaymentStatus = t.UnionEnum(["unpaid", "pending", "paid", "failed", "refunded", "partially_refunded"]);
 
-/** What a client may ask for. It deliberately has no price fields: anything extra the client sends is ignored. */
 const BookingRequest = {
   vehicle: t.String({ minLength: 1, description: "Vehicle slug or UUID" }),
   pickupLocationId: t.Optional(t.String({ format: "uuid", description: "Defaults to the vehicle's location; must be where the vehicle is" })),
@@ -45,6 +44,7 @@ export const Booking = t.Object({
   currency: Currency,
   pricing: Pricing,
   addons: t.Array(AddonLine),
+  holdExpiresAt: t.Nullable(t.String({ format: "date-time", description: "While pending, the vehicle is held until this time; after it the booking becomes expired" })),
   cancelledAt: t.Nullable(t.String({ format: "date-time" })),
   cancellationReason: t.Nullable(t.String()),
   createdAt: t.String({ format: "date-time" }),

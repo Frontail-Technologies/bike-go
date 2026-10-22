@@ -2,6 +2,7 @@ export * from "./auth";
 export * from "./booking";
 export * from "./document";
 export * from "./enums";
+export * from "./fx";
 export * from "./idempotency";
 export * from "./loan";
 export * from "./location";
