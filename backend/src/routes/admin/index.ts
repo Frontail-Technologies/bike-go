@@ -1,6 +1,9 @@
 import { Elysia, t } from "elysia";
 import { Envelope, ok } from "@/libs/api";
 import { authPlugin } from "@/plugins/auth";
+import { adminBookingRoutes } from "./booking";
+import { adminCustomerRoutes } from "./customer";
+import { adminDashboardRoutes } from "./dashboard";
 import { adminLoanRoutes } from "./loan";
 import { adminLocationRoutes } from "./location";
 import { adminVehicleRoutes } from "./vehicle";
@@ -22,4 +25,7 @@ export const adminRoutes = new Elysia({ name: "RideGo.Admin", prefix: "/api/v1/a
   )
   .use(adminVehicleRoutes)
   .use(adminLocationRoutes)
+  .use(adminDashboardRoutes)
+  .use(adminBookingRoutes)
+  .use(adminCustomerRoutes)
   .use(adminLoanRoutes);

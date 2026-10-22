@@ -190,7 +190,7 @@ export async function createBooking(userId: string, request: BookingRequest, ide
 
 // ------------------------------------------------------------------ reading
 
-async function bookingViews(executor: Executor, ids: string[]): Promise<BookingView[]> {
+export async function bookingViews(executor: Executor, ids: string[]): Promise<BookingView[]> {
   if (ids.length === 0) return [];
   const rows = await executor.query.bookings.findMany({
     where: inArray(bookings.id, ids),
