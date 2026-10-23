@@ -2,11 +2,33 @@
 
 import { Breadcrumbs, Tabs } from "@heroui/react";
 import { HouseIcon } from "@phosphor-icons/react";
+import { AnimatedSelection, SelectionIndicator } from "@/components/motion/animated-selection";
 import type { ReactNode } from "react";
 
 export type AdminTabItem = { id: string; label: string; content?: ReactNode; icon?: ReactNode };
 export function AdminTabs({ items, label, selectedKey, onSelectionChange }: { items: AdminTabItem[]; label: string; selectedKey?: string; onSelectionChange?: (key: string) => void }) {
-  return <Tabs selectedKey={selectedKey} defaultSelectedKey={items[0]?.id} onSelectionChange={(key) => onSelectionChange?.(String(key))} className="w-full"><Tabs.ListContainer><Tabs.List aria-label={label}>{items.map((item) => <Tabs.Tab key={item.id} id={item.id} className="relative min-h-10 gap-2 whitespace-nowrap font-bold">{item.icon}{item.label}<Tabs.Indicator className="rounded-lg bg-white shadow-sm" /></Tabs.Tab>)}</Tabs.List></Tabs.ListContainer>{items.map((item) => item.content ? <Tabs.Panel key={item.id} id={item.id} className="px-0 pt-4">{item.content}</Tabs.Panel> : null)}</Tabs>;
+  return (
+    <Tabs selectedKey={selectedKey} defaultSelectedKey={items[0]?.id} onSelectionChange={(key) => onSelectionChange?.(String(key))} className="w-full">
+      <Tabs.ListContainer className="overflow-x-auto scrollbar-none">
+        <AnimatedSelection>
+          <Tabs.List aria-label={label} className="min-w-max sm:w-full sm:min-w-0">
+            {items.map((item) => (
+              <Tabs.Tab key={item.id} id={item.id} className="isolate min-h-11 gap-2 whitespace-nowrap font-bold sm:flex-1">
+                {({ isSelected }) => (
+                  <>
+                    {isSelected ? <SelectionIndicator layoutId={`admin-tab-${label}`} className="bg-[var(--admin-accent)] shadow-sm" /> : null}
+                    {item.icon}
+                    {item.label}
+                  </>
+                )}
+              </Tabs.Tab>
+            ))}
+          </Tabs.List>
+        </AnimatedSelection>
+      </Tabs.ListContainer>
+      {items.map((item) => (item.content ? <Tabs.Panel key={item.id} id={item.id} className="px-0 pt-4">{item.content}</Tabs.Panel> : null))}
+    </Tabs>
+  );
 }
 
 export function AdminBreadcrumbs({ items }: { items: ReadonlyArray<{ label: string; href?: string }> }) {

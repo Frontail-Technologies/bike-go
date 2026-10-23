@@ -13,12 +13,13 @@ export function AnimatedSelection({ children }: { children: React.ReactNode }) {
 type SelectionIndicatorProps = {
   className?: string;
   radius?: number;
+  layoutId?: string;
 };
 
-export function SelectionIndicator({ className, radius = 9999 }: SelectionIndicatorProps) {
+export function SelectionIndicator({ className, radius = 9999, layoutId = "rgo-selection" }: SelectionIndicatorProps) {
   return (
     <motion.span
-      layoutId="rgo-selection"
+      layoutId={layoutId}
       transition={selectionTransition}
       style={{ borderRadius: radius }}
       className={cn("absolute inset-0 -z-10", className)}
