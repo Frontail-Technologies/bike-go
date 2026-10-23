@@ -43,3 +43,6 @@ next-env.d.ts
 # QA artifacts
 /qa/screenshots/
 /.next-qa/
+
+# backend lives in its own repository
+/backend/
