@@ -5,14 +5,14 @@ import { CheckCircleIcon, EyeIcon, FloppyDiskIcon, XCircleIcon } from "@phosphor
 import type { ColumnDef } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { AdminSearch, AdminSelect, CambodiaDateFilter, FilterBar, formatCambodiaDate } from "@/components/admin/controls";
+import { AdminSearch, AdminSelect, FilterBar, formatCambodiaDate } from "@/components/admin/controls";
 import { AdminDataTable } from "@/components/admin/data-display/admin-data-table";
-import { AvatarCell, MoneyDisplay } from "@/components/admin/data-display/misc";
+import { AvatarCell } from "@/components/admin/data-display/misc";
 import { AdminStatusBadge, type AdminStatus } from "@/components/admin/data-display/status-badge";
 import { AdminErrorState } from "@/components/admin/feedback";
 import { FormGrid, FormSection } from "@/components/admin/forms/form-layout";
 import { AdminPage, ContentSection, DetailList, InfoCard, PageHeader } from "@/components/admin/layout";
-import { adminDocuments, adminPayments, type AdminDocument, type AdminPayment } from "./data";
+import { adminDocuments, type AdminDocument } from "./data";
 
 const PAGE_SIZE = 6;
 const all = "all";
@@ -37,20 +37,6 @@ export function DocumentsScreen() {
     { id: "actions", header: "", enableSorting: false, cell: ({ row }) => <ViewAction label={`Review document ${row.original.reference}`} onPress={() => router.push(`/admin/documents/${row.original.id}`)} /> },
   ];
   return <ListFrame title="Documents" description="Review identity and eligibility documents securely." search={search} setSearch={setSearch} status={status} setStatus={setStatus} statusOptions={["verified", "needs-review", "rejected", "expired"]} columns={columns} rows={rows} total={filtered.length} page={page} setPage={setPage} empty="No documents match these filters." />;
-}
-
-export function PaymentsScreen() {
-  const [search, setSearch] = useState(""); const [status, setStatus] = useState(all); const [page, setPage] = useState(1); const [range, setRange] = useState({ start: "2026-10-01", end: "2026-10-31" });
-  const filtered = useMemo(() => adminPayments.filter((item) => (!search || `${item.reference} ${item.bookingReference} ${item.customer}`.toLowerCase().includes(search.toLowerCase())) && (status === all || item.status === status)), [search, status]);
-  const rows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  const columns: ColumnDef<AdminPayment>[] = [
-    { accessorKey: "reference", header: "Payment", cell: ({ row }) => <span className="font-bold">{row.original.reference}</span> }, { accessorKey: "bookingReference", header: "Booking" },
-    { accessorKey: "customer", header: "Customer", cell: ({ row }) => <AvatarCell name={row.original.customer} /> },
-    { accessorKey: "amountMinor", header: "Amount", cell: ({ row }) => <MoneyDisplay amount={row.original.amountMinor} /> }, { accessorKey: "method", header: "Method" },
-    { accessorKey: "paidAt", header: "Date", cell: ({ row }) => formatCambodiaDate(row.original.paidAt) },
-    { accessorKey: "status", header: "Status", cell: ({ row }) => <AdminStatusBadge status={row.original.status} /> },
-  ];
-  return <AdminPage><PageHeader title="Payments" description="Track USD rental payments, refunds, and settlement status." /><ContentSection><FilterBar search={<AdminSearch className="sm:max-w-md" value={search} onChange={(value) => { setSearch(value); setPage(1); }} placeholder="Search payments…" />}><AdminSelect label="All statuses" value={status} onChange={(value) => { setStatus(value); setPage(1); }} options={[{ value: all, label: "All statuses" }, ...["paid", "pending", "partially-paid", "refunded", "failed"].map((value) => ({ value, label: value.split("-").map((part) => part[0].toUpperCase() + part.slice(1)).join(" ") }))]} /><CambodiaDateFilter value={range} onChange={setRange} /></FilterBar><AdminDataTable columns={columns} data={rows} label="Payments" emptyState="No payments match these filters." pagination={{ page, pageSize: PAGE_SIZE, total: filtered.length, onPageChange: setPage }} /></ContentSection></AdminPage>;
 }
 
 function RecordNotFound({ title }: { title: string }) { return <AdminPage><PageHeader title={title} /><AdminErrorState title="Record not found" description="This UI preview does not contain that record." /></AdminPage>; }

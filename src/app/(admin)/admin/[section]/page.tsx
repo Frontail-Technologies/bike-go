@@ -1,9 +1,10 @@
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { AdminLoadingState } from "@/components/admin/feedback";
+import { PaymentList } from "@/components/admin/payments/payment-list";
 import { CustomerList } from "@/components/admin/customers/customer-list";
 import { BookingList } from "@/components/admin/bookings/booking-list";
-import { DocumentsScreen, PaymentsScreen, SettingsScreen } from "@/components/admin/operations/operation-screens";
+import { DocumentsScreen, SettingsScreen } from "@/components/admin/operations/operation-screens";
 
 const sections = ["bookings", "customers", "loan-applications", "documents", "payments", "settings"] as const;
 
@@ -19,7 +20,7 @@ async function AdminSection({ params }: { params: Promise<{ section: string }> }
   if (section === "customers") return <CustomerList />;
   if (section === "loan-applications") redirect("/admin/loans");
   if (section === "documents") return <DocumentsScreen />;
-  if (section === "payments") return <PaymentsScreen />;
+  if (section === "payments") return <PaymentList />;
   return <SettingsScreen />;
 }
 
