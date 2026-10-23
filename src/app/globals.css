@@ -240,3 +240,7 @@ body {
   transition-duration: 0.01ms !important;
   animation-duration: 0.01ms !important;
 }
+
+html[data-locale-pending] body {
+  opacity: 0;
+}

@@ -2,8 +2,10 @@
 
 import { createPersistedStore } from "@/lib/persisted-store";
 import { type Locale, defaultLocale } from "./config";
+import { LOCALE_KEY } from "./pending";
 
-export const LOCALE_KEY = "rgo.locale.v1";
+export { LOCALE_KEY };
+
 
 export const localeStore = createPersistedStore<Locale>(LOCALE_KEY, defaultLocale);
 

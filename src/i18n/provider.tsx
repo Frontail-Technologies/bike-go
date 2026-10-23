@@ -3,10 +3,24 @@
 import { I18nProvider as AriaI18nProvider } from "@heroui/react";
 import { startTransition, useEffect, useState } from "react";
 import { IntlProvider } from "use-intl";
-import { type Locale, defaultLocale, detectLocale, localeMeta } from "./config";
+import { type Locale, defaultLocale, detectLocale, isLocale, localeMeta } from "./config";
 import { DocumentTitle } from "./document-title";
 import { messages } from "./index";
-import { LOCALE_KEY, localeStore, setActiveLocale } from "./store";
+import { LOCALE_KEY, PENDING_ATTRIBUTE } from "./pending";
+import { localeStore, setActiveLocale } from "./store";
+
+function intendedLocale(): Locale {
+  try {
+    const raw = window.localStorage.getItem(LOCALE_KEY);
+    if (raw !== null) {
+      const stored: unknown = JSON.parse(raw);
+      return isLocale(stored) ? stored : defaultLocale;
+    }
+    return detectLocale(navigator.languages ?? [navigator.language]);
+  } catch {
+    return defaultLocale;
+  }
+}
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   const saved = localeStore.useValue();
@@ -30,6 +44,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     document.documentElement.lang = localeMeta[locale].lang;
+    if (locale === intendedLocale()) document.documentElement.removeAttribute(PENDING_ATTRIBUTE);
   }, [locale]);
 
   return (
