@@ -1,12 +1,12 @@
-import { DocumentDetailScreen } from "@/components/admin/operations/operation-screens";
 import { Suspense } from "react";
+import { DocumentList } from "@/components/admin/documents/document-list";
 import { AdminLoadingState } from "@/components/admin/feedback";
 
-async function DocumentDetail({ params }: { params: Promise<{ id: string }> }) {
+async function DocumentReview({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  return <DocumentDetailScreen id={id} />;
+  return <DocumentList initialId={id} />;
 }
 
-export default function DocumentDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  return <Suspense fallback={<AdminLoadingState label="Loading document…" />}><DocumentDetail params={params} /></Suspense>;
+export default function DocumentReviewPage({ params }: { params: Promise<{ id: string }> }) {
+  return <Suspense fallback={<AdminLoadingState label="Loading document…" />}><DocumentReview params={params} /></Suspense>;
 }

@@ -1,6 +1,6 @@
 import { adminLocations, adminVehicles } from "@/components/admin/data";
 import type { AdminStatus } from "@/components/admin/data-display/status-badge";
-import { type LoanCurrency, type LoanStatus, loanTypes } from "@/components/admin/loans/loan-types";
+import { documentTypes, type LoanCurrency, type LoanStatus, loanTypes } from "@/components/admin/loans/loan-types";
 
 export type CustomerStatus = Extract<AdminStatus, "active" | "inactive">;
 
@@ -40,7 +40,6 @@ const seeds = [
 const bookingStatuses: AdminStatus[] = ["completed", "ongoing", "completed", "confirmed", "completed", "cancelled", "completed"];
 const paymentStatuses: AdminStatus[] = ["paid", "paid", "paid", "partially-paid", "paid", "refunded", "paid"];
 const loanStatuses: LoanStatus[] = ["documents-review", "approved", "submitted", "rejected", "eligibility-review", "action-required", "draft"];
-const documentTypes = ["Passport", "Driving licence", "National ID", "Proof of address", "Visa"];
 const documentStatuses: AdminStatus[] = ["verified", "needs-review", "verified", "rejected", "verified"];
 
 const stamp = (month: number, day: number, hour = 3) => `2026-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}T${String(hour).padStart(2, "0")}:00:00.000Z`;
@@ -77,8 +76,8 @@ function build(seed: (typeof seeds)[number], index: number): Customer {
 
   const documents: CustomerDocument[] = loans.flatMap((loan, loanSlot) =>
     Array.from({ length: 2 }, (_, slot) => ({
-      id: `${loan.id}-d${slot + 1}`, type: documentTypes[(index + loanSlot + slot) % documentTypes.length], loanReference: loan.reference,
-      uploadedAt: stamp(9 - loanSlot, 9 + index, 5 + slot), status: documentStatuses[(index + slot + loanSlot) % documentStatuses.length], detailId: `document-${((index + slot + loanSlot) % 8) + 1}`,
+      id: `${loan.id}-d${slot + 1}`, type: documentTypes[slot], loanReference: loan.reference,
+      uploadedAt: stamp(9 - loanSlot, 9 + index, 5 + slot), status: documentStatuses[(index + slot + loanSlot) % documentStatuses.length], detailId: `${loan.reference}-${slot}`,
     })),
   );
 

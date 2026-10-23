@@ -1,10 +1,10 @@
 import { type Customer, customers } from "@/components/admin/customers/customer-data";
-import { type LoanCurrency, type LoanStatus, type LoanType } from "./loan-types";
+import { type DocumentType, documentTypes, type LoanCurrency, type LoanStatus, type LoanType } from "./loan-types";
+
+export { type DocumentType, documentTypes };
 
 export const NOW = Date.parse("2026-10-23T03:00:00.000Z");
 
-export const documentTypes = ["Passport", "Visa / Residence permit", "Employment proof", "Salary / income proof", "Address proof", "Bank statement"] as const;
-export type DocumentType = (typeof documentTypes)[number];
 export type DocumentStatus = "uploaded" | "verified" | "needs-review" | "rejected" | "missing";
 export const documentStatusLabels: Record<DocumentStatus, string> = { uploaded: "Uploaded", verified: "Verified", "needs-review": "Needs review", rejected: "Rejected", missing: "Missing" };
 
@@ -23,7 +23,7 @@ const employers = ["Mekong Logistics Co., Ltd.", "Angkor Hospitality Group", "Ph
 const jobTitles = ["Operations Manager", "Tour Operator", "Software Engineer", "Shop Owner", "Accountant", "Sales Lead"];
 const purposes: Record<string, string> = { "Personal loan": "Home repairs and family expenses", "Emergency loan": "Unexpected medical bills", "Business loan": "Stock and equipment for a small shop" };
 
-function docs(status: LoanStatus, seed: number, submittedAt: string): LoanDocument[] {
+function docs(reference: string, status: LoanStatus, seed: number, submittedAt: string): LoanDocument[] {
   const at = (offset: number) => new Date(Date.parse(submittedAt) + offset * 3_600_000).toISOString();
   return documentTypes.map((type, index) => {
     let doc: DocumentStatus;
@@ -33,7 +33,7 @@ function docs(status: LoanStatus, seed: number, submittedAt: string): LoanDocume
     else if (status === "action-required") doc = index === 5 ? "missing" : index === 3 ? "rejected" : "verified";
     else if (status === "rejected") doc = index === 3 ? "rejected" : index % 2 ? "verified" : "uploaded";
     else doc = "verified";
-    return { type, status: doc, uploadedAt: doc === "missing" ? null : at(index + 1), detailId: `document-${((seed + index) % 8) + 1}` };
+    return { type, status: doc, uploadedAt: doc === "missing" ? null : at(index + 1), detailId: `${reference}-${index}` };
   });
 }
 
@@ -58,7 +58,7 @@ function build(customer: Customer, loan: Customer["loans"][number], index: numbe
     purpose: purposes[loan.loanType] ?? "Personal use", submittedAt: loan.submittedAt,
     applicant: { customerId: customer.id, customerReference: customer.reference, name: customer.name, phone: customer.phone, email: customer.email, dateOfBirth: customer.dateOfBirth, nationality: customer.nationality, city: customer.city, address: customer.address, residence: residenceExpat ? "Expat resident (work visa)" : "Cambodian citizen" },
     employment: { type: employmentTypes[index % employmentTypes.length], employer: employers[index % employers.length], jobTitle: jobTitles[index % jobTitles.length], monthlyIncomeMinor: (80000 + (index % 5) * 35000), experienceYears: 2 + (index % 9), activeBankAccount: index % 6 !== 5 },
-    documents: docs(loan.status, index, loan.submittedAt), history: history(loan.status, loan.submittedAt),
+    documents: docs(loan.reference, loan.status, index, loan.submittedAt), history: history(loan.status, loan.submittedAt),
   };
 }
 

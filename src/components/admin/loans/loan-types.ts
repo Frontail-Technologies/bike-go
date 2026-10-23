@@ -15,4 +15,7 @@ export const toLoanBadge = (status: LoanStatus) => ({ status: tone[status], labe
 
 export const loanTypes = ["Personal loan", "Emergency loan", "Business loan"] as const;
 export type LoanType = (typeof loanTypes)[number];
+export const documentTypes = ["Passport", "Visa / Residence permit", "Employment proof", "Salary / income proof", "Address proof", "Bank statement"] as const;
+export const allDocumentTypes = [...documentTypes, "Other"] as const;
+export type DocumentType = (typeof allDocumentTypes)[number];
 export type LoanCurrency = "USD" | "KHR";

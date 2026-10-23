@@ -12,7 +12,6 @@ import { AdminStatusBadge, type AdminStatus } from "@/components/admin/data-disp
 import { AdminErrorState } from "@/components/admin/feedback";
 import { FormGrid, FormSection } from "@/components/admin/forms/form-layout";
 import { AdminPage, ContentSection, DetailList, InfoCard, PageHeader } from "@/components/admin/layout";
-import { adminDocuments, type AdminDocument } from "./data";
 
 const PAGE_SIZE = 6;
 const all = "all";
@@ -25,26 +24,7 @@ function ListFrame<T extends { id: string }>({ title, description, search, setSe
   return <AdminPage><PageHeader title={title} description={description} /><ContentSection><FilterBar search={<AdminSearch className="sm:max-w-md" value={search} onChange={(value) => { setSearch(value); setPage(1); }} placeholder={`Search ${title.toLowerCase()}…`} />}><AdminSelect label="All statuses" value={status} onChange={(value) => { setStatus(value); setPage(1); }} options={[{ value: all, label: "All statuses" }, ...statusOptions.map((value) => ({ value, label: value.split("-").map((part) => part[0].toUpperCase() + part.slice(1)).join(" ") }))]} />{search || status !== all ? <Button size="sm" variant="ghost" onPress={() => { setSearch(""); setStatus(all); setPage(1); }}>Reset filters</Button> : null}</FilterBar><AdminDataTable columns={columns} data={rows} label={title} emptyState={empty} pagination={{ page, pageSize: PAGE_SIZE, total, onPageChange: setPage }} /></ContentSection></AdminPage>;
 }
 
-export function DocumentsScreen() {
-  const router = useRouter(); const [search, setSearch] = useState(""); const [status, setStatus] = useState(all); const [page, setPage] = useState(1);
-  const filtered = useMemo(() => adminDocuments.filter((item) => (!search || `${item.reference} ${item.customer} ${item.type} ${item.fileName}`.toLowerCase().includes(search.toLowerCase())) && (status === all || item.status === status)), [search, status]);
-  const rows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  const columns: ColumnDef<AdminDocument>[] = [
-    { accessorKey: "reference", header: "Document", cell: ({ row }) => <div><p className="font-bold">{row.original.reference}</p><p className="text-xs text-[var(--admin-muted)]">{row.original.fileName}</p></div> },
-    { accessorKey: "customer", header: "Customer", cell: ({ row }) => <AvatarCell name={row.original.customer} /> },
-    { accessorKey: "type", header: "Type" }, { accessorKey: "uploadedAt", header: "Uploaded", cell: ({ row }) => formatCambodiaDate(row.original.uploadedAt) },
-    { accessorKey: "status", header: "Status", cell: ({ row }) => <AdminStatusBadge status={row.original.status} /> },
-    { id: "actions", header: "", enableSorting: false, cell: ({ row }) => <ViewAction label={`Review document ${row.original.reference}`} onPress={() => router.push(`/admin/documents/${row.original.id}`)} /> },
-  ];
-  return <ListFrame title="Documents" description="Review identity and eligibility documents securely." search={search} setSearch={setSearch} status={status} setStatus={setStatus} statusOptions={["verified", "needs-review", "rejected", "expired"]} columns={columns} rows={rows} total={filtered.length} page={page} setPage={setPage} empty="No documents match these filters." />;
-}
-
 function RecordNotFound({ title }: { title: string }) { return <AdminPage><PageHeader title={title} /><AdminErrorState title="Record not found" description="This UI preview does not contain that record." /></AdminPage>; }
-
-export function DocumentDetailScreen({ id }: { id: string }) {
-  const item = adminDocuments.find((document) => document.id === id); const [status, setStatus] = useState<AdminStatus | null>(item?.status ?? null); if (!item || !status) return <RecordNotFound title="Document Review" />;
-  return <AdminPage><PageHeader eyebrow="Documents" title="Document Review" description={item.reference} /><div className="grid gap-5 xl:grid-cols-[0.8fr_1.25fr_0.8fr]"><InfoCard title="Document information"><DetailList items={[{ label: "Customer", value: item.customer }, { label: "Type", value: item.type }, { label: "File", value: item.fileName }, { label: "Uploaded", value: formatCambodiaDate(item.uploadedAt) }, { label: "Status", value: <AdminStatusBadge status={status} /> }]} /></InfoCard><InfoCard title="Secure preview"><div className="flex min-h-80 items-center justify-center rounded-xl border border-dashed border-[var(--admin-border)] bg-[var(--admin-surface-muted)] text-center"><div><p className="font-bold">Protected document preview</p><p className="mt-1 text-sm text-[var(--admin-muted)]">Preview content is intentionally unavailable in this UI-only build.</p></div></div></InfoCard><InfoCard title="Review actions"><p className="mb-4 text-sm text-[var(--admin-muted)]">Confirm that the document is readable, current, and matches the customer profile.</p><div className="grid gap-2"><Button variant="danger" onPress={() => setStatus("rejected")}><XCircleIcon />Reject</Button><Button variant="primary" onPress={() => setStatus("verified")}><CheckCircleIcon />Verify</Button></div></InfoCard></div></AdminPage>;
-}
 
 export function SettingsScreen() {
   const [saved, setSaved] = useState(false);
