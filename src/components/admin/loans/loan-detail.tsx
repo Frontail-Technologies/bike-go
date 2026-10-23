@@ -17,8 +17,8 @@ import { DocumentStatusBadge, LoanStatusBadge } from "./loan-parts";
 
 function Card({ title, action, children, className }: { title: string; action?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <section aria-label={title} className={cn("adminSurface rounded-2xl p-4 sm:p-5", className)}>
-      <header className="mb-4 flex items-center justify-between gap-3"><h2 className="text-sm font-extrabold">{title}</h2>{action}</header>
+    <section aria-label={title} className={cn("adminSurface flex h-full flex-col rounded-2xl p-4 sm:p-5", className)}>
+      <header className="mb-4 flex min-h-9 items-center justify-between gap-3"><h2 className="text-sm font-extrabold">{title}</h2>{action}</header>
       {children}
     </section>
   );
@@ -67,7 +67,7 @@ export function LoanDetail({ reference }: { reference: string }) {
   const hasActions = canRequestDocuments(loan.status) || canReject(loan.status) || canApprove(loan.status);
 
   const overview = (
-    <div className="grid items-start gap-4 lg:grid-cols-2 xl:gap-5">
+    <div className="grid items-stretch gap-4 lg:grid-cols-2 xl:gap-5">
       <Card title="Applicant" action={<Button size="sm" variant="ghost" className="min-h-11 text-[var(--admin-info)] md:min-h-9" onPress={() => router.push(`/admin/customers/${applicant.customerId}`)}>View customer<ArrowRightIcon size={14} /></Button>}>
         <div className="mb-4 flex items-center gap-3"><CustomerAvatar name={applicant.name} size="md" /><div className="min-w-0"><p className="truncate text-sm font-extrabold">{applicant.name}</p><p className="text-xs text-[var(--admin-muted)]">{applicant.customerReference}</p></div></div>
         <dl className="space-y-4"><Row icon={<PhoneIcon size={18} />} label="Phone">{applicant.phone}</Row><Row icon={<EnvelopeSimpleIcon size={18} />} label="Email">{applicant.email}</Row><Row icon={<MapPinIcon size={18} />} label="Current city">{applicant.city}, Cambodia</Row></dl>
@@ -93,23 +93,24 @@ export function LoanDetail({ reference }: { reference: string }) {
     <AdminPage className="gap-5">
       <AdminBreadcrumbs items={[{ label: "Loan Applications", href: "/admin/loans" }, { label: loan.reference }]} />
 
-      <header className="adminHero flex flex-col gap-4 rounded-3xl p-4 sm:p-5 lg:flex-row lg:items-center">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-            <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">{loan.reference}</h1>
-            <LoanStatusBadge status={loan.status} />
+      <header className="adminHero rounded-3xl p-4 sm:p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">{loan.reference}</h1>
+              <LoanStatusBadge status={loan.status} />
+            </div>
+            <p className="mt-1 text-sm text-[var(--admin-muted)]">{applicant.name} · Submitted on {fmtDateTime(loan.submittedAt)} (Asia/Phnom_Penh)</p>
           </div>
-          <p className="mt-1 text-sm text-[var(--admin-muted)]">{applicant.name} · Submitted on {fmtDateTime(loan.submittedAt)} (Asia/Phnom_Penh)</p>
+          <div className="hidden gap-2 lg:flex">{actions}</div>
         </div>
-        <div className="hidden gap-2 lg:flex">{actions}</div>
+        <dl aria-label="Loan details" className="mt-4 grid gap-x-6 gap-y-4 border-t border-[var(--admin-border)] pt-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div><dt className="text-[11px] font-medium text-[var(--admin-muted)]">Requested amount</dt><dd><CurrencyAmount amount={loan.requestedMinor} currency={loan.currency} showCode className="text-2xl font-extrabold" /></dd></div>
+          <div><dt className="text-[11px] font-medium text-[var(--admin-muted)]">Loan type</dt><dd className="text-sm font-bold">{loan.loanType}</dd></div>
+          <div><dt className="flex items-center gap-1 text-[11px] font-medium text-[var(--admin-muted)]"><TimerIcon size={12} aria-hidden />Tenure</dt><dd className="text-sm font-bold">{loan.tenureMonths} months <span className="text-xs font-medium text-[var(--admin-muted)]">· {loan.currency}</span></dd></div>
+          <div><dt className="text-[11px] font-medium text-[var(--admin-muted)]">Purpose</dt><dd className="text-sm font-semibold">{loan.purpose}</dd></div>
+        </dl>
       </header>
-
-      <section aria-label="Loan details" className="adminSurface grid gap-4 rounded-2xl p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-[1.4fr_1fr_1fr_1.4fr]">
-        <div><p className="text-[11px] font-medium text-[var(--admin-muted)]">Requested amount</p><CurrencyAmount amount={loan.requestedMinor} currency={loan.currency} showCode className="text-2xl font-extrabold" /></div>
-        <div><p className="text-[11px] font-medium text-[var(--admin-muted)]">Loan type</p><p className="text-sm font-bold">{loan.loanType}</p></div>
-        <div><p className="flex items-center gap-1 text-[11px] font-medium text-[var(--admin-muted)]"><TimerIcon size={12} aria-hidden />Tenure</p><p className="text-sm font-bold">{loan.tenureMonths} months</p><p className="text-[11px] text-[var(--admin-muted)]">Currency: {loan.currency}</p></div>
-        <div><p className="text-[11px] font-medium text-[var(--admin-muted)]">Purpose</p><p className="text-sm font-semibold">{loan.purpose}</p></div>
-      </section>
 
       <AdminTabs label="Loan application" selectedKey={tab} onSelectionChange={setTab} items={[
         { id: "overview", label: "Overview", content: overview },
