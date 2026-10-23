@@ -57,7 +57,6 @@ function SingleSlider({
   );
 }
 
-/** EMI estimate. Illustrative only: the final rate is set by the lender after review. */
 export function LoanCalculator() {
   const t = useTranslations("loans");
   const [amount, setAmount] = useState(5000);

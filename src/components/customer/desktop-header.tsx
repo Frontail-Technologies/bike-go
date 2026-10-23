@@ -17,14 +17,8 @@ import { useTranslations } from "@/i18n/hooks";
 import { initials, profileStore } from "@/features/profile/store";
 import { cn } from "@/lib/cn";
 
-/** Matches rounded-control (see globals.css); Motion needs it in px to keep corners round while it slides. */
 const RADIUS = 12;
 
-/**
- * Sticky top bar.
- * Mobile: just the logo and notifications; the bottom nav carries navigation and Home shows the city row.
- * From 768px: primary links and the profile avatar join in; the pickup city joins from 1024px.
- */
 export function CustomerHeader({ className }: { className?: string }) {
   const pathname = usePathname();
   const { current, navigate } = useOptimisticNav(pathname);

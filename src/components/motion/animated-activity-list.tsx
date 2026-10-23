@@ -13,11 +13,6 @@ type AnimatedActivityListProps<T> = {
   "aria-label"?: string;
 };
 
-/**
- * Feed for recent bookings or admin activity. New entries ease in at the top and
- * existing rows slide to make room (position only, so nothing stretches). The
- * first render is not animated.
- */
 export function AnimatedActivityList<T>({
   items,
   getKey,

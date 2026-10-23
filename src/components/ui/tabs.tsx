@@ -20,10 +20,6 @@ type TabsProps = {
   className?: string;
 };
 
-/**
- * Pill tabs for categories and filters. HeroUI Tabs provides roles, keyboard
- * handling and panels; the sliding highlight is RideGo's AnimatedSelection.
- */
 export function Tabs({ items, selectedKey, defaultSelectedKey, onSelectionChange, className, ...props }: TabsProps) {
   return (
     <HeroTabs
@@ -49,7 +45,6 @@ export function Tabs({ items, selectedKey, defaultSelectedKey, onSelectionChange
           </HeroTabs.List>
         </AnimatedSelection>
       </HeroTabs.ListContainer>
-      {/* HeroUI pads panels by 8px; zero it so content lines up with the tab bar above (only the gap stays). */}
       {items.map((item) =>
         item.content ? (
           <HeroTabs.Panel key={item.id} id={item.id} className="p-0 pt-4">

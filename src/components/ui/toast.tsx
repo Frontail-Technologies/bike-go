@@ -4,7 +4,6 @@ import { Toast, toast } from "@heroui/react";
 
 export { toast };
 
-/** Mount once in the root layout. Sits above the mobile bottom navigation. */
 export function AppToaster() {
   return (
     <Toast.Provider

@@ -6,7 +6,6 @@ import { ConfirmationView } from "@/features/bookings/confirmation-view";
 
 export const metadata: Metadata = { title: "Booking confirmed" };
 
-// Sample references let the shell's pathname-aware nav prerender. New bookings render on first request.
 export function generateStaticParams() {
   return seedBookings.map((booking) => ({ ref: booking.reference }));
 }

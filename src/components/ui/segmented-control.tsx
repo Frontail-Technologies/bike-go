@@ -10,7 +10,6 @@ type SegmentedControlProps = {
   className?: string;
 };
 
-/** Single-select segmented control (e.g. price per hour / day / week). */
 export function SegmentedControl({ options, value, onChange, className, ...props }: SegmentedControlProps) {
   return (
     <Tabs

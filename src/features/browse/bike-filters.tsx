@@ -21,7 +21,6 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
   );
 }
 
-/** The full filter set. Rendered in a sheet on mobile and a sticky sidebar on desktop. */
 export function BikeFilters({ value, onChange }: BikeFiltersProps) {
   const t = useTranslations("browse");
   const set = <K extends keyof Filters>(key: K, next: Filters[K]) => onChange({ ...value, [key]: next });

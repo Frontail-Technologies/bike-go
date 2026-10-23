@@ -7,15 +7,12 @@ export type ChipOption = { id: string; label: string };
 type ChipGroupProps = {
   label: string;
   options: ChipOption[];
-  /** Selected option ids. */
   value: string[];
   onChange: (value: string[]) => void;
-  /** Allow several selected chips. Single-select toggles back to "none" when pressed again. */
   multiple?: boolean;
   className?: string;
 };
 
-/** Pressable filter chips (reference: Brand and Engine Capacity). 44px targets, `aria-pressed` state. */
 export function ChipGroup({ label, options, value, onChange, multiple = false, className }: ChipGroupProps) {
   function toggle(id: string) {
     const selected = value.includes(id);

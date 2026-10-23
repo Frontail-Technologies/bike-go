@@ -17,8 +17,6 @@ function StatusSkeleton() {
   );
 }
 
-// Applications are created at runtime, so the reference is runtime data: read it under Suspense.
-// Sample references let the shell's pathname-aware nav prerender.
 export function generateStaticParams() {
   return seedApplications.map((application) => ({ ref: application.reference }));
 }

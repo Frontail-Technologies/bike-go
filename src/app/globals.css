@@ -1,12 +1,7 @@
-/* Order matters: Tailwind first, then HeroUI v3 styles. */
+
 @import "tailwindcss";
 @import "@heroui/styles";
 
-/* ---------------------------------------------------------------------------
- * RideGo semantic tokens.
- * Added alongside Tailwind defaults (nothing is reset), exposed as utilities
- * such as `rounded-control`, `rounded-card`, `rounded-overlay`, `px-page`.
- * ------------------------------------------------------------------------- */
 @theme {
   --font-sans: var(--font-jakarta), "Khmer UI", "Leelawadee UI", "Noto Sans Khmer", "Khmer Sangam MN", "Microsoft YaHei UI", "PingFang SC", "Noto Sans SC", "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", ui-sans-serif, system-ui, sans-serif;
 
@@ -33,7 +28,7 @@
 }
 
 :root {
-  /* Spacing scale: 4, 8, 12, 16, 24, 32, 48 (Tailwind 1, 2, 3, 4, 6, 8, 12). */
+  
   --page-padding-mobile: 16px;
   --page-padding-desktop: 32px;
   --page-padding: var(--page-padding-mobile);
@@ -43,7 +38,7 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-top: env(safe-area-inset-top, 0px);
 
-  /* Map RideGo palette onto HeroUI's supported variables. */
+  
   --background: #f7f8fa;
   --foreground: #111111;
   --surface: #ffffff;
@@ -71,7 +66,7 @@
 
   --accent: #ffc400;
   --accent-foreground: #111111;
-  /* Soft accent (secondary buttons, today marker): yellow tint, black text. */
+  
   --accent-soft: #fff3c4;
   --accent-soft-foreground: #111111;
   --accent-soft-hover: #ffe9a0;
@@ -80,7 +75,7 @@
   --danger: #ef4444;
   --danger-foreground: #111111;
 
-  /* HeroUI: field radius = radius * 1.5, so 8px -> 12px inputs. */
+  
   --radius: 0.5rem;
 }
 
@@ -92,7 +87,7 @@
 
 html {
   -webkit-text-size-adjust: 100%;
-  /* App feel: no rubber-band or pull-to-refresh bounce, no grey tap flash, no double-tap delay. */
+  
   overscroll-behavior-y: none;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
@@ -118,7 +113,7 @@ body {
 }
 
 @layer utilities {
-  /* Chrome (bars, nav, buttons) should not be text-selectable by an accidental long press. */
+  
   [role="button"],
   button,
   nav,
@@ -137,11 +132,6 @@ body {
   }
 }
 
-/* ---------------------------------------------------------------------------
- * HeroUI component overrides: reference-driven shapes and sizes.
- * Only radii, heights and weights change; HeroUI keeps its native states,
- * animations and reduced-motion handling.
- * ------------------------------------------------------------------------- */
 @layer components {
   .button {
     height: 48px;
@@ -195,7 +185,7 @@ body {
   .textarea {
     min-height: var(--touch-target);
     border-radius: var(--radius-control);
-    font-size: 1rem; /* 16px avoids iOS zoom-on-focus */
+    font-size: 1rem; 
   }
 
   .chip {
@@ -203,7 +193,6 @@ body {
   }
 }
 
-/* Bottom sheet (HeroUI Drawer, bottom placement): reference shape + safe area. */
 @layer components {
   .drawer__content--bottom .drawer__dialog {
     border-start-start-radius: var(--radius-overlay);
@@ -215,7 +204,6 @@ body {
   }
 }
 
-/* Reduced motion: HeroUI components already opt out; this is the global safety net. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -227,10 +215,6 @@ body {
   }
 }
 
-/*
- * Tab screens: a 200ms fade (see PageTransition). Opacity only on purpose: a transform here would become
- * the containing block of position:fixed descendants (pinned CTAs) and make them jump when it ends.
- */
 @keyframes rgo-page-in {
   from {
     opacity: 0;
@@ -240,10 +224,6 @@ body {
   animation: rgo-page-in 200ms var(--ease-out-quart) backwards;
 }
 
-/*
- * Stack screens: a 220ms shared-axis slide in from the right, applied to the screen body only (never to
- * the AppBar or pinned footer, which are position:fixed/sticky siblings). Enter-only, so Back is instant.
- */
 @keyframes rgo-stack-in {
   from {
     opacity: 0;
@@ -254,7 +234,6 @@ body {
   animation: rgo-stack-in 220ms var(--ease-out-quart) backwards;
 }
 
-/* Design-system "preview reduced motion" switch: makes CSS-driven motion instant. */
 .rgo-force-reduced *,
 .rgo-force-reduced *::before,
 .rgo-force-reduced *::after {

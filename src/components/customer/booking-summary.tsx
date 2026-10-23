@@ -14,7 +14,6 @@ type BookingSummaryProps = {
   className?: string;
 };
 
-/** Itemised amounts with a total. The total is always the sum of the lines shown. */
 export function BookingSummary({ lines, totalLabel = "totalAmount", className }: BookingSummaryProps) {
   const t = useTranslations("booking");
   const common = useTranslations("common");

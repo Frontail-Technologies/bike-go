@@ -3,7 +3,6 @@ import { cn } from "@/lib/cn";
 
 export { Skeleton };
 
-/** Same box model as MotorcycleCard (padding, image ratio, 2-line title, price row) so loading never shifts layout. */
 export function MotorcycleCardSkeleton({ className }: { className?: string }) {
   return (
     <div

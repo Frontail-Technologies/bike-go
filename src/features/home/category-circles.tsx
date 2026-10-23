@@ -14,12 +14,10 @@ const items = [
 ] satisfies { id: BikeCategory; Icon: typeof MotorcycleIcon }[];
 
 type CategoryCirclesProps = {
-  /** Selected category, or null for all bikes. Pressing the selected one again clears it. */
   value: BikeCategory | null;
   onChange: (value: BikeCategory | null) => void;
 };
 
-/** Round category buttons (reference: Adventure, Cruiser, Sports, Touring). The yellow fill slides between them. */
 export function CategoryCircles({ value, onChange }: CategoryCirclesProps) {
   const t = useTranslations("home");
 

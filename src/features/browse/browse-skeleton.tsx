@@ -2,7 +2,6 @@ import { LoadingRegion } from "@/components/ui/loading-region";
 import { Screen } from "@/components/shared/screen";
 import { BlockSkeleton, MotorcycleCardSkeleton } from "@/components/ui/skeleton";
 
-/** Route-level fallback. Same wrapper, padding and columns as BrowseView, so nothing shifts when it loads. */
 export function BrowseSkeleton() {
   return (
     <LoadingRegion>

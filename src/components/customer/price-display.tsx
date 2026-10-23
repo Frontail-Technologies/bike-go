@@ -8,9 +8,7 @@ type PriceDisplayProps = {
   amount: number;
   unit?: "day" | "hour" | "week" | null;
   size?: "sm" | "md" | "lg";
-  /** Amber price, as in the reference cards (#A16207 keeps 4.5:1 on white). */
   accent?: boolean;
-  /** Always show cents. Use for totals that are the sum of itemised lines. */
   precise?: boolean;
   className?: string;
 };

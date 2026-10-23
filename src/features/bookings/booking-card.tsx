@@ -14,7 +14,6 @@ import { formatMoney } from "@/lib/format";
 import { formatRange } from "./dates";
 import type { CustomerBooking } from "./types";
 
-/** One contextual action per state: look, extend, or rebook. */
 function PrimaryAction({ booking, bike }: { booking: CustomerBooking; bike: Motorcycle }) {
   const t = useTranslations("booking");
 

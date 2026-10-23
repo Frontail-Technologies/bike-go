@@ -7,7 +7,6 @@ type TextInputProps = Omit<TextFieldProps, "children"> & {
   label: string;
   placeholder?: string;
   description?: string;
-  /** Error text shown below the field when `isInvalid`. */
   error?: string;
   startIcon?: React.ReactNode;
   inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
@@ -59,7 +58,6 @@ type TextAreaInputProps = Omit<TextFieldProps, "children"> & {
   rows?: number;
 };
 
-/** Multi-line counterpart of TextInput (same label, helper and error placement). */
 export function TextAreaInput({ label, placeholder, description, error, rows = 5, className, ...props }: TextAreaInputProps) {
   return (
     <TextField className={cn("flex flex-col gap-2", className)} {...props}>

@@ -15,12 +15,9 @@ export type Quote = {
   rental: number;
   helmet: number;
   jacket: number;
-  /** Tax on rental and add-ons. */
   tax: number;
   fee: number;
-  /** Refundable security deposit, held until the bike is returned. */
   deposit: number;
-  /** Everything charged at booking, deposit included. */
   payable: number;
 };
 
@@ -36,7 +33,6 @@ export function getQuote(bike: Motorcycle, days: number, addOns: AddOns): Quote 
 
 export type QuoteLine = SummaryLine;
 
-/** Line items for BookingSummary, in display order. */
 export function quoteLines(quote: Quote): QuoteLine[] {
   const lines: QuoteLine[] = [{ id: "rental", days: quote.days, amount: quote.rental }];
   if (quote.helmet) lines.push({ id: "helmet", amount: quote.helmet });

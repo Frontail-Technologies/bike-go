@@ -36,7 +36,6 @@ export function BrowseView() {
   const t = useTranslations("browse");
   const common = useTranslations("common");
 
-  // Home hands over category / search / dates in the URL: take them into the store once, on arrival.
   useEffect(() => {
     const category = params.get("category");
     const q = params.get("q");
@@ -49,14 +48,12 @@ export function BrowseView() {
       filters: { ...s.filters, category: categories.some((c) => c.id === category) ? (category as string) : s.filters.category },
       dates: start && end ? { start, end } : s.dates,
     }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const results = useMemo(
     () => queryBikes(motorcycles, { filters, query, sort, start: dates?.start, end: dates?.end, onlyIds: saved ? favorites : undefined }),
     [filters, query, sort, dates, saved, favorites],
   );
-  // Phones keep the category inside Filters, so the app bar badge counts it; desktop shows it as tabs.
   const phoneCount = activeFilterCount(filters, true);
   const sidebarCount = activeFilterCount(filters);
   const set = (patch: Partial<typeof DEFAULT_BROWSE>) => browseStore.update((s) => ({ ...s, ...patch }));
@@ -65,7 +62,6 @@ export function BrowseView() {
 
   return (
     <>
-      {/* Phones: filters and sort live in the app bar; the page itself only carries the pickup dates. */}
       <AppBar
         title={title}
         actions={
@@ -126,7 +122,6 @@ export function BrowseView() {
           ) : null}
         </div>
 
-        {/* From 768px there is room for search and category tabs on the page. */}
         <div className="hidden gap-2 md:flex">
           <AppSearchField value={query} onChange={(q) => set({ query: q })} className="flex-1" />
           <ButtonLink

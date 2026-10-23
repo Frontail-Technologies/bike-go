@@ -28,7 +28,6 @@ import { formatMoney } from "@/lib/format";
 import { PickupCard } from "./pickup-card";
 import { RentalTerms } from "./rental-terms";
 
-/** Section wrapper: one heading size and one heading-to-content gap, so the page has a clear rhythm. */
 function DetailSection({ id, title, className, children }: { id: string; title: string; className?: string; children: React.ReactNode }) {
   return (
     <section aria-labelledby={id} className={className}>
@@ -56,7 +55,6 @@ export function BikeDetailsView({ bike }: { bike: Motorcycle }) {
     dropTime: params.get("dt") ?? "10:00 AM",
   });
 
-  // The floating app bar turns solid once the hero has scrolled under it. One observer, no scroll listener.
   useEffect(() => {
     const hero = heroRef.current;
     if (!hero) return;
@@ -75,7 +73,7 @@ export function BikeDetailsView({ bike }: { bike: Motorcycle }) {
       setSheetOpen(true);
       return;
     }
-    draftStore.set(null); // start every booking from the dates chosen here
+    draftStore.set(null);
     const qs = new URLSearchParams({
       start: toISO(range.start),
       end: toISO(range.end),
@@ -94,7 +92,6 @@ export function BikeDetailsView({ bike }: { bike: Motorcycle }) {
         toast.success(t("linkCopied"));
       }
     } catch {
-      /* dismissed share sheet or blocked clipboard: nothing to report */
     }
   }
 
@@ -123,7 +120,6 @@ export function BikeDetailsView({ bike }: { bike: Motorcycle }) {
 
   return (
     <>
-      {/* Phones: back, save and share float over the hero and the bar turns solid after scrolling. */}
       <AppBar
         floating
         solid={solidBar}
@@ -163,7 +159,6 @@ export function BikeDetailsView({ bike }: { bike: Motorcycle }) {
                       </div>
                       <div className="flex shrink-0 flex-col items-end gap-2">
                         <PriceDisplay amount={bike.pricePerDay} size="lg" />
-                        {/* Desktop has no app bar, so save and share live here. */}
                         <div className="hidden gap-2 md:flex">
                           {saveButton("border border-line")}
                           {shareButton("border border-line")}
@@ -187,7 +182,6 @@ export function BikeDetailsView({ bike }: { bike: Motorcycle }) {
                 </section>
               </Reveal>
 
-              {/* Dates and total stay high on the page for mobile; desktop shows them in the side panel. */}
               <DetailSection id="dates-title" title={t("rentalDates")} className="lg:hidden">
                 <button
                   type="button"

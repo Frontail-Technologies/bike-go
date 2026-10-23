@@ -14,7 +14,6 @@ export function useMediaQuery(query: string) {
   );
 }
 
-/** True from the `md` breakpoint (768px) up. False during SSR. */
 export function useIsDesktop() {
   return useMediaQuery("(min-width: 768px)");
 }

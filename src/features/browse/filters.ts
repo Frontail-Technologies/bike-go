@@ -22,7 +22,6 @@ export const engineBands: { id: EngineBand; key: "engineUnder200" | "engine20040
 ];
 
 export type Filters = {
-  /** "all" or a BikeCategory. */
   category: string;
   brands: string[];
   price: [number, number];
@@ -46,7 +45,6 @@ function inEngineBand(cc: number, band: EngineBand) {
   return cc > 400;
 }
 
-/** Available now, or for the whole range when dates are chosen. */
 export function isAvailable(bike: Motorcycle, start?: string | null, end?: string | null): boolean {
   if (start && end) {
     const returnsBeforeStart = bike.available || (bike.availableFrom ? start >= bike.availableFrom : false);
@@ -55,10 +53,6 @@ export function isAvailable(bike: Motorcycle, start?: string | null, end?: strin
   return bike.available;
 }
 
-/**
- * Number of filters differing from the defaults. The category is excluded by default because desktop shows
- * it as tabs; pass `includeCategory` where it only lives inside Filters (the phone app bar badge).
- */
 export function activeFilterCount(filters: Filters, includeCategory = false): number {
   let count = 0;
   if (includeCategory && filters.category !== "all") count++;
@@ -76,7 +70,6 @@ type QueryOptions = {
   sort?: SortKey;
   start?: string | null;
   end?: string | null;
-  /** Restrict to these ids (saved bikes). */
   onlyIds?: string[];
 };
 

@@ -1,9 +1,5 @@
 import type { MetadataRoute } from "next";
 
-/**
- * Makes RideGo installable ("Add to Home screen"): it then opens full screen, with no browser bar, like an app.
- * There is deliberately no service worker yet, so the app needs a connection.
- */
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "RideGo",
@@ -13,7 +9,6 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: "/",
     display: "standalone",
     orientation: "portrait",
-    // White matches the app bars, so the status bar blends in; the brand yellow lives in the icons.
     background_color: "#F7F8FA",
     theme_color: "#FFFFFF",
     icons: [

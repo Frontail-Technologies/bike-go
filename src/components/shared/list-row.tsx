@@ -2,7 +2,6 @@ import { CaretRightIcon } from "@phosphor-icons/react/ssr";
 import Link from "next/link";
 import { cn } from "@/lib/cn";
 
-/** A titled card that groups related rows (Profile, Help, Legal). */
 export function SectionCard({ title, id, children, className }: { title: string; id: string; children: React.ReactNode; className?: string }) {
   return (
     <section aria-labelledby={id} className={cn("rounded-card border border-line bg-surface p-4 shadow-card", className)}>
@@ -20,15 +19,12 @@ const rowClass =
 type ListRowProps = {
   icon: React.ReactNode;
   label: string;
-  /** Secondary line under the label. */
   description?: string;
   trailing?: React.ReactNode;
   onPress?: () => void;
-  /** In-app path (client navigation) or external href such as tel: / mailto:. */
   href?: string;
 };
 
-/** Tappable row with an icon tile, label and chevron. Renders a real link for hrefs and a button otherwise. */
 export function ListRow({ icon, label, description, trailing, onPress, href }: ListRowProps) {
   const content = (
     <>

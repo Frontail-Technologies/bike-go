@@ -3,7 +3,6 @@
 import { getBike } from "@/features/mock/data";
 import { bookingsStore } from "./store";
 
-/** Look up a booking (and its bike) by public reference. `undefined` when it doesn't exist. */
 export function useBooking(reference: string) {
   const booking = bookingsStore.useValue().find((b) => b.reference === reference);
   const bike = booking ? getBike(booking.bikeId) : undefined;

@@ -4,7 +4,6 @@ import { ClockIcon, MapPinIcon } from "@phosphor-icons/react";
 import { useTranslations } from "@/i18n/hooks";
 import { cityStore } from "@/features/profile/store";
 
-/** Pickup hub for the city chosen in the header. */
 export function PickupCard() {
   const city = cityStore.useValue();
   const t = useTranslations("places");

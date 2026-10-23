@@ -19,8 +19,6 @@ import { useTranslations } from "@/i18n/hooks";
 
 type PatchProps = { draft: BookingDraft; patch: (partial: Partial<BookingDraft>) => void };
 
-// ---------------------------------------------------------------- 1. Dates
-
 export function DatesStep({ bike, draft, patch }: PatchProps & { bike: Motorcycle }) {
   const t = useTranslations("booking");
   const value: RentalSelection = { range: toRange(draft.start ?? undefined, draft.end ?? undefined), pickupTime: draft.pickupTime, dropTime: draft.dropTime };
@@ -51,8 +49,6 @@ export function DatesStep({ bike, draft, patch }: PatchProps & { bike: Motorcycl
     </div>
   );
 }
-
-// ---------------------------------------------------------------- 2. Rider
 
 type Say = (key: "errName" | "errPhone" | "errEmail" | "errLicence") => string;
 
@@ -149,8 +145,6 @@ export function RiderStep({ draft, patch, onValid, formId }: PatchProps & { onVa
   );
 }
 
-// ---------------------------------------------------------------- 3. Licence
-
 const licenceSchema = (say: Say) =>
   z.object({
     licenceNumber: z.string().regex(/^[A-Za-z]{2}\d{2}[\s-]?\d{4}[\s-]?\d{7}$/, say("errLicence")),
@@ -220,8 +214,6 @@ export function riderStepValid(draft: BookingDraft) {
   return riderSchema(keyOnly).safeParse(draft.rider).success;
 }
 
-// ---------------------------------------------------------------- 4. Review
-
 export function ReviewStep({
   bike,
   draft,
@@ -282,8 +274,6 @@ export function ReviewStep({
     </div>
   );
 }
-
-// ---------------------------------------------------------------- 5. Payment
 
 export const paymentMethods = [
   { value: "aba-khqr", label: "ABA KHQR" },

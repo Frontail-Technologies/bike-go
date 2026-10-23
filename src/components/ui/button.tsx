@@ -7,12 +7,10 @@ export { Button };
 export type { ButtonProps };
 
 type IconButtonProps = Omit<ButtonProps, "isIconOnly" | "children" | "aria-label"> & {
-  /** Required: icon-only controls need an accessible name. */
   label: string;
   icon: React.ReactNode;
 };
 
-/** 44px square icon control. Pass a 20px Phosphor icon. */
 export function IconButton({ label, icon, variant = "ghost", className, ...props }: IconButtonProps) {
   return (
     <Button

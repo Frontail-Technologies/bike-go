@@ -15,9 +15,7 @@ export const metadata: Metadata = {
   title: { default: "RideGo", template: "%s · RideGo" },
   description: "Premium motorcycle rentals with flexible bookings.",
   applicationName: "RideGo",
-  // Installed from the home screen on iOS: full screen, with a normal status bar.
   appleWebApp: { capable: true, title: "RideGo", statusBarStyle: "default" },
-  // Declaring `apple` here replaces the file-based icon, so the favicon must be listed too or browsers fall back to /favicon.ico (404).
   icons: { icon: [{ url: "/icon.svg", type: "image/svg+xml" }], apple: "/icons/apple-touch-icon.png" },
   formatDetection: { telephone: false },
 };
@@ -25,10 +23,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  // Pinch-zoom in stays available; zooming out below 1 does not, so a stray overflow can never shrink the page.
   minimumScale: 1,
   viewportFit: "cover",
-  // White matches the app bars so the status bar blends in. Dark screens (sign-in) override this.
   themeColor: "#FFFFFF",
 };
 

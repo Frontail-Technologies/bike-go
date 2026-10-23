@@ -13,7 +13,6 @@ import { cn } from "@/lib/cn";
 
 type MotorcycleCardProps = {
   bike: Motorcycle;
-  /** Defaults to the bike's detail page. Pass `null` for a non-link card. */
   href?: string | null;
   className?: string;
 };

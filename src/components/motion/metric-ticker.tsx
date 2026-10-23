@@ -8,32 +8,23 @@ import { cn } from "@/lib/cn";
 
 type MetricTickerProps = {
   value: number;
-  /** Intl.NumberFormat options, e.g. `{ style: "currency", currency: "USD" }`. */
   format?: Intl.NumberFormatOptions;
   className?: string;
 };
 
-/**
- * Counts up when first seen and tweens whenever `value` changes (the NumberTicker
- * pattern from Magic UI, adapted). The final value is in the server HTML, holds
- * the layout width, and is what screen readers get. Under reduced motion the
- * number simply shows its final value.
- */
 export function MetricTicker({ value, format, className }: MetricTickerProps) {
   const reduced = useReducedMotionPreference();
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, amount: 0.6 });
   const motionValue = useMotionValue(value);
   const formatKey = JSON.stringify(format ?? {});
-  const formatter = useMemo(() => new Intl.NumberFormat("en-US", format), [formatKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  const formatter = useMemo(() => new Intl.NumberFormat("en-US", format), [formatKey]);
   const text = formatter.format(value);
 
-  // Before first paint, rewind to 0 so the first reveal counts up instead of flashing the final value.
   useLayoutEffect(() => {
     if (reduced || !ref.current) return;
     motionValue.jump(0);
     ref.current.textContent = formatter.format(0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -60,7 +51,6 @@ export function MetricTicker({ value, format, className }: MetricTickerProps) {
 
   return (
     <span className={cn("tabular relative inline-grid", className)}>
-      {/* Holds the final width so counting never shifts layout. */}
       <span aria-hidden className="invisible col-start-1 row-start-1">
         {text}
       </span>

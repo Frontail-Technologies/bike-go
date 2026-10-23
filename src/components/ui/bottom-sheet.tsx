@@ -13,12 +13,7 @@ type BottomSheetProps = {
   className?: string;
 };
 
-/**
- * Mobile sheet built on HeroUI Drawer. Drag-to-dismiss, scroll lock, focus
- * trapping and enter/exit animation are all HeroUI-native.
- */
 export function BottomSheet({ isOpen, onOpenChange, title, children, footer, className }: BottomSheetProps) {
-  // Android Back closes the sheet before it leaves the page.
   useBackToClose(isOpen, () => onOpenChange(false));
 
   return (

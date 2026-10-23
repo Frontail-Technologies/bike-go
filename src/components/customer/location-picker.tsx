@@ -9,12 +9,10 @@ import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";
 
 type LocationPickerProps = {
-  /** "header" is a compact ghost button; "row" is the full-width field under the Home header. */
   variant?: "header" | "row";
   className?: string;
 };
 
-/** Pickup city. Sheet on mobile, popover on desktop. Every bike can be collected from any hub. */
 export function LocationPicker({ variant = "header", className }: LocationPickerProps) {
   const city = cityStore.useValue();
   const t = useTranslations("places");

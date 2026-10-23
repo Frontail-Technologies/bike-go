@@ -18,7 +18,6 @@ export type RentalSelection = {
 type RentalDateSelectorProps = {
   value: RentalSelection;
   onChange: (value: RentalSelection) => void;
-  /** Dates that cannot be booked (already rented). */
   isDateUnavailable?: (date: DateValue) => boolean;
   className?: string;
 };

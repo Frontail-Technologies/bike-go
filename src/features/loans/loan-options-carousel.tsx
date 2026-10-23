@@ -16,10 +16,6 @@ const icons: Record<LoanTypeId, React.ReactNode> = {
   emergency: <SirenIcon size={30} weight="fill" />,
 };
 
-/**
- * Loan options as one card each: a rail that runs to the screen edges on phones (the next card peeks in)
- * with pager dots; from 768px the three cards sit in a grid.
- */
 export function LoanOptionsCarousel() {
   const [emblaRef, emblaApi] = useEmblaCarousel({ align: "start", containScroll: "trimSnaps" });
   const [selected, setSelected] = useState(0);

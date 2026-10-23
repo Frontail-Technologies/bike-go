@@ -17,7 +17,6 @@ type StatusBadgeProps = {
   className?: string;
 };
 
-/** Fully rounded status pill. Always carries a text label (never colour only). */
 export function StatusBadge({ tone = "neutral", icon, children, className }: StatusBadgeProps) {
   return (
     <span

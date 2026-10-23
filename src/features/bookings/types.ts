@@ -4,11 +4,9 @@ import type { AddOns, Quote } from "./pricing";
 export type RiderDetails = { name: string; phone: string; email: string };
 
 export type CustomerBooking = {
-  /** Public reference, also the URL id (e.g. RG820461). */
   reference: string;
   bikeId: string;
   status: BookingStatus;
-  /** ISO dates (YYYY-MM-DD). */
   startDate: string;
   endDate: string;
   pickupTime: string;

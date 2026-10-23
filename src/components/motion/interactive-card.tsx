@@ -7,18 +7,9 @@ type InteractiveCardProps = {
   children: React.ReactNode;
   className?: string;
   as?: "div" | "article" | "li";
-  /** Very soft pointer-following highlight. Mouse only; off on touch. */
   glare?: boolean;
 };
 
-/**
- * RideGo card behaviour.
- * - Hover devices: a 2px lift and a deeper shadow (faded in as an overlay so only
- *   transform and opacity animate). Optional soft glare following the mouse.
- * - Touch: press feedback only.
- * Hover styles only apply on devices that can hover, and all transitions are
- * removed under reduced motion.
- */
 export function InteractiveCard({ children, className, as: Tag = "div", glare = false }: InteractiveCardProps) {
   const glareRef = useRef<HTMLSpanElement>(null);
   const frame = useRef(0);

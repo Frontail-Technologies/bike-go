@@ -24,7 +24,6 @@ const statIcons = {
 
 const bike = motorcycles[0];
 
-// Bikes already rented on these days can't be picked.
 const booked = [new CalendarDate(2026, 10, 28), new CalendarDate(2026, 10, 29)];
 
 export function RideGoSection() {

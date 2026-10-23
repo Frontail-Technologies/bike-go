@@ -8,7 +8,6 @@ export type Motorcycle = {
   brand: string;
   category: BikeCategory;
   pricePerDay: number;
-  /** Refundable security deposit in US dollars. */
   deposit: number;
   rating: number;
   reviews: number;
@@ -20,20 +19,14 @@ export type Motorcycle = {
   weightKg: number;
   fuelTankL: number;
   transmission: Transmission;
-  /** Primary colour; also tints the placeholder artwork. */
   color: string;
-  /** One colourway per gallery slide while real photography is missing. */
   colorways: string[];
-  /** Real photos, e.g. `/bikes/<id>/1.webp`. Empty until assets exist; BikeImage falls back to artwork. */
   images: string[];
-  /** Home city. Every bike can be collected from any hub. */
   location: string;
   description: string;
   highlights: string[];
-  /** Currently rentable. When false, `availableFrom` says when it returns. */
   available: boolean;
   availableFrom?: string;
-  /** Inclusive ISO date ranges that are already booked. */
   bookedRanges: [string, string][];
 };
 
@@ -315,8 +308,6 @@ export const pickupHubs: Record<City, { name: string; address: string; hours: st
   Udaipur: { name: "RideGo Fatehsagar Hub", address: "5 Lake Road, near Fatehsagar, Udaipur 313001", hours: "7 AM – 9 PM" },
   Jodhpur: { name: "RideGo Clock Tower Hub", address: "8 Sardar Market Road, Jodhpur 342001", hours: "7 AM – 9 PM" },
 };
-
-// ---------------------------------------------------------------- Admin-facing sample data (Phase 1)
 
 export type BookingStatus = "upcoming" | "ongoing" | "completed" | "cancelled";
 

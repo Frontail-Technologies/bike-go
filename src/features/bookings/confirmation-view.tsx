@@ -22,7 +22,6 @@ export function ConfirmationView({ reference }: { reference: string }) {
   const t = useTranslations("booking");
   const common = useTranslations("common");
   const places = useTranslations("places");
-  // The flow is finished: Back goes Home rather than into the payment steps.
   const goHome = () => router.replace("/");
 
   if (!found) {
@@ -50,7 +49,6 @@ export function ConfirmationView({ reference }: { reference: string }) {
       <Screen enter="slide" className="max-w-xl">
       <div className="flex w-full flex-col gap-5">
       <section aria-labelledby="done-title" className="flex flex-col items-center gap-3 pt-2 text-center">
-        {/* One short scale-in. Collapses to a plain fade under reduced motion. */}
         <motion.span
           initial={{ opacity: 0, scale: 0.85 }}
           animate={{ opacity: 1, scale: 1 }}

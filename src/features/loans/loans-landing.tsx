@@ -78,7 +78,6 @@ export function LoansLanding() {
           </>
         } />
 
-      {/* Edge to edge on phones, flush under the app bar with rounded bottom corners; a contained card from 768px. */}
       <div className="md:mx-auto md:max-w-7xl md:px-page md:pt-8">
         <section
           aria-label={t("overviewAria")}

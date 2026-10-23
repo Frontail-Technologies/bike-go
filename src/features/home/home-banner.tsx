@@ -4,13 +4,8 @@ import Image from "next/image";
 import { BikeArt } from "@/components/shared/bike-art";
 import { useTranslations } from "@/i18n/hooks";
 
-/**
- * Banner artwork: the illustration from `bun run art` (public/hero/home-banner.jpg). Replace the file with a
- * real photo (wide, rider on the right, darker on the left for the text) and nothing else needs to change.
- */
 const BANNER_IMAGE: string | null = "/hero/home-banner.jpg";
 
-/** "FREEDOM STARTS HERE" banner: copy on the left, rider and bike on the right. */
 export function HomeBanner() {
   const t = useTranslations("home");
 

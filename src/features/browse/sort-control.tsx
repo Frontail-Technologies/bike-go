@@ -9,11 +9,9 @@ import { type SortKey, sortOptions } from "./filters";
 type SortControlProps = {
   value: SortKey;
   onChange: (value: SortKey) => void;
-  /** Icon-only trigger (app bar). The current order stays in the accessible name. */
   iconOnly?: boolean;
 };
 
-/** Bottom sheet on mobile, popover on desktop. Choosing an option closes it. */
 export function SortControl({ value, onChange, iconOnly = false }: SortControlProps) {
   const t = useTranslations("browse");
   const found = sortOptions.find((o) => o.id === value);

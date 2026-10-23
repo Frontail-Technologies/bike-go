@@ -39,10 +39,6 @@ const columns = [
 const linkClass =
   "inline-flex min-h-8 items-center rounded-control text-sm leading-6 text-ink/75 outline-none transition-colors duration-150 hover:text-ink focus-visible:ring-2 focus-visible:ring-ink";
 
-/**
- * Website footer for 768px and up. Phones are app-like (bottom nav, no footer), so it is hidden there.
- * Pass extra bottom padding when a screen pins a bar to the bottom edge on tablets.
- */
 export function SiteFooter({ className }: { className?: string }) {
   const t = useTranslations("nav");
   const places = useTranslations("places");

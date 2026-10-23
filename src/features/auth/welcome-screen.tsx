@@ -29,7 +29,6 @@ export function WelcomeScreen() {
   const t = useTranslations("auth");
   const common = useTranslations("common");
 
-  /** Simulated: there is no backend, so either provider just starts a demo session. */
   function continueWith(provider: Provider) {
     setPending(provider);
     window.setTimeout(() => {
@@ -53,8 +52,6 @@ export function WelcomeScreen() {
       id="main"
       className="relative isolate flex min-h-dvh flex-col overflow-hidden bg-ink text-white md:flex-row-reverse"
     >
-      {/* Artwork. Phones: full-bleed behind everything, the text sits on its darkened lower half.
-          Desktop: it fills the right-hand panel. */}
       <div className="absolute inset-0 md:relative md:inset-auto md:min-h-dvh md:flex-1">
         {HERO_IMAGE ? (
           <Image

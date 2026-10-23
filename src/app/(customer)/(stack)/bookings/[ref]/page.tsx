@@ -17,8 +17,6 @@ function DetailsSkeleton() {
   );
 }
 
-// Bookings are created at runtime, so the reference is runtime data: read it under Suspense.
-// Sample references let the shell's pathname-aware nav prerender. New bookings render on first request.
 export function generateStaticParams() {
   return seedBookings.map((booking) => ({ ref: booking.reference }));
 }

@@ -12,22 +12,11 @@ import { cn } from "@/lib/cn";
 
 type FeaturedBikeCarouselProps = {
   bikes: Motorcycle[];
-  /** Where each slide's call to action goes. */
   hrefFor?: (bike: Motorcycle) => string;
   className?: string;
-  /**
-   * Run the rail to the screen edges while the first card stays inset by the page padding, and let
-   * the last card end inset too. This is the same trailing rail as the Popular Bikes row. Use it
-   * only when the carousel sits directly in the page gutter.
-   */
   bleed?: boolean;
 };
 
-/**
- * Swipeable showcase of featured bikes. Embla provides drag, momentum and snap; slides are sized
- * by breakpoint (the next card peeks in on phones). Cards are light, like the rest of the
- * customer UI. Artwork is `meet`-fitted, never stretched.
- */
 export function FeaturedBikeCarousel({ bikes, hrefFor = (bike) => `/bikes/${bike.id}`, className, bleed = false }: FeaturedBikeCarouselProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({ align: "start", containScroll: "trimSnaps" });
   const [selected, setSelected] = useState(0);
@@ -67,8 +56,6 @@ export function FeaturedBikeCarousel({ bikes, hrefFor = (bike) => `/bikes/${bike
     >
       <div className="relative">
         <div ref={emblaRef} className="overflow-hidden">
-          {/* Slides carry 12px of left padding as the gap, so the container is pulled back by 12px
-              (or, in a bleed rail, pushed in to the page padding and given the same trailing inset). */}
           <div className={cn("flex touch-pan-y", bleed ? "ml-[calc(var(--page-padding)-0.75rem)] pr-(--page-padding)" : "-ml-3")}>
             {bikes.map((bike, index) => (
               <div
@@ -145,7 +132,6 @@ export function FeaturedBikeCarousel({ bikes, hrefFor = (bike) => `/bikes/${bike
         </button>
       </div>
 
-      {/* Fixed height so the dots appearing after mount never shift the page. */}
       <div className="flex h-6 items-center justify-center gap-1.5" aria-hidden>
         {snaps.map((_, i) => (
           <span

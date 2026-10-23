@@ -35,7 +35,6 @@ function seed(
   };
 }
 
-/** Starting bookings so every My Bookings tab has realistic content. */
 export const seedBookings: CustomerBooking[] = [
   seed("RG820461", "royal-enfield-classic-350", "upcoming", "2026-11-12", "2026-11-14"),
   seed("RG820388", "royal-enfield-hunter-350", "ongoing", "2026-10-21", "2026-10-24", { helmet: true, jacket: true }),

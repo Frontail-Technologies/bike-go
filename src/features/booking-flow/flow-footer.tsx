@@ -5,18 +5,14 @@ import { useTranslations } from "@/i18n/hooks";
 
 type FlowFooterProps = {
   label: string;
-  /** Amount shown beside the button (the total payable). */
   amount: number;
-  /** Submit a form by id instead of calling `onPress`. */
   formId?: string;
   onPress?: () => void;
   isDisabled?: boolean;
   isPending?: boolean;
-  /** Caption above the amount. */
   summaryLabel?: string;
 };
 
-/** Primary action pinned to the safe-area edge on mobile. The bottom nav is hidden in this flow. */
 export function FlowFooter({ label, amount, formId, onPress, isDisabled, isPending, summaryLabel }: FlowFooterProps) {
   const t = useTranslations("booking");
 
@@ -30,10 +26,6 @@ export function FlowFooter({ label, amount, formId, onPress, isDisabled, isPendi
           <p className="text-xs text-subtle">{summaryLabel ?? t("summaryLabel")}</p>
           <PriceDisplay amount={amount} unit={null} size="md" precise />
         </div>
-        {/*
-          Always a plain button. Submitting via requestSubmit (not type="submit") means a press that
-          moves to the next step can't be followed by a native click that submits the next step's form.
-        */}
         <Button
           type="button"
           onPress={() => {

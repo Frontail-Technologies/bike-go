@@ -16,20 +16,17 @@ export function toRange(start?: string, end?: string): DateRange | null {
   }
 }
 
-/** Whole rental days. A same-day rental counts as one day. */
 export function rentalDaysBetween(start: string, end: string): number {
   const diff = parseDate(end).compare(parseDate(start));
   return Math.max(1, diff);
 }
 
-/** A day can't be picked if it's inside a booked range, or before an on-rent bike returns. */
 export function isBooked(bike: Motorcycle, date: DateValue): boolean {
   const iso = toISO(date);
   if (!bike.available && bike.availableFrom && iso < bike.availableFrom) return true;
   return bike.bookedRanges.some(([from, to]) => iso >= from && iso <= to);
 }
 
-/** True when any day in the range is already booked. */
 export function rangeOverlapsBooking(bike: Motorcycle, start: string, end: string): boolean {
   return bike.bookedRanges.some(([from, to]) => start <= to && end >= from);
 }

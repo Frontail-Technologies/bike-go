@@ -11,10 +11,8 @@ type Step = { title: string; detail: string; notes: string[]; state: StepState }
 
 const formatWhen = (iso: string) => formatDay(iso.slice(0, 10));
 
-/** Which stage a status event belongs to: 0 submitted, 1 documents, 2 eligibility, 3 decision. */
 const stageOf: Record<LoanStatus, number> = { submitted: 0, "documents-required": 1, "in-review": 1, approved: 3, rejected: 3 };
 
-/** Stage the application is at now, and how that stage looks. */
 const position: Record<LoanStatus, { stage: number; state: StepState }> = {
   submitted: { stage: 1, state: "current" },
   "in-review": { stage: 2, state: "current" },

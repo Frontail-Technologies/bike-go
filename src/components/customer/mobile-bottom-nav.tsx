@@ -9,10 +9,8 @@ import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";
 
 type MobileBottomNavProps = {
-  /** Override the router-derived active href (used by the design-system demo). */
   activeHref?: string;
   onNavigate?: (href: string) => void;
-  /** Fixed to the viewport by default; the showcase renders it inline. */
   inline?: boolean;
   className?: string;
 };

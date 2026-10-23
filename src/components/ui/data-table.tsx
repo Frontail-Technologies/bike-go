@@ -20,15 +20,9 @@ type DataTableProps<T extends { id: string }> = {
   pageSize?: number;
 };
 
-/**
- * TanStack Table owns sorting/pagination state; HeroUI Table owns the
- * accessible markup. Horizontal overflow stays inside the table container.
- */
 export function DataTable<T extends { id: string }>({ columns, data, label, pageSize = 5 }: DataTableProps<T>) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
-  // TanStack Table returns unstable function identities; the compiler skips this component.
-  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,

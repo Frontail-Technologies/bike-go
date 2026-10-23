@@ -16,11 +16,9 @@ type RentalDatesButtonProps = {
   onChange: (start: string, end: string) => void;
   isDateUnavailable?: (date: DateValue) => boolean;
   triggerProps?: Omit<ButtonProps, "children" | "onPress">;
-  /** Calendar icon only (44px square). The dates stay in the accessible name. */
   iconOnly?: boolean;
 };
 
-/** "Pickup dates" entry point: calendar in a sheet on mobile, a popover on desktop. */
 export function RentalDatesButton({ start, end, onChange, isDateUnavailable, triggerProps, iconOnly }: RentalDatesButtonProps) {
   const [draft, setDraft] = useState<DateRange | null>(toRange(start ?? undefined, end ?? undefined));
   const min = useToday();

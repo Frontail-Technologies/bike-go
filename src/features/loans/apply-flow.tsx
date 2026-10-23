@@ -55,8 +55,6 @@ const clampStep = (n: number) => Math.max(1, Math.min(LAST_STEP, Number.isFinite
 
 type PatchProps = { draft: LoanDraft; patch: (partial: Partial<LoanDraft>) => void };
 
-// ------------------------------------------------------------------ small form helpers
-
 function Field<T extends FieldValues>({
   control,
   name,
@@ -126,7 +124,6 @@ function SelectField<T extends FieldValues>({
   );
 }
 
-/** Single choice shown as chips (loan type, tenure, employment type). */
 function ChipField<T extends FieldValues>({
   control,
   name,
@@ -152,7 +149,7 @@ function ChipField<T extends FieldValues>({
             options={options}
             value={field.value ? [String(field.value)] : []}
             onChange={(ids) => {
-              if (!ids[0]) return; // a single choice: pressing the selected chip again keeps it
+              if (!ids[0]) return;
               field.onChange(ids[0]);
               onPick?.(ids[0]);
             }}
@@ -168,7 +165,6 @@ function ChipField<T extends FieldValues>({
   );
 }
 
-/** Saves every change to the draft, so a refresh or Back keeps what was typed. */
 function useAutosave<T extends FieldValues>(form: UseFormReturn<T>, save: (values: T) => void) {
   const latest = useRef(save);
   useEffect(() => {
@@ -179,8 +175,6 @@ function useAutosave<T extends FieldValues>(form: UseFormReturn<T>, save: (value
     return () => sub.unsubscribe();
   }, [form]);
 }
-
-// ------------------------------------------------------------------ 1. loan details
 
 function LoanStep({ draft, patch, formId, onValid }: PatchProps & { formId: string; onValid: () => void }) {
   const { t, typeShort, options } = useLoanText();
@@ -254,8 +248,6 @@ function LoanStep({ draft, patch, formId, onValid }: PatchProps & { formId: stri
   );
 }
 
-// ------------------------------------------------------------------ 2. personal
-
 function PersonalStep({ draft, patch, formId, onValid }: PatchProps & { formId: string; onValid: () => void }) {
   const { t, options } = useLoanText();
   const form = useForm({ resolver: zodResolver(personalSchema(t)), mode: "onBlur", values: draft.applicant });
@@ -273,8 +265,6 @@ function PersonalStep({ draft, patch, formId, onValid }: PatchProps & { formId: 
     </form>
   );
 }
-
-// ------------------------------------------------------------------ 3. employment
 
 function EmploymentStep({ draft, patch, formId, onValid }: PatchProps & { formId: string; onValid: () => void }) {
   const { t, options, yesNo } = useLoanText();
@@ -303,8 +293,6 @@ function EmploymentStep({ draft, patch, formId, onValid }: PatchProps & { formId
   );
 }
 
-// ------------------------------------------------------------------ 4. documents
-
 function DocumentsStep({ draft, patch }: PatchProps) {
   const { t, docLabel } = useLoanText();
 
@@ -329,8 +317,6 @@ function DocumentsStep({ draft, patch }: PatchProps) {
     </div>
   );
 }
-
-// ------------------------------------------------------------------ 5. review
 
 function ReviewRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -405,9 +391,6 @@ function ReviewStep({ draft, agreed, onAgree, onEdit }: PatchProps & { agreed: b
   );
 }
 
-// ------------------------------------------------------------------ flow
-
-/** Numbered stepper (done steps are ticked) plus the current step's name. */
 function Progress({ step }: { step: number }) {
   const intl = useTranslations("loans");
 
@@ -443,10 +426,6 @@ function Progress({ step }: { step: number }) {
   );
 }
 
-/**
- * Five steps on one route, like the booking flow: the step is `?step=n`, every Continue pushes a history
- * entry so Back returns to the previous step, and the draft (session) keeps what was typed.
- */
 export function ApplyFlow() {
   const router = useRouter();
   const params = useSearchParams();
@@ -475,7 +454,6 @@ export function ApplyFlow() {
 
   const patch = (partial: Partial<LoanDraft>) => loanDraftStore.set({ ...draft, ...partial });
 
-  // Furthest step the data allows: you cannot URL-jump past steps you have not completed.
   const maxStep = !hasStored || !loanStepValid(draft) ? 1 : !personalStepValid(draft) ? 2 : !employmentStepValid(draft) ? 3 : !documentsStepValid(draft) ? 4 : LAST_STEP;
   const requested = clampStep(Number(params.get("step") ?? 1));
   const step = Math.min(requested, hasStored ? maxStep : 1);
@@ -489,11 +467,10 @@ export function ApplyFlow() {
   useEffect(() => {
     if (!hydrated || submitted.current || step === requested) return;
     router.replace(withStep(step), { scroll: false });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated, step, requested]);
 
   function go(next: number) {
-    if (!hasStored) loanDraftStore.set(draft); // the first Continue creates the stored draft
+    if (!hasStored) loanDraftStore.set(draft);
     router.push(withStep(next), { scroll: false });
   }
 
@@ -547,7 +524,6 @@ export function ApplyFlow() {
       <AppBar
         leading="back"
         backFallback="/loans"
-        // Steps are history entries, so Back is a real pop; step 1 falls through to the default (back to the loans page).
         onBack={step > 1 ? () => router.back() : undefined}
         title={t("applyAppBarTitle")}
         subtitle={t("applyAppBarSub")}
@@ -583,7 +559,6 @@ export function ApplyFlow() {
         </div>
       </Screen>
 
-      {/* Outside Screen: the slide-in transform would otherwise become this fixed bar's containing block. */}
       <div className="lg:hidden">{footer}</div>
     </>
   );

@@ -10,26 +10,16 @@ import { cn } from "@/lib/cn";
 type AppBarProps = {
   title?: string;
   subtitle?: React.ReactNode;
-  /** "back" for stack screens, "logo" for Home, "none" for other tab roots. */
   leading?: "back" | "logo" | "none";
-  /** Where Back goes when the user arrived by deep link or refresh. */
   backFallback?: string;
-  /** Overrides the default Back (e.g. step-by-step flows that own their history). */
   onBack?: () => void;
   actions?: React.ReactNode;
-  /** Float over a hero image (fixed, transparent). Pair with `solid` once the hero scrolls away. */
   floating?: boolean;
   solid?: boolean;
-  /** Use "p" when the page body has its own <h1> (e.g. the bike name on Details). */
   titleAs?: "h1" | "p";
   className?: string;
 };
 
-/**
- * Phone app bar: 56px, safe-area aware, back / title / actions. Hidden from 768px, where the website header
- * and in-page headings take over. Render it as a direct child of the shell's `main` (outside `Screen`) so it
- * spans the full width.
- */
 export function AppBar({ title, subtitle, leading = "none", backFallback = "/", onBack, actions, floating = false, solid = true, titleAs = "h1", className }: AppBarProps) {
   const back = useBack(backFallback);
   const t = useTranslations("common");

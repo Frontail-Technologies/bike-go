@@ -8,14 +8,11 @@ import { cn } from "@/lib/cn";
 
 type ImageCarouselProps = {
   slides: React.ReactNode[];
-  /** Accessible name, e.g. "Royal Enfield Classic 350 photos". */
   label: string;
-  /** Tailwind aspect class. Slides always fill it without stretching. */
   aspectClassName?: string;
   showArrows?: boolean;
   className?: string;
   onIndexChange?: (index: number) => void;
-  /** Controlled index, used by thumbnail strips. */
   index?: number;
 };
 

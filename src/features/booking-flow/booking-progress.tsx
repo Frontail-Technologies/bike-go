@@ -3,7 +3,6 @@ import { cn } from "@/lib/cn";
 
 export const flowSteps = ["stepDates", "stepRider", "stepLicence", "stepReview", "stepPayment"] as const;
 
-/** Thin segmented progress: a label plus one bar per step. Not a wizard chrome. */
 export function BookingProgress({ step }: { step: number }) {
   const t = useTranslations("booking");
 

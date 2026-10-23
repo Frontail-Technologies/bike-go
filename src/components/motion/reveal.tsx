@@ -7,18 +7,11 @@ import { useReducedMotionPreference } from "@/hooks/use-reduced-motion";
 type RevealProps = {
   children: React.ReactNode;
   className?: string;
-  /** Seconds before the reveal starts. Ignored under reduced motion. */
   delay?: number;
-  /** Starting vertical offset in px. */
   y?: number;
-  /** Starting blur in px. */
   blur?: number;
 };
 
-/**
- * Fade + light rise + a touch of blur, played once when the block scrolls into
- * view. Under reduced motion it is a plain, near-instant fade: no offset, no blur.
- */
 export function Reveal({ children, className, delay = 0, y = 12, blur = 4 }: RevealProps) {
   const reduced = useReducedMotionPreference();
 

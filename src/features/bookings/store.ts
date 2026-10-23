@@ -8,7 +8,6 @@ export const bookingsStore = createPersistedStore<CustomerBooking[]>("rgo.bookin
 
 export const draftStore = createPersistedStore<BookingDraft | null>("rgo.draft.v1", null, "session");
 
-/** Reference of the booking just paid for. Lets system Back from the confirmation skip the finished flow. */
 export const justBookedStore = createPersistedStore<string | null>("rgo.justbooked.v1", null, "session");
 
 export function newReference(): string {

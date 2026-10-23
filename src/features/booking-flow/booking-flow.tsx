@@ -24,11 +24,6 @@ const LAST_STEP = flowSteps.length;
 
 const clampStep = (n: number) => Math.max(1, Math.min(LAST_STEP, Number.isFinite(n) ? n : 1));
 
-/**
- * Five steps on one route. The step lives in the URL (`?step=n`) and every Continue pushes a history entry,
- * so the system Back button, like the app bar's, returns to the previous step. The draft store (session)
- * holds the data, so a refresh keeps what you typed.
- */
 export function BookingFlow({ bike }: { bike: Motorcycle }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -41,10 +36,9 @@ export function BookingFlow({ bike }: { bike: Motorcycle }) {
   const justBooked = justBookedStore.useValue();
   const [agreed, setAgreed] = useState(false);
   const [paying, setPaying] = useState(false);
-  const paid = useRef(false); // set once the booking exists, so the clamp below does not race the confirmation redirect
+  const paid = useRef(false);
 
   const hasStored = stored?.bikeId === bike.id;
-  // With no stored draft yet, derive one from the URL (dates from the details page) and the profile.
   const draft: BookingDraft = hasStored
     ? stored!
     : {
@@ -66,7 +60,6 @@ export function BookingFlow({ bike }: { bike: Motorcycle }) {
   const days = hasDates ? rentalDaysBetween(draft.start!, draft.end!) : 0;
   const quote = getQuote(bike, Math.max(days, 1), draft.addOns);
 
-  // Furthest step the data allows: you cannot URL-jump past steps you haven't completed.
   const maxStep = !hasDates || overlaps || !hasStored ? 1 : !riderStepValid(draft) ? 2 : !licenceStepValid(draft) ? 3 : agreed ? LAST_STEP : 4;
   const requested = clampStep(Number(params.get("step") ?? 1));
   const step = Math.min(requested, maxStep);
@@ -77,11 +70,7 @@ export function BookingFlow({ bike }: { bike: Motorcycle }) {
     return `?${qs}`;
   };
 
-  // Out-of-range step (typed URL, refresh, or Back after paying): move to where the data allows.
-  // Waits for hydration so the persisted draft has loaded before judging.
   const flowPath = `/bikes/${bike.id}/book`;
-  // The flag only covers the moment between paying and the confirmation page opening. Once the app has left
-  // this route, clear it, so Back (the kept-alive flow becomes visible again) is clamped like a fresh visit.
   useEffect(() => {
     if (pathname !== flowPath) paid.current = false;
   }, [pathname, flowPath]);
@@ -90,12 +79,11 @@ export function BookingFlow({ bike }: { bike: Motorcycle }) {
     if (!hydrated || pathname !== flowPath || paid.current || step === requested) return;
     if (!hasStored && justBooked) router.replace(`/bookings/${justBooked}`);
     else router.replace(withStep(step), { scroll: false });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated, pathname, step, requested, hasStored, justBooked]);
 
   function go(next: number) {
     if (!hasStored) {
-      draftStore.set(draft); // the first Continue creates the stored draft
+      draftStore.set(draft);
       justBookedStore.set(null);
     }
     router.push(withStep(next), { scroll: false });
@@ -123,7 +111,7 @@ export function BookingFlow({ bike }: { bike: Motorcycle }) {
       });
       paid.current = true;
       draftStore.set(null);
-      justBookedStore.set(reference); // lets system Back from the confirmation skip the finished flow
+      justBookedStore.set(reference);
       router.replace(`/bookings/${reference}/confirmation`);
     }, PAY_DELAY_MS);
   }
@@ -151,7 +139,6 @@ export function BookingFlow({ bike }: { bike: Motorcycle }) {
       <AppBar
         leading="back"
         backFallback={`/bikes/${bike.id}`}
-        // Steps are history entries, so Back is a real pop; step 1 falls through to the default (back to the bike).
         onBack={step > 1 ? () => router.back() : undefined}
         title={t("bookThisBike")}
         subtitle={bike.name}
@@ -199,7 +186,6 @@ export function BookingFlow({ bike }: { bike: Motorcycle }) {
         </div>
       </Screen>
 
-      {/* Outside Screen: the slide-in transform would otherwise become this fixed bar's containing block. */}
       <div className="lg:hidden">{footer}</div>
     </>
   );

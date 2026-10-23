@@ -7,17 +7,10 @@ import { useReducedMotionPreference } from "@/hooks/use-reduced-motion";
 
 type AnimatedGridProps = {
   children: React.ReactNode;
-  /** Put the grid classes here (`grid grid-cols-2 gap-3 ...`). */
   className?: string;
-  /** Classes for each item wrapper (e.g. a fixed width in a horizontal scroller). */
   itemClassName?: string;
 };
 
-/**
- * Staggers its children in once, when the listing first scrolls into view.
- * It never replays on small scrolls. Only the first few items are staggered, so
- * long listings don't feel slow. Under reduced motion every item fades together.
- */
 export function AnimatedGrid({ children, className, itemClassName }: AnimatedGridProps) {
   const reduced = useReducedMotionPreference();
 

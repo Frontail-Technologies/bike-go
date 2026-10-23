@@ -1,10 +1,8 @@
-/** Mock data and rules for the Expat Loan section. No lender, credit or KYC integration. */
 
 export type LoanTypeId = "personal" | "vehicle" | "emergency";
 
 export type LoanType = {
   id: LoanTypeId;
-  /** Annual percentage rate, as a percent. */
   apr: number;
   minAmount: number;
   maxAmount: number;
@@ -22,7 +20,6 @@ export const getLoanType = (id: string) => loanTypes.find((t) => t.id === id);
 export const TENURES = [6, 12, 24, 36, 48, 60] as const;
 export const tenuresFor = (type: LoanType) => TENURES.filter((t) => t <= type.maxTenure);
 
-/** Interest-rate range the calculator lets you explore. */
 export const RATE_MIN = 6;
 export const RATE_MAX = 24;
 
@@ -34,11 +31,8 @@ export const employmentTypes = [{ id: "salaried" }, { id: "self-employed" }, { i
 
 export const experienceBands = [{ id: "under-1" }, { id: "1-3" }, { id: "3-5" }, { id: "5-plus" }];
 
-// ------------------------------------------------------------------ EMI
-
 export type Emi = { monthly: number; total: number; interest: number };
 
-/** Standard reducing-balance EMI. Rounded to cents. */
 export function calculateEmi(amount: number, apr: number, months: number): Emi {
   const r = apr / 12 / 100;
   const raw = r === 0 ? amount / months : (amount * r) / (1 - Math.pow(1 + r, -months));
@@ -47,10 +41,7 @@ export function calculateEmi(amount: number, apr: number, months: number): Emi {
   return { monthly, total, interest: Math.round((total - amount) * 100) / 100 };
 }
 
-/** Monthly repayments should stay within this share of income. */
 export const MAX_EMI_SHARE = 0.5;
-
-// ------------------------------------------------------------------ documents
 
 export type DocumentId = "passport" | "residence" | "employment" | "income" | "address" | "bank";
 
@@ -60,8 +51,6 @@ export const MAX_FILE_BYTES = 5 * 1024 * 1024;
 export const ACCEPTED_FILES = ".pdf,.jpg,.jpeg,.png";
 
 export type StoredFile = { name: string; size: number };
-
-// ------------------------------------------------------------------ applications
 
 export type LoanStatus = "submitted" | "in-review" | "documents-required" | "approved" | "rejected";
 
@@ -95,7 +84,6 @@ export type Employment = {
 };
 
 export type LoanApplication = {
-  /** Public reference, also the URL id (e.g. LN410231). */
   reference: string;
   loanType: LoanTypeId;
   amount: number;
@@ -106,7 +94,6 @@ export type LoanApplication = {
   applicant: Applicant;
   employment: Employment;
   documents: Partial<Record<DocumentId, StoredFile>>;
-  /** Documents the reviewer asked for (status "documents-required"). */
   requestedDocuments: DocumentId[];
   history: StatusEvent[];
   createdAt: string;

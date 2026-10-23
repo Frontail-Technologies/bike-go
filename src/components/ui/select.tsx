@@ -12,10 +12,6 @@ type AppSelectProps<T extends object = object> = Omit<SelectProps<T>, "children"
   placeholder?: string;
 };
 
-/**
- * Uses HeroUI's native Select popover (portal + collision-aware positioning),
- * so it works inside drawers and modals without clipping.
- */
 export function AppSelect({ label, options, placeholder = "Select one", className, ...props }: AppSelectProps) {
   return (
     <Select placeholder={placeholder} className={cn("flex w-full flex-col gap-2", className)} {...props}>

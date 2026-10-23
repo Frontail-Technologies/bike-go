@@ -14,7 +14,6 @@ type RangeSliderProps = {
   className?: string;
 };
 
-/** Two-thumb dollar range (HeroUI Slider). Shows the current range above the track. */
 export function RangeSlider({ label, min, max, step = 1, value, onChange, className }: RangeSliderProps) {
   return (
     <Slider

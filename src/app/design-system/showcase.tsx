@@ -42,7 +42,6 @@ export function Showcase() {
         <OverlaysSection />
         <NavigationSection />
         <DataSection />
-        {/* The calendar marks "today" while rendering, which can't be prerendered. */}
         <Suspense fallback={<div className="min-h-[1400px]" aria-hidden />}>
           <RideGoSection />
         </Suspense>

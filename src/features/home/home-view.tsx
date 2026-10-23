@@ -57,7 +57,6 @@ export function HomeView() {
           </>
         } />
       <Screen bottom="nav" className="flex flex-col gap-6 md:gap-10">
-      {/* Top of the screen follows the reference: city, banner, search, categories, popular bikes. */}
       <div className="flex flex-col gap-4">
         <div className="lg:hidden">
           <LocationPicker variant="row" />
@@ -82,7 +81,6 @@ export function HomeView() {
 
       <section aria-labelledby="popular" className="flex flex-col gap-3">
         <SectionHeading id="popular" title={t("popular")} href={category ? `/bikes?category=${category}` : "/bikes"} />
-        {/* A sideways scroller on phones (next card peeks in); a regular grid from 768px. */}
         <AnimatedGrid
           key={category ?? "all"}
           className="-mx-4 flex snap-x snap-mandatory scroll-pl-4 gap-3 overflow-x-auto px-4 pb-1 scrollbar-none md:mx-0 md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:px-0 lg:grid-cols-4"

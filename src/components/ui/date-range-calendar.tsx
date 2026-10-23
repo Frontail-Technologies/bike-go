@@ -10,7 +10,6 @@ export type DateRange = NonNullable<RangeCalendarProps<DateValue>["value"]>;
 
 type DateRangeCalendarProps = Omit<RangeCalendarProps<DateValue>, "children"> & { className?: string };
 
-/** Responsive range calendar: fills its container, 44px+ day cells. */
 export function DateRangeCalendar({ className, ...props }: DateRangeCalendarProps) {
   const t = useTranslations("common");
 

@@ -9,15 +9,10 @@ type StickyBookingBarProps = {
   label?: string;
   onPress?: () => void;
   isDisabled?: boolean;
-  /** Sticks within its scroll parent (showcase). Default pins to the viewport. */
   inline?: boolean;
   className?: string;
 };
 
-/**
- * Primary booking action pinned to the bottom edge, above the home indicator. Bike details is a pushed
- * screen, so there is no bottom nav to sit above.
- */
 export function StickyBookingBar({
   amount,
   unit = "day",

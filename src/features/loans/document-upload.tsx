@@ -22,16 +22,10 @@ type DocumentUploadProps = {
   hint: string;
   file: StoredFile | undefined;
   onChange: (file: StoredFile | undefined) => void;
-  /** Icon for a known document type. */
   doc?: DocumentId;
-  /** Marks a document the reviewer asked for. */
   requested?: boolean;
 };
 
-/**
- * One document row: icon, name, and an Upload button (or the chosen file with a remove button). Mock only:
- * it keeps the file name and size so the flow can be reviewed, and never reads or sends the file anywhere.
- */
 export function DocumentUpload({ label, hint, file, onChange, doc, requested }: DocumentUploadProps) {
   const inputId = useId();
   const t = useTranslations("loans");

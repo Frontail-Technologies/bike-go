@@ -1,4 +1,3 @@
-/** Mirrors the CSS tokens in globals.css for places that need values in JS. */
 export const colors = {
   brand: "#FFC400",
   ink: "#111111",

@@ -7,20 +7,15 @@ import { useIsDesktop } from "@/hooks/use-media-query";
 import { cn } from "@/lib/cn";
 
 type ResponsiveOverlayProps = {
-  /** Trigger button content. */
   triggerLabel: React.ReactNode;
   triggerProps?: Omit<ButtonProps, "children" | "onPress">;
   title: string;
-  /** Content, or a function receiving `close` for choices that should dismiss the overlay. */
   children: React.ReactNode | ((close: () => void) => React.ReactNode);
-  /** Sheet footer on mobile; rendered below the content in the popover. */
   footer?: React.ReactNode;
   popoverClassName?: string;
-  /** Called when the overlay opens (e.g. to reset a draft). */
   onOpen?: () => void;
 };
 
-/** Bottom sheet below 768px, anchored popover from 768px up. */
 export function ResponsiveOverlay({
   triggerLabel,
   triggerProps,

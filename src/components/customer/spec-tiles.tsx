@@ -5,7 +5,6 @@ import type { Motorcycle } from "@/features/mock/data";
 import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";
 
-/** Four key specs as tiles (reference: 350cc, 35 km/l, 5 speed, 160 kg). */
 export function SpecTiles({ bike, className }: { bike: Motorcycle; className?: string }) {
   const t = useTranslations("bike");
   const specs = [
