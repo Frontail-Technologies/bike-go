@@ -110,8 +110,9 @@ export function BannerForm({ banner }: { banner?: Banner }) {
       <AdminBreadcrumbs items={[{ label: "Banners", href: "/admin/banners" }, { label: banner ? "Edit" : "Add New Banner" }]} />
       <PageHeader title={banner ? "Edit Banner" : "Add New Banner"} description={banner ? "Update the banner copy, image, placement and schedule." : "Create a promotional banner to engage your users."} actions={<div className="hidden gap-2 lg:flex">{actions}</div>} />
       <Form id="banner-form" aria-label={banner ? "Edit banner" : "Add banner"} validationBehavior="aria" validationErrors={errors as Record<string, string>} onSubmit={submit} className="block pb-24 lg:pb-0">
-        <div className="grid items-start gap-5 xl:grid-cols-2">
-          <FormCard title="Banner Image" description="Recommended 1920 × 600 (16:5). JPG, PNG or WebP." icon={<ImageIcon size={19} weight="duotone" />}>
+        <div className="flex flex-col gap-5 xl:grid xl:grid-cols-2 xl:items-start">
+          <div className="contents xl:block xl:space-y-5">
+          <FormCard className="order-1 xl:order-none" title="Banner Image" description="Recommended 1920 × 600 (16:5). JPG, PNG or WebP." icon={<ImageIcon size={19} weight="duotone" />}>
             {keepImage && !files.length ? (
               <div className="space-y-3">
                 <BannerImage banner={preview} className="aspect-[16/5] w-full rounded-2xl border border-[var(--admin-border)]" sizes="720px" />
@@ -124,10 +125,17 @@ export function BannerForm({ banner }: { banner?: Banner }) {
               <ImageUploader limit={1} maxSizeMb={5} aspectClass="aspect-[16/5]" emptyTitle="Click to upload banner image" emptyHint="or drag and drop · PNG, JPG or WebP (1920 × 600 recommended)" onChange={onFiles} />
             )}
             {errors.image ? <p role="alert" className="mt-2 text-sm font-semibold text-[var(--admin-danger)]">{errors.image}</p> : null}
-            {previewUrl || !keepImage ? <div className="mt-4 space-y-1.5"><p className="text-xs font-semibold text-[var(--admin-muted)]">Live preview</p><BannerImage banner={preview} src={previewUrl} className="aspect-[16/5] w-full rounded-xl border border-[var(--admin-border)]" sizes="720px" /></div> : null}
           </FormCard>
-
-          <FormCard title="Banner Information" icon={<InfoIcon size={19} weight="duotone" />}>
+          <FormCard className="order-3 xl:order-none" title="Schedule" description="Cambodia Time — ICT / Asia/Phnom_Penh" icon={<CalendarBlankIcon size={19} weight="duotone" />}>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <TextField name="startAt" isInvalid={Boolean(errors.schedule)} value={values.startAt} onChange={(value) => change("startAt", value)}><Label>Start date and time</Label><Input type="datetime-local" /><Description>Optional. Empty means it can show immediately.</Description></TextField>
+              <TextField name="endAt" isInvalid={Boolean(errors.schedule)} value={values.endAt} onChange={(value) => change("endAt", value)}><Label>End date and time</Label><Input type="datetime-local" /><Description>Optional. Empty means no end.</Description></TextField>
+            </div>
+            {errors.schedule ? <p role="alert" className="mt-3 text-sm font-semibold text-[var(--admin-danger)]">{errors.schedule}</p> : null}
+          </FormCard>
+          </div>
+          <div className="contents xl:block xl:space-y-5">
+          <FormCard className="order-2 xl:order-none" title="Banner Information" icon={<InfoIcon size={19} weight="duotone" />}>
             <div className="space-y-4">
               <Field label="Title" name="title" required {...shared} />
               <Field label="Subtitle" name="subtitle" {...shared} />
@@ -135,27 +143,18 @@ export function BannerForm({ banner }: { banner?: Banner }) {
                 <Field label="CTA label" name="ctaLabel" required description="Button text, e.g. Book Now" {...shared} />
                 <Field label="CTA URL" name="ctaUrl" required description="Internal path (/bikes) or https:// URL" extra={link ? <span className="rounded-full bg-[var(--admin-info-soft)] px-2 py-0.5 text-[10px] font-bold text-[var(--admin-info)]">{link}</span> : null} {...shared} />
               </div>
-              <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_9rem]">
+              <div className="grid items-start gap-4 sm:grid-cols-[minmax(0,1fr)_9rem]">
                 <Select name="placement" value={values.placement} onChange={(key) => key !== null && change("placement", String(key))}>
                   <Label>Placement</Label>
-                  <Select.Trigger><Select.Value /><Select.Indicator /></Select.Trigger>
+                  <Select.Trigger className="min-h-11"><Select.Value /><Select.Indicator /></Select.Trigger>
                   <Select.Popover className="adminOverlay"><ListBox>{placements.map((value) => <ListBox.Item key={value} id={value} textValue={placementMeta[value].label}>{placementMeta[value].label}<ListBox.ItemIndicator /></ListBox.Item>)}</ListBox></Select.Popover>
                 </Select>
                 <Field label="Display order" name="displayOrder" type="number" required {...shared} />
               </div>
             </div>
           </FormCard>
-
-          <FormCard title="Schedule" description="Cambodia Time — ICT / Asia/Phnom_Penh" icon={<CalendarBlankIcon size={19} weight="duotone" />}>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <TextField name="startAt" isInvalid={Boolean(errors.schedule)} value={values.startAt} onChange={(value) => change("startAt", value)}><Label>Start date and time</Label><Input type="datetime-local" /><Description>Optional. Empty means it can show immediately.</Description></TextField>
-              <TextField name="endAt" isInvalid={Boolean(errors.schedule)} value={values.endAt} onChange={(value) => change("endAt", value)}><Label>End date and time</Label><Input type="datetime-local" /><Description>Optional. Empty means no end.</Description></TextField>
-            </div>
-            {errors.schedule ? <p role="alert" className="mt-3 text-sm font-semibold text-[var(--admin-danger)]">{errors.schedule}</p> : null}
-          </FormCard>
-
-          <FormCard title="Status" description="Expired is computed from the end date, not chosen." icon={<CheckIcon size={19} weight="bold" />}>
-            <div role="radiogroup" aria-label="Banner status" className="grid gap-2 sm:grid-cols-3">
+          <FormCard className="order-4 xl:order-none" title="Status" description="Expired is computed from the end date, not chosen." icon={<CheckIcon size={19} weight="bold" />}>
+            <div role="radiogroup" aria-label="Banner status" className="grid gap-2 sm:grid-cols-2">
               {statusOptions.map((option) => {
                 const selected = choice === option.value;
                 return (
@@ -166,9 +165,14 @@ export function BannerForm({ banner }: { banner?: Banner }) {
                   </label>
                 );
               })}
+              <div aria-disabled="true" className="flex min-h-14 items-start gap-2.5 rounded-xl border border-dashed border-[var(--admin-border)] bg-[var(--admin-surface-muted)] p-3 opacity-70">
+                <span className="mt-1 size-2.5 shrink-0 rounded-full bg-[var(--admin-danger)]" aria-hidden />
+                <span><span className="block text-sm font-bold">Expired</span><span className="block text-xs text-[var(--admin-muted)]">Computed after the end date.</span></span>
+              </div>
             </div>
             {effective === "expired" ? <p className="mt-3 text-xs text-[var(--admin-warning)]">This banner has expired. Extend the end date to show it again.</p> : null}
           </FormCard>
+          </div>
         </div>
         <div className="fixed inset-x-0 bottom-0 z-30 flex gap-2 border-t border-[var(--admin-border)] bg-white/95 p-3 backdrop-blur-md lg:hidden">{actions}</div>
       </Form>
