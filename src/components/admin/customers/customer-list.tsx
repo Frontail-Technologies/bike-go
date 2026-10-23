@@ -5,7 +5,6 @@ import { ArrowCounterClockwiseIcon, CalendarCheckIcon, CarProfileIcon, GridFourI
 import type { ColumnDef } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
 import { startTransition, useEffect, useMemo, useState } from "react";
-import { AdminChartCard, StatusDonutChart } from "@/components/admin/charts";
 import { AdminPagination, AdminSearch, AdminSelect, ViewToggle, formatCambodiaDate } from "@/components/admin/controls";
 import { AdminDataTable } from "@/components/admin/data-display/admin-data-table";
 import { StatCard } from "@/components/admin/data-display/stat-card";
@@ -13,9 +12,8 @@ import { AdminStatusBadge } from "@/components/admin/data-display/status-badge";
 import { AdminPage, ContentSection, PageHeader } from "@/components/admin/layout";
 import { AdminCustomerCard, CustomerActions } from "./admin-customer-card";
 import { CustomerAvatar } from "./customer-avatar";
-import { activeRentals, customerGrowth, customers as seedCustomers, type Customer } from "./customer-data";
+import { NOW, activeRentals, customers as seedCustomers, type Customer } from "./customer-data";
 import { CustomerEditDrawer } from "./customer-edit-drawer";
-import { CustomerGrowthChart } from "./customer-growth-chart";
 
 const PAGE_SIZE = 8;
 const all = "all";
@@ -33,7 +31,6 @@ const activityOptions = [
   { value: "loans", label: "Has loan applications" },
   { value: "none", label: "No bookings yet" },
 ];
-const NOW = Date.parse("2026-10-23T03:00:00.000Z");
 
 export function CustomerList() {
   const router = useRouter();
@@ -79,10 +76,6 @@ export function CustomerList() {
     fresh: people.filter((person) => NOW - Date.parse(person.joinedAt) <= 30 * 86_400_000).length,
     renting: people.filter((person) => activeRentals(person) > 0).length,
   };
-  const statusChart = [
-    { label: "Active", value: stats.active, color: "var(--admin-success)" },
-    { label: "Inactive", value: stats.total - stats.active, color: "var(--admin-muted)" },
-  ];
 
   const filterControls = (className?: string) => (
     <>
@@ -95,7 +88,7 @@ export function CustomerList() {
 
   const columns: ColumnDef<Customer>[] = [
     { accessorKey: "name", header: "Customer", cell: ({ row }) => <div className="flex min-w-48 items-center gap-3"><CustomerAvatar name={row.original.name} size="sm" /><div className="min-w-0"><p className="truncate font-bold leading-tight">{row.original.name}</p><p className="text-xs text-[var(--admin-muted)]">{row.original.reference}</p></div></div> },
-    { id: "contact", header: "Contact", accessorFn: (row) => row.email, cell: ({ row }) => <div className="min-w-44"><p className="truncate text-sm">{row.original.email}</p><p className="text-xs text-[var(--admin-muted)]">{row.original.phone}</p></div> },
+    { id: "contact", header: "Contact", accessorFn: (row) => row.phone, cell: ({ row }) => <div className="min-w-44"><p className="text-sm font-medium">{row.original.phone}</p><p className="truncate text-xs text-[var(--admin-muted)]">{row.original.email}</p></div> },
     { accessorKey: "city", header: "Location" },
     { accessorKey: "joinedAt", header: "Joined", cell: ({ row }) => <span className="whitespace-nowrap">{formatCambodiaDate(row.original.joinedAt)}</span> },
     { id: "bookings", header: "Bookings", accessorFn: (row) => row.bookings.length, cell: ({ row }) => <div className="flex items-center gap-2 font-semibold tabular-nums">{row.original.bookings.length}{activeRentals(row.original) ? <span className="inline-flex items-center gap-1 rounded-full bg-[var(--admin-info-soft)] px-2 py-0.5 text-[11px] font-bold text-[var(--admin-info)]"><span className="size-1.5 rounded-full bg-current" aria-hidden />Active</span> : null}</div> },
@@ -110,15 +103,11 @@ export function CustomerList() {
     <AdminPage>
       <PageHeader title="Customers" description="Manage customers, view their bookings, loan applications and account status." />
 
-      <section aria-label="Customer overview" className="grid gap-5 xl:grid-cols-[minmax(0,1.9fr)_minmax(300px,1fr)]">
-        <div className="grid grid-cols-2 gap-3 xl:col-span-2 xl:grid-cols-4">
-          <StatCard tone="info" label="Total Customers" value={stats.total} icon={<UsersIcon size={22} weight="duotone" />} trend={{ direction: "up", value: "6%" }} />
-          <StatCard tone="success" label="Active Customers" value={stats.active} icon={<CarProfileIcon size={22} weight="duotone" />} secondary={`${stats.total - stats.active} inactive`} />
-          <StatCard tone="accent" label="New (30 days)" value={stats.fresh} icon={<UserPlusIcon size={22} weight="duotone" />} trend={{ direction: "up", value: "12%" }} />
-          <StatCard tone="warning" label="Active Rentals" value={stats.renting} icon={<CalendarCheckIcon size={22} weight="duotone" />} secondary="customers on the road" />
-        </div>
-        <AdminChartCard title="Customer Growth" description="Registered customers, January to October."><CustomerGrowthChart data={customerGrowth} /></AdminChartCard>
-        <AdminChartCard title="Account Status" description="Share of active and inactive accounts."><StatusDonutChart compact data={statusChart} centerLabel="Customers" /></AdminChartCard>
+      <section aria-label="Customer overview" className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <StatCard tone="info" label="Total Customers" value={stats.total} icon={<UsersIcon size={22} weight="duotone" />} trend={{ direction: "up", value: "6%" }} />
+        <StatCard tone="success" label="Active Customers" value={stats.active} icon={<CarProfileIcon size={22} weight="duotone" />} secondary={`${stats.total - stats.active} inactive`} />
+        <StatCard tone="accent" label="New (30 days)" value={stats.fresh} icon={<UserPlusIcon size={22} weight="duotone" />} trend={{ direction: "up", value: "12%" }} />
+        <StatCard tone="warning" label="Active Rentals" value={stats.renting} icon={<CalendarCheckIcon size={22} weight="duotone" />} secondary="customers on the road" />
       </section>
 
       <ContentSection className="overflow-visible">
@@ -139,28 +128,7 @@ export function CustomerList() {
         </div>
 
         {view === "table" ? (
-          <>
-            <div className="hidden md:block">
-              <AdminDataTable columns={columns} data={rows} label="Customers" emptyState="No customers match these filters." showPagination={false} pagination={{ page: safePage, pageSize: PAGE_SIZE, total: filtered.length, onPageChange: setPage }} onRowNavigate={open} rowActions={(person) => <CustomerActions customer={person} onView={() => open(person)} onEdit={() => edit(person)} />} />
-            </div>
-            <ul className="divide-y divide-[var(--admin-border)] md:hidden" aria-label="Customers">
-              {rows.map((person) => (
-                <li key={person.id} className="flex items-center gap-1 pr-1">
-                  <button type="button" onClick={() => open(person)} className="flex min-h-[76px] min-w-0 flex-1 items-center gap-3 p-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--admin-accent-strong)]">
-                    <CustomerAvatar name={person.name} />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-bold">{person.name}</span>
-                      <span className="block truncate text-xs text-[var(--admin-muted)]">{person.email}</span>
-                      <span className="mt-1.5 flex items-center gap-2 text-xs text-[var(--admin-muted)]"><AdminStatusBadge status={person.status} />{person.bookings.length} bookings · {person.city}</span>
-                    </span>
-                  </button>
-                  <CustomerActions customer={person} onView={() => open(person)} onEdit={() => edit(person)} />
-                </li>
-              ))}
-              {!rows.length ? <li>{empty}</li> : null}
-            </ul>
-            {pagination}
-          </>
+          <AdminDataTable columns={columns} data={rows} label="Customers" emptyState="No customers match these filters." pagination={{ page: safePage, pageSize: PAGE_SIZE, total: filtered.length, onPageChange: setPage }} onRowNavigate={open} rowActions={(person) => <CustomerActions customer={person} onView={() => open(person)} onEdit={() => edit(person)} />} minWidth={820} />
         ) : (
           <>
             <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3 2xl:grid-cols-4">

@@ -47,7 +47,7 @@ export function AdminDataTable<T extends { id: string }>({ columns, data, label,
           </Table.Body>
         </Table.Content>
       </Table.ScrollContainer>
-      {showPagination ? <Table.Footer><AdminPagination page={currentPage} pageCount={pageCount} total={total} pageSize={currentPageSize} onPageChange={(page) => pagination ? pagination.onPageChange(page) : table.setPageIndex(page - 1)} /></Table.Footer> : null}
+      {showPagination && total > currentPageSize ? <Table.Footer><AdminPagination page={currentPage} pageCount={pageCount} total={total} pageSize={currentPageSize} onPageChange={(page) => pagination ? pagination.onPageChange(page) : table.setPageIndex(page - 1)} /></Table.Footer> : null}
     </Table>
   </div>;
 }

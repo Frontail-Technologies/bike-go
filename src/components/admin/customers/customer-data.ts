@@ -48,7 +48,7 @@ const stamp = (month: number, day: number, hour = 3) => `2026-${String(month).pa
 function build(seed: (typeof seeds)[number], index: number): Customer {
   const [name, email, phone, city, address, nationality, dateOfBirth, joined, status] = seed;
   const bookingCount = 2 + ((index * 3) % 6);
-  const loanCount = index % 3 === 0 ? 0 : (index % 2) + 1;
+  const loanCount = index % 4 === 3 ? 0 : (index % 2) + 1;
   const joinedAt = `${joined}T03:00:00.000Z`;
 
   const bookings: CustomerBooking[] = Array.from({ length: bookingCount }, (_, slot) => {
@@ -100,7 +100,6 @@ export const initialsOf = (name: string) => name.split(/\s+/).slice(0, 2).map((p
 export const totalSpentMinor = (customer: Customer) => customer.bookings.filter((booking) => booking.status !== "cancelled").reduce((sum, booking) => sum + booking.amountMinor, 0);
 export const activeRentals = (customer: Customer) => customer.bookings.filter((booking) => booking.status === "ongoing").length;
 
-export const customerGrowth = [
-  { label: "Jan", value: 38 }, { label: "Feb", value: 74 }, { label: "Mar", value: 121 }, { label: "Apr", value: 176 }, { label: "May", value: 248 },
-  { label: "Jun", value: 331 }, { label: "Jul", value: 452 }, { label: "Aug", value: 589 }, { label: "Sep", value: 706 }, { label: "Oct", value: 842 },
-];
+
+export const NOW = Date.parse("2026-10-23T03:00:00.000Z");
+export const monthsSince = (iso: string) => Math.max(1, Math.round((NOW - Date.parse(iso)) / (30.44 * 86_400_000)));
