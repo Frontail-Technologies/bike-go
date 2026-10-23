@@ -2,7 +2,9 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { Spinner } from "@heroui/react";
 import { BookingSummary } from "@/components/customer/booking-summary";
+import { LoadingRegion } from "@/components/ui/loading-region";
 import { AppBar } from "@/components/shared/app-bar";
 import { BikeImage } from "@/components/shared/bike-image";
 import { DesktopTitle, Screen } from "@/components/shared/screen";
@@ -36,6 +38,7 @@ export function BookingFlow({ bike }: { bike: Motorcycle }) {
   const justBooked = justBookedStore.useValue();
   const [agreed, setAgreed] = useState(false);
   const [paying, setPaying] = useState(false);
+  const [completing, setCompleting] = useState(false);
   const paid = useRef(false);
 
   const hasStored = stored?.bikeId === bike.id;
@@ -110,10 +113,19 @@ export function BookingFlow({ bike }: { bike: Motorcycle }) {
         createdAt: new Date().toISOString(),
       });
       paid.current = true;
+      setCompleting(true);
       draftStore.set(null);
       justBookedStore.set(reference);
       router.replace(`/bookings/${reference}/confirmation`);
     }, PAY_DELAY_MS);
+  }
+
+  if (completing) {
+    return (
+      <LoadingRegion className="flex min-h-[60dvh] items-center justify-center">
+        <Spinner size="lg" />
+      </LoadingRegion>
+    );
   }
 
   const footer =
