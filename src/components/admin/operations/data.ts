@@ -6,11 +6,6 @@ export type AdminBooking = {
   rentalMinor: number; depositMinor: number; totalMinor: number;
 };
 
-export type AdminCustomer = {
-  id: string; name: string; initials: string; email: string; phone: string; city: string; joinedAt: string;
-  status: AdminStatus; totalBookings: number; activeRentals: number; totalSpentMinor: number; loanApplications: number;
-};
-
 export type AdminLoan = {
   id: string; reference: string; applicant: string; email: string; phone: string; occupation: string; employer: string;
   monthlyIncomeMinor: number; requestedMinor: number; tenureMonths: number; purpose: string; status: AdminStatus; submittedAt: string;
@@ -48,11 +43,6 @@ export const adminBookings: AdminBooking[] = Array.from({ length: 12 }, (_, inde
     location: index % 3 === 0 ? "Siem Reap Riverside" : "Phnom Penh Central", status: bookingStatuses[index], paymentStatus: index % 4 === 3 ? "partially-paid" : index % 5 === 4 ? "refunded" : "paid",
     rentalMinor, depositMinor, totalMinor: rentalMinor + depositMinor,
   };
-});
-
-export const adminCustomers: AdminCustomer[] = Array.from({ length: 12 }, (_, index) => {
-  const person = people[index % people.length];
-  return { id: `customer-${index + 1}`, name: person[0], initials: person[1], email: person[2], phone: person[3], city: person[4], joinedAt: `2026-${String(1 + (index % 9)).padStart(2, "0")}-15T03:00:00.000Z`, status: index === 4 ? "inactive" : "available", totalBookings: 2 + index, activeRentals: index % 4 === 0 ? 1 : 0, totalSpentMinor: 8500 + index * 4300, loanApplications: index % 3 };
 });
 
 const loanStatuses: AdminStatus[] = ["under-review", "approved", "pending", "rejected", "approved", "pending", "under-review", "approved"];

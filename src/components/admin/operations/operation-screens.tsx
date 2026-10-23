@@ -12,8 +12,7 @@ import { AdminStatusBadge, type AdminStatus } from "@/components/admin/data-disp
 import { AdminErrorState } from "@/components/admin/feedback";
 import { FormGrid, FormSection } from "@/components/admin/forms/form-layout";
 import { AdminPage, ContentSection, DetailList, InfoCard, PageHeader } from "@/components/admin/layout";
-import { AdminTabs } from "@/components/admin/navigation";
-import { adminBookings, adminCustomers, adminDocuments, adminLoans, adminPayments, type AdminBooking, type AdminCustomer, type AdminDocument, type AdminLoan, type AdminPayment } from "./data";
+import { adminBookings, adminDocuments, adminLoans, adminPayments, type AdminBooking, type AdminDocument, type AdminLoan, type AdminPayment } from "./data";
 
 const PAGE_SIZE = 6;
 const all = "all";
@@ -40,21 +39,6 @@ export function BookingsScreen() {
     { id: "actions", header: "", enableSorting: false, cell: ({ row }) => <ViewAction label={`View booking ${row.original.reference}`} onPress={() => router.push(`/admin/bookings/${row.original.id}`)} /> },
   ];
   return <ListFrame title="Bookings" description="Review reservations, rental periods, payment state, and handover details." search={search} setSearch={setSearch} status={status} setStatus={setStatus} statusOptions={["pending", "confirmed", "ongoing", "completed", "cancelled", "no-show"]} columns={columns} rows={rows} total={filtered.length} page={page} setPage={setPage} empty="No bookings match these filters." />;
-}
-
-export function CustomersScreen() {
-  const router = useRouter(); const [search, setSearch] = useState(""); const [status, setStatus] = useState(all); const [page, setPage] = useState(1);
-  const filtered = useMemo(() => adminCustomers.filter((item) => (!search || `${item.name} ${item.email} ${item.phone}`.toLowerCase().includes(search.toLowerCase())) && (status === all || item.status === status)), [search, status]);
-  const rows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  const columns: ColumnDef<AdminCustomer>[] = [
-    { accessorKey: "name", header: "Customer", cell: ({ row }) => <AvatarCell name={row.original.name} detail={row.original.email} /> },
-    { accessorKey: "phone", header: "Phone" }, { accessorKey: "city", header: "City" },
-    { accessorKey: "totalBookings", header: "Bookings" },
-    { accessorKey: "totalSpentMinor", header: "Total spent", cell: ({ row }) => <MoneyDisplay amount={row.original.totalSpentMinor} /> },
-    { accessorKey: "status", header: "Status", cell: ({ row }) => <AdminStatusBadge status={row.original.status} /> },
-    { id: "actions", header: "", enableSorting: false, cell: ({ row }) => <ViewAction label={`View customer ${row.original.name}`} onPress={() => router.push(`/admin/customers/${row.original.id}`)} /> },
-  ];
-  return <ListFrame title="Customers" description="View customer profiles, rental activity, and account status." search={search} setSearch={setSearch} status={status} setStatus={setStatus} statusOptions={["available", "inactive"]} columns={columns} rows={rows} total={filtered.length} page={page} setPage={setPage} empty="No customers match these filters." />;
 }
 
 export function LoansScreen() {
@@ -107,11 +91,6 @@ export function BookingDetailScreen({ id }: { id: string }) {
   const item = adminBookings.find((booking) => booking.id === id); const [status, setStatus] = useState<AdminStatus | null>(item?.status ?? null);
   if (!item || !status) return <RecordNotFound title="Booking Details" />;
   return <AdminPage><PageHeader eyebrow="Bookings" title={item.reference} description="Booking and handover overview" actions={<><AdminStatusBadge status={status} /><Button variant="primary" onPress={() => setStatus(status === "completed" ? "ongoing" : "completed")}>Update status</Button></>} /><div className="grid gap-5 xl:grid-cols-3"><InfoCard title="Customer"><div className="mb-4"><p className="text-sm font-bold">{item.customer}</p><p className="text-xs text-[var(--admin-muted)]">{item.email}</p></div><DetailList items={[{ label: "Phone", value: item.phone }]} /></InfoCard><InfoCard title="Vehicle"><DetailList items={[{ label: "Vehicle", value: item.vehicle }, { label: "Registration", value: item.registration }, { label: "Pickup location", value: item.location }]} /></InfoCard><InfoCard title="Payment"><DetailList items={[{ label: "Rental", value: <MoneyDisplay amount={item.rentalMinor} /> }, { label: "Security deposit", value: <MoneyDisplay amount={item.depositMinor} /> }, { label: "Total", value: <MoneyDisplay amount={item.totalMinor} /> }, { label: "Status", value: <AdminStatusBadge status={item.paymentStatus} /> }]} /></InfoCard></div><InfoCard title="Booking schedule"><DetailList columns={2} items={[{ label: "Pickup — ICT", value: formatCambodiaDate(item.pickupAt, { hour: "2-digit", minute: "2-digit" }) }, { label: "Return — ICT", value: formatCambodiaDate(item.returnAt, { hour: "2-digit", minute: "2-digit" }) }]} /></InfoCard></AdminPage>;
-}
-
-export function CustomerDetailScreen({ id }: { id: string }) {
-  const item = adminCustomers.find((customer) => customer.id === id); if (!item) return <RecordNotFound title="Customer Details" />;
-  return <AdminPage><PageHeader eyebrow="Customers" title={item.name} description={`${item.email} · ${item.phone}`} actions={<AdminStatusBadge status={item.status} />} /><InfoCard title="Customer profile"><div className="mb-5"><AvatarCell name={item.name} detail={item.city} /></div><AdminTabs label="Customer information" items={[{ id: "overview", label: "Overview", content: <div className="grid gap-5 lg:grid-cols-2"><DetailList items={[{ label: "Email", value: item.email }, { label: "Phone", value: item.phone }, { label: "City", value: item.city }, { label: "Joined", value: formatCambodiaDate(item.joinedAt) }]} /><DetailList items={[{ label: "Total bookings", value: item.totalBookings }, { label: "Active rentals", value: item.activeRentals }, { label: "Total spent", value: <MoneyDisplay amount={item.totalSpentMinor} /> }, { label: "Loan applications", value: item.loanApplications }]} /></div> }, { id: "bookings", label: `Bookings (${item.totalBookings})`, content: <p className="text-sm text-[var(--admin-muted)]">Booking history is represented in the Bookings workspace.</p> }, { id: "loans", label: `Loan Applications (${item.loanApplications})`, content: <p className="text-sm text-[var(--admin-muted)]">Loan activity is represented in the Loan Applications workspace.</p> }]} /></InfoCard></AdminPage>;
 }
 
 export function LoanDetailScreen({ id }: { id: string }) {

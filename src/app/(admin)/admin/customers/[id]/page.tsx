@@ -1,10 +1,10 @@
-import { CustomerDetailScreen } from "@/components/admin/operations/operation-screens";
+import { CustomerDetail as CustomerWorkspace } from "@/components/admin/customers/customer-detail";
 import { Suspense } from "react";
 import { AdminLoadingState } from "@/components/admin/feedback";
 
 async function CustomerDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  return <CustomerDetailScreen id={id} />;
+  return <CustomerWorkspace id={id} />;
 }
 
 export default function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {

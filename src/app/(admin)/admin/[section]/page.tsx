@@ -1,7 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { AdminLoadingState } from "@/components/admin/feedback";
-import { BookingsScreen, CustomersScreen, DocumentsScreen, LoansScreen, PaymentsScreen, SettingsScreen } from "@/components/admin/operations/operation-screens";
+import { CustomerList } from "@/components/admin/customers/customer-list";
+import { BookingsScreen, DocumentsScreen, LoansScreen, PaymentsScreen, SettingsScreen } from "@/components/admin/operations/operation-screens";
 
 const sections = ["bookings", "customers", "loan-applications", "documents", "payments", "settings"] as const;
 
@@ -14,7 +15,7 @@ async function AdminSection({ params }: { params: Promise<{ section: string }> }
   if (section === "bikes") redirect("/admin/vehicles");
   if (!sections.includes(section as (typeof sections)[number])) notFound();
   if (section === "bookings") return <BookingsScreen />;
-  if (section === "customers") return <CustomersScreen />;
+  if (section === "customers") return <CustomerList />;
   if (section === "loan-applications") return <LoansScreen />;
   if (section === "documents") return <DocumentsScreen />;
   if (section === "payments") return <PaymentsScreen />;
