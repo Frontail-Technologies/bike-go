@@ -141,10 +141,9 @@ export default async function run({ browser, base, t }) {
     check("dashboard renders four accessible chart surfaces", await page.locator('[role="application"]').count() >= 4);
     await page.waitForTimeout(600);
     await page.screenshot({ path: join(SHOTS, "admin-dashboard-1440.png"), fullPage: true });
-    await page.getByRole("button", { name: "KHR" }).click();
-    check("dashboard switches revenue to KHR without conversion", (await page.getByText("KHR only — no conversion").count()) === 1 && await page.getByText(/KHR.*18,400,000/).first().isVisible());
     await page.getByRole("button", { name: "90 days" }).click();
-    check("dashboard switches to the 90-day series", await page.getByText("90-day booked and paid revenue in KHR.").isVisible());
+    check("dashboard keeps revenue in USD", await page.getByText("USD only").isVisible() && (await page.getByRole("button", { name: "Revenue currency" }).count()) === 0);
+    check("dashboard switches to the 90-day series", await page.getByText("90-day booked and paid revenue in USD.").isVisible());
 
     await page.goto(`${base}/admin/ui`, { waitUntil: "networkidle" });
     const chartShowcase = page.getByRole("region", { name: "Admin chart examples" });

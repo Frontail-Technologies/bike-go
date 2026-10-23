@@ -58,7 +58,7 @@ export function VehicleList() {
     { accessorKey: "vehicleType", header: "Type", cell: ({ row }) => <span className="capitalize">{row.original.vehicleType}</span> },
     { id: "brandModel", header: "Brand / model", accessorFn: (row) => `${row.brand} ${row.model}` },
     { id: "location", header: "Location", accessorFn: (row) => row.location.name, cell: ({ row }) => <div><p>{row.original.location.name}</p><p className="text-xs text-[var(--admin-muted)]">{row.original.location.city}</p></div> },
-    { accessorKey: "dailyRentalPriceMinor", header: "Daily price", cell: ({ row }) => <MoneyDisplay amount={row.original.dailyRentalPriceMinor} currency={row.original.currency} /> },
+    { accessorKey: "dailyRentalPriceMinor", header: "Daily price", cell: ({ row }) => <MoneyDisplay amount={row.original.dailyRentalPriceMinor} /> },
     { accessorKey: "status", header: "Status", cell: ({ row }) => <AdminStatusBadge status={row.original.status} /> },
   ];
 

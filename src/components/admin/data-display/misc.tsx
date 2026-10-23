@@ -2,9 +2,8 @@ import { Avatar } from "@heroui/react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
-export function MoneyDisplay({ amount, currency = "USD", className }: { amount: number; currency?: "USD" | "KHR"; className?: string }) {
-  const value = currency === "USD" ? amount / 100 : amount;
-  const formatted = new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: currency === "KHR" ? 0 : 2 }).format(value);
+export function MoneyDisplay({ amount, className }: { amount: number; className?: string }) {
+  const formatted = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(amount / 100);
   return <span className={cn("whitespace-nowrap font-semibold tabular-nums", className)}>{formatted}</span>;
 }
 

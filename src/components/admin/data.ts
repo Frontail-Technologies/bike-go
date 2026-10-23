@@ -1,4 +1,4 @@
-export type Currency = "USD" | "KHR";
+export type Currency = "USD";
 export type DashboardPeriod = 7 | 30 | 90;
 export type RevenueTrendPoint = { label: string; bookedMinor: number; paidMinor: number };
 export type MetricPoint = { label: string; value: number };
@@ -31,10 +31,10 @@ export type DashboardData = {
   pendingDocumentReviews: number;
 };
 
-function makeRevenueSeries(period: DashboardPeriod, currency: Currency): RevenueTrendPoint[] {
+function makeRevenueSeries(period: DashboardPeriod): RevenueTrendPoint[] {
   const points = period === 7 ? 7 : period === 30 ? 10 : 13;
-  const bookedBase = currency === "USD" ? 118000 : 4720000;
-  const paidBase = currency === "USD" ? 89000 : 3560000;
+  const bookedBase = 118000;
+  const paidBase = 89000;
   return Array.from({ length: points }, (_, index) => {
     const day = Math.round(1 + (index * (period - 1)) / Math.max(1, points - 1));
     const variation = 0.82 + ((index * 7) % 5) * 0.09 + index * 0.025;
@@ -89,12 +89,12 @@ export const adminVehicleAvailability: VehicleAvailabilityBlock[] = [
 
 export const adminDashboard: DashboardData = {
   vehicles: { total: adminVehicles.length, byStatus: { available: 7, rented: 2, maintenance: 2, inactive: 1 } },
-  bookings: { total: 124, activeNow: 36, upcomingPickups7d: 8, byStatus: { completed: 62, active: 24, cancelled: 16, pending: 12, no_show: 10 }, revenue: [{ currency: "USD", bookedMinor: 1245000, paidMinor: 986000 }, { currency: "KHR", bookedMinor: 18400000, paidMinor: 15100000 }] },
+  bookings: { total: 124, activeNow: 36, upcomingPickups7d: 8, byStatus: { completed: 62, active: 24, cancelled: 16, pending: 12, no_show: 10 }, revenue: [{ currency: "USD", bookedMinor: 1245000, paidMinor: 986000 }] },
   loans: { total: 28, awaitingReview: 7, byStatus: { submitted: 4, documents_under_review: 3, approved: 15, rejected: 6 } }, customers: { total: 842, newLast30Days: 46 },
   recentBookings: [
     { reference: "BND0124", bookingStatus: "active", customerName: "Sokha Chan", vehicleName: "Toyota Vios", pickupAt: "2026-10-23T03:00:00.000Z", totalPayableMinor: 4500, currency: "USD" },
     { reference: "BND0123", bookingStatus: "completed", customerName: "Marie Tan", vehicleName: "Honda Click 125", pickupAt: "2026-10-22T02:00:00.000Z", totalPayableMinor: 5200, currency: "USD" },
-    { reference: "BND0122", bookingStatus: "confirmed", customerName: "David Kim", vehicleName: "Yamaha NMAX 155", pickupAt: "2026-10-25T04:00:00.000Z", totalPayableMinor: 320000, currency: "KHR" },
+    { reference: "BND0122", bookingStatus: "confirmed", customerName: "David Kim", vehicleName: "Yamaha NMAX 155", pickupAt: "2026-10-25T04:00:00.000Z", totalPayableMinor: 3200, currency: "USD" },
   ],
   recentLoans: [
     { reference: "LNN0028", status: "documents_under_review", applicantName: "Davit Park", loanType: "vehicle", requestedAmountMinor: 500000, currency: "USD", createdAt: "2026-10-23T02:00:00.000Z" },
@@ -103,8 +103,7 @@ export const adminDashboard: DashboardData = {
   pendingDocumentReviews: 9,
   charts: {
     revenue: {
-      USD: { 7: makeRevenueSeries(7, "USD"), 30: makeRevenueSeries(30, "USD"), 90: makeRevenueSeries(90, "USD") },
-      KHR: { 7: makeRevenueSeries(7, "KHR"), 30: makeRevenueSeries(30, "KHR"), 90: makeRevenueSeries(90, "KHR") },
+      USD: { 7: makeRevenueSeries(7), 30: makeRevenueSeries(30), 90: makeRevenueSeries(90) },
     },
     bookingVolume: { 7: makeVolumeSeries(7), 30: makeVolumeSeries(30), 90: makeVolumeSeries(90) },
     bookingStatus: [

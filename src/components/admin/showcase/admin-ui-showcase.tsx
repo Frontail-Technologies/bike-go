@@ -64,8 +64,8 @@ export function AdminUiShowcase() {
     </section>
 
     <section aria-label="Admin chart examples" className="grid gap-5 xl:grid-cols-2">
-      <AdminChartCard title="Revenue trend" description="USD booked and paid totals remain isolated from KHR.">
-        <RevenueTrendChart data={adminDashboard.charts.revenue.USD[30]} currency="USD" />
+      <AdminChartCard title="Revenue trend" description="All admin revenue is displayed in USD.">
+        <RevenueTrendChart data={adminDashboard.charts.revenue.USD[30]} />
       </AdminChartCard>
       <AdminChartCard title="Booking status" description="Visible values accompany every chart segment.">
         <StatusDonutChart data={adminDashboard.charts.bookingStatus} centerLabel="Bookings" />
@@ -95,7 +95,7 @@ export function AdminUiShowcase() {
     </ContentSection>
 
     <ContentSection title="Status and money" description="A unified status vocabulary and minor-unit money formatting.">
-      <div className="space-y-5 p-5"><div className="flex flex-wrap gap-2">{adminStatusVariants.map((variant) => <AdminStatusBadge key={variant} status={variant} />)}</div><div className="flex flex-wrap items-center gap-5 text-sm"><span>USD cents: <MoneyDisplay amount={125099} /></span><span>KHR riel: <MoneyDisplay amount={4100000} currency="KHR" /></span></div></div>
+      <div className="space-y-5 p-5"><div className="flex flex-wrap gap-2">{adminStatusVariants.map((variant) => <AdminStatusBadge key={variant} status={variant} />)}</div><div className="flex flex-wrap items-center gap-5 text-sm"><span>USD cents: <MoneyDisplay amount={125099} /></span></div></div>
     </ContentSection>
 
     <SplitPanel primary={<ContentSection title="Form layout"><div className="space-y-6 p-5"><FormSection title="Basic information" description="Fields retain readable widths across the workspace."><FormGrid columns={2}><AdminTextField label="Vehicle name" defaultValue="Honda Click 125" /><AdminTextField label="Registration number" defaultValue="1AA-1234" /><AdminTextField label="Location" defaultValue="Phnom Penh" /><AdminTextField label="Daily price (USD cents)" defaultValue="1200" /></FormGrid></FormSection><ImageUploader /><DocumentUploader /></div></ContentSection>} secondary={<div className="space-y-5"><InfoCard title="Vehicle details"><DetailList items={[{ label: "Type", value: "Motorcycle" }, { label: "Transmission", value: "Automatic" }, { label: "Fuel", value: "Petrol" }, { label: "Seats", value: "2" }]} columns={2} /></InfoCard><InfoCard title="Application timeline"><ActivityTimeline items={[{ id: "1", title: "Application submitted", detail: "Dara submitted the loan request.", time: "10 Oct 2026, 10:30 ICT", tone: "info" }, { id: "2", title: "Documents verified", time: "12 Oct 2026, 14:15 ICT", tone: "success" }, { id: "3", title: "Under review", time: "Today, 09:40 ICT", tone: "warning" }]} /></InfoCard></div>} />
