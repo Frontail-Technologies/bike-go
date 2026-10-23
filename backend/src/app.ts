@@ -9,6 +9,7 @@ import { requestMeta } from "@/plugins/request-meta";
 import { securityHeaders } from "@/plugins/security";
 import { adminRoutes } from "@/routes/admin";
 import { availabilityRoutes } from "@/routes/availability";
+import { bannerRoutes } from "@/routes/banner";
 import { addonRoutes, bookingRoutes } from "@/routes/booking";
 import { health } from "@/routes/health";
 import { documentRoutes } from "@/routes/document";
@@ -33,6 +34,7 @@ export const app = new Elysia({ name: "RideGo.App", serve: { maxRequestBodySize:
   .use(vehicleRoutes)
   .use(availabilityRoutes)
   .use(fxRoutes)
+  .use(bannerRoutes)
   .use(addonRoutes)
   .use(bookingRoutes)
   .use(paymentRoutes)

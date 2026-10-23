@@ -36,6 +36,13 @@
       "when": 1792694111441,
       "tag": "0004_payments",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792727568384,
+      "tag": "0005_banners",
+      "breakpoints": true
     }
   ]
 }

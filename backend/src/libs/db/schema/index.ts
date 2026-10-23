@@ -1,4 +1,5 @@
 export * from "./auth";
+export * from "./banner";
 export * from "./booking";
 export * from "./document";
 export * from "./enums";
