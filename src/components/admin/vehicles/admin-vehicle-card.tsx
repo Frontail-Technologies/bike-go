@@ -1,26 +1,41 @@
 "use client";
 
-import { Button, Dropdown, Label } from "@heroui/react";
-import { CarProfileIcon, DotsThreeVerticalIcon, EyeIcon, NotePencilIcon, PowerIcon } from "@phosphor-icons/react";
-import Image from "next/image";
+import { GasPumpIcon, GearIcon, MapPinIcon, SpeedometerIcon, UsersIcon } from "@phosphor-icons/react";
 import type { AdminVehicle } from "@/components/admin/data";
 import { MoneyDisplay } from "@/components/admin/data-display/misc";
 import { AdminStatusBadge } from "@/components/admin/data-display/status-badge";
+import { VehicleActions } from "./vehicle-actions";
+import { VehiclePhoto } from "./vehicle-photo";
 
 export function AdminVehicleCard({ vehicle, onView, onEdit, onToggle }: { vehicle: AdminVehicle; onView: () => void; onEdit: () => void; onToggle: () => void }) {
-  const image = vehicle.images[0];
-  return <article className="group overflow-hidden rounded-2xl border border-[var(--admin-border)] bg-white shadow-[0_1px_2px_rgb(15_23_42/4%)] transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-lg motion-reduce:transition-none motion-reduce:hover:translate-y-0">
-    <button type="button" onClick={onView} className="block w-full text-left outline-none focus-visible:ring-2 focus-visible:ring-[var(--admin-accent-strong)] focus-visible:ring-inset">
-      <div className="relative aspect-[16/10] overflow-hidden bg-[var(--admin-surface-muted)]">
-        {image?.url ? <Image src={image.url} alt={image.altText ?? vehicle.name} fill className="object-cover transition-transform duration-300 group-hover:scale-[1.02] motion-reduce:transition-none" /> : <div className="flex size-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-[var(--admin-surface-muted)] to-[#e9ecef] text-[var(--admin-muted)]"><CarProfileIcon size={38} weight="duotone" /><span className="text-xs font-semibold">Vehicle image pending</span></div>}
-        <span className="absolute left-3 top-3"><AdminStatusBadge status={vehicle.status} /></span>
+  const specs = [
+    vehicle.engineCc ? { Icon: SpeedometerIcon, label: `${vehicle.engineCc} cc` } : null,
+    vehicle.transmission ? { Icon: GearIcon, label: vehicle.transmission } : null,
+    vehicle.fuelType ? { Icon: GasPumpIcon, label: vehicle.fuelType } : null,
+    vehicle.seats ? { Icon: UsersIcon, label: `${vehicle.seats} seats` } : null,
+  ].filter((spec): spec is { Icon: typeof GearIcon; label: string } => spec !== null);
+
+  return (
+    <article className="adminSurface adminLift group relative overflow-hidden rounded-2xl">
+      <div className="relative">
+        <button type="button" onClick={onView} aria-label={`View ${vehicle.name}`} className="block w-full outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--admin-accent-strong)]">
+          <VehiclePhoto vehicle={vehicle} className="aspect-[16/10] w-full transition-transform duration-300 group-hover:scale-[1.02] motion-reduce:transition-none" sizes="(min-width: 1536px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" />
+        </button>
+        <span className="pointer-events-none absolute left-3 top-3"><AdminStatusBadge status={vehicle.status} className="shadow-sm" /></span>
+        <span className="absolute right-1.5 top-1.5 rounded-full bg-white/85 backdrop-blur"><VehicleActions vehicle={vehicle} onView={onView} onEdit={onEdit} onToggle={onToggle} /></span>
       </div>
-    </button>
-    <div className="space-y-3 p-4">
-      <div className="flex items-start justify-between gap-3"><div className="min-w-0"><h3 className="truncate text-sm font-extrabold">{vehicle.name}</h3><p className="mt-0.5 truncate text-xs text-[var(--admin-muted)]">{vehicle.brand} {vehicle.model} · <span className="capitalize">{vehicle.vehicleType} · {vehicle.category}</span></p></div><Dropdown><Button isIconOnly size="sm" variant="ghost" aria-label={`More actions for ${vehicle.name}`}><DotsThreeVerticalIcon size={18} /></Button><Dropdown.Popover className="adminOverlay"><Dropdown.Menu aria-label={`Actions for ${vehicle.name}`} onAction={(key) => { if (key === "view") onView(); if (key === "edit") onEdit(); if (key === "toggle") onToggle(); }}><Dropdown.Item id="view" textValue="View vehicle"><EyeIcon size={16} /><Label>View vehicle</Label></Dropdown.Item><Dropdown.Item id="edit" textValue="Edit vehicle"><NotePencilIcon size={16} /><Label>Edit vehicle</Label></Dropdown.Item><Dropdown.Item id="toggle" textValue={vehicle.status === "inactive" ? "Activate vehicle" : "Deactivate vehicle"} variant={vehicle.status === "inactive" ? "default" : "danger"}><PowerIcon size={16} /><Label>{vehicle.status === "inactive" ? "Activate vehicle" : "Deactivate vehicle"}</Label></Dropdown.Item></Dropdown.Menu></Dropdown.Popover></Dropdown></div>
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs"><div><dt className="text-[var(--admin-muted)]">Location</dt><dd className="mt-0.5 truncate font-semibold">{vehicle.location.city}</dd></div><div><dt className="text-[var(--admin-muted)]">Registration</dt><dd className="mt-0.5 truncate font-semibold">{vehicle.registrationNumber}</dd></div><div><dt className="text-[var(--admin-muted)]">Daily rate</dt><dd className="mt-0.5 font-bold"><MoneyDisplay amount={vehicle.dailyRentalPriceMinor} /></dd></div><div><dt className="text-[var(--admin-muted)]">Currency</dt><dd className="mt-0.5 font-semibold">USD</dd></div></dl>
-      <div className="flex flex-wrap gap-x-3 gap-y-1 border-t border-[var(--admin-border)] pt-3 text-[11px] text-[var(--admin-muted)]"><span>{vehicle.engineCc ? `${vehicle.engineCc} cc` : "Engine —"}</span><span>{vehicle.transmission || "Transmission —"}</span>{vehicle.seats ? <span>{vehicle.seats} seats</span> : null}</div>
-      <Button fullWidth size="sm" variant="outline" onPress={onView}><EyeIcon size={16} />View details</Button>
-    </div>
-  </article>;
+      <div className="space-y-3 p-4">
+        <div className="min-w-0">
+          <h3 className="truncate text-[15px] font-extrabold leading-tight">{vehicle.name}</h3>
+          <p className="mt-0.5 truncate text-xs capitalize text-[var(--admin-muted)]">{vehicle.category.toLowerCase() === vehicle.vehicleType ? vehicle.vehicleType : `${vehicle.vehicleType} · ${vehicle.category}`}</p>
+        </div>
+        <p className="flex items-center gap-1.5 text-xs text-[var(--admin-muted)]"><MapPinIcon size={14} className="shrink-0" aria-hidden /><span className="truncate">{vehicle.location.name}</span></p>
+        {specs.length ? <ul className="flex flex-wrap gap-1.5">{specs.slice(0, 3).map(({ Icon, label }) => <li key={label} className="adminTile inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold"><Icon size={12} aria-hidden />{label}</li>)}</ul> : null}
+        <div className="flex items-end justify-between gap-3 border-t border-[var(--admin-border)] pt-3">
+          <p className="text-xs text-[var(--admin-muted)]">{vehicle.registrationNumber}</p>
+          <p className="text-right"><MoneyDisplay amount={vehicle.dailyRentalPriceMinor} className="text-lg font-extrabold" /><span className="ml-1 text-xs text-[var(--admin-muted)]">/ day</span></p>
+        </div>
+      </div>
+    </article>
+  );
 }

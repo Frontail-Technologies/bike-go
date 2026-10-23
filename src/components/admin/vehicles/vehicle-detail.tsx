@@ -1,34 +1,119 @@
 "use client";
 
 import { Button } from "@heroui/react";
-import { CarProfileIcon, MapPinIcon, NotePencilIcon, PowerIcon } from "@phosphor-icons/react";
-import Image from "next/image";
+import { CaretLeftIcon, CaretRightIcon, GasPumpIcon, GearIcon, IdentificationCardIcon, MapPinIcon, NotePencilIcon, PowerIcon, SpeedometerIcon, TagIcon, UsersIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { adminVehicles } from "@/components/admin/data";
+import { useState, type ReactNode } from "react";
+import { adminVehicles, type AdminVehicle } from "@/components/admin/data";
 import { MoneyDisplay } from "@/components/admin/data-display/misc";
 import { AdminStatusBadge } from "@/components/admin/data-display/status-badge";
 import { AdminErrorState, ConfirmationDialog } from "@/components/admin/feedback";
-import { AdminPage, DetailList, InfoCard, PageHeader } from "@/components/admin/layout";
+import { AdminPage, ContentSection, PageHeader } from "@/components/admin/layout";
+import { AdminBreadcrumbs } from "@/components/admin/navigation";
 import { AvailabilityBlocks } from "@/components/admin/vehicles/availability-blocks";
+import { VehiclePhoto } from "@/components/admin/vehicles/vehicle-photo";
+import { cn } from "@/lib/cn";
+
+function Gallery({ vehicle }: { vehicle: AdminVehicle }) {
+  const count = Math.max(1, vehicle.images.length);
+  const [selected, setSelected] = useState(0);
+  const step = (direction: -1 | 1) => setSelected((current) => (current + direction + count) % count);
+  return (
+    <div className="space-y-3">
+      <div className="relative overflow-hidden rounded-2xl border border-[var(--admin-border)]">
+        <VehiclePhoto key={selected} vehicle={vehicle} index={selected} priority sizes="(min-width: 1024px) 48vw, 100vw" className="adminReveal aspect-[4/3] w-full sm:aspect-[16/10]" />
+        {count > 1 ? (
+          <>
+            <Button isIconOnly variant="ghost" aria-label="Previous image" onPress={() => step(-1)} className="absolute left-2 top-1/2 size-11 min-w-11 -translate-y-1/2 rounded-full bg-white/80 backdrop-blur"><CaretLeftIcon size={18} weight="bold" /></Button>
+            <Button isIconOnly variant="ghost" aria-label="Next image" onPress={() => step(1)} className="absolute right-2 top-1/2 size-11 min-w-11 -translate-y-1/2 rounded-full bg-white/80 backdrop-blur"><CaretRightIcon size={18} weight="bold" /></Button>
+          </>
+        ) : null}
+        <span className="absolute bottom-3 right-3 rounded-full bg-[#111820]/75 px-2.5 py-1 text-xs font-bold text-white backdrop-blur" aria-live="polite">{selected + 1} / {count}</span>
+      </div>
+      {count > 1 ? (
+        <ul className="grid grid-cols-4 gap-2 sm:grid-cols-5" aria-label="Vehicle images">
+          {Array.from({ length: count }, (_, index) => (
+            <li key={index}>
+              <button type="button" onClick={() => setSelected(index)} aria-label={`Show image ${index + 1}`} aria-current={index === selected} className={cn("block w-full overflow-hidden rounded-xl border-2 outline-none transition-[border-color,opacity] focus-visible:ring-2 focus-visible:ring-[var(--admin-accent-strong)]", index === selected ? "border-[var(--admin-accent)]" : "border-transparent opacity-70 hover:opacity-100")}>
+                <VehiclePhoto vehicle={vehicle} index={index} sizes="120px" className="aspect-[4/3] w-full" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
+
+function Tile({ icon, label, children }: { icon: ReactNode; label: string; children: ReactNode }) {
+  return (
+    <div className="adminTile flex items-center gap-3 rounded-xl p-3">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white text-[var(--admin-warning)] shadow-sm">{icon}</span>
+      <div className="min-w-0"><dt className="text-[11px] font-medium text-[var(--admin-muted)]">{label}</dt><dd className="truncate text-sm font-bold">{children}</dd></div>
+    </div>
+  );
+}
 
 export function VehicleDetail({ id }: { id: string }) {
   const router = useRouter();
-  const initialVehicle = adminVehicles.find((item) => item.id === id);
-  const [vehicle, setVehicle] = useState(initialVehicle);
+  const [vehicle, setVehicle] = useState(() => adminVehicles.find((item) => item.id === id));
   const [confirming, setConfirming] = useState(false);
 
   if (!vehicle) return <AdminPage><PageHeader title="Vehicle Details" /><AdminErrorState title="Vehicle not found" description="This UI preview does not contain that vehicle." /></AdminPage>;
+  const inactive = vehicle.status === "inactive";
   function toggle() { setVehicle((current) => current ? { ...current, status: current.status === "inactive" ? "available" : "inactive" } : current); setConfirming(false); }
-  const image = vehicle.images[0];
-  return <AdminPage>
-    <PageHeader eyebrow="Vehicles" title={vehicle.name} description={`${vehicle.brand} ${vehicle.model}`} actions={<><Button onPress={() => router.push(`/admin/vehicles/${id}/edit`)} variant="outline"><NotePencilIcon />Edit</Button><Button variant={vehicle.status === "inactive" ? "primary" : "danger"} onPress={() => setConfirming(true)}><PowerIcon />{vehicle.status === "inactive" ? "Reactivate" : "Deactivate"}</Button></>} />
-    <div className="grid gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)]">
-      <InfoCard title="Vehicle gallery"><div className="relative aspect-[4/3] max-h-[420px] overflow-hidden rounded-xl bg-[var(--admin-surface-muted)]">{image?.url ? <Image src={image.url} alt={image.altText ?? vehicle.name} fill className="object-cover" sizes="(min-width: 1280px) 60vw, 100vw" /> : <div className="flex size-full flex-col items-center justify-center gap-2 text-[var(--admin-muted)]"><CarProfileIcon size={42} weight="duotone" /><span className="text-sm font-semibold">No stored images</span></div>}<span className="absolute left-3 top-3"><AdminStatusBadge status={vehicle.status} /></span></div>{vehicle.images.length > 1 ? <div className="mt-3 grid grid-cols-4 gap-2">{vehicle.images.slice(1, 5).map((item) => <div key={item.id} className="relative aspect-[4/3] overflow-hidden rounded-lg bg-[var(--admin-surface-muted)]">{item.url ? <Image src={item.url} alt={item.altText ?? vehicle.name} fill className="object-cover" sizes="120px" /> : null}</div>)}</div> : null}</InfoCard>
-      <div className="space-y-5"><InfoCard title="Overview"><DetailList items={[{ label: "Type / category", value: <span className="capitalize">{vehicle.vehicleType} · {vehicle.category}</span> }, { label: "Brand / model", value: `${vehicle.brand} ${vehicle.model}` }, { label: "Registration", value: vehicle.registrationNumber }, { label: "Location", value: <span className="inline-flex items-center gap-1"><MapPinIcon size={14} className="text-[var(--admin-muted)]" />{vehicle.location.name}, {vehicle.location.city}</span> }]} /></InfoCard><InfoCard title="Pricing"><DetailList columns={2} items={[{ label: "Daily rate", value: <MoneyDisplay amount={vehicle.dailyRentalPriceMinor} /> }, { label: "Security deposit", value: <MoneyDisplay amount={vehicle.securityDepositMinor} /> }]} /></InfoCard><InfoCard title="Specifications"><DetailList columns={2} items={[{ label: "Engine", value: vehicle.engineCc ? `${vehicle.engineCc} cc` : "—" }, { label: "Transmission", value: vehicle.transmission || "—" }, { label: "Fuel type", value: vehicle.fuelType || "—" }, { label: "Seats", value: vehicle.seats ?? "—" }]} /></InfoCard></div>
+  const subtitle = [`${vehicle.brand} ${vehicle.model}`, vehicle.vehicleType, vehicle.category].filter((part, index, parts) => part.toLowerCase() !== vehicle.name.toLowerCase() && parts.findIndex((other) => other.toLowerCase() === part.toLowerCase()) === index).join(" · ");
+  const specs = [
+    { icon: <SpeedometerIcon size={18} />, label: "Engine", value: vehicle.engineCc ? `${vehicle.engineCc} cc` : "—" },
+    { icon: <GearIcon size={18} />, label: "Transmission", value: vehicle.transmission || "—" },
+    { icon: <GasPumpIcon size={18} />, label: "Fuel type", value: vehicle.fuelType || "—" },
+    { icon: <UsersIcon size={18} />, label: "Seats", value: vehicle.seats ?? "—" },
+  ];
+
+  return <AdminPage className="gap-5">
+    <AdminBreadcrumbs items={[{ label: "Vehicles", href: "/admin/vehicles" }, { label: vehicle.name }]} />
+
+    <section aria-label="Vehicle overview" className="adminHero grid gap-5 rounded-3xl p-4 sm:p-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-7">
+      <Gallery vehicle={vehicle} />
+      <div className="flex min-w-0 flex-col gap-5">
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">{vehicle.name}</h1>
+            <AdminStatusBadge status={vehicle.status} />
+          </div>
+          <p className="text-sm capitalize text-[var(--admin-muted)]">{subtitle}</p>
+          <ul className="flex flex-wrap gap-2 text-xs font-semibold">
+            <li className="adminTile inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5"><IdentificationCardIcon size={14} aria-hidden />{vehicle.registrationNumber}</li>
+            <li className="adminTile inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5"><MapPinIcon size={14} aria-hidden />{vehicle.location.name}, {vehicle.location.city}</li>
+          </ul>
+        </div>
+
+        <dl className="grid grid-cols-2 gap-3">
+          <div className="rounded-2xl bg-[var(--admin-accent-soft)] p-4"><dt className="text-xs font-semibold text-[var(--admin-warning)]">Daily rate</dt><dd className="mt-1 text-2xl font-extrabold"><MoneyDisplay amount={vehicle.dailyRentalPriceMinor} /></dd></div>
+          <div className="rounded-2xl bg-[var(--admin-success-soft)] p-4"><dt className="text-xs font-semibold text-[var(--admin-success)]">Security deposit</dt><dd className="mt-1 text-2xl font-extrabold"><MoneyDisplay amount={vehicle.securityDepositMinor} /></dd></div>
+        </dl>
+
+        <dl className="grid grid-cols-2 gap-2.5">{specs.map((spec) => <Tile key={spec.label} icon={spec.icon} label={spec.label}>{spec.value}</Tile>)}</dl>
+
+        <div className="mt-auto flex flex-col gap-2 sm:flex-row">
+          <Button variant="outline" className="min-h-11 sm:min-w-32" onPress={() => router.push(`/admin/vehicles/${id}/edit`)}><NotePencilIcon />Edit</Button>
+          <Button variant={inactive ? "primary" : "danger"} className="min-h-11 sm:min-w-36" onPress={() => setConfirming(true)}><PowerIcon />{inactive ? "Activate" : "Deactivate"}</Button>
+        </div>
+      </div>
+    </section>
+
+    <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(300px,1fr)]">
+      <ContentSection title="Description"><p className="p-5 text-sm leading-6 text-[var(--admin-muted)]">{vehicle.description || "No description has been added."}</p></ContentSection>
+      <ContentSection title="Pricing">
+        <dl className="grid grid-cols-3 gap-3 p-5 text-sm xl:grid-cols-1">
+          <div className="flex items-center justify-between gap-2 xl:border-b xl:border-[var(--admin-border)] xl:pb-3"><dt className="flex items-center gap-1.5 text-[var(--admin-muted)]"><TagIcon size={15} aria-hidden />Daily</dt><dd><MoneyDisplay amount={vehicle.dailyRentalPriceMinor} /></dd></div>
+          <div className="flex items-center justify-between gap-2 xl:border-b xl:border-[var(--admin-border)] xl:pb-3"><dt className="text-[var(--admin-muted)]">7 days</dt><dd><MoneyDisplay amount={vehicle.dailyRentalPriceMinor * 7} /></dd></div>
+          <div className="flex items-center justify-between gap-2"><dt className="text-[var(--admin-muted)]">Deposit</dt><dd><MoneyDisplay amount={vehicle.securityDepositMinor} /></dd></div>
+        </dl>
+      </ContentSection>
     </div>
-    <InfoCard title="Description"><p className="text-sm leading-6 text-[var(--admin-muted)]">{vehicle.description || "No description has been added."}</p></InfoCard>
+
     <AvailabilityBlocks vehicleId={vehicle.id} />
-    <ConfirmationDialog isOpen={confirming} onOpenChange={setConfirming} title={vehicle.status === "inactive" ? "Reactivate vehicle?" : "Deactivate vehicle?"} description={vehicle.status === "inactive" ? "This vehicle will be available for bookings again." : "This vehicle will be removed from the active catalogue."} confirmLabel={vehicle.status === "inactive" ? "Reactivate" : "Deactivate"} danger={vehicle.status !== "inactive"} onConfirm={toggle} />
+    <ConfirmationDialog isOpen={confirming} onOpenChange={setConfirming} title={inactive ? "Activate vehicle?" : "Deactivate vehicle?"} description={inactive ? "This vehicle will be available for bookings again." : "This vehicle will be removed from the active catalogue."} confirmLabel={inactive ? "Activate" : "Deactivate"} danger={!inactive} onConfirm={toggle} />
   </AdminPage>;
 }

@@ -62,7 +62,7 @@ export const adminLocations: AdminLocation[] = [
 ];
 
 const vehicleSeeds = [
-  ["Honda Click 125", "honda", "Click 125", "Scooter", "scooter", "available", 1200, 20000, 0],
+  ["Honda Click 125", "Honda", "Click 125", "Scooter", "scooter", "available", 1200, 20000, 0],
   ["Yamaha NMAX 155", "Yamaha", "NMAX 155", "Premium Scooter", "scooter", "rented", 1800, 25000, 1],
   ["Honda PCX 160", "Honda", "PCX 160", "Premium Scooter", "scooter", "maintenance", 2000, 30000, 0],
   ["Toyota Vios", "Toyota", "Vios", "Sedan", "car", "available", 4500, 50000, 0],
@@ -79,7 +79,7 @@ const vehicleSeeds = [
 export const adminVehicles: AdminVehicle[] = vehicleSeeds.map((seed, index) => {
   const [name, brand, model, category, vehicleType, status, dailyRentalPriceMinor, securityDepositMinor, locationIndex] = seed;
   const location = adminLocations[locationIndex];
-  return { id: `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`, slug: name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""), name, brand, model, category, vehicleType, status, description: `${name} is maintained for dependable travel across Cambodia.`, engineCc: vehicleType === "car" ? 1500 : vehicleType === "other" ? null : Number(model.match(/\d+/)?.[0] ?? 125), transmission: vehicleType === "car" ? "Automatic" : "CVT", fuelType: "Petrol", seats: vehicleType === "car" ? 5 : 2, dailyRentalPriceMinor, securityDepositMinor, currency: "USD", registrationNumber: `RG-${String(index + 1).padStart(4, "0")}`, specifications: {}, location, images: [], createdAt: "2026-10-01T03:00:00.000Z", updatedAt: "2026-10-20T03:00:00.000Z" };
+  return { id: `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`, slug: name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""), name, brand, model, category, vehicleType, status, description: `${name} is maintained for dependable travel across Cambodia.`, engineCc: vehicleType === "car" ? 1500 : vehicleType === "other" ? null : Number(model.match(/\d+/)?.[0] ?? 125), transmission: vehicleType === "car" ? "Automatic" : "CVT", fuelType: "Petrol", seats: vehicleType === "car" ? 5 : 2, dailyRentalPriceMinor, securityDepositMinor, currency: "USD", registrationNumber: `RG-${String(index + 1).padStart(4, "0")}`, specifications: {}, location, images: Array.from({ length: (index % 3) + 2 }, (_, view) => ({ id: `img-${index + 1}-${view + 1}`, url: null, altText: `${name} view ${view + 1}`, sortOrder: view })), createdAt: "2026-10-01T03:00:00.000Z", updatedAt: "2026-10-20T03:00:00.000Z" };
 });
 
 export const adminVehicleAvailability: VehicleAvailabilityBlock[] = [
@@ -95,6 +95,8 @@ export const adminDashboard: DashboardData = {
     { reference: "BND0124", bookingStatus: "active", customerName: "Sokha Chan", vehicleName: "Toyota Vios", pickupAt: "2026-10-23T03:00:00.000Z", totalPayableMinor: 4500, currency: "USD" },
     { reference: "BND0123", bookingStatus: "completed", customerName: "Marie Tan", vehicleName: "Honda Click 125", pickupAt: "2026-10-22T02:00:00.000Z", totalPayableMinor: 5200, currency: "USD" },
     { reference: "BND0122", bookingStatus: "confirmed", customerName: "David Kim", vehicleName: "Yamaha NMAX 155", pickupAt: "2026-10-25T04:00:00.000Z", totalPayableMinor: 3200, currency: "USD" },
+    { reference: "BND0121", bookingStatus: "active", customerName: "Vanna Sok", vehicleName: "Yamaha MT-15", pickupAt: "2026-10-23T05:30:00.000Z", totalPayableMinor: 4800, currency: "USD" },
+    { reference: "BND0120", bookingStatus: "pending", customerName: "Dara Kem", vehicleName: "Honda PCX 160", pickupAt: "2026-10-26T01:00:00.000Z", totalPayableMinor: 6000, currency: "USD" },
   ],
   recentLoans: [
     { reference: "LNN0028", status: "documents_under_review", applicantName: "Davit Park", loanType: "vehicle", requestedAmountMinor: 500000, currency: "USD", createdAt: "2026-10-23T02:00:00.000Z" },

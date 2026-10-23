@@ -3,6 +3,7 @@
 import { DateField, DateRangePicker, Label, ListBox, Pagination, RangeCalendar, SearchField, Select } from "@heroui/react";
 import { parseDate } from "@internationalized/date";
 import { FunnelIcon } from "@phosphor-icons/react";
+import { motion, useReducedMotion } from "motion/react";
 import { Fragment, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
@@ -14,11 +15,11 @@ export function FilterBar({ children, search, actions, className }: { children?:
   return <div className={cn("flex flex-col gap-3 border-b border-[var(--admin-border)] bg-[var(--admin-surface)] p-4 xl:flex-row xl:items-center", className)}>{search}<div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">{children}</div>{actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}</div>;
 }
 
-export function AdminSelect({ label, value, onChange, options, className }: { label: string; value: string; onChange: (value: string) => void; options: ReadonlyArray<{ value: string; label: string }>; className?: string }) {
-  return <Select aria-label={label} value={value} onChange={(key) => key !== null && onChange(String(key))} placeholder={label} className={cn("min-w-36", className)}>
+export function AdminSelect({ label, value, onChange, options, className, icon }: { label: string; value: string; onChange: (value: string) => void; options: ReadonlyArray<{ value: string; label: string }>; className?: string; icon?: ReactNode | null }) {
+  return <Select aria-label={label} value={value} onChange={(key) => key !== null && onChange(String(key))} placeholder={label} className={cn("min-w-40", className)}>
     <Label className="sr-only">{label}</Label>
-    <Select.Trigger className="min-h-10 rounded-xl border border-[var(--admin-border)] bg-white px-3 shadow-none">
-      <FunnelIcon size={15} className="shrink-0 text-[var(--admin-muted)]" aria-hidden />
+    <Select.Trigger className="flex min-h-11 items-center gap-2 rounded-xl border border-[var(--admin-border)] bg-white px-3 shadow-none transition-colors hover:border-[var(--admin-border-strong)]">
+      {icon === null ? null : icon ?? <FunnelIcon size={15} className="shrink-0 text-[var(--admin-muted)]" aria-hidden />}
       <Select.Value className="text-sm font-semibold" />
       <Select.Indicator />
     </Select.Trigger>
@@ -66,4 +67,18 @@ export function AdminPagination({ page, pageCount, total, pageSize, onPageChange
 
 export function formatCambodiaDate(value: string | Date, options?: Intl.DateTimeFormatOptions) {
   return new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Phnom_Penh", day: "2-digit", month: "short", year: "numeric", ...options }).format(new Date(value));
+}
+
+export type ViewOption<T extends string> = { value: T; label: string; icon: ReactNode };
+export function ViewToggle<T extends string>({ value, onChange, options, label = "View" }: { value: T; onChange: (value: T) => void; options: ReadonlyArray<ViewOption<T>>; label?: string }) {
+  const reduce = useReducedMotion();
+  return <div role="group" aria-label={label} className="relative flex shrink-0 rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface-muted)] p-0.5">
+    {options.map((option) => {
+      const active = option.value === value;
+      return <button key={option.value} type="button" aria-pressed={active} onClick={() => onChange(option.value)} className={cn("relative flex min-h-10 items-center gap-1.5 rounded-[10px] px-3 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--admin-accent-strong)]", active ? "text-[#111820]" : "text-[var(--admin-muted)] hover:text-[var(--admin-text)]")}>
+        {active ? <motion.span layoutId={`view-toggle-${label}`} transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 38 }} className="absolute inset-0 rounded-[10px] bg-[var(--admin-accent)] shadow-sm" aria-hidden /> : null}
+        <span className="relative flex items-center gap-1.5">{option.icon}<span className="max-sm:sr-only">{option.label}</span></span>
+      </button>;
+    })}
+  </div>;
 }

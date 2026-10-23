@@ -6,16 +6,16 @@ import type { StatusMetric } from "@/components/admin/data";
 import { AdminChartTooltip } from "./chart-tooltip";
 import { ChartEmptyState } from "./chart-empty-state";
 
-export function StatusDonutChart({ data, centerLabel = "Total" }: { data: StatusMetric[]; centerLabel?: string }) {
+export function StatusDonutChart({ data, centerLabel = "Total", compact = false }: { data: StatusMetric[]; centerLabel?: string; compact?: boolean }) {
   const reduceMotion = useReducedMotion();
   const total = data.reduce((sum, item) => sum + item.value, 0);
   if (!data.length || total === 0) return <ChartEmptyState title="No status activity" />;
   return (
-    <div className="grid items-center gap-5 sm:grid-cols-[minmax(180px,0.85fr)_minmax(160px,1fr)]">
-      <div className="relative h-56 min-w-0" aria-label={`${centerLabel}: ${total}`}>
+    <div className={compact ? "grid items-center gap-4" : "grid items-center gap-5 sm:grid-cols-[minmax(180px,0.85fr)_minmax(160px,1fr)]"}>
+      <div className={compact ? "relative mx-auto h-48 w-full max-w-60 min-w-0" : "relative h-56 min-w-0"} aria-label={`${centerLabel}: ${total}`}>
         <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 320, height: 224 }}>
           <PieChart accessibilityLayer>
-            <Pie data={data} dataKey="value" nameKey="label" cx="50%" cy="50%" innerRadius={58} outerRadius={82} paddingAngle={2} stroke="var(--admin-surface)" strokeWidth={2} animationDuration={450} isAnimationActive={!reduceMotion}>{data.map((item) => <Cell key={item.label} fill={item.color} />)}</Pie>
+            <Pie data={data} dataKey="value" nameKey="label" cx="50%" cy="50%" innerRadius={compact ? 52 : 58} outerRadius={compact ? 72 : 82} paddingAngle={2} stroke="var(--admin-surface)" strokeWidth={2} animationDuration={450} isAnimationActive={!reduceMotion}>{data.map((item) => <Cell key={item.label} fill={item.color} />)}</Pie>
             <Tooltip content={({ active, payload, label }) => <AdminChartTooltip active={active} payload={payload} label={label} />} />
           </PieChart>
         </ResponsiveContainer>

@@ -122,7 +122,7 @@ export default async function run({ browser, base, t }) {
     await page.getByRole("button", { name: "Edit" }).click();
     check("vehicle edit form loads existing data", await page.getByRole("textbox", { name: "Vehicle name" }).inputValue() === "Honda Click 125");
     await page.goto(`${base}/admin/vehicles/new`, { waitUntil: "networkidle" });
-    await page.getByRole("button", { name: "Add Vehicle" }).click();
+    await page.getByRole("button", { name: "Save Vehicle" }).click();
     check("add vehicle shows inline validation", await page.getByText("Enter at least 2 characters.").isVisible());
     await page.goto(`${base}/admin/locations`, { waitUntil: "networkidle" });
     check("Cambodia locations render", await page.getByText("Phnom Penh Central").isVisible() && await page.getByText("Siem Reap Riverside").isVisible());
@@ -152,7 +152,7 @@ export default async function run({ browser, base, t }) {
     await chartShowcase.screenshot({ path: join(SHOTS, "admin-ui-charts-1440.png") });
 
     await page.goto(`${base}/admin/vehicles/00000000-0000-4000-8000-000000000001`, { waitUntil: "networkidle" });
-    check("availability notice clearly states changes are not saved", await page.getByText("Mock UI only — changes are not saved").isVisible());
+    check("availability notice clearly states changes are not saved", await page.getByText("Demo only — changes reset after reload.").first().isVisible());
     await page.getByRole("button", { name: "Add block" }).click();
     check("availability drawer opens and receives focus", await page.getByRole("dialog", { name: "Add vehicle availability block" }).isVisible() && await page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]')));
     await page.getByRole("button", { name: "Add block" }).last().click();

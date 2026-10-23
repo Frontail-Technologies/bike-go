@@ -1,33 +1,102 @@
 "use client";
 
 import { Alert, Button } from "@heroui/react";
-import { ArrowLeftIcon, ArrowRightIcon, ImageIcon, StarIcon, TrashIcon, UploadSimpleIcon } from "@phosphor-icons/react";
+import { ArrowLeftIcon, ArrowRightIcon, ImageIcon, PlusIcon, StarIcon, TrashIcon, UploadSimpleIcon } from "@phosphor-icons/react";
 import Image from "next/image";
 import { useEffect, useId, useRef, useState } from "react";
+import { cn } from "@/lib/cn";
 
 type LocalImage = { id: string; file: File; url: string };
+
 export function ImageUploader({ limit = 5, maxSizeMb = 5, onChange, onPrimaryChange, onReorder }: { limit?: number; maxSizeMb?: number; onChange?: (files: File[]) => void; onPrimaryChange?: (file: File | null) => void; onReorder?: (files: File[]) => void }) {
   const inputId = useId();
   const [images, setImages] = useState<LocalImage[]>([]);
   const [primaryId, setPrimaryId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [dragging, setDragging] = useState(false);
   const urls = useRef<string[]>([]);
   useEffect(() => () => urls.current.forEach((url) => URL.revokeObjectURL(url)), []);
+
+  const full = images.length >= limit;
+  const openPicker = () => document.getElementById(inputId)?.click();
+  const selected = images.find((item) => item.id === selectedId) ?? images.find((item) => item.id === primaryId) ?? images[0];
+
   function commit(next: LocalImage[]) { setImages(next); onChange?.(next.map((item) => item.file)); }
-  function add(files: FileList | null) {
+  function add(files: FileList | File[] | null) {
     if (!files) return;
-    const valid = Array.from(files).filter((file) => file.type.startsWith("image/") && file.size <= maxSizeMb * 1024 * 1024).slice(0, Math.max(0, limit - images.length));
-    if (valid.length !== files.length) setError(`Use image files up to ${maxSizeMb} MB. Maximum ${limit} images.`); else setError("");
+    const list = Array.from(files);
+    const valid = list.filter((file) => file.type.startsWith("image/") && file.size <= maxSizeMb * 1024 * 1024).slice(0, Math.max(0, limit - images.length));
+    setError(valid.length !== list.length ? `Use image files up to ${maxSizeMb} MB. Maximum ${limit} images.` : "");
     const added = valid.map((file) => { const url = URL.createObjectURL(file); urls.current.push(url); return { id: crypto.randomUUID(), file, url }; });
-    const next = [...images, ...added]; commit(next);
+    const next = [...images, ...added];
+    commit(next);
     if (!primaryId && next[0]) { setPrimaryId(next[0].id); onPrimaryChange?.(next[0].file); }
+    if (added[0]) setSelectedId(added[0].id);
   }
-  function remove(item: LocalImage) { URL.revokeObjectURL(item.url); urls.current = urls.current.filter((url) => url !== item.url); const next = images.filter((image) => image.id !== item.id); commit(next); if (primaryId === item.id) { setPrimaryId(next[0]?.id ?? null); onPrimaryChange?.(next[0]?.file ?? null); } }
-  function move(index: number, direction: -1 | 1) { const target = index + direction; if (target < 0 || target >= images.length) return; const next = [...images]; [next[index], next[target]] = [next[target], next[index]]; setImages(next); onReorder?.(next.map((item) => item.file)); }
+  function remove(item: LocalImage) {
+    URL.revokeObjectURL(item.url);
+    urls.current = urls.current.filter((url) => url !== item.url);
+    const next = images.filter((image) => image.id !== item.id);
+    commit(next);
+    if (selectedId === item.id) setSelectedId(null);
+    if (primaryId === item.id) { setPrimaryId(next[0]?.id ?? null); onPrimaryChange?.(next[0]?.file ?? null); }
+  }
+  function makePrimary(item: LocalImage) { setPrimaryId(item.id); onPrimaryChange?.(item.file); }
+  function move(item: LocalImage, direction: -1 | 1) {
+    const index = images.findIndex((image) => image.id === item.id);
+    const target = index + direction;
+    if (target < 0 || target >= images.length) return;
+    const next = [...images];
+    [next[index], next[target]] = [next[target], next[index]];
+    setImages(next);
+    onReorder?.(next.map((image) => image.file));
+  }
+
+  const dropProps = {
+    onDragOver: (event: React.DragEvent) => { event.preventDefault(); setDragging(true); },
+    onDragLeave: () => setDragging(false),
+    onDrop: (event: React.DragEvent) => { event.preventDefault(); setDragging(false); add(event.dataTransfer.files); },
+  };
+
   return <div className="space-y-3">
-    <div className="flex items-center justify-between gap-3"><div><p className="text-sm font-bold">Vehicle images</p><p className="text-xs text-[var(--admin-muted)]">JPG, PNG or WebP · up to {maxSizeMb} MB each</p></div><Button variant="outline" isDisabled={images.length >= limit} onPress={() => document.getElementById(inputId)?.click()}><UploadSimpleIcon size={17} />Add images</Button><input id={inputId} className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => { add(event.target.files); event.currentTarget.value = ""; }} /></div>
+    <input id={inputId} className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple tabIndex={-1} onChange={(event) => { add(event.target.files); event.currentTarget.value = ""; }} />
     {error ? <Alert status="danger"><Alert.Indicator /><Alert.Content><Alert.Title>Some images were not added</Alert.Title><Alert.Description>{error}</Alert.Description></Alert.Content></Alert> : null}
-    {images.length ? <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">{images.map((item, index) => <li key={item.id} className={`overflow-hidden rounded-xl border border-[var(--admin-border)] bg-white ${index === 0 ? "sm:col-span-2" : ""}`}><div className={`relative ${index === 0 ? "aspect-[16/10]" : "aspect-[4/3]"}`}><Image src={item.url} alt={item.file.name} fill unoptimized className="object-cover" />{primaryId === item.id ? <span className="absolute left-2 top-2 rounded-full bg-[var(--admin-accent)] px-2 py-1 text-[10px] font-extrabold">Primary</span> : null}</div><div className="flex items-center justify-between gap-1 p-1"><Button isIconOnly size="sm" variant="ghost" aria-label={`Make ${item.file.name} primary`} onPress={() => { setPrimaryId(item.id); onPrimaryChange?.(item.file); }}><StarIcon size={15} weight={primaryId === item.id ? "fill" : "regular"} /></Button><div className="flex"><Button isIconOnly size="sm" variant="ghost" aria-label={`Move ${item.file.name} left`} isDisabled={index === 0} onPress={() => move(index, -1)}><ArrowLeftIcon size={14} /></Button><Button isIconOnly size="sm" variant="ghost" aria-label={`Move ${item.file.name} right`} isDisabled={index === images.length - 1} onPress={() => move(index, 1)}><ArrowRightIcon size={14} /></Button><Button isIconOnly size="sm" variant="ghost" aria-label={`Remove ${item.file.name}`} onPress={() => remove(item)}><TrashIcon size={15} /></Button></div></div></li>)}</ul> : <Button variant="ghost" onPress={() => document.getElementById(inputId)?.click()} className="flex min-h-32 w-full flex-col items-center justify-center rounded-xl border border-dashed border-[var(--admin-border)] bg-[var(--admin-surface-muted)] text-sm text-[var(--admin-muted)]"><ImageIcon size={27} className="mb-2" />Choose local images</Button>}
+
+    {selected ? (
+      <div className="space-y-3">
+        <div {...dropProps} className={cn("relative aspect-[16/10] overflow-hidden rounded-2xl border bg-[var(--admin-surface-muted)] transition-colors", dragging ? "border-[var(--admin-accent-strong)] ring-2 ring-[var(--admin-accent)]" : "border-[var(--admin-border)]")}>
+          <Image src={selected.url} alt={selected.file.name} fill unoptimized className="object-cover" />
+          {primaryId === selected.id ? <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-[var(--admin-accent)] px-2.5 py-1 text-[11px] font-extrabold text-[#111820] shadow-sm"><StarIcon size={12} weight="fill" aria-hidden />Primary</span> : null}
+          <div className="absolute inset-x-2 bottom-2 flex items-center justify-between gap-1 rounded-xl bg-white/90 p-1 backdrop-blur">
+            <Button size="sm" variant="ghost" className="min-h-11" isDisabled={primaryId === selected.id} onPress={() => makePrimary(selected)}><StarIcon size={16} weight={primaryId === selected.id ? "fill" : "regular"} />Make primary</Button>
+            <div className="flex">
+              <Button isIconOnly size="sm" variant="ghost" className="size-11 min-w-11" aria-label={`Move ${selected.file.name} earlier`} isDisabled={images[0]?.id === selected.id} onPress={() => move(selected, -1)}><ArrowLeftIcon size={16} /></Button>
+              <Button isIconOnly size="sm" variant="ghost" className="size-11 min-w-11" aria-label={`Move ${selected.file.name} later`} isDisabled={images.at(-1)?.id === selected.id} onPress={() => move(selected, 1)}><ArrowRightIcon size={16} /></Button>
+              <Button isIconOnly size="sm" variant="ghost" className="size-11 min-w-11 text-[var(--admin-danger)]" aria-label={`Remove ${selected.file.name}`} onPress={() => remove(selected)}><TrashIcon size={16} /></Button>
+            </div>
+          </div>
+        </div>
+        <ul className="grid grid-cols-4 gap-2" aria-label="Selected images">
+          {images.map((item) => (
+            <li key={item.id}>
+              <button type="button" onClick={() => setSelectedId(item.id)} aria-label={`Preview ${item.file.name}`} aria-current={item.id === selected.id} className={cn("relative block aspect-[4/3] w-full overflow-hidden rounded-xl border-2 outline-none transition-[border-color,opacity] focus-visible:ring-2 focus-visible:ring-[var(--admin-accent-strong)]", item.id === selected.id ? "border-[var(--admin-accent)]" : "border-transparent opacity-75 hover:opacity-100")}>
+                <Image src={item.url} alt="" fill unoptimized className="object-cover" />
+                {primaryId === item.id ? <span className="absolute left-1 top-1 flex size-5 items-center justify-center rounded-full bg-[var(--admin-accent)]" aria-hidden><StarIcon size={11} weight="fill" /></span> : null}
+              </button>
+            </li>
+          ))}
+          {!full ? <li><button type="button" onClick={openPicker} aria-label="Add more images" className="flex aspect-[4/3] w-full items-center justify-center rounded-xl border-2 border-dashed border-[var(--admin-border-strong)] text-[var(--admin-muted)] outline-none transition-colors hover:border-[var(--admin-accent-strong)] hover:text-[var(--admin-text)] focus-visible:ring-2 focus-visible:ring-[var(--admin-accent-strong)]"><PlusIcon size={20} /></button></li> : null}
+        </ul>
+      </div>
+    ) : (
+      <button type="button" onClick={openPicker} {...dropProps} className={cn("flex min-h-52 w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-4 text-center outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--admin-accent-strong)]", dragging ? "border-[var(--admin-accent-strong)] bg-[var(--admin-accent-soft)]" : "border-[var(--admin-border-strong)] bg-[var(--admin-surface-muted)] hover:border-[var(--admin-accent-strong)]")}>
+        <span className="flex size-12 items-center justify-center rounded-full bg-white text-[var(--admin-warning)] shadow-sm"><ImageIcon size={24} weight="duotone" /></span>
+        <span className="text-sm font-bold">Click to upload images</span>
+        <span className="text-xs text-[var(--admin-muted)]">or drag and drop · JPG, PNG or WebP · up to {maxSizeMb} MB each</span>
+        <span className="mt-1 inline-flex items-center gap-1.5 rounded-lg border border-[var(--admin-border)] bg-white px-3 py-1.5 text-xs font-bold"><UploadSimpleIcon size={14} />Choose files</span>
+      </button>
+    )}
     <p className="text-right text-[11px] text-[var(--admin-muted)]">{images.length}/{limit} images</p>
   </div>;
 }

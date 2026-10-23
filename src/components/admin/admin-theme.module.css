@@ -1,15 +1,18 @@
 .adminRoot,
 .adminOverlay {
   --admin-sidebar: #08131b;
+  --admin-sidebar-raised: #0d1d28;
   --admin-sidebar-muted: #96a0a7;
   --admin-canvas: #faf8f2;
   --admin-surface: #ffffff;
   --admin-surface-muted: #f5f6f7;
-  --admin-border: #e4e6e8;
+  --admin-border: #e6e4dc;
+  --admin-border-strong: #d6d3c8;
   --admin-text: #14191f;
   --admin-muted: #69727c;
   --admin-accent: #f4c900;
   --admin-accent-strong: #dcae00;
+  --admin-accent-soft: #fff6cc;
   --admin-success: #12805c;
   --admin-success-soft: #e8f7f0;
   --admin-warning: #a96800;
@@ -18,25 +21,73 @@
   --admin-danger-soft: #ffebeb;
   --admin-info: #2563b9;
   --admin-info-soft: #eaf2ff;
+  --admin-shadow-1: 0 1px 2px rgb(20 25 31 / 5%);
+  --admin-shadow-2: 0 1px 2px rgb(20 25 31 / 4%), 0 8px 24px -12px rgb(20 25 31 / 14%);
   color: var(--admin-text);
 }
 
 .adminRoot {
   min-height: 100dvh;
   background:
-    radial-gradient(circle at 80% -10%, rgb(244 201 0 / 7%), transparent 28rem),
+    radial-gradient(42rem 26rem at 88% -8%, rgb(244 201 0 / 9%), transparent 70%),
+    radial-gradient(34rem 22rem at 12% 108%, rgb(37 99 185 / 5%), transparent 70%),
     var(--admin-canvas);
 }
 
+/* Level 2: data surfaces such as tables, forms and info panels. */
 .adminSurface {
   border: 1px solid var(--admin-border);
   background: var(--admin-surface);
-  box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
+  box-shadow: var(--admin-shadow-1);
+}
+
+/* Level 1: primary operational cards such as metrics, the vehicle hero and charts. */
+.adminHero {
+  border: 1px solid var(--admin-border);
+  background: linear-gradient(180deg, #fff 0%, #fffdf6 100%);
+  box-shadow: var(--admin-shadow-2);
+}
+
+/* Level 3: small supporting tiles such as specs, quick actions and list items. */
+.adminTile {
+  border: 1px solid var(--admin-border);
+  background: var(--admin-surface-muted);
+}
+
+.adminLift {
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.adminLift:hover {
+  transform: translateY(-2px);
+  border-color: var(--admin-border-strong);
+  box-shadow: var(--admin-shadow-2);
 }
 
 .adminFocusable:focus-visible {
   outline: 3px solid rgb(244 201 0 / 45%);
   outline-offset: 2px;
+}
+
+.adminReveal {
+  animation: adminReveal 320ms ease-out both;
+}
+
+@keyframes adminReveal {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.adminSidebarGlow {
+  background:
+    radial-gradient(120% 90% at 100% 100%, rgb(244 201 0 / 28%), transparent 62%),
+    linear-gradient(160deg, var(--admin-sidebar-raised), #0a1620);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -46,5 +97,9 @@
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+  }
+
+  .adminLift:hover {
+    transform: none;
   }
 }
