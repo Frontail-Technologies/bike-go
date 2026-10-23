@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Drawer, useOverlayState } from "@heroui/react";
-import { ArrowRightIcon, BankIcon, BriefcaseIcon, CakeIcon, CalendarCheckIcon, EnvelopeSimpleIcon, EyeIcon, FileTextIcon, FlagIcon, HouseLineIcon, IdentificationCardIcon, MapPinIcon, PhoneIcon, TimerIcon, UserCircleIcon, WalletIcon, XCircleIcon } from "@phosphor-icons/react";
+import { ArrowRightIcon, BankIcon, BriefcaseIcon, CakeIcon, CalendarCheckIcon, EnvelopeSimpleIcon, EyeIcon, FileTextIcon, FlagIcon, HouseLineIcon, IdentificationCardIcon, MapPinIcon, PhoneIcon, TimerIcon, WalletIcon, XCircleIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { CustomerAvatar } from "@/components/admin/customers/customer-avatar";
@@ -66,26 +66,54 @@ export function LoanDetail({ reference }: { reference: string }) {
   );
   const hasActions = canRequestDocuments(loan.status) || canReject(loan.status) || canApprove(loan.status);
 
+  const applicantCard = (
+    <Card title="Applicant" action={<Button size="sm" variant="ghost" className="min-h-11 text-[var(--admin-info)] md:min-h-9" onPress={() => router.push(`/admin/customers/${applicant.customerId}`)}>View customer<ArrowRightIcon size={14} /></Button>}>
+      <div className="mb-4 flex items-center gap-3"><CustomerAvatar name={applicant.name} size="md" /><div className="min-w-0"><p className="truncate text-sm font-extrabold">{applicant.name}</p><p className="text-xs text-[var(--admin-muted)]">{applicant.customerReference}</p></div></div>
+      <dl className="grid gap-4 sm:grid-cols-2">
+        <Row icon={<PhoneIcon size={18} />} label="Phone">{applicant.phone}</Row><Row icon={<EnvelopeSimpleIcon size={18} />} label="Email">{applicant.email}</Row>
+        <Row icon={<CakeIcon size={18} />} label="Date of birth">{fmtDate(applicant.dateOfBirth)} ({ageOf(applicant.dateOfBirth)} years)</Row><Row icon={<FlagIcon size={18} />} label="Nationality">{applicant.nationality}</Row>
+        <Row icon={<MapPinIcon size={18} />} label="Current city">{applicant.city}, Cambodia</Row><Row icon={<IdentificationCardIcon size={18} />} label="Residence status">{applicant.residence}</Row>
+        <div className="sm:col-span-2"><Row icon={<HouseLineIcon size={18} />} label="Address">{applicant.address}</Row></div>
+      </dl>
+    </Card>
+  );
+  const employmentCard = (
+    <Card title="Employment & Income">
+      <dl className="grid gap-4 sm:grid-cols-2">
+        <Row icon={<BriefcaseIcon size={18} />} label="Employment type">{employment.type}</Row><Row icon={<BriefcaseIcon size={18} />} label="Employer">{employment.employer}</Row>
+        <Row icon={<IdentificationCardIcon size={18} />} label="Job title">{employment.jobTitle}</Row><Row icon={<WalletIcon size={18} />} label="Monthly income"><MoneyDisplay amount={employment.monthlyIncomeMinor} /> <span className="text-xs font-medium text-[var(--admin-muted)]">USD</span></Row>
+        <Row icon={<CalendarCheckIcon size={18} />} label="Work experience">{employment.experienceYears} years</Row><Row icon={<BankIcon size={18} />} label="Active bank account">{employment.activeBankAccount ? "Yes" : "No"}</Row>
+      </dl>
+    </Card>
+  );
+  const documentsCard = (
+    <Card title="Document checklist" action={<span className="text-xs font-semibold text-[var(--admin-muted)]">{verified}/{loan.documents.length} verified</span>}>
+      <div className="mb-4 h-2 overflow-hidden rounded-full bg-[var(--admin-surface-muted)]" role="progressbar" aria-valuemin={0} aria-valuemax={loan.documents.length} aria-valuenow={verified} aria-label="Verified documents"><div className="h-full rounded-full bg-[var(--admin-success)] transition-[width]" style={{ width: `${(verified / loan.documents.length) * 100}%` }} /></div>
+      <ul className="divide-y divide-[var(--admin-border)]">
+        {loan.documents.map((doc) => (
+          <li key={doc.type} className="flex flex-wrap items-center gap-3 py-3 first:pt-0 last:pb-0">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[var(--admin-surface-muted)] text-[var(--admin-muted)]"><FileTextIcon size={20} weight="duotone" aria-hidden /></span>
+            <div className="min-w-0 flex-1"><p className="text-sm font-bold">{doc.type}</p><p className="text-xs text-[var(--admin-muted)]">{doc.uploadedAt ? `Uploaded ${fmtDateTime(doc.uploadedAt)} ICT` : "Not uploaded yet"}</p></div>
+            <DocumentStatusBadge status={doc.status} />
+            <div className="flex w-full justify-end gap-1.5 sm:w-auto">
+              {doc.status === "missing" ? (canRequestDocuments(loan.status) ? <Button size="sm" variant="outline" className="min-h-11 md:min-h-8" onPress={requestDrawer.open}>Request Document</Button> : null) : (
+                <>
+                  <Button size="sm" variant="ghost" className="min-h-11 md:min-h-8" onPress={() => setPreviewing(doc)}><EyeIcon size={15} />Preview</Button>
+                  <Button size="sm" variant="outline" className="min-h-11 md:min-h-8" onPress={() => router.push(`/admin/documents/${doc.detailId}`)}>Review</Button>
+                </>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </Card>
+  );
+  const historyCard = <Card title="Status history"><ActivityTimeline items={timeline} /></Card>;
+
   const overview = (
-    <div className="grid items-stretch gap-4 lg:grid-cols-2 xl:gap-5">
-      <Card title="Applicant" action={<Button size="sm" variant="ghost" className="min-h-11 text-[var(--admin-info)] md:min-h-9" onPress={() => router.push(`/admin/customers/${applicant.customerId}`)}>View customer<ArrowRightIcon size={14} /></Button>}>
-        <div className="mb-4 flex items-center gap-3"><CustomerAvatar name={applicant.name} size="md" /><div className="min-w-0"><p className="truncate text-sm font-extrabold">{applicant.name}</p><p className="text-xs text-[var(--admin-muted)]">{applicant.customerReference}</p></div></div>
-        <dl className="space-y-4"><Row icon={<PhoneIcon size={18} />} label="Phone">{applicant.phone}</Row><Row icon={<EnvelopeSimpleIcon size={18} />} label="Email">{applicant.email}</Row><Row icon={<MapPinIcon size={18} />} label="Current city">{applicant.city}, Cambodia</Row></dl>
-      </Card>
-      <Card title="Employment & Income">
-        <dl className="space-y-4">
-          <Row icon={<BriefcaseIcon size={18} />} label="Employment">{employment.type} · {employment.employer}</Row>
-          <Row icon={<WalletIcon size={18} />} label="Monthly income"><MoneyDisplay amount={employment.monthlyIncomeMinor} /> <span className="text-xs font-medium text-[var(--admin-muted)]">USD</span></Row>
-          <Row icon={<BankIcon size={18} />} label="Active bank account">{employment.activeBankAccount ? "Yes" : "No"}</Row>
-        </dl>
-      </Card>
-      <Card title="Document progress" action={<Button size="sm" variant="ghost" className="min-h-11 text-[var(--admin-info)] md:min-h-9" onPress={() => setTab("documents")}>Open checklist<ArrowRightIcon size={14} /></Button>}>
-        <p className="text-sm"><strong className="text-lg font-extrabold">{verified}</strong> <span className="text-[var(--admin-muted)]">of {loan.documents.length} documents verified</span></p>
-        <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--admin-surface-muted)]" role="progressbar" aria-valuemin={0} aria-valuemax={loan.documents.length} aria-valuenow={verified} aria-label="Verified documents"><div className="h-full rounded-full bg-[var(--admin-success)] transition-[width]" style={{ width: `${(verified / loan.documents.length) * 100}%` }} /></div>
-      </Card>
-      <Card title="Latest activity" action={<Button size="sm" variant="ghost" className="min-h-11 text-[var(--admin-info)] md:min-h-9" onPress={() => setTab("history")}>Status history<ArrowRightIcon size={14} /></Button>}>
-        <ActivityTimeline items={timeline.filter((item) => item.state !== "future").slice(-2)} />
-      </Card>
+    <div className="space-y-4 xl:space-y-5">
+      <div className="grid items-stretch gap-4 lg:grid-cols-2 xl:gap-5">{applicantCard}{employmentCard}</div>
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] xl:gap-5">{documentsCard}{historyCard}</div>
     </div>
   );
 
@@ -114,41 +142,10 @@ export function LoanDetail({ reference }: { reference: string }) {
 
       <AdminTabs label="Loan application" selectedKey={tab} onSelectionChange={setTab} items={[
         { id: "overview", label: "Overview", content: overview },
-        { id: "applicant", label: "Applicant", content: (
-          <Card title="Applicant details"><dl className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            <Row icon={<UserCircleIcon size={18} />} label="Full name">{applicant.name}</Row><Row icon={<PhoneIcon size={18} />} label="Phone">{applicant.phone}</Row><Row icon={<EnvelopeSimpleIcon size={18} />} label="Email">{applicant.email}</Row>
-            <Row icon={<CakeIcon size={18} />} label="Date of birth">{fmtDate(applicant.dateOfBirth)} ({ageOf(applicant.dateOfBirth)} years)</Row><Row icon={<FlagIcon size={18} />} label="Nationality">{applicant.nationality}</Row><Row icon={<MapPinIcon size={18} />} label="Current city">{applicant.city}</Row>
-            <Row icon={<HouseLineIcon size={18} />} label="Address">{applicant.address}</Row><Row icon={<IdentificationCardIcon size={18} />} label="Residence status">{applicant.residence}</Row>
-          </dl></Card>
-        ) },
-        { id: "employment", label: "Employment", content: (
-          <Card title="Employment & income"><dl className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            <Row icon={<BriefcaseIcon size={18} />} label="Employment type">{employment.type}</Row><Row icon={<BriefcaseIcon size={18} />} label="Employer">{employment.employer}</Row><Row icon={<IdentificationCardIcon size={18} />} label="Job title">{employment.jobTitle}</Row>
-            <Row icon={<WalletIcon size={18} />} label="Monthly income"><MoneyDisplay amount={employment.monthlyIncomeMinor} /> <span className="text-xs font-medium text-[var(--admin-muted)]">USD</span></Row><Row icon={<CalendarCheckIcon size={18} />} label="Work experience">{employment.experienceYears} years</Row><Row icon={<BankIcon size={18} />} label="Active bank account">{employment.activeBankAccount ? "Yes" : "No"}</Row>
-          </dl></Card>
-        ) },
-        { id: "documents", label: "Documents", content: (
-          <Card title="Document checklist" action={<span className="text-xs font-semibold text-[var(--admin-muted)]">{verified}/{loan.documents.length} verified</span>}>
-            <ul className="divide-y divide-[var(--admin-border)]">
-              {loan.documents.map((doc) => (
-                <li key={doc.type} className="flex flex-wrap items-center gap-3 py-3 first:pt-0 last:pb-0">
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[var(--admin-surface-muted)] text-[var(--admin-muted)]"><FileTextIcon size={20} weight="duotone" aria-hidden /></span>
-                  <div className="min-w-0 flex-1"><p className="text-sm font-bold">{doc.type}</p><p className="text-xs text-[var(--admin-muted)]">{doc.uploadedAt ? `Uploaded ${fmtDateTime(doc.uploadedAt)} ICT` : "Not uploaded yet"}</p></div>
-                  <DocumentStatusBadge status={doc.status} />
-                  <div className="flex w-full justify-end gap-1.5 sm:w-auto">
-                    {doc.status === "missing" ? (canRequestDocuments(loan.status) ? <Button size="sm" variant="outline" className="min-h-11 md:min-h-8" onPress={requestDrawer.open}>Request Document</Button> : null) : (
-                      <>
-                        <Button size="sm" variant="ghost" className="min-h-11 md:min-h-8" onPress={() => setPreviewing(doc)}><EyeIcon size={15} />Preview</Button>
-                        <Button size="sm" variant="outline" className="min-h-11 md:min-h-8" onPress={() => router.push(`/admin/documents/${doc.detailId}`)}>Review</Button>
-                      </>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </Card>
-        ) },
-        { id: "history", label: "Status History", content: <Card title="Status history"><ActivityTimeline items={timeline} /></Card> },
+        { id: "applicant", label: "Applicant", content: applicantCard },
+        { id: "employment", label: "Employment", content: employmentCard },
+        { id: "documents", label: "Documents", content: documentsCard },
+        { id: "history", label: "Status History", content: historyCard },
       ]} />
 
       {hasActions ? <div className="fixed inset-x-0 bottom-0 z-30 flex gap-2 border-t border-[var(--admin-border)] bg-white/95 p-3 backdrop-blur-md lg:hidden">{actions}</div> : null}
