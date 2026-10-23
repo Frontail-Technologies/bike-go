@@ -32,6 +32,10 @@ const rawEnv = z
     PLATFORM_FEE_USD_MINOR: z.coerce.number().int().nonnegative().default(0),
     PLATFORM_FEE_KHR_MINOR: z.coerce.number().int().nonnegative().default(0),
     BOOKING_HOLD_MINUTES: z.coerce.number().int().min(1).max(1440).default(15),
+    RATE_LIMIT_ENABLED: z.enum(["true", "false"]).optional(),
+    TRUST_PROXY: z.enum(["true", "false"]).optional(),
+    SESSION_COOKIE_CACHE_SECONDS: z.coerce.number().int().min(0).max(600).default(60),
+    JSON_BODY_LIMIT_BYTES: z.coerce.number().int().min(1024).default(256 * 1024),
     DASHBOARD_CACHE_SECONDS: z.coerce.number().int().min(0).max(600).default(15),
     DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(200).optional(),
     MAX_REQUEST_BODY_BYTES: z.coerce.number().int().positive().default(64 * 1024 * 1024),
@@ -77,6 +81,8 @@ if (rawEnv.STORAGE_DRIVER === "r2") {
 
 export const env = {
   ...rawEnv,
+  RATE_LIMIT_ENABLED: rawEnv.RATE_LIMIT_ENABLED ? rawEnv.RATE_LIMIT_ENABLED === "true" : rawEnv.NODE_ENV !== "test",
+  TRUST_PROXY: rawEnv.TRUST_PROXY === "true",
   FRONTEND_ORIGINS: rawEnv.FRONTEND_ORIGINS.split(",")
     .map((origin) => origin.trim())
     .filter(Boolean),

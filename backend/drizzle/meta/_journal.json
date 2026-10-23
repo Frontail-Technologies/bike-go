@@ -64,6 +64,20 @@
       "when": 1792731019649,
       "tag": "0008_bookings_created_index",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792733281474,
+      "tag": "0009_telegram_logins",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792733452294,
+      "tag": "0010_audit_log",
+      "breakpoints": true
     }
   ]
 }

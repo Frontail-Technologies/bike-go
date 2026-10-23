@@ -1,4 +1,5 @@
 import { Elysia } from "elysia";
+import { audit } from "@/libs/audit";
 import { ok, okPage, sessionSecurity, staffErrors } from "@/libs/api";
 import { authPlugin } from "@/plugins/auth";
 import * as FxModel from "@/routes/fx/model";
@@ -20,5 +21,9 @@ export const adminFxRoutes = new Elysia({ name: "RideGo.Admin.Fx", prefix: "/fx-
         security: sessionSecurity,
       },
     },
-    async ({ body, user }) => ok(await createRate(user.id, body)),
+    async ({ body, user, request, server }) => {
+      const created = await createRate(user.id, body);
+      await audit({ user, request, server }, "fx.create", { type: "fx-rate", id: undefined, details: { base: body.baseCurrency, quote: body.quoteCurrency } });
+      return ok(created);
+    },
   );

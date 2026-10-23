@@ -99,6 +99,19 @@ Set `PAYMENT_DRIVER=payway`, `PAYWAY_MERCHANT_ID` and `PAYWAY_API_KEY`. The sand
 
 - Every error is `{ success: false, error: { code, message, details }, requestId }` with a stable code.
 
+## Security
+
+Sessions stay cookie based: an opaque Better Auth token in an HttpOnly, SameSite=Lax cookie (Secure in production). There are no JWTs or refresh tokens.
+
+- **Rate limits**: per client IP, fixed window, in memory (one instance). Auth 30/min, uploads 30/min, PayWay callback 120/min, other writes 120/min, reads 900/min. Over the limit returns `429 RATE_LIMITED` with `Retry-After`. Set `RATE_LIMIT_ENABLED` (on by default in production) and `TRUST_PROXY=true` only behind a proxy that sets `x-forwarded-for`. Use a shared store if you run several instances.
+- **Cross-site guard**: a POST/PUT/PATCH/DELETE that carries a cookie must come from an allowed origin (`FRONTEND_ORIGINS` or the API's own) by `Origin`, or `Referer` as a fallback. Otherwise `403 FORBIDDEN`. The PayWay callback is exempt (it has no cookie and is verified server to server).
+- **Body limits**: JSON bodies are capped by `JSON_BODY_LIMIT_BYTES` (256 KiB). Upload routes have their own caps (vehicles 55 MiB, banners and loan documents 6 MiB) and need a session before the body is read. Over the cap returns `413 REQUEST_TOO_LARGE`.
+- **Telegram replay**: each signed login payload can be used once; the hash is stored until the payload would expire anyway.
+- **Staff action log**: admin writes are recorded in `audit_log` (actor, action, target, IP, and field names, never values). Super admins read it at `GET /api/v1/admin/audit-log`. A failed log write never fails the action.
+- **Session cache**: `SESSION_COOKIE_CACHE_SECONDS` (default 60, 0 turns it off) trades instant sign-out on customer routes for fewer database reads. Admin routes always check the database.
+
+Not done: session tokens are stored as issued (not hashed), and admins have no second factor.
+
 ## Not built yet
 
 Refunds, SMS/OTP (not wanted), automated KYC, credit scoring and lender APIs (explicitly out of scope).

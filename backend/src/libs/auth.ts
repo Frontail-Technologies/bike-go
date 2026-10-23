@@ -8,6 +8,7 @@ import * as z from "zod";
 import { env } from "@/env";
 import { db, schema } from "@/libs/db";
 import { verifyTelegramLogin } from "@/libs/telegram";
+import { claimTelegramLogin } from "@/libs/telegram-replay";
 import { placeholderEmail } from "@/libs/identity";
 
 const telegram = (): BetterAuthPlugin => ({
@@ -26,6 +27,8 @@ const telegram = (): BetterAuthPlugin => ({
         const verified = verifyTelegramLogin(ctx.body, { botToken: env.TELEGRAM_BOT_TOKEN, maxAgeSeconds: env.TELEGRAM_AUTH_MAX_AGE_SECONDS });
         if (!verified.ok) throw APIError.from("UNAUTHORIZED", { code: "TELEGRAM_AUTH_INVALID", message: "Telegram sign-in could not be verified." });
         const { identity } = verified;
+        const fresh = await claimTelegramLogin(String(ctx.body.hash), Number(ctx.body.auth_date), env.TELEGRAM_AUTH_MAX_AGE_SECONDS);
+        if (!fresh) throw APIError.from("UNAUTHORIZED", { code: "TELEGRAM_AUTH_INVALID", message: "Telegram sign-in could not be verified." });
 
         const adapter = ctx.context.internalAdapter;
         const existing = await adapter.findAccountByKey({ providerId: "telegram", accountId: identity.telegramId });
@@ -66,7 +69,7 @@ export const auth = betterAuth({
     database: { generateId: "uuid" },
     useSecureCookies: env.NODE_ENV === "production",
   },
-  session: { expiresIn: 60 * 60 * 24 * 30, updateAge: 60 * 60 * 24, cookieCache: { enabled: true, maxAge: 60 } },
+  session: { expiresIn: 60 * 60 * 24 * 30, updateAge: 60 * 60 * 24, cookieCache: { enabled: env.SESSION_COOKIE_CACHE_SECONDS > 0, maxAge: Math.max(1, env.SESSION_COOKIE_CACHE_SECONDS) } },
   rateLimit: { enabled: env.NODE_ENV !== "test" },
   user: {
     additionalFields: {

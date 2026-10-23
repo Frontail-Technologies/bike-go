@@ -53,7 +53,7 @@ export const openapiPlugin = () =>
         description: [
           "Backend for RideGo vehicle rental and Expat Loan (Cambodia).",
           "",
-          "**Responses.** Every success is `{ success: true, data, meta }`. Every failure is `{ success: false, error: { code, message, details }, requestId }` with a stable `code` (AUTH_REQUIRED, FORBIDDEN, VALIDATION_ERROR, NOT_FOUND, VEHICLE_UNAVAILABLE, BOOKING_CONFLICT, INVALID_BOOKING_STATUS, INVALID_LOAN_STATUS_TRANSITION, LOAN_NOT_EDITABLE, IDEMPOTENCY_CONFLICT, DOCUMENT_TYPE_INVALID, FILE_TOO_LARGE, FILE_TYPE_INVALID, PAYMENT_UNAVAILABLE, PAYMENT_PROVIDER_ERROR, INTERNAL_ERROR). Switch on the code, never the message. Every response carries an `x-request-id` header.",
+          "**Responses.** Every success is `{ success: true, data, meta }`. Every failure is `{ success: false, error: { code, message, details }, requestId }` with a stable `code` (AUTH_REQUIRED, FORBIDDEN, VALIDATION_ERROR, NOT_FOUND, VEHICLE_UNAVAILABLE, BOOKING_CONFLICT, INVALID_BOOKING_STATUS, INVALID_LOAN_STATUS_TRANSITION, LOAN_NOT_EDITABLE, IDEMPOTENCY_CONFLICT, DOCUMENT_TYPE_INVALID, FILE_TOO_LARGE, FILE_TYPE_INVALID, RATE_LIMITED, REQUEST_TOO_LARGE, PAYMENT_UNAVAILABLE, PAYMENT_PROVIDER_ERROR, INTERNAL_ERROR). Switch on the code, never the message. Every response carries an `x-request-id` header.",
           "",
           "**Money.** Always integer minor units (cents for USD, sen for KHR) next to an explicit `currency` of `USD` or `KHR`. Totals are computed by the server; any total a client sends is ignored.",
           "",

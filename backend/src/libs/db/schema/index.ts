@@ -1,3 +1,4 @@
+export * from "./audit";
 export * from "./auth";
 export * from "./banner";
 export * from "./booking";
@@ -8,5 +9,6 @@ export * from "./idempotency";
 export * from "./loan";
 export * from "./location";
 export * from "./payment";
+export * from "./telegram";
 export * from "./user";
 export * from "./vehicle";

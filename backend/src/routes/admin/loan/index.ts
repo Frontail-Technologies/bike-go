@@ -1,4 +1,5 @@
 import { Elysia } from "elysia";
+import { audit } from "@/libs/audit";
 import { ok, okPage, sessionSecurity, staffErrors } from "@/libs/api";
 import { authPlugin } from "@/plugins/auth";
 import * as DocumentModel from "@/routes/document/model";
@@ -24,7 +25,11 @@ export const adminLoanRoutes = new Elysia({ name: "RideGo.Admin.Loan", prefix: "
         security: sessionSecurity,
       },
     },
-    async ({ params, body, user }) => ok(await changeLoanStatus(params.reference, user.id, body.status as never, body.note)),
+    async ({ params, body, user, request, server }) => {
+      const changed = await changeLoanStatus(params.reference, user.id, body.status as never, body.note);
+      await audit({ user, request, server }, "loan.status", { type: "loan", id: params.reference, details: { status: body.status } });
+      return ok(changed);
+    },
   )
   .patch(
     "/:reference/documents/:documentId/review",
@@ -35,7 +40,11 @@ export const adminLoanRoutes = new Elysia({ name: "RideGo.Admin.Loan", prefix: "
       response: { 200: DocumentModel.DocumentReviewPatch.Response, ...staffErrors },
       detail: { summary: "Review a document", description: "Mark it verified, needs_review or rejected. A note is required for the last two and is shown to the applicant. Reviewing does not itself change the application's status.", security: sessionSecurity },
     },
-    async ({ params, body, user }) => ok(await reviewDocument(params.reference, user.id, params.documentId, body)),
+    async ({ params, body, user, request, server }) => {
+      const reviewed = await reviewDocument(params.reference, user.id, params.documentId, body);
+      await audit({ user, request, server }, "loan.document.review", { type: "loan", id: params.reference, details: { documentId: params.documentId, verificationStatus: body.verificationStatus } });
+      return ok(reviewed);
+    },
   )
   .get(
     "/:reference/documents/:documentId/file",

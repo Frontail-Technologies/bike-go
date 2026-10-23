@@ -1,4 +1,5 @@
 import { Elysia } from "elysia";
+import { audit, changedFields } from "@/libs/audit";
 import { ok, okPage, sessionSecurity, staffErrors } from "@/libs/api";
 import { authPlugin } from "@/plugins/auth";
 import * as BannerModel from "./model";
@@ -30,7 +31,11 @@ export const adminBannerRoutes = new Elysia({ name: "RideGo.Admin.Banner", prefi
         security: sessionSecurity,
       },
     },
-    async ({ body }) => ok(await createBanner(body)),
+    async ({ body, user, request, server }) => {
+      const created = await createBanner(body);
+      await audit({ user, request, server }, "banner.create", { type: "banner", id: created.id, details: { placement: created.placement } });
+      return ok(created);
+    },
   )
   .patch(
     "/:id",
@@ -41,10 +46,18 @@ export const adminBannerRoutes = new Elysia({ name: "RideGo.Admin.Banner", prefi
       response: { 200: BannerModel.BannerPatch.Response, ...staffErrors },
       detail: { summary: "Update a banner (multipart/form-data or JSON)", description: "Send only what changes. Add an `image` file to replace the image; the old file is removed after the change is saved. An empty value clears a nullable field.", security: sessionSecurity },
     },
-    async ({ params, body }) => ok(await updateBanner(params.id, body)),
+    async ({ params, body, user, request, server }) => {
+      const updated = await updateBanner(params.id, body);
+      await audit({ user, request, server }, "banner.update", { type: "banner", id: params.id, details: { fields: changedFields(body) } });
+      return ok(updated);
+    },
   )
   .delete(
     "/:id",
     { admin: true, params: BannerModel.BannerDelete.Params, response: { 200: BannerModel.BannerDelete.Response, ...staffErrors }, detail: { summary: "Delete a banner", description: "Nothing references a banner, so it is removed. To only hide one, set its status to inactive.", security: sessionSecurity } },
-    async ({ params }) => ok(await deleteBanner(params.id)),
+    async ({ params, user, request, server }) => {
+      const removed = await deleteBanner(params.id);
+      await audit({ user, request, server }, "banner.delete", { type: "banner", id: params.id });
+      return ok(removed);
+    },
   );

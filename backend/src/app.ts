@@ -5,6 +5,8 @@ import { authPlugin } from "@/plugins/auth";
 import { corsPlugin } from "@/plugins/cors";
 import { errorPlugin } from "@/plugins/error";
 import { openapiFiles, openapiPlugin } from "@/plugins/openapi";
+import { rateLimit } from "@/plugins/rate-limit";
+import { requestGuards } from "@/plugins/request-guards";
 import { requestMeta } from "@/plugins/request-meta";
 import { securityHeaders } from "@/plugins/security";
 import { adminRoutes } from "@/routes/admin";
@@ -26,6 +28,8 @@ export const app = new Elysia({ name: "RideGo.App", serve: { maxRequestBodySize:
   .use(requestMeta)
   .use(errorPlugin)
   .use(corsPlugin)
+  .use(rateLimit)
+  .use(requestGuards)
   .use(openapiFiles)
   .use(openapiPlugin())
   .use(authPlugin)

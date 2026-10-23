@@ -1,4 +1,5 @@
 import { Elysia } from "elysia";
+import { audit } from "@/libs/audit";
 import { ok, okPage, sessionSecurity, staffErrors } from "@/libs/api";
 import { authPlugin } from "@/plugins/auth";
 import * as BookingModel from "./model";
@@ -21,5 +22,9 @@ export const adminBookingRoutes = new Elysia({ name: "RideGo.Admin.Booking", pre
         security: sessionSecurity,
       },
     },
-    async ({ params, body }) => ok(await updateBookingStatus(params.reference, body)),
+    async ({ params, body, user, request, server }) => {
+      const updated = await updateBookingStatus(params.reference, body);
+      await audit({ user, request, server }, "booking.status", { type: "booking", id: params.reference, details: { bookingStatus: body.bookingStatus, paymentStatus: body.paymentStatus } });
+      return ok(updated);
+    },
   );
