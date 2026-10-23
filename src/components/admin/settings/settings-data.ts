@@ -2,7 +2,7 @@ import { bookingLabels, bookingStatuses } from "@/components/admin/bookings/book
 import { allDocumentTypes, loanStatuses, loanStatusLabels } from "@/components/admin/loans/loan-types";
 import type { CurrencyCode } from "@/components/admin/money";
 
-export type MasterItem = { id: string; name: string; code: string; description?: string; priceMinor?: number; currency?: CurrencyCode; active: boolean };
+export type MasterItem = { id: string; name: string; code: string; description?: string; priceMinor?: number; currency?: CurrencyCode; imageUrl?: string; active: boolean };
 
 const make = (names: string[], inactive: string[] = []): MasterItem[] => names.map((name) => ({ id: name.toLowerCase().replace(/[^a-z0-9]+/g, "-"), name, code: name.toLowerCase().replace(/[^a-z0-9]+/g, "_"), active: !inactive.includes(name) }));
 

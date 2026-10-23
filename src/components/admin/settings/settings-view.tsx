@@ -8,7 +8,7 @@ import { addons, blockReasons, bookingStatusList, brands, documentTypeMasters, f
 const vehicle = (
   <div className="space-y-5">
     <MasterDataSection title="Vehicle Types" description="Top-level groups used when adding vehicles." noun="vehicle type" initial={vehicleTypes} fields={["name", "code"]} reorder />
-    <MasterDataSection title="Vehicle Categories" description="Segments such as cruiser or commuter." noun="category" initial={vehicleCategories} reorder />
+    <MasterDataSection title="Vehicle Categories" description="Segments such as cruiser or commuter." noun="category" initial={vehicleCategories} fields={["name", "code", "image"]} reorder />
     <MasterDataSection title="Brands" description="Manufacturers available in the vehicle form." noun="brand" initial={brands} fields={["name"]} />
     <div className="grid items-start gap-5 xl:grid-cols-2">
       <MasterDataSection title="Transmission Types" description="Gearbox options." noun="transmission" initial={transmissions} fields={["name"]} />

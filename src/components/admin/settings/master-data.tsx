@@ -1,21 +1,23 @@
 "use client";
 
 import { Button, Description, Dropdown, FieldError, Input, Label, ListBox, Modal, Select, TextArea, TextField, useOverlayState } from "@heroui/react";
-import { ArrowDownIcon, ArrowUpIcon, DotsThreeVerticalIcon, LockSimpleIcon, NotePencilIcon, PlusIcon, PowerIcon } from "@phosphor-icons/react";
+import { ArrowDownIcon, ArrowUpIcon, ArrowsClockwiseIcon, DotsThreeVerticalIcon, ImageIcon, LockSimpleIcon, NotePencilIcon, PlusIcon, PowerIcon, TrashIcon } from "@phosphor-icons/react";
+import Image from "next/image";
 import { useState, type ReactNode } from "react";
 import { AdminSearch } from "@/components/admin/controls";
+import { ImageUploader } from "@/components/admin/forms/image-uploader";
 import { AdminStatusBadge } from "@/components/admin/data-display/status-badge";
 import { CurrencyAmount, type CurrencyCode } from "@/components/admin/money";
 import { cn } from "@/lib/cn";
 import type { MasterItem } from "./settings-data";
 
-export type MasterField = "name" | "code" | "description" | "price";
+export type MasterField = "name" | "code" | "description" | "price" | "image";
 
 const slug = (value: string) => value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
 
-type DialogValues = { name: string; code: string; description: string; price: string; currency: CurrencyCode; active: boolean };
-const blank: DialogValues = { name: "", code: "", description: "", price: "", currency: "USD", active: true };
-const toValues = (item: MasterItem): DialogValues => ({ name: item.name, code: item.code, description: item.description ?? "", price: item.priceMinor === undefined ? "" : String(item.currency === "KHR" ? item.priceMinor : item.priceMinor / 100), currency: item.currency ?? "USD", active: item.active });
+type DialogValues = { name: string; code: string; description: string; price: string; currency: CurrencyCode; imageUrl: string | null; active: boolean };
+const blank: DialogValues = { name: "", code: "", description: "", price: "", currency: "USD", imageUrl: null, active: true };
+const toValues = (item: MasterItem): DialogValues => ({ name: item.name, code: item.code, description: item.description ?? "", price: item.priceMinor === undefined ? "" : String(item.currency === "KHR" ? item.priceMinor : item.priceMinor / 100), currency: item.currency ?? "USD", imageUrl: item.imageUrl ?? null, active: item.active });
 
 function MasterDataDialog({ noun, fields, items, editing, isOpen, onOpenChange, onSave }: { noun: string; fields: MasterField[]; items: MasterItem[]; editing: MasterItem | null; isOpen: boolean; onOpenChange: (open: boolean) => void; onSave: (values: DialogValues, editing: MasterItem | null) => void }) {
   return (
@@ -67,6 +69,22 @@ function DialogForm({ noun, fields, items, editing, onClose, onSave }: { noun: s
             </Select>
           </div>
         ) : null}
+        {fields.includes("image") ? (
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Image</p>
+            {values.imageUrl ? (
+              <div className="space-y-2">
+                <div className="relative aspect-[16/9] overflow-hidden rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface-muted)]"><Image src={values.imageUrl} alt={values.name || "Category image"} fill unoptimized className="object-cover" /></div>
+                <div className="flex flex-wrap gap-2">
+                  <Button type="button" variant="outline" size="sm" className="min-h-11 md:min-h-9" onPress={() => set("imageUrl", null)}><ArrowsClockwiseIcon size={15} />Replace image</Button>
+                  <Button type="button" variant="ghost" size="sm" className="min-h-11 text-[var(--admin-danger)] md:min-h-9" onPress={() => set("imageUrl", null)}><TrashIcon size={15} />Remove</Button>
+                </div>
+              </div>
+            ) : (
+              <ImageUploader limit={1} maxSizeMb={5} aspectClass="aspect-[16/9]" emptyTitle="Click to upload category image" emptyHint="or drag and drop · JPG, PNG or WebP · up to 5 MB" onChange={(files) => set("imageUrl", files[0] ? URL.createObjectURL(files[0]) : null)} />
+            )}
+          </div>
+        ) : null}
         <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-[var(--admin-border)] p-3 text-sm font-semibold focus-within:ring-2 focus-within:ring-[var(--admin-accent-strong)]">
           <input type="checkbox" checked={values.active} onChange={(event) => set("active", event.target.checked)} className="size-4 accent-[#dcae00]" />Active
           <span className="text-xs font-normal text-[var(--admin-muted)]">Inactive items stay on existing records but can’t be picked for new ones.</span>
@@ -94,7 +112,7 @@ export function MasterDataSection({ title, description, noun, initial, fields = 
 
   function save(values: DialogValues, current: MasterItem | null) {
     const price = fields.includes("price") ? (values.currency === "KHR" ? Math.round(Number(values.price)) : Math.round(Number(values.price) * 100)) : undefined;
-    const patch = { name: values.name, code: values.code, description: values.description.trim() || undefined, active: values.active, ...(price === undefined ? {} : { priceMinor: price, currency: values.currency }) };
+    const patch = { name: values.name, code: values.code, description: values.description.trim() || undefined, imageUrl: fields.includes("image") ? values.imageUrl ?? undefined : undefined, active: values.active, ...(price === undefined ? {} : { priceMinor: price, currency: values.currency }) };
     setItems((list) => current ? list.map((item) => item.id === current.id ? { ...item, ...patch } : item) : [...list, { id: `${slug(values.name)}-${list.length + 1}`, ...patch }]);
   }
   const toggle = (item: MasterItem) => setItems((list) => list.map((entry) => entry.id === item.id ? { ...entry, active: !entry.active } : entry));
@@ -116,6 +134,7 @@ export function MasterDataSection({ title, description, noun, initial, fields = 
           const index = items.findIndex((entry) => entry.id === item.id);
           return (
             <li key={item.id} className={cn("flex items-center gap-3 px-4 py-3 sm:px-5", !item.active && "bg-[var(--admin-surface-muted)]/60")}>
+              {fields.includes("image") ? <span className="relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface-muted)] text-[var(--admin-muted)]">{item.imageUrl ? <Image src={item.imageUrl} alt="" fill unoptimized className="object-cover" /> : <ImageIcon size={20} weight="duotone" aria-hidden />}</span> : null}
               <div className="min-w-0 flex-1">
                 <p className={cn("truncate text-sm font-bold", !item.active && "text-[var(--admin-muted)]")}>{item.name}</p>
                 <p className="truncate text-xs text-[var(--admin-muted)]">{fields.includes("code") ? <span>{item.code}</span> : null}{item.description ? <span>{fields.includes("code") ? " · " : ""}{item.description}</span> : null}</p>
