@@ -4,7 +4,7 @@ import { accessLog } from "@/plugins/access-log";
 import { authPlugin } from "@/plugins/auth";
 import { corsPlugin } from "@/plugins/cors";
 import { errorPlugin } from "@/plugins/error";
-import { openapiPlugin } from "@/plugins/openapi";
+import { openapiFiles, openapiPlugin } from "@/plugins/openapi";
 import { requestMeta } from "@/plugins/request-meta";
 import { securityHeaders } from "@/plugins/security";
 import { adminRoutes } from "@/routes/admin";
@@ -26,6 +26,7 @@ export const app = new Elysia({ name: "RideGo.App", serve: { maxRequestBodySize:
   .use(requestMeta)
   .use(errorPlugin)
   .use(corsPlugin)
+  .use(openapiFiles)
   .use(openapiPlugin())
   .use(authPlugin)
   .use(health)

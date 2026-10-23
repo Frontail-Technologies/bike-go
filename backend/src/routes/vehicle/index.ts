@@ -1,6 +1,7 @@
 import { Elysia } from "elysia";
 import { ok, okPage, publicErrors } from "@/libs/api";
 import * as VehicleModel from "./model";
+import { vehicleImageFile } from "./images";
 import { getVehicle, listVehicles } from "./service";
 
 export const vehicleRoutes = new Elysia({ name: "RideGo.Vehicle", prefix: "/api/v1/vehicles", tags: ["Vehicles"] })
@@ -17,6 +18,7 @@ export const vehicleRoutes = new Elysia({ name: "RideGo.Vehicle", prefix: "/api/
     },
     async ({ query }) => okPage(await listVehicles(query)),
   )
+  .get("/images/:imageId", { params: VehicleModel.VehicleImageGet.Params, detail: { summary: "One uploaded vehicle image", description: "Public and cacheable for a few minutes." } }, async ({ params }) => vehicleImageFile(params.imageId))
   .get(
     "/:idOrSlug",
     {

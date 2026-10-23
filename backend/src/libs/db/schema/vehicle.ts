@@ -51,6 +51,8 @@ export const vehicleImages = pgTable(
       .references(() => vehicles.id, { onDelete: "cascade" }),
     storageKey: text("storage_key").notNull(),
     publicUrl: text("public_url"),
+    contentType: text("content_type"),
+    sizeBytes: integer("size_bytes"),
     altText: text("alt_text"),
     sortOrder: integer("sort_order").notNull().default(0),
     createdAt: createdAt(),

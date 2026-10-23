@@ -2,7 +2,7 @@ import { Elysia } from "elysia";
 import { customerErrors, ok, sessionSecurity } from "@/libs/api";
 import { authPlugin } from "@/plugins/auth";
 import * as DocumentModel from "./model";
-import { deleteDocument, downloadOwnDocument, listDocuments, uploadDocument } from "./service";
+import { deleteDocument, downloadOwnDocument, listDocuments, replaceDocument, uploadDocument } from "./service";
 
 export const documentRoutes = new Elysia({ name: "RideGo.Document", prefix: "/api/v1/loans", tags: ["Loan documents"] })
   .use(authPlugin)
@@ -26,6 +26,22 @@ export const documentRoutes = new Elysia({ name: "RideGo.Document", prefix: "/ap
       },
     },
     async ({ user, params, body, status }) => status(201, ok(await uploadDocument(user.id, params.reference, body))),
+  )
+  .patch(
+    "/:reference/documents/:documentId",
+    {
+      auth: true,
+      params: DocumentModel.DocumentPatch.Params,
+      body: DocumentModel.DocumentPatch.Body,
+      response: { 200: DocumentModel.DocumentPatch.Response, ...customerErrors },
+      detail: {
+        summary: "Replace one of my documents (multipart/form-data)",
+        description:
+          "Fields: `file` (the replacement; PDF, JPG or PNG, max 5 MB) and optionally `type`. The old file is removed only after the new one is saved, and the document goes back to uploaded for review. Not allowed once a document is verified.",
+        security: sessionSecurity,
+      },
+    },
+    async ({ user, params, body }) => ok(await replaceDocument(user.id, params.reference, params.documentId, body)),
   )
   .get(
     "/:reference/documents/:documentId/file",

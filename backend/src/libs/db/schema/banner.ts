@@ -15,7 +15,7 @@ export const banners = pgTable(
     title: text("title").notNull(),
     subtitle: text("subtitle"),
     imageStorageKey: text("image_storage_key").notNull(),
-    imageUrl: text("image_url"),
+    imageContentType: text("image_content_type").notNull().default("image/jpeg"),
     ctaLabel: text("cta_label"),
     ctaUrl: text("cta_url"),
     placement: bannerPlacement("placement").notNull(),

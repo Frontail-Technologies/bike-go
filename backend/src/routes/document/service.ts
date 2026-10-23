@@ -1,32 +1,22 @@
 import { and, count, eq } from "drizzle-orm";
-import { fileTypeFromBuffer } from "file-type";
 import { AppError } from "@/libs/api";
 import { db } from "@/libs/db";
 import { loanApplications, loanDocuments } from "@/libs/db/schema";
+import { sanitizeFilename } from "@/libs/uploads/filenames";
+import { inspectDocument, MAX_DOCUMENT_BYTES } from "@/libs/uploads/inspect";
+import { commitOrDiscard, discardQuietly, uploadAll } from "@/libs/uploads/storage";
 import { storage } from "@/providers/storage";
 import { findOwned } from "@/routes/loan/service";
 import { DOCUMENT_TYPES } from "@/routes/loan/rules";
 import type { DocumentType } from "@/routes/loan/types";
 
-export const MAX_FILE_BYTES = 5 * 1024 * 1024;
+export const MAX_FILE_BYTES = MAX_DOCUMENT_BYTES;
 const MAX_PER_TYPE = 5;
 const MAX_PER_APPLICATION = 20;
 
-const ALLOWED: Record<string, string> = { "application/pdf": "pdf", "image/jpeg": "jpg", "image/png": "png" };
-
 const OPEN_FOR_DOCUMENTS = ["draft", "additional_documents_required"] as const;
 
-export function sanitizeFilename(name: string) {
-  const base = name.split(/[\\/]/).pop() ?? "";
-  const cleaned = base
-    .replace(/\p{Cc}/gu, "")
-    .replace(/[^\w.\- ()]+/g, "_")
-    .replace(/\s+/g, " ")
-    .replace(/^\.+/, "")
-    .trim()
-    .slice(0, 120);
-  return cleaned || "document";
-}
+export { sanitizeFilename };
 
 const view = (d: typeof loanDocuments.$inferSelect) => ({
   id: d.id,
@@ -45,56 +35,91 @@ export async function listDocuments(userId: string, reference: string) {
   return rows.map(view);
 }
 
-export async function uploadDocument(userId: string, reference: string, input: { type: string; file: File }) {
-  if (!(DOCUMENT_TYPES as readonly string[]).includes(input.type)) {
+function documentType(value: string) {
+  if (!(DOCUMENT_TYPES as readonly string[]).includes(value)) {
     throw new AppError("DOCUMENT_TYPE_INVALID", 422, `Unknown document type. Use one of: ${DOCUMENT_TYPES.join(", ")}.`);
   }
-  const type = input.type as DocumentType;
+  return value as DocumentType;
+}
+
+function assertOpen(status: string, message: string) {
+  if (!(OPEN_FOR_DOCUMENTS as readonly string[]).includes(status)) throw new AppError("LOAN_NOT_EDITABLE", 409, message);
+}
+
+const documentKey = (applicationId: string, extension: string) => `loans/${applicationId}/${crypto.randomUUID()}.${extension}`;
+
+async function assertRoomForType(applicationId: string, type: DocumentType, options: { adding: boolean }) {
+  const [totals, [sameType]] = await Promise.all([
+    db.select({ n: count() }).from(loanDocuments).where(eq(loanDocuments.applicationId, applicationId)),
+    db.select({ n: count() }).from(loanDocuments).where(and(eq(loanDocuments.applicationId, applicationId), eq(loanDocuments.type, type))),
+  ]);
+  if (options.adding && (totals[0]?.n ?? 0) >= MAX_PER_APPLICATION) throw new AppError("VALIDATION_ERROR", 422, `An application can have at most ${MAX_PER_APPLICATION} documents.`);
+  if ((sameType?.n ?? 0) >= MAX_PER_TYPE) throw new AppError("VALIDATION_ERROR", 422, `At most ${MAX_PER_TYPE} files per document type. Remove one first.`);
+}
+
+export async function uploadDocument(userId: string, reference: string, input: { type: string; file: File }) {
+  const type = documentType(input.type);
 
   const application = await findOwned(db, userId, reference);
-  if (!(OPEN_FOR_DOCUMENTS as readonly string[]).includes(application.status)) {
-    throw new AppError("LOAN_NOT_EDITABLE", 409, "Documents can only be added while the application is a draft or when staff have asked for more.");
-  }
+  assertOpen(application.status, "Documents can only be added while the application is a draft or when staff have asked for more.");
 
-  if (input.file.size === 0) throw new AppError("VALIDATION_ERROR", 422, "That file is empty.", [{ path: "file", message: "Empty file." }]);
-  if (input.file.size > MAX_FILE_BYTES) throw new AppError("FILE_TOO_LARGE", 413, `Files can be at most ${MAX_FILE_BYTES / 1024 / 1024} MB.`);
+  const upload = await inspectDocument(input.file);
+  await assertRoomForType(application.id, type, { adding: true });
 
-  const bytes = new Uint8Array(await input.file.arrayBuffer());
-  const detected = await fileTypeFromBuffer(bytes);
-  const extension = detected ? ALLOWED[detected.mime] : undefined;
-  if (!detected || !extension) throw new AppError("DOCUMENT_TYPE_INVALID", 422, "Only PDF, JPG and PNG files are accepted.");
-
-  const [totals, [sameType]] = await Promise.all([
-    db.select({ n: count() }).from(loanDocuments).where(eq(loanDocuments.applicationId, application.id)),
-    db.select({ n: count() }).from(loanDocuments).where(and(eq(loanDocuments.applicationId, application.id), eq(loanDocuments.type, type))),
-  ]);
-  if ((totals[0]?.n ?? 0) >= MAX_PER_APPLICATION) throw new AppError("VALIDATION_ERROR", 422, `An application can have at most ${MAX_PER_APPLICATION} documents.`);
-  if ((sameType?.n ?? 0) >= MAX_PER_TYPE) throw new AppError("VALIDATION_ERROR", 422, `At most ${MAX_PER_TYPE} files per document type. Remove one first.`);
-
-  const storageKey = `loans/${application.id}/${crypto.randomUUID()}.${extension}`;
-  await storage.put(storageKey, bytes, { contentType: detected.mime });
-  try {
-    const [created] = await db
+  const storageKey = documentKey(application.id, upload.extension);
+  await uploadAll([{ key: storageKey, upload }]);
+  const created = await commitOrDiscard([storageKey], async () => {
+    const [row] = await db
       .insert(loanDocuments)
-      .values({ applicationId: application.id, type, storageKey, originalFilename: sanitizeFilename(input.file.name), mimeType: detected.mime, sizeBytes: bytes.byteLength })
+      .values({ applicationId: application.id, type, storageKey, originalFilename: sanitizeFilename(upload.originalName), mimeType: upload.contentType, sizeBytes: upload.bytes.byteLength })
       .returning();
-    return view(created!);
-  } catch (error) {
-    await storage.delete(storageKey);
-    throw error;
-  }
+    return row!;
+  });
+  return view(created);
+}
+
+export async function replaceDocument(userId: string, reference: string, documentId: string, input: { type?: string | undefined; file?: File | undefined }) {
+  if (input.type === undefined && input.file === undefined) throw new AppError("VALIDATION_ERROR", 422, "Send a replacement file, a new document type, or both.");
+  const type = input.type === undefined ? undefined : documentType(input.type);
+
+  const application = await findOwned(db, userId, reference);
+  assertOpen(application.status, "Documents can only be replaced while the application is a draft or when staff have asked for more.");
+  const [doc] = await db.select().from(loanDocuments).where(and(eq(loanDocuments.id, documentId), eq(loanDocuments.applicationId, application.id))).limit(1);
+  if (!doc) throw new AppError("NOT_FOUND", 404, "Document not found.");
+  if (doc.verificationStatus === "verified") throw new AppError("LOAN_NOT_EDITABLE", 409, "A verified document cannot be replaced.");
+
+  const upload = input.file ? await inspectDocument(input.file) : undefined;
+  if (type && type !== doc.type) await assertRoomForType(application.id, type, { adding: false });
+
+  const storageKey = upload ? documentKey(application.id, upload.extension) : undefined;
+  if (upload && storageKey) await uploadAll([{ key: storageKey, upload }]);
+  const updated = await commitOrDiscard(storageKey ? [storageKey] : [], async () => {
+    const [row] = await db
+      .update(loanDocuments)
+      .set({
+        ...(type ? { type } : {}),
+        ...(upload && storageKey ? { storageKey, originalFilename: sanitizeFilename(upload.originalName), mimeType: upload.contentType, sizeBytes: upload.bytes.byteLength, uploadedAt: new Date() } : {}),
+        verificationStatus: "uploaded",
+        reviewNote: null,
+        reviewedAt: null,
+        reviewedBy: null,
+      })
+      .where(eq(loanDocuments.id, doc.id))
+      .returning();
+    return row!;
+  });
+  if (storageKey) await discardQuietly([doc.storageKey]);
+  return view(updated);
 }
 
 export async function deleteDocument(userId: string, reference: string, documentId: string) {
   const application = await findOwned(db, userId, reference);
-  if (!(OPEN_FOR_DOCUMENTS as readonly string[]).includes(application.status)) {
-    throw new AppError("LOAN_NOT_EDITABLE", 409, "Documents can only be removed while the application is a draft or when staff have asked for more.");
-  }
+  assertOpen(application.status, "Documents can only be removed while the application is a draft or when staff have asked for more.");
   const [doc] = await db.select().from(loanDocuments).where(and(eq(loanDocuments.id, documentId), eq(loanDocuments.applicationId, application.id))).limit(1);
   if (!doc) throw new AppError("NOT_FOUND", 404, "Document not found.");
   if (doc.verificationStatus === "verified") throw new AppError("LOAN_NOT_EDITABLE", 409, "A verified document cannot be removed.");
   await db.delete(loanDocuments).where(eq(loanDocuments.id, doc.id));
-  await storage.delete(doc.storageKey);
+  await discardQuietly([doc.storageKey]);
   return { id: doc.id };
 }
 

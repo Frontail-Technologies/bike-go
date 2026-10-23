@@ -1,0 +1,1 @@
+ALTER TABLE "banners" DROP COLUMN "image_url";

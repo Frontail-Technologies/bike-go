@@ -1,4 +1,5 @@
 import { openapi } from "@elysia/openapi";
+import { Elysia } from "elysia";
 import { auth } from "@/libs/auth";
 
 const authSchema = await auth.api.generateOpenAPISchema();
@@ -6,10 +7,45 @@ const authPaths = Object.fromEntries(
   Object.entries(authSchema.paths).map(([path, operation]) => [`/api/v1/auth${path}`, Object.fromEntries(Object.entries(operation as Record<string, object>).map(([method, op]) => [method, { ...op, tags: ["Auth"] }]))]),
 );
 
+const SPEC_PATH = "/api/v1/docs/json";
+
+const isBinary = (node: unknown) => Boolean(node) && typeof node === "object" && (node as Record<string, unknown>).format === "binary";
+
+function describeFiles(node: unknown): void {
+  if (Array.isArray(node)) return node.forEach(describeFiles);
+  if (!node || typeof node !== "object") return;
+  const schema = node as Record<string, unknown>;
+  if (schema["~kind"] === "File") {
+    delete schema["~kind"];
+    delete schema["~elyTyp"];
+    schema.type = "string";
+    schema.format = "binary";
+    return;
+  }
+  Object.values(schema).forEach(describeFiles);
+  const options = schema.anyOf;
+  if (Array.isArray(options) && options.length === 2) {
+    const list = options.find((option) => option?.type === "array" && isBinary(option.items));
+    const single = options.find((option) => isBinary(option));
+    if (list && single) {
+      delete schema.anyOf;
+      delete schema["~elyTyp"];
+      schema.type = "array";
+      schema.items = { type: "string", format: "binary" };
+    }
+  }
+}
+
+export const openapiFiles = new Elysia({ name: "RideGo.OpenApi.Files" }).onAfterHandle(({ path, responseValue }) => {
+  if (path !== SPEC_PATH || !responseValue || typeof responseValue !== "object") return;
+  describeFiles(responseValue);
+  return responseValue;
+}).as("global");
+
 export const openapiPlugin = () =>
   openapi({
     path: "/api/v1/docs",
-    specPath: "/api/v1/docs/json",
+    specPath: SPEC_PATH,
     documentation: {
       info: {
         title: "RideGo API",
@@ -17,7 +53,7 @@ export const openapiPlugin = () =>
         description: [
           "Backend for RideGo vehicle rental and Expat Loan (Cambodia).",
           "",
-          "**Responses.** Every success is `{ success: true, data, meta }`. Every failure is `{ success: false, error: { code, message, details }, requestId }` with a stable `code` (AUTH_REQUIRED, FORBIDDEN, VALIDATION_ERROR, NOT_FOUND, VEHICLE_UNAVAILABLE, BOOKING_CONFLICT, INVALID_BOOKING_STATUS, INVALID_LOAN_STATUS_TRANSITION, LOAN_NOT_EDITABLE, IDEMPOTENCY_CONFLICT, DOCUMENT_TYPE_INVALID, FILE_TOO_LARGE, INTERNAL_ERROR). Switch on the code, never the message. Every response carries an `x-request-id` header.",
+          "**Responses.** Every success is `{ success: true, data, meta }`. Every failure is `{ success: false, error: { code, message, details }, requestId }` with a stable `code` (AUTH_REQUIRED, FORBIDDEN, VALIDATION_ERROR, NOT_FOUND, VEHICLE_UNAVAILABLE, BOOKING_CONFLICT, INVALID_BOOKING_STATUS, INVALID_LOAN_STATUS_TRANSITION, LOAN_NOT_EDITABLE, IDEMPOTENCY_CONFLICT, DOCUMENT_TYPE_INVALID, FILE_TOO_LARGE, FILE_TYPE_INVALID, PAYMENT_UNAVAILABLE, PAYMENT_PROVIDER_ERROR, INTERNAL_ERROR). Switch on the code, never the message. Every response carries an `x-request-id` header.",
           "",
           "**Money.** Always integer minor units (cents for USD, sen for KHR) next to an explicit `currency` of `USD` or `KHR`. Totals are computed by the server; any total a client sends is ignored.",
           "",

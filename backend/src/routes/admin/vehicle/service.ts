@@ -1,15 +1,19 @@
 import { and, asc, count, desc, eq, inArray } from "drizzle-orm";
-import { AppError } from "@/libs/api";
+import { AppError, invalid } from "@/libs/api";
 import { db } from "@/libs/db";
 import { PG, pgConstraint, pgErrorCode } from "@/libs/db/errors";
+import { lockRows } from "@/libs/db/lock";
 import { bookings, locations, vehicleBlocks, vehicleImages, vehicles } from "@/libs/db/schema";
+import { compact } from "@/libs/object";
 import { paginate } from "@/libs/pagination";
+import { asFileList, inspectImage } from "@/libs/uploads/inspect";
+import { commitOrDiscard, discardQuietly, uploadAll } from "@/libs/uploads/storage";
 import { assertInterval, busyPeriods } from "@/routes/availability/service";
+import { MAX_VEHICLE_IMAGES, presentImages, vehicleImageColumns } from "@/routes/vehicle/images";
 import { vehicleSearch } from "@/routes/vehicle/service";
 import type { Executor } from "@/libs/db/types";
+import { blankToNull, parseIdList, parseSpecifications, planImages, primaryFirst } from "./images";
 import type { BlockPost, VehiclePatch, VehiclePost, VehiclesGet } from "./types";
-import { lockRows } from "@/libs/db/lock";
-import { compact } from "@/libs/object";
 
 async function adminShape(executor: Executor, ids: string[]) {
   if (ids.length === 0) return [];
@@ -19,11 +23,7 @@ async function adminShape(executor: Executor, ids: string[]) {
       .from(vehicles)
       .innerJoin(locations, eq(vehicles.locationId, locations.id))
       .where(inArray(vehicles.id, ids)),
-    executor
-      .select({ id: vehicleImages.id, vehicleId: vehicleImages.vehicleId, url: vehicleImages.publicUrl, altText: vehicleImages.altText, sortOrder: vehicleImages.sortOrder })
-      .from(vehicleImages)
-      .where(inArray(vehicleImages.vehicleId, ids))
-      .orderBy(asc(vehicleImages.sortOrder)),
+    executor.select(vehicleImageColumns).from(vehicleImages).where(inArray(vehicleImages.vehicleId, ids)).orderBy(asc(vehicleImages.sortOrder)),
   ]);
   return rows.map(({ vehicle, locationName, locationCity, locationAddress }) => {
     const { locationId, createdAt, updatedAt, ...rest } = vehicle;
@@ -33,7 +33,7 @@ async function adminShape(executor: Executor, ids: string[]) {
       createdAt: createdAt.toISOString(),
       updatedAt: updatedAt.toISOString(),
       location: { id: locationId, name: locationName, city: locationCity, address: locationAddress },
-      images: images.filter((i) => i.vehicleId === vehicle.id).map(({ vehicleId: _v, ...image }) => image),
+      images: presentImages(images, vehicle.id),
     };
   });
 }
@@ -49,6 +49,23 @@ function mapWriteError(error: unknown): never {
   if (code === PG.checkViolation) throw new AppError("VALIDATION_ERROR", 422, "A value is out of its allowed range.");
   throw error;
 }
+
+const NOT_COLUMNS = new Set(["images", "primaryImageIndex", "removeImageIds", "imageOrder", "primaryImageId", "specifications", "description", "transmission", "fuelType"]);
+
+type Columns = Partial<typeof vehicles.$inferInsert>;
+
+function writableFields(input: VehiclePost["Body"] | VehiclePatch["Body"]): Columns {
+  const columns = Object.fromEntries(Object.entries(input).filter(([name]) => !NOT_COLUMNS.has(name))) as Columns;
+  return compact({
+    ...columns,
+    description: blankToNull(input.description),
+    transmission: blankToNull(input.transmission),
+    fuelType: blankToNull(input.fuelType),
+    specifications: parseSpecifications(input.specifications),
+  });
+}
+
+const imageKey = (vehicleId: string, extension: string) => `vehicles/${vehicleId}/${crypto.randomUUID()}.${extension}`;
 
 export async function adminListVehicles(query: VehiclesGet["Query"]) {
   const where = and(
@@ -74,40 +91,83 @@ export async function adminGetVehicle(id: string) {
 }
 
 export async function createVehicle(input: VehiclePost["Body"]) {
-  const { images, ...fields } = input;
+  const fields = writableFields(input) as Omit<typeof vehicles.$inferInsert, "id">;
+  const files = asFileList(input.images);
+  if (input.primaryImageIndex !== undefined && input.primaryImageIndex >= files.length) throw invalid("primaryImageIndex", "There is no image at that position.");
+  const uploads = await Promise.all(files.map((file) => inspectImage(file, "images")));
+
+  const vehicleId = crypto.randomUUID();
+  const ordered = primaryFirst(uploads, input.primaryImageIndex);
+  const staged = ordered.map((upload) => ({ key: imageKey(vehicleId, upload.extension), upload }));
+  const keys = await uploadAll(staged);
+
   try {
-    const id = await db.transaction(async (tx) => {
-      const [created] = await tx.insert(vehicles).values(fields).returning({ id: vehicles.id });
-      if (images?.length) {
-        await tx.insert(vehicleImages).values(images.map((image, i) => ({ vehicleId: created!.id, storageKey: image.storageKey, publicUrl: image.publicUrl ?? null, altText: image.altText ?? null, sortOrder: image.sortOrder ?? i })));
-      }
-      return created!.id;
-    });
-    return adminGetVehicle(id);
+    await commitOrDiscard(keys, () =>
+      db.transaction(async (tx) => {
+        await tx.insert(vehicles).values({ ...fields, id: vehicleId });
+        if (staged.length > 0) {
+          await tx.insert(vehicleImages).values(
+            staged.map(({ key, upload }, index) => ({
+              vehicleId,
+              storageKey: key,
+              contentType: upload.contentType,
+              sizeBytes: upload.bytes.byteLength,
+              altText: fields.name,
+              sortOrder: index,
+            })),
+          );
+        }
+      }),
+    );
   } catch (error) {
-    return mapWriteError(error);
+    mapWriteError(error);
   }
+  return adminGetVehicle(vehicleId);
 }
 
 export async function updateVehicle(id: string, patch: VehiclePatch["Body"]) {
-  const { images, ...fields } = patch;
-  const changes = compact(fields);
+  const [existing] = await db.select({ id: vehicles.id, name: vehicles.name }).from(vehicles).where(eq(vehicles.id, id)).limit(1);
+  if (!existing) throw new AppError("NOT_FOUND", 404, "Vehicle not found.");
+
+  const changes = writableFields(patch);
+  const currentImages = await db.select({ id: vehicleImages.id, storageKey: vehicleImages.storageKey, sortOrder: vehicleImages.sortOrder }).from(vehicleImages).where(eq(vehicleImages.vehicleId, id));
+  const newFiles = asFileList(patch.images);
+  const remove = parseIdList("removeImageIds", patch.removeImageIds) ?? [];
+  const newIds = newFiles.map(() => crypto.randomUUID());
+
+  const finalOrder = planImages({ existing: currentImages, remove, order: parseIdList("imageOrder", patch.imageOrder), primaryId: patch.primaryImageId, newIds, primaryIndex: patch.primaryImageIndex });
+  if (finalOrder.length > MAX_VEHICLE_IMAGES) throw invalid("images", `A vehicle can have at most ${MAX_VEHICLE_IMAGES} images.`);
+
+  const uploads = await Promise.all(newFiles.map((file) => inspectImage(file, "images")));
+  const staged = uploads.map((upload) => ({ key: imageKey(id, upload.extension), upload }));
+  const keys = await uploadAll(staged);
+
   try {
-    await db.transaction(async (tx) => {
-      const [existing] = await tx.select({ id: vehicles.id }).from(vehicles).where(eq(vehicles.id, id)).limit(1);
-      if (!existing) throw new AppError("NOT_FOUND", 404, "Vehicle not found.");
-      if (Object.keys(changes).length > 0) await tx.update(vehicles).set(changes).where(eq(vehicles.id, id));
-      if (images) {
-        await tx.delete(vehicleImages).where(eq(vehicleImages.vehicleId, id));
-        if (images.length) {
-          await tx.insert(vehicleImages).values(images.map((image, i) => ({ vehicleId: id, storageKey: image.storageKey, publicUrl: image.publicUrl ?? null, altText: image.altText ?? null, sortOrder: image.sortOrder ?? i })));
+    await commitOrDiscard(keys, () =>
+      db.transaction(async (tx) => {
+        await tx.update(vehicles).set({ ...changes, updatedAt: new Date() }).where(eq(vehicles.id, id));
+        if (remove.length > 0) await tx.delete(vehicleImages).where(and(eq(vehicleImages.vehicleId, id), inArray(vehicleImages.id, remove)));
+        if (staged.length > 0) {
+          await tx.insert(vehicleImages).values(
+            staged.map(({ key, upload }, index) => ({
+              id: newIds[index]!,
+              vehicleId: id,
+              storageKey: key,
+              contentType: upload.contentType,
+              sizeBytes: upload.bytes.byteLength,
+              altText: changes.name ?? existing.name,
+              sortOrder: 0,
+            })),
+          );
         }
-      }
-    });
+        for (const [index, imageId] of finalOrder.entries()) await tx.update(vehicleImages).set({ sortOrder: index }).where(eq(vehicleImages.id, imageId));
+      }),
+    );
   } catch (error) {
-    if (error instanceof AppError) throw error;
     mapWriteError(error);
   }
+
+  await discardQuietly(currentImages.filter((image) => remove.includes(image.id)).map((image) => image.storageKey));
   return adminGetVehicle(id);
 }
 
@@ -119,7 +179,9 @@ export async function removeVehicle(id: string) {
     await db.update(vehicles).set({ status: "inactive" }).where(eq(vehicles.id, id));
     return { id, deleted: false, deactivated: true };
   }
+  const keys = (await db.select({ key: vehicleImages.storageKey }).from(vehicleImages).where(eq(vehicleImages.vehicleId, id))).map((row) => row.key);
   await db.delete(vehicles).where(eq(vehicles.id, id));
+  await discardQuietly(keys);
   return { id, deleted: true, deactivated: false };
 }
 

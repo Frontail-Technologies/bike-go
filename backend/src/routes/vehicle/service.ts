@@ -8,6 +8,7 @@ import type { Executor } from "@/libs/db/types";
 import type { PublicVehicle, VehiclesGet } from "./types";
 import { matchIdOrSlug } from "@/libs/uuid";
 import type { VehicleListRow } from "./types";
+import { presentImages, vehicleImageColumns } from "./images";
 
 const columns = {
   id: vehicles.id,
@@ -38,7 +39,7 @@ const selectJoined = () => db.select(columns).from(vehicles).innerJoin(locations
 async function present(executor: Executor, rows: VehicleListRow[]): Promise<PublicVehicle[]> {
   if (rows.length === 0) return [];
   const images = await executor
-    .select({ id: vehicleImages.id, vehicleId: vehicleImages.vehicleId, url: vehicleImages.publicUrl, altText: vehicleImages.altText, sortOrder: vehicleImages.sortOrder })
+    .select(vehicleImageColumns)
     .from(vehicleImages)
     .where(inArray(vehicleImages.vehicleId, rows.map((r) => r.id)))
     .orderBy(asc(vehicleImages.sortOrder));
@@ -46,7 +47,7 @@ async function present(executor: Executor, rows: VehicleListRow[]): Promise<Publ
   return rows.map(({ locationId, locationName, locationCity, locationAddress, ...vehicle }) => ({
     ...vehicle,
     location: { id: locationId, name: locationName, city: locationCity, address: locationAddress },
-    images: images.filter((image) => image.vehicleId === vehicle.id).map(({ vehicleId: _vehicleId, ...image }) => image),
+    images: presentImages(images, vehicle.id),
   }));
 }
 

@@ -9,6 +9,7 @@ export const VehicleImage = t.Object({
   url: t.Nullable(t.String()),
   altText: t.Nullable(t.String()),
   sortOrder: t.Number(),
+  isPrimary: t.Boolean({ description: "The first image is the primary one" }),
 });
 
 export const Vehicle = t.Object({
@@ -53,6 +54,8 @@ export const VehiclesGet = {
   }),
   Response: Envelope(t.Array(Vehicle)),
 };
+
+export const VehicleImageGet = { Params: t.Object({ imageId: t.String({ format: "uuid" }) }) };
 
 export const VehicleByIdGet = {
   Params: t.Object({ idOrSlug: t.String({ description: "Vehicle slug or UUID" }) }),

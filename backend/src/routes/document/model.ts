@@ -16,6 +16,18 @@ export const DocumentPost = {
 };
 
 export const DocumentByIdParams = DocumentParams;
+
+export const DocumentPatch = {
+  Params: DocumentParams,
+  Body: t.Object(
+    {
+      file: t.Optional(t.File({ description: "Replacement file: PDF, JPG or PNG, up to 5 MB. The real file type is checked, not the extension." })),
+      type: t.Optional(t.String({ description: "A new document type, if the file was filed under the wrong one" })),
+    },
+    { additionalProperties: false },
+  ),
+  Response: Envelope(DocumentItem),
+};
 export const DocumentDelete = { Params: DocumentParams, Response: Envelope(t.Object({ id: t.String({ format: "uuid" }) })) };
 
 export const DocumentReviewPatch = {

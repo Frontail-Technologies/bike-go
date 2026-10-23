@@ -115,11 +115,11 @@ describe("admin catalogue", () => {
     const { cookie } = await signInAdmin();
     const location = (await json(await request("/api/v1/locations"))).data[0] as { id: string };
 
-    const created = await postJson("/api/v1/admin/vehicles", newVehicle({ locationId: location.id, images: [{ storageKey: "vehicles/test/main.jpg" }] }), { cookie });
+    const created = await postJson("/api/v1/admin/vehicles", newVehicle({ locationId: location.id }), { cookie });
     expect(created.status).toBe(200);
     const vehicle = (await json(created)).data;
     expect(vehicle.registrationNumber).toMatch(/^TST-/);
-    expect(vehicle.images.length).toBe(1);
+    expect(vehicle.images).toEqual([]);
 
     const updated = await patchJson(`/api/v1/admin/vehicles/${vehicle.id}`, { dailyRentalPriceMinor: 2100, status: "maintenance" }, { cookie });
     expect(updated.status).toBe(200);

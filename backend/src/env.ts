@@ -32,7 +32,7 @@ const rawEnv = z
     PLATFORM_FEE_USD_MINOR: z.coerce.number().int().nonnegative().default(0),
     PLATFORM_FEE_KHR_MINOR: z.coerce.number().int().nonnegative().default(0),
     BOOKING_HOLD_MINUTES: z.coerce.number().int().min(1).max(1440).default(15),
-    MAX_REQUEST_BODY_BYTES: z.coerce.number().int().positive().default(16 * 1024 * 1024),
+    MAX_REQUEST_BODY_BYTES: z.coerce.number().int().positive().default(64 * 1024 * 1024),
   })
   .parse(process.env);
 
