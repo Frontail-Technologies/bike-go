@@ -18,15 +18,16 @@ export type AdminDataTableProps<T extends { id: string }> = {
   rowActions?: (row: T) => ReactNode;
   onRowNavigate?: (row: T) => void;
   minWidth?: number;
+  showPagination?: boolean;
 };
 
-export function AdminDataTable<T extends { id: string }>({ columns, data, label, pageSize = 6, pagination, loading = false, emptyState, rowActions, onRowNavigate, minWidth = 760 }: AdminDataTableProps<T>) {
+export function AdminDataTable<T extends { id: string }>({ columns, data, label, pageSize = 6, pagination, loading = false, emptyState, rowActions, onRowNavigate, minWidth = 760, showPagination = true }: AdminDataTableProps<T>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [localPagination, setLocalPagination] = useState<PaginationState>({ pageIndex: 0, pageSize });
   const finalColumns: ColumnDef<T>[] = rowActions ? [...columns, { id: "actions", header: "", enableSorting: false, cell: ({ row }) => rowActions(row.original) }] : columns;
   const table = useReactTable({
     data, columns: finalColumns, state: { sorting, pagination: localPagination }, onSortingChange: setSorting, onPaginationChange: setLocalPagination,
-    getCoreRowModel: getCoreRowModel(), getSortedRowModel: getSortedRowModel(), getPaginationRowModel: pagination ? undefined : getPaginationRowModel(),
+    getCoreRowModel: getCoreRowModel(), getSortedRowModel: getSortedRowModel(), getPaginationRowModel: pagination || !showPagination ? undefined : getPaginationRowModel(),
     manualPagination: Boolean(pagination), pageCount: pagination ? Math.max(1, Math.ceil(pagination.total / pagination.pageSize)) : undefined,
   });
   const currentPage = pagination?.page ?? localPagination.pageIndex + 1;
@@ -46,7 +47,7 @@ export function AdminDataTable<T extends { id: string }>({ columns, data, label,
           </Table.Body>
         </Table.Content>
       </Table.ScrollContainer>
-      <Table.Footer><AdminPagination page={currentPage} pageCount={pageCount} total={total} pageSize={currentPageSize} onPageChange={(page) => pagination ? pagination.onPageChange(page) : table.setPageIndex(page - 1)} /></Table.Footer>
+      {showPagination ? <Table.Footer><AdminPagination page={currentPage} pageCount={pageCount} total={total} pageSize={currentPageSize} onPageChange={(page) => pagination ? pagination.onPageChange(page) : table.setPageIndex(page - 1)} /></Table.Footer> : null}
     </Table>
   </div>;
 }

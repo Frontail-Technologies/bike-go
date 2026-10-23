@@ -14,6 +14,7 @@ export type AdminVehicle = {
   location: Pick<AdminLocation, "id" | "name" | "city" | "address">; images: Array<{ id: string; url: string | null; altText: string | null; sortOrder: number }>; createdAt: string; updatedAt: string;
 };
 export type VehicleInput = Omit<AdminVehicle, "id" | "location" | "images" | "createdAt" | "updatedAt"> & { locationId: string };
+export type VehicleAvailabilityBlock = { id: string; vehicleId: string; startAt: string; endAt: string; reason: string };
 export type DashboardData = {
   vehicles: { total: number; byStatus: Record<string, number> };
   bookings: { total: number; byStatus: Record<string, number>; activeNow: number; upcomingPickups7d: number; revenue: Array<{ currency: Currency; bookedMinor: number; paidMinor: number }> };
@@ -80,6 +81,11 @@ export const adminVehicles: AdminVehicle[] = vehicleSeeds.map((seed, index) => {
   const location = adminLocations[locationIndex];
   return { id: `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`, slug: name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""), name, brand, model, category, vehicleType, status, description: `${name} is maintained for dependable travel across Cambodia.`, engineCc: vehicleType === "car" ? 1500 : vehicleType === "other" ? null : Number(model.match(/\d+/)?.[0] ?? 125), transmission: vehicleType === "car" ? "Automatic" : "CVT", fuelType: "Petrol", seats: vehicleType === "car" ? 5 : 2, dailyRentalPriceMinor, securityDepositMinor, currency: "USD", registrationNumber: `RG-${String(index + 1).padStart(4, "0")}`, specifications: {}, location, images: [], createdAt: "2026-10-01T03:00:00.000Z", updatedAt: "2026-10-20T03:00:00.000Z" };
 });
+
+export const adminVehicleAvailability: VehicleAvailabilityBlock[] = [
+  { id: "block-001", vehicleId: "00000000-0000-4000-8000-000000000001", startAt: "2026-10-28T09:00:00+07:00", endAt: "2026-10-29T17:00:00+07:00", reason: "Scheduled preventive maintenance" },
+  { id: "block-002", vehicleId: "00000000-0000-4000-8000-000000000001", startAt: "2026-11-04T08:30:00+07:00", endAt: "2026-11-04T12:30:00+07:00", reason: "Reserved for safety inspection" },
+];
 
 export const adminDashboard: DashboardData = {
   vehicles: { total: adminVehicles.length, byStatus: { available: 7, rented: 2, maintenance: 2, inactive: 1 } },

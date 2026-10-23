@@ -13,9 +13,9 @@ export function StatusDonutChart({ data, centerLabel = "Total" }: { data: Status
   return (
     <div className="grid items-center gap-5 sm:grid-cols-[minmax(180px,0.85fr)_minmax(160px,1fr)]">
       <div className="relative h-56 min-w-0" aria-label={`${centerLabel}: ${total}`}>
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 320, height: 224 }}>
           <PieChart accessibilityLayer>
-            <Pie data={data} dataKey="value" nameKey="label" cx="50%" cy="50%" innerRadius={58} outerRadius={82} paddingAngle={2} stroke="var(--admin-surface)" strokeWidth={2} isAnimationActive={!reduceMotion}>{data.map((item) => <Cell key={item.label} fill={item.color} />)}</Pie>
+            <Pie data={data} dataKey="value" nameKey="label" cx="50%" cy="50%" innerRadius={58} outerRadius={82} paddingAngle={2} stroke="var(--admin-surface)" strokeWidth={2} animationDuration={450} isAnimationActive={!reduceMotion}>{data.map((item) => <Cell key={item.label} fill={item.color} />)}</Pie>
             <Tooltip content={({ active, payload, label }) => <AdminChartTooltip active={active} payload={payload} label={label} />} />
           </PieChart>
         </ResponsiveContainer>

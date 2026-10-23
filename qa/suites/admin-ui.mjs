@@ -1,4 +1,5 @@
-import { overflowReport, watch } from "../lib.mjs";
+import { join } from "node:path";
+import { overflowReport, SHOTS, watch } from "../lib.mjs";
 
 const widths = [768, 1024, 1280, 1440, 1920];
 
@@ -61,6 +62,7 @@ export default async function run({ browser, base, t }) {
     await page.getByRole("button", { name: "Open drawer demo" }).click();
     check("showcase drawer traps focus", await page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]')));
     await page.keyboard.press("Escape");
+    await page.waitForTimeout(450);
     check("showcase drawer closes with Escape", (await page.getByRole("dialog", { name: "Drawer demonstration" }).count()) === 0);
     await page.getByRole("button", { name: "Open modal demo" }).click();
     check("modal traps focus", await page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]')));
@@ -127,6 +129,74 @@ export default async function run({ browser, base, t }) {
     await page.getByRole("button", { name: "Edit" }).first().click();
     check("location edit form loads existing data", await page.getByRole("textbox", { name: "Location name" }).inputValue() === "Phnom Penh Central");
     check("production admin interactions have no console errors", logs.length === 0, logs.join(" | "));
+    await context.close();
+  }
+
+  section("E. dashboard charts and vehicle availability");
+  {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+    const page = await context.newPage();
+    const logs = watch(page);
+    await page.goto(`${base}/admin`, { waitUntil: "networkidle" });
+    check("dashboard renders four accessible chart surfaces", await page.locator('[role="application"]').count() >= 4);
+    await page.waitForTimeout(600);
+    await page.screenshot({ path: join(SHOTS, "admin-dashboard-1440.png"), fullPage: true });
+    await page.getByRole("button", { name: "KHR" }).click();
+    check("dashboard switches revenue to KHR without conversion", (await page.getByText("KHR only — no conversion").count()) === 1 && await page.getByText(/KHR.*18,400,000/).first().isVisible());
+    await page.getByRole("button", { name: "90 days" }).click();
+    check("dashboard switches to the 90-day series", await page.getByText("90-day booked and paid revenue in KHR.").isVisible());
+
+    await page.goto(`${base}/admin/ui`, { waitUntil: "networkidle" });
+    const chartShowcase = page.getByRole("region", { name: "Admin chart examples" });
+    check("chart showcase includes populated, loading, and empty states", await chartShowcase.isVisible() && await chartShowcase.getByText("Loading chart").count() === 1 && await chartShowcase.getByText("No chart data").isVisible());
+    await page.waitForTimeout(600);
+    await chartShowcase.screenshot({ path: join(SHOTS, "admin-ui-charts-1440.png") });
+
+    await page.goto(`${base}/admin/vehicles/00000000-0000-4000-8000-000000000001`, { waitUntil: "networkidle" });
+    check("availability notice clearly states changes are not saved", await page.getByText("Mock UI only — changes are not saved").isVisible());
+    await page.getByRole("button", { name: "Add block" }).click();
+    check("availability drawer opens and receives focus", await page.getByRole("dialog", { name: "Add vehicle availability block" }).isVisible() && await page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]')));
+    await page.getByRole("button", { name: "Add block" }).last().click();
+    check("availability validates required fields", await page.getByText("Start date and time is required.").isVisible());
+    await page.getByLabel("Start date and time — ICT").fill("2026-11-10T15:00");
+    await page.getByLabel("End date and time — ICT").fill("2026-11-10T14:00");
+    await page.getByLabel("Reason").fill("x");
+    await page.getByRole("button", { name: "Add block" }).last().click();
+    check("availability validates ordering and reason length", await page.getByText("End date and time must be after the start.").isVisible() && await page.getByText("Reason must contain at least 2 characters.").isVisible());
+    await page.getByLabel("End date and time — ICT").fill("2026-11-10T17:00");
+    await page.getByLabel("Reason").fill("Local QA availability block");
+    await page.getByRole("button", { name: "Add block" }).last().click();
+    check("availability adds a local block", await page.getByText("Local QA availability block").isVisible());
+    await page.getByRole("button", { name: "Remove availability block: Local QA availability block" }).click();
+    check("availability removal requires confirmation", await page.getByRole("alertdialog").isVisible());
+    await page.getByRole("button", { name: "Remove block" }).click();
+    check("availability removes the local block", (await page.getByText("Local QA availability block").count()) === 0);
+    await page.getByRole("region", { name: "Vehicle availability" }).screenshot({ path: join(SHOTS, "admin-vehicle-availability-1440.png") });
+    await page.getByRole("button", { name: "Add block" }).click();
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(450);
+    check("availability drawer closes with Escape", (await page.getByRole("dialog", { name: "Add vehicle availability block" }).count()) === 0);
+    check("chart and availability interactions have no console errors", logs.length === 0, logs.join(" | "));
+    await context.close();
+  }
+
+  for (const width of widths) {
+    const context = await browser.newContext({ viewport: { width, height: 900 } });
+    const page = await context.newPage();
+    const logs = watch(page);
+    await page.goto(`${base}/admin/vehicles/00000000-0000-4000-8000-000000000001`, { waitUntil: "networkidle" });
+    const metrics = await overflowReport(page);
+    check(`vehicle availability @${width} no page overflow`, metrics.scrollWidth <= metrics.innerWidth, JSON.stringify(metrics));
+    check(`vehicle availability @${width} no console errors`, logs.length === 0, logs.join(" | "));
+    await context.close();
+  }
+
+  {
+    const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, reducedMotion: "reduce" });
+    const page = await context.newPage();
+    await page.goto(`${base}/admin`, { waitUntil: "networkidle" });
+    const animatedElements = await page.locator(".recharts-area-area, .recharts-bar-rectangle path, .recharts-pie-sector path").evaluateAll((elements) => elements.filter((element) => getComputedStyle(element).animationName !== "none").length);
+    check("charts disable animation for reduced motion", animatedElements === 0, String(animatedElements));
     await context.close();
   }
 }

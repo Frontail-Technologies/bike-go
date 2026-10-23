@@ -1,29 +1,19 @@
 "use client";
 
 import { Button } from "@heroui/react";
-import {
-  CalendarCheckIcon,
-  CarProfileIcon,
-  CurrencyDollarIcon,
-  HandCoinsIcon,
-  PlusIcon,
-} from "@phosphor-icons/react";
+import type { ColumnDef } from "@tanstack/react-table";
+import { CalendarCheckIcon, CarProfileIcon, CurrencyDollarIcon, FileMagnifyingGlassIcon, HandCoinsIcon, PlusIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { adminDashboard, type Currency } from "@/components/admin/data";
+import { useMemo, useState } from "react";
+import { AdminChartCard, MetricBarChart, RevenueTrendChart, StatusDonutChart } from "@/components/admin/charts";
 import { formatCambodiaDate } from "@/components/admin/controls";
+import { AdminDataTable } from "@/components/admin/data-display/admin-data-table";
 import { MoneyDisplay } from "@/components/admin/data-display/misc";
 import { StatCard } from "@/components/admin/data-display/stat-card";
-import {
-  AdminStatusBadge,
-  type AdminStatus,
-} from "@/components/admin/data-display/status-badge";
-import {
-  AdminPage,
-  ContentSection,
-  PageHeader,
-  SplitPanel,
-} from "@/components/admin/layout";
+import { AdminStatusBadge, type AdminStatus } from "@/components/admin/data-display/status-badge";
+import { adminDashboard, type Currency, type DashboardPeriod } from "@/components/admin/data";
+import { AdminPage, PageHeader } from "@/components/admin/layout";
 
 const statusTone = (status: string): AdminStatus =>
   (({
@@ -31,299 +21,63 @@ const statusTone = (status: string): AdminStatus =>
     active: "ongoing",
     submitted: "under-review",
     documents_under_review: "under-review",
+    additional_documents_required: "needs-review",
     eligibility_review: "under-review",
-  })[status] as AdminStatus | undefined) ??
-  (status.replaceAll("_", "-") as AdminStatus);
+  })[status] as AdminStatus | undefined) ?? (status.replaceAll("_", "-") as AdminStatus);
 
-function RevenueOverview({
-  revenue,
-}: {
-  revenue: Array<{
-    currency: Currency;
-    bookedMinor: number;
-    paidMinor: number;
-  }>;
-}) {
-  if (!revenue.length)
-    return (
-      <p className="p-5 text-sm text-(--admin-muted)">
-        Revenue will appear after the first confirmed booking.
-      </p>
-    );
-  return (
-    <div className="space-y-6 p-5">
-      {revenue.map((item) => {
-        const maximum = Math.max(item.bookedMinor, 1);
-        return (
-          <div key={item.currency} className="space-y-3">
-            <div className="flex items-end justify-between gap-4">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-(--admin-muted)">
-                  {item.currency}
-                </p>
-                <p className="mt-1 text-xl font-extrabold">
-                  <MoneyDisplay
-                    amount={item.bookedMinor}
-                    currency={item.currency}
-                  />
-                </p>
-              </div>
-              <p className="text-right text-xs text-(--admin-muted)">
-                Paid
-                <br />
-                <strong className="text-sm text-[var(--admin-text)]">
-                  <MoneyDisplay
-                    amount={item.paidMinor}
-                    currency={item.currency}
-                  />
-                </strong>
-              </p>
-            </div>
-            <div
-              className="space-y-2"
-              role="img"
-              aria-label={`${item.currency}: ${item.paidMinor} paid of ${item.bookedMinor} booked in minor units`}
-            >
-              <div className="h-3 overflow-hidden rounded-full bg-[var(--admin-surface-muted)]">
-                <div
-                  className="h-full rounded-full bg-[var(--admin-accent)]"
-                  style={{
-                    width: `${Math.max(2, (item.bookedMinor / maximum) * 100)}%`,
-                  }}
-                />
-              </div>
-              <div className="h-3 overflow-hidden rounded-full bg-[var(--admin-surface-muted)]">
-                <div
-                  className="h-full rounded-full bg-[var(--admin-success)]"
-                  style={{
-                    width: `${Math.max(item.paidMinor ? 2 : 0, (item.paidMinor / maximum) * 100)}%`,
-                  }}
-                />
-              </div>
-            </div>
-            <div className="flex gap-4 text-[11px] text-(--admin-muted)">
-              <span>
-                <i className="mr-1 inline-block size-2 rounded-full bg-[var(--admin-accent)]" />
-                Booked
-              </span>
-              <span>
-                <i className="mr-1 inline-block size-2 rounded-full bg-[var(--admin-success)]" />
-                Paid
-              </span>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
+type RecentBookingRow = (typeof adminDashboard.recentBookings)[number] & { id: string };
+type RecentLoanRow = (typeof adminDashboard.recentLoans)[number] & { id: string };
 
-function BookingSummary({ counts }: { counts: Record<string, number> }) {
-  const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-  const total = entries.reduce((sum, [, count]) => sum + count, 0);
-  return (
-    <div className="space-y-3 p-5">
-      {entries.length ? (
-        entries.map(([status, count]) => (
-          <div key={status} className="flex items-center gap-3">
-            <AdminStatusBadge status={statusTone(status)} />
-            <div className="h-2 flex-1 overflow-hidden rounded-full bg-[var(--admin-surface-muted)]">
-              <div
-                className="h-full rounded-full bg-[var(--admin-info)]"
-                style={{ width: `${total ? (count / total) * 100 : 0}%` }}
-              />
-            </div>
-            <span className="w-8 text-right text-sm font-bold tabular-nums">
-              {count}
-            </span>
-          </div>
-        ))
-      ) : (
-        <p className="text-sm text-(--admin-muted)">No bookings yet.</p>
-      )}
-    </div>
-  );
+function Selector<T extends string | number>({ label, value, options, onChange }: { label: string; value: T; options: ReadonlyArray<{ value: T; label: string }>; onChange: (value: T) => void }) {
+  return <div className="flex rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface-muted)] p-0.5" role="group" aria-label={label}>{options.map((option) => <Button key={option.value} size="sm" variant={value === option.value ? "primary" : "ghost"} aria-pressed={value === option.value} onPress={() => onChange(option.value)}>{option.label}</Button>)}</div>;
 }
 
 export function DashboardView() {
   const router = useRouter();
+  const [period, setPeriod] = useState<DashboardPeriod>(30);
+  const [currency, setCurrency] = useState<Currency>("USD");
   const data = adminDashboard;
-  const primaryRevenue =
-    data.bookings.revenue.find((item) => item.currency === "USD") ??
-    data.bookings.revenue[0];
+  const selectedRevenue = data.bookings.revenue.find((item) => item.currency === currency);
+  const bookingRows = useMemo<RecentBookingRow[]>(() => data.recentBookings.map((item) => ({ ...item, id: item.reference })), [data.recentBookings]);
+  const loanRows = useMemo<RecentLoanRow[]>(() => data.recentLoans.map((item) => ({ ...item, id: item.reference })), [data.recentLoans]);
+  const bookingColumns = useMemo<ColumnDef<RecentBookingRow>[]>(() => [
+    { accessorKey: "reference", header: "Booking" },
+    { accessorKey: "customerName", header: "Customer", cell: ({ row }) => <div><p className="font-bold">{row.original.customerName}</p><p className="text-xs text-[var(--admin-muted)]">{row.original.vehicleName}</p></div> },
+    { accessorKey: "pickupAt", header: "Pickup (ICT)", cell: ({ getValue }) => formatCambodiaDate(getValue<string>(), { year: undefined, hour: "2-digit", minute: "2-digit" }) },
+    { accessorKey: "totalPayableMinor", header: "Amount", cell: ({ row }) => <MoneyDisplay amount={row.original.totalPayableMinor} currency={row.original.currency} /> },
+    { accessorKey: "bookingStatus", header: "Status", cell: ({ getValue }) => <AdminStatusBadge status={statusTone(getValue<string>())} /> },
+  ], []);
+  const loanColumns = useMemo<ColumnDef<RecentLoanRow>[]>(() => [
+    { accessorKey: "reference", header: "Application" },
+    { accessorKey: "applicantName", header: "Applicant", cell: ({ row }) => <div><p className="font-bold">{row.original.applicantName ?? "Applicant pending"}</p><p className="text-xs capitalize text-[var(--admin-muted)]">{row.original.loanType.replaceAll("_", " ")}</p></div> },
+    { accessorKey: "requestedAmountMinor", header: "Requested", cell: ({ row }) => <MoneyDisplay amount={row.original.requestedAmountMinor} currency={row.original.currency} /> },
+    { accessorKey: "status", header: "Status", cell: ({ getValue }) => <AdminStatusBadge status={statusTone(getValue<string>())} /> },
+  ], []);
+
   return (
     <AdminPage>
-      <PageHeader
-        title="Dashboard"
-        description="A live overview of RideGo operations in Cambodia."
-        actions={
-          <>
-            <Button
-              variant="primary"
-              onPress={() => router.push("/admin/vehicles/new")}
-            >
-              <PlusIcon />
-              Add Vehicle
-            </Button>
-          </>
-        }
-      />
-      <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          label="Total Bookings"
-          value={data.bookings.total}
-          icon={<CalendarCheckIcon size={19} />}
-          secondary={`${data.bookings.upcomingPickups7d} pickups in the next 7 days`}
-        />
-        <StatCard
-          label="Active Rentals"
-          value={data.bookings.activeNow}
-          icon={<CarProfileIcon size={19} />}
-          secondary={`${data.vehicles.byStatus.available ?? 0} vehicles available`}
-        />
-        <StatCard
-          label="Total Revenue"
-          value={
-            primaryRevenue ? (
-              <MoneyDisplay
-                amount={primaryRevenue.bookedMinor}
-                currency={primaryRevenue.currency}
-              />
-            ) : (
-              "—"
-            )
-          }
-          icon={<CurrencyDollarIcon size={19} />}
-          secondary={
-            data.bookings.revenue.length > 1
-              ? data.bookings.revenue
-                  .filter((item) => item.currency !== primaryRevenue?.currency)
-                  .map((item) => (
-                    <span key={item.currency} className="mr-2">
-                      <MoneyDisplay
-                        amount={item.bookedMinor}
-                        currency={item.currency}
-                      />
-                    </span>
-                  ))
-              : "Confirmed and completed bookings"
-          }
-        />
-        <StatCard
-          label="Loan Applications"
-          value={data.loans.total}
-          icon={<HandCoinsIcon size={19} />}
-          secondary={`${data.loans.awaitingReview} awaiting review`}
-        />
+      <PageHeader title="Dashboard" description="A focused overview of RideGo operations in Cambodia." actions={<Button variant="primary" onPress={() => router.push("/admin/vehicles/new")}><PlusIcon />Add Vehicle</Button>} />
+      <section aria-label="Operational metrics" className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 xl:grid-cols-5">
+        <StatCard label="Total Bookings" value={data.bookings.total} icon={<CalendarCheckIcon size={19} />} secondary={`${data.bookings.upcomingPickups7d} pickups in the next 7 days`} />
+        <StatCard label="Active Rentals" value={data.bookings.activeNow} icon={<CarProfileIcon size={19} />} secondary={`${data.vehicles.byStatus.available ?? 0} vehicles available`} />
+        <StatCard label={`Revenue (${currency})`} value={selectedRevenue ? <MoneyDisplay amount={selectedRevenue.bookedMinor} currency={currency} /> : "—"} icon={<CurrencyDollarIcon size={19} />} secondary={`${currency} only — no conversion`} />
+        <StatCard label="Loan Applications" value={data.loans.total} icon={<HandCoinsIcon size={19} />} secondary={`${data.loans.awaitingReview} awaiting review`} />
+        <StatCard label="Pending Document Reviews" value={data.pendingDocumentReviews} icon={<FileMagnifyingGlassIcon size={19} />} secondary="Requires an admin decision" />
+      </section>
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+        <Selector label="Chart period" value={period} options={[{ value: 7, label: "7 days" }, { value: 30, label: "30 days" }, { value: 90, label: "90 days" }]} onChange={setPeriod} />
+        <Selector label="Revenue currency" value={currency} options={[{ value: "USD", label: "USD" }, { value: "KHR", label: "KHR" }]} onChange={setCurrency} />
       </div>
-      <SplitPanel
-        primary={
-          <ContentSection
-            title="Revenue overview"
-            description="Booked and paid revenue, kept separate by currency."
-          >
-            <RevenueOverview revenue={data.bookings.revenue} />
-          </ContentSection>
-        }
-        secondary={
-          <ContentSection
-            title="Booking status"
-            description={`${data.bookings.total} total bookings`}
-          >
-            <BookingSummary counts={data.bookings.byStatus} />
-          </ContentSection>
-        }
-      />
-      <div className="grid gap-5 xl:grid-cols-2">
-        <ContentSection
-          title="Recent bookings"
-          actions={
-            <Link
-              className="text-xs font-bold text-[var(--admin-info)]"
-              href="/admin/bookings"
-            >
-              View all
-            </Link>
-          }
-        >
-          <div className="divide-y divide-[var(--admin-border)]">
-            {data.recentBookings.map((booking) => (
-              <div
-                key={booking.reference}
-                className="flex items-center justify-between gap-3 px-5 py-3"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-bold">
-                    {booking.customerName}
-                  </p>
-                  <p className="truncate text-xs text-(--admin-muted)">
-                    {booking.reference} · {booking.vehicleName} ·{" "}
-                    {formatCambodiaDate(booking.pickupAt, { year: undefined })}
-                  </p>
-                </div>
-                <div className="flex shrink-0 flex-col items-end gap-1">
-                  <MoneyDisplay
-                    amount={booking.totalPayableMinor}
-                    currency={booking.currency}
-                    className="text-sm"
-                  />
-                  <AdminStatusBadge
-                    status={statusTone(booking.bookingStatus)}
-                  />
-                </div>
-              </div>
-            ))}
-            {!data.recentBookings.length ? (
-              <p className="p-5 text-sm text-(--admin-muted)">
-                No recent bookings.
-              </p>
-            ) : null}
-          </div>
-        </ContentSection>
-        <ContentSection
-          title="Recent loan applications"
-          actions={
-            <Link
-              className="text-xs font-bold text-[var(--admin-info)]"
-              href="/admin/loan-applications"
-            >
-              View all
-            </Link>
-          }
-        >
-          <div className="divide-y divide-[var(--admin-border)]">
-            {data.recentLoans.map((loan) => (
-              <div
-                key={loan.reference}
-                className="flex items-center justify-between gap-3 px-5 py-3"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-bold">
-                    {loan.applicantName ?? "Applicant pending"}
-                  </p>
-                  <p className="truncate text-xs text-(--admin-muted)">
-                    {loan.reference} · {loan.loanType.replaceAll("_", " ")} ·{" "}
-                    {formatCambodiaDate(loan.createdAt, { year: undefined })}
-                  </p>
-                </div>
-                <div className="flex shrink-0 flex-col items-end gap-1">
-                  <MoneyDisplay
-                    amount={loan.requestedAmountMinor}
-                    currency={loan.currency}
-                    className="text-sm"
-                  />
-                  <AdminStatusBadge status={statusTone(loan.status)} />
-                </div>
-              </div>
-            ))}
-            {!data.recentLoans.length ? (
-              <p className="p-5 text-sm text-(--admin-muted)">
-                No recent applications.
-              </p>
-            ) : null}
-          </div>
-        </ContentSection>
-      </div>
+      <section aria-label="Dashboard charts" className="grid gap-5 xl:grid-cols-2">
+        <AdminChartCard title="Revenue trend" description={`${period}-day booked and paid revenue in ${currency}.`}><RevenueTrendChart data={data.charts.revenue[currency][period]} currency={currency} /></AdminChartCard>
+        <AdminChartCard title="Booking status" description={`${data.bookings.total} bookings across the current status mix.`}><StatusDonutChart data={data.charts.bookingStatus} centerLabel="Bookings" /></AdminChartCard>
+        <AdminChartCard title="Booking volume" description={`${period}-day booking activity.`}><MetricBarChart data={data.charts.bookingVolume[period]} /></AdminChartCard>
+        <AdminChartCard title="Loan status" description="Current loan application pipeline."><StatusDonutChart data={data.charts.loanStatus} centerLabel="Applications" /></AdminChartCard>
+      </section>
+      <section aria-label="Recent operations" className="grid gap-5 xl:grid-cols-2">
+        <AdminChartCard title="Recent bookings" actions={<Link className="text-xs font-bold text-[var(--admin-info)]" href="/admin/bookings">View all</Link>}><AdminDataTable label="Recent bookings" columns={bookingColumns} data={bookingRows} minWidth={680} showPagination={false} /></AdminChartCard>
+        <AdminChartCard title="Recent loan applications" actions={<Link className="text-xs font-bold text-[var(--admin-info)]" href="/admin/loan-applications">View all</Link>}><AdminDataTable label="Recent loan applications" columns={loanColumns} data={loanRows} minWidth={580} showPagination={false} /></AdminChartCard>
+      </section>
     </AdminPage>
   );
 }
