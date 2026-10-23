@@ -4,13 +4,11 @@ import { AdminEmptyState } from "@/components/admin/feedback";
 import { AdminPage, ContentSection, PageHeader } from "@/components/admin/layout";
 
 const sections = {
-  vehicles: "Vehicles",
   bookings: "Bookings",
   customers: "Customers",
   "loan-applications": "Loan Applications",
   documents: "Documents",
   payments: "Payments",
-  locations: "Locations",
   settings: "Settings",
 } as const;
 

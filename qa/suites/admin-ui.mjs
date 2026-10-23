@@ -91,4 +91,42 @@ export default async function run({ browser, base, t }) {
     check("legacy bikes route redirects to vehicles", page.url().endsWith("/admin/vehicles"));
     await context.close();
   }
+
+  section("D. production admin screens");
+  for (const width of widths) {
+    const context = await browser.newContext({ viewport: { width, height: 900 } });
+    const page = await context.newPage();
+    const logs = watch(page);
+    await page.goto(`${base}/admin`, { waitUntil: "networkidle" });
+    const metrics = await overflowReport(page);
+    check(`/admin @${width} loads dashboard`, await page.getByRole("heading", { name: "Dashboard" }).isVisible());
+    check(`/admin @${width} no page overflow`, metrics.scrollWidth <= metrics.innerWidth, JSON.stringify(metrics));
+    check(`/admin @${width} no hydration or console errors`, logs.length === 0, logs.join(" | "));
+    await context.close();
+  }
+
+  {
+    const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    const page = await context.newPage();
+    const logs = watch(page);
+    await page.goto(`${base}/admin/vehicles`, { waitUntil: "networkidle" });
+    await page.getByRole("searchbox", { name: "Search vehicles…" }).fill("Toyota Vios");
+    check("vehicle search filters the list", await page.getByRole("row").filter({ hasText: "Toyota Vios" }).isVisible() && (await page.getByRole("row").filter({ hasText: "Honda Click 125" }).count()) === 0);
+    await page.getByRole("searchbox", { name: "Search vehicles…" }).fill("");
+    await page.getByRole("button", { name: "Next page" }).click();
+    check("vehicle pagination advances", (await page.locator('.pagination [aria-current="page"]').innerText()) === "2");
+    await page.goto(`${base}/admin/vehicles/00000000-0000-4000-8000-000000000001`, { waitUntil: "networkidle" });
+    check("vehicle details render", await page.getByRole("heading", { name: "Honda Click 125" }).isVisible());
+    await page.getByRole("button", { name: "Edit" }).click();
+    check("vehicle edit form loads existing data", await page.getByRole("textbox", { name: "Vehicle name" }).inputValue() === "Honda Click 125");
+    await page.goto(`${base}/admin/vehicles/new`, { waitUntil: "networkidle" });
+    await page.getByRole("button", { name: "Add Vehicle" }).click();
+    check("add vehicle shows inline validation", await page.getByText("Enter at least 2 characters.").isVisible());
+    await page.goto(`${base}/admin/locations`, { waitUntil: "networkidle" });
+    check("Cambodia locations render", await page.getByText("Phnom Penh Central").isVisible() && await page.getByText("Siem Reap Riverside").isVisible());
+    await page.getByRole("button", { name: "Edit" }).first().click();
+    check("location edit form loads existing data", await page.getByRole("textbox", { name: "Location name" }).inputValue() === "Phnom Penh Central");
+    check("production admin interactions have no console errors", logs.length === 0, logs.join(" | "));
+    await context.close();
+  }
 }

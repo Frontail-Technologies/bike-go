@@ -24,8 +24,6 @@ export function AdminDataTable<T extends { id: string }>({ columns, data, label,
   const [sorting, setSorting] = useState<SortingState>([]);
   const [localPagination, setLocalPagination] = useState<PaginationState>({ pageIndex: 0, pageSize });
   const finalColumns: ColumnDef<T>[] = rowActions ? [...columns, { id: "actions", header: "", enableSorting: false, cell: ({ row }) => rowActions(row.original) }] : columns;
-  // TanStack Table exposes intentionally unstable callbacks; the React compiler skips this hook boundary.
-  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data, columns: finalColumns, state: { sorting, pagination: localPagination }, onSortingChange: setSorting, onPaginationChange: setLocalPagination,
     getCoreRowModel: getCoreRowModel(), getSortedRowModel: getSortedRowModel(), getPaginationRowModel: pagination ? undefined : getPaginationRowModel(),

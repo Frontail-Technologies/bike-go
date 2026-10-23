@@ -1,0 +1,6 @@
+import { VehicleDetail } from "@/components/admin/vehicles/vehicle-detail";
+import { Suspense } from "react";
+import { AdminLoadingState } from "@/components/admin/feedback";
+
+async function VehicleDetails({ params }: { params: Promise<{ id: string }> }) { const { id } = await params; return <VehicleDetail id={id} />; }
+export default function VehicleDetailsPage({ params }: { params: Promise<{ id: string }> }) { return <Suspense fallback={<AdminLoadingState label="Loading vehicle…" />}><VehicleDetails params={params} /></Suspense>; }

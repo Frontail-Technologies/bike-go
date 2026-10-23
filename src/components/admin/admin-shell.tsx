@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import "@/components/admin/admin-theme.module.css";
 import { AdminHeader } from "@/components/admin/shell/admin-header";
 import { AdminMobileBar, AdminSidebar } from "@/components/admin/shell/admin-sidebar";
@@ -11,9 +11,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div data-admin-ui className="adminRoot flex min-h-dvh">
-      <AdminSidebar collapsed={collapsed} onCollapsedChange={setCollapsed} />
+      <Suspense fallback={<aside aria-label="Admin" className="hidden h-dvh w-[232px] shrink-0 bg-[var(--admin-sidebar)] lg:block" />}>
+        <AdminSidebar collapsed={collapsed} onCollapsedChange={setCollapsed} />
+      </Suspense>
       <div className="flex min-w-0 flex-1 flex-col">
-        <AdminMobileBar />
+        <Suspense fallback={<div className="h-16 bg-[var(--admin-sidebar)] lg:hidden" />}>
+          <AdminMobileBar />
+        </Suspense>
         <AdminHeader />
         <main id="main" className="w-full flex-1 px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
           <div className="mx-auto w-full max-w-[1680px]">{children}</div>
