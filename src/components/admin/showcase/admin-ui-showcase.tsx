@@ -4,6 +4,7 @@ import { Button, Description, Drawer, Dropdown, FieldError, Input, Label, Modal,
 import type { ColumnDef } from "@tanstack/react-table";
 import { BuildingsIcon, CalendarCheckIcon, CurrencyDollarIcon, DotsThreeIcon, PlusIcon, UsersIcon } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
+import { AdminChartCard, ChartEmptyState, ChartLoadingState, MetricBarChart, RevenueTrendChart, StatusDonutChart } from "@/components/admin/charts";
 import { AdminSearch, AdminSelect, CambodiaDateFilter, FilterBar, TableActions } from "@/components/admin/controls";
 import { AdminDataTable } from "@/components/admin/data-display/admin-data-table";
 import { ActivityTimeline, AvatarCell, MoneyDisplay } from "@/components/admin/data-display/misc";
@@ -15,6 +16,7 @@ import { FormGrid, FormSection } from "@/components/admin/forms/form-layout";
 import { ImageUploader } from "@/components/admin/forms/image-uploader";
 import { AdminPage, ContentSection, DetailList, InfoCard, PageHeader, SplitPanel } from "@/components/admin/layout";
 import { AdminBreadcrumbs, AdminTabs } from "@/components/admin/navigation";
+import { adminDashboard } from "@/components/admin/data";
 
 type DemoBooking = { id: string; customer: string; phone: string; vehicle: string; location: string; amount: number; status: AdminStatus };
 const bookings: DemoBooking[] = [
@@ -59,6 +61,21 @@ export function AdminUiShowcase() {
       <StatCard label="Active rentals" value="36" icon={<BuildingsIcon size={19} />} trend={{ direction: "up", value: "8.1%" }} />
       <StatCard label="Total revenue" value={<MoneyDisplay amount={12545000} />} icon={<CurrencyDollarIcon size={19} />} secondary="October 2026 · USD" />
       <StatCard label="Customers" value="1,284" icon={<UsersIcon size={19} />} loading />
+    </section>
+
+    <section aria-label="Admin chart examples" className="grid gap-5 xl:grid-cols-2">
+      <AdminChartCard title="Revenue trend" description="USD booked and paid totals remain isolated from KHR.">
+        <RevenueTrendChart data={adminDashboard.charts.revenue.USD[30]} currency="USD" />
+      </AdminChartCard>
+      <AdminChartCard title="Booking status" description="Visible values accompany every chart segment.">
+        <StatusDonutChart data={adminDashboard.charts.bookingStatus} centerLabel="Bookings" />
+      </AdminChartCard>
+      <AdminChartCard title="Booking volume" description="A compact 30-day operational view.">
+        <MetricBarChart data={adminDashboard.charts.bookingVolume[30]} />
+      </AdminChartCard>
+      <AdminChartCard title="Chart states" description="Stable loading and empty layouts prevent content shifts.">
+        <div className="grid gap-4 sm:grid-cols-2"><ChartLoadingState /><ChartEmptyState /></div>
+      </AdminChartCard>
     </section>
 
     <ContentSection title="Bookings table" description="Sortable columns, filters, local pagination and contained horizontal scrolling.">

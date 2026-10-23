@@ -1,4 +1,8 @@
 export type Currency = "USD" | "KHR";
+export type DashboardPeriod = 7 | 30 | 90;
+export type RevenueTrendPoint = { label: string; bookedMinor: number; paidMinor: number };
+export type MetricPoint = { label: string; value: number };
+export type StatusMetric = { label: string; value: number; color: string };
 export type VehicleStatus = "available" | "rented" | "maintenance" | "inactive";
 export type VehicleType = "motorcycle" | "scooter" | "car" | "other";
 
@@ -17,7 +21,37 @@ export type DashboardData = {
   customers: { total: number; newLast30Days: number };
   recentBookings: Array<{ reference: string; bookingStatus: string; customerName: string; vehicleName: string; pickupAt: string; totalPayableMinor: number; currency: Currency }>;
   recentLoans: Array<{ reference: string; status: string; applicantName: string | null; loanType: string; requestedAmountMinor: number; currency: Currency; createdAt: string }>;
+  charts: {
+    revenue: Record<Currency, Record<DashboardPeriod, RevenueTrendPoint[]>>;
+    bookingVolume: Record<DashboardPeriod, MetricPoint[]>;
+    bookingStatus: StatusMetric[];
+    loanStatus: StatusMetric[];
+  };
+  pendingDocumentReviews: number;
 };
+
+function makeRevenueSeries(period: DashboardPeriod, currency: Currency): RevenueTrendPoint[] {
+  const points = period === 7 ? 7 : period === 30 ? 10 : 13;
+  const bookedBase = currency === "USD" ? 118000 : 4720000;
+  const paidBase = currency === "USD" ? 89000 : 3560000;
+  return Array.from({ length: points }, (_, index) => {
+    const day = Math.round(1 + (index * (period - 1)) / Math.max(1, points - 1));
+    const variation = 0.82 + ((index * 7) % 5) * 0.09 + index * 0.025;
+    return {
+      label: `${day}d`,
+      bookedMinor: Math.round(bookedBase * variation),
+      paidMinor: Math.round(paidBase * (variation - 0.05)),
+    };
+  });
+}
+
+function makeVolumeSeries(period: DashboardPeriod): MetricPoint[] {
+  const points = period === 7 ? 7 : period === 30 ? 10 : 13;
+  return Array.from({ length: points }, (_, index) => ({
+    label: `${Math.round(1 + (index * (period - 1)) / Math.max(1, points - 1))}d`,
+    value: 7 + ((index * 5 + period) % 12),
+  }));
+}
 
 export const adminLocations: AdminLocation[] = [
   { id: "11111111-1111-4111-8111-111111111111", name: "Phnom Penh Central", city: "Phnom Penh", address: "125 Norodom Boulevard, Chamkarmon", latitude: 11.5504, longitude: 104.9212, active: true },
@@ -60,4 +94,25 @@ export const adminDashboard: DashboardData = {
     { reference: "LNN0028", status: "documents_under_review", applicantName: "Davit Park", loanType: "vehicle", requestedAmountMinor: 500000, currency: "USD", createdAt: "2026-10-23T02:00:00.000Z" },
     { reference: "LNN0027", status: "approved", applicantName: "Kim Sopheap", loanType: "personal", requestedAmountMinor: 350000, currency: "USD", createdAt: "2026-10-22T07:00:00.000Z" },
   ],
+  pendingDocumentReviews: 9,
+  charts: {
+    revenue: {
+      USD: { 7: makeRevenueSeries(7, "USD"), 30: makeRevenueSeries(30, "USD"), 90: makeRevenueSeries(90, "USD") },
+      KHR: { 7: makeRevenueSeries(7, "KHR"), 30: makeRevenueSeries(30, "KHR"), 90: makeRevenueSeries(90, "KHR") },
+    },
+    bookingVolume: { 7: makeVolumeSeries(7), 30: makeVolumeSeries(30), 90: makeVolumeSeries(90) },
+    bookingStatus: [
+      { label: "Completed", value: 62, color: "var(--admin-success)" },
+      { label: "Active", value: 24, color: "var(--admin-info)" },
+      { label: "Cancelled", value: 16, color: "var(--admin-danger)" },
+      { label: "Pending", value: 12, color: "var(--admin-warning)" },
+      { label: "Expired", value: 10, color: "var(--admin-muted)" },
+    ],
+    loanStatus: [
+      { label: "Approved", value: 15, color: "var(--admin-success)" },
+      { label: "Documents under review", value: 3, color: "var(--admin-info)" },
+      { label: "Submitted", value: 4, color: "var(--admin-warning)" },
+      { label: "Rejected", value: 6, color: "var(--admin-danger)" },
+    ],
+  },
 };
