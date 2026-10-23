@@ -12,11 +12,16 @@ type AdminNavListProps = {
   onNavigate?: (href: string) => void;
 };
 
-export function AdminNavList({ activeHref, collapsed = false, onNavigate }: AdminNavListProps) {
+export function AdminNavList({
+  activeHref,
+  collapsed = false,
+  onNavigate,
+}: AdminNavListProps) {
   return (
     <ul className="flex flex-col gap-1">
       {adminNavigation.map(({ href, label, Icon }) => {
-        const active = href === "/admin" ? activeHref === href : activeHref.startsWith(href);
+        const active =
+          href === "/admin" ? activeHref === href : activeHref.startsWith(href);
         return (
           <li key={href}>
             <Link
@@ -31,14 +36,18 @@ export function AdminNavList({ activeHref, collapsed = false, onNavigate }: Admi
                 }
               }}
               className={cn(
-                "flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--admin-accent)]",
+                "flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-(--admin-accent)",
                 collapsed && "justify-center px-0",
                 active
-                  ? "bg-[var(--admin-accent)] font-bold text-[#111820]"
-                  : "font-medium text-[var(--admin-sidebar-muted)] hover:bg-white/8 hover:text-white",
+                  ? "bg-(--admin-accent) font-bold text-[#111820]"
+                  : "font-medium text-(--admin-sidebar-muted) hover:bg-white/8 hover:text-white",
               )}
             >
-              <Icon size={19} weight={active ? "fill" : "regular"} aria-hidden />
+              <Icon
+                size={19}
+                weight={active ? "fill" : "regular"}
+                aria-hidden
+              />
               {collapsed ? null : <span className="truncate">{label}</span>}
             </Link>
           </li>

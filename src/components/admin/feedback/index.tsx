@@ -5,7 +5,7 @@ import { FileMagnifyingGlassIcon } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 
 export function AdminLoadingState({ label = "Loading records…" }: { label?: string }) {
-  return <div role="status" className="flex min-h-40 flex-col items-center justify-center gap-3 p-8 text-sm text-[var(--admin-muted)]"><Spinner size="lg" /><span>{label}</span></div>;
+  return <div role="status" className="flex min-h-40 flex-col items-center justify-center gap-3 p-8 text-sm text-[var(--admin-muted)]"><Spinner size="lg" aria-label={label} /><span>{label}</span></div>;
 }
 
 export function AdminEmptyState({ title = "Nothing here yet", description = "Records will appear here when they are available.", action }: { title?: string; description?: string; action?: ReactNode }) {

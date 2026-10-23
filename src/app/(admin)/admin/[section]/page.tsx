@@ -1,26 +1,26 @@
-import { SquaresFourIcon } from "@phosphor-icons/react/ssr";
 import { notFound, redirect } from "next/navigation";
-import { AdminEmptyState } from "@/components/admin/feedback";
-import { AdminPage, ContentSection, PageHeader } from "@/components/admin/layout";
+import { Suspense } from "react";
+import { AdminLoadingState } from "@/components/admin/feedback";
+import { BookingsScreen, CustomersScreen, DocumentsScreen, LoansScreen, PaymentsScreen, SettingsScreen } from "@/components/admin/operations/operation-screens";
 
-const sections = {
-  bookings: "Bookings",
-  customers: "Customers",
-  "loan-applications": "Loan Applications",
-  documents: "Documents",
-  payments: "Payments",
-  settings: "Settings",
-} as const;
+const sections = ["bookings", "customers", "loan-applications", "documents", "payments", "settings"] as const;
 
 export function generateStaticParams() {
-  return Object.keys(sections).map((section) => ({ section }));
+  return sections.map((section) => ({ section }));
 }
 
-export default async function AdminSectionPlaceholder({ params }: { params: Promise<{ section: string }> }) {
+async function AdminSection({ params }: { params: Promise<{ section: string }> }) {
   const { section } = await params;
   if (section === "bikes") redirect("/admin/vehicles");
-  const title = sections[section as keyof typeof sections];
-  if (!title) notFound();
+  if (!sections.includes(section as (typeof sections)[number])) notFound();
+  if (section === "bookings") return <BookingsScreen />;
+  if (section === "customers") return <CustomersScreen />;
+  if (section === "loan-applications") return <LoansScreen />;
+  if (section === "documents") return <DocumentsScreen />;
+  if (section === "payments") return <PaymentsScreen />;
+  return <SettingsScreen />;
+}
 
-  return <AdminPage><PageHeader title={title} /><ContentSection><AdminEmptyState title={`${title} workspace`} description="This section is ready for feature-specific screens in a later phase." action={<span className="inline-flex size-10 items-center justify-center rounded-full bg-[var(--admin-warning-soft)] text-[var(--admin-warning)]"><SquaresFourIcon size={20} weight="fill" /></span>} /></ContentSection></AdminPage>;
+export default function AdminSectionPage({ params }: { params: Promise<{ section: string }> }) {
+  return <Suspense fallback={<AdminLoadingState label="Loading workspace…" />}><AdminSection params={params} /></Suspense>;
 }

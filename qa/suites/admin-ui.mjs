@@ -198,4 +198,36 @@ export default async function run({ browser, base, t }) {
     check("charts disable animation for reduced motion", animatedElements === 0, String(animatedElements));
     await context.close();
   }
+
+  section("F. remaining admin workspaces");
+  {
+    const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    const page = await context.newPage();
+    const logs = watch(page);
+    for (const [route, heading] of [["bookings", "Bookings"], ["customers", "Customers"], ["loan-applications", "Loan Applications"], ["documents", "Documents"], ["payments", "Payments"], ["settings", "Settings"]]) {
+      await page.goto(`${base}/admin/${route}`, { waitUntil: "networkidle" });
+      const metrics = await overflowReport(page);
+      check(`/admin/${route} loads`, await page.getByRole("heading", { name: heading, exact: true }).isVisible());
+      check(`/admin/${route} has no page overflow`, metrics.scrollWidth <= metrics.innerWidth, JSON.stringify(metrics));
+    }
+    await page.goto(`${base}/admin/bookings`, { waitUntil: "networkidle" });
+    await page.getByRole("searchbox", { name: "Search bookings…" }).fill("John Smith");
+    check("booking search filters records", await page.getByText("John Smith").first().isVisible() && (await page.getByText("Marie Tan").count()) === 0);
+    await page.getByRole("button", { name: /View booking/ }).first().click();
+    await page.waitForURL(/\/admin\/bookings\/booking-/);
+    check("booking detail renders", await page.getByRole("heading", { name: "BND0124" }).isVisible());
+    await page.goto(`${base}/admin/customers/customer-1`, { waitUntil: "networkidle" });
+    check("customer detail renders", await page.getByRole("heading", { name: "John Smith" }).isVisible());
+    await page.goto(`${base}/admin/loan-applications/loan-1`, { waitUntil: "networkidle" });
+    await page.getByRole("button", { name: "Approve" }).click();
+    check("loan decision updates locally", await page.getByText("Approved", { exact: true }).first().isVisible());
+    await page.goto(`${base}/admin/documents/document-2`, { waitUntil: "networkidle" });
+    await page.getByRole("button", { name: "Verify" }).click();
+    check("document review updates locally", await page.getByText("Verified", { exact: true }).isVisible());
+    await page.goto(`${base}/admin/settings`, { waitUntil: "networkidle" });
+    await page.getByRole("button", { name: "Save changes" }).click();
+    check("settings provides local success feedback", await page.getByText("Settings saved locally").isVisible());
+    check("remaining workspaces have no console errors", logs.length === 0, logs.join(" | "));
+    await context.close();
+  }
 }

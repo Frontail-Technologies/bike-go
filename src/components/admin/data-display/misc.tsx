@@ -9,7 +9,7 @@ export function MoneyDisplay({ amount, className }: { amount: number; className?
 
 export function AvatarCell({ name, detail, src }: { name: string; detail?: string; src?: string }) {
   const initials = name.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
-  return <div className="flex min-w-[180px] items-center gap-3"><Avatar size="sm">{src ? <Avatar.Image src={src} alt="" /> : null}<Avatar.Fallback>{initials}</Avatar.Fallback></Avatar><span className="min-w-0"><span className="block truncate text-sm font-bold">{name}</span>{detail ? <span className="block truncate text-xs text-[var(--admin-muted)]">{detail}</span> : null}</span></div>;
+  return <div className="flex min-w-[180px] items-center gap-3"><Avatar size="sm" aria-label={name}>{src ? <Avatar.Image src={src} alt="" /> : null}<Avatar.Fallback>{initials}</Avatar.Fallback></Avatar><span className="min-w-0"><span className="block truncate text-sm font-bold">{name}</span>{detail ? <span className="block truncate text-xs text-[var(--admin-muted)]">{detail}</span> : null}</span></div>;
 }
 
 export type ActivityItem = { id: string; title: string; detail?: string; time: string; icon?: ReactNode; tone?: "success" | "warning" | "info" };

@@ -15,7 +15,7 @@ export function FilterBar({ children, search, actions, className }: { children?:
 }
 
 export function AdminSelect({ label, value, onChange, options, className }: { label: string; value: string; onChange: (value: string) => void; options: ReadonlyArray<{ value: string; label: string }>; className?: string }) {
-  return <Select value={value} onChange={(key) => key !== null && onChange(String(key))} placeholder={label} className={cn("min-w-36", className)}>
+  return <Select aria-label={label} value={value} onChange={(key) => key !== null && onChange(String(key))} placeholder={label} className={cn("min-w-36", className)}>
     <Label className="sr-only">{label}</Label>
     <Select.Trigger className="min-h-10 rounded-xl border border-[var(--admin-border)] bg-white px-3 shadow-none">
       <FunnelIcon size={15} className="shrink-0 text-[var(--admin-muted)]" aria-hidden />
