@@ -10,13 +10,14 @@ import {
   Switch,
   TextField,
 } from "@heroui/react";
-import { ArrowLeftIcon, CheckIcon } from "@phosphor-icons/react";
+import { ArrowLeftIcon, CheckIcon, LinkIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { z } from "zod";
 import { adminLocations, type AdminLocation } from "@/components/admin/data";
 import { FormGrid, FormSection } from "@/components/admin/forms/form-layout";
 import { AdminErrorState } from "@/components/admin/feedback";
+import { mapLinkError, parseMapLink } from "./map-link";
 import {
   AdminPage,
   ContentSection,
@@ -47,6 +48,16 @@ function LocationForm({ location }: { location?: AdminLocation }) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [mapLink, setMapLink] = useState("");
+  const [mapLinkMessage, setMapLinkMessage] = useState("");
+  function applyMapLink() {
+    const found = parseMapLink(mapLink);
+    if (!found) { setMapLinkMessage(mapLinkError(mapLink)); return; }
+    setForm((current) => ({ ...current, latitude: String(found.latitude), longitude: String(found.longitude) }));
+    setErrors((current) => ({ ...current, latitude: "", longitude: "" }));
+    setMapLink("");
+    setMapLinkMessage("");
+  }
   function change(name: keyof Raw, value: string | boolean) {
     setForm((current) => ({ ...current, [name]: value }));
     setErrors((current) => ({ ...current, [name]: "" }));
@@ -141,6 +152,19 @@ function LocationForm({ location }: { location?: AdminLocation }) {
                 </TextField>
               ))}
             </FormGrid>
+            {form.latitude === "" || form.longitude === "" ? (
+              <div className="mt-5 rounded-xl border border-dashed border-[var(--admin-border-strong)] bg-[var(--admin-surface-muted)] p-4">
+                <p className="text-sm font-bold">No coordinates yet</p>
+                <p className="mb-3 text-xs text-[var(--admin-muted)]">Paste a map link and the latitude and longitude are filled in for you.</p>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+                  <TextField aria-label="Map link" value={mapLink} onChange={(value) => { setMapLink(value); setMapLinkMessage(""); }} isInvalid={Boolean(mapLinkMessage)} className="min-w-0 flex-1">
+                    <Input placeholder="https://www.google.com/maps/place/…/@11.5504,104.9212,17z" />
+                    <FieldError>{mapLinkMessage}</FieldError>
+                  </TextField>
+                  <Button type="button" variant="outline" className="min-h-11" onPress={applyMapLink}><LinkIcon size={16} />Use link</Button>
+                </div>
+              </div>
+            ) : null}
             <Switch
               className="mt-5"
               isSelected={form.active}

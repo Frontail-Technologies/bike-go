@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Dropdown, Label } from "@heroui/react";
-import { DotsThreeVerticalIcon, MapPinIcon, NotePencilIcon, PlusIcon, PowerIcon } from "@phosphor-icons/react";
+import { DotsThreeVerticalIcon, LinkIcon, MapPinIcon, NotePencilIcon, PlusIcon, PowerIcon } from "@phosphor-icons/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -11,6 +11,7 @@ import { AdminDataTable } from "@/components/admin/data-display/admin-data-table
 import { AdminStatusBadge } from "@/components/admin/data-display/status-badge";
 import { ConfirmationDialog } from "@/components/admin/feedback";
 import { AdminPage, ContentSection, PageHeader } from "@/components/admin/layout";
+import { MapLinkDialog } from "./map-link-dialog";
 
 const PAGE_SIZE = 10;
 
@@ -20,6 +21,7 @@ export function LocationList() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [changing, setChanging] = useState<AdminLocation | null>(null);
+  const [linking, setLinking] = useState<AdminLocation | null>(null);
 
   const filtered = useMemo(() => items.filter((location) => `${location.name} ${location.city} ${location.address}`.toLowerCase().includes(search.trim().toLowerCase())), [items, search]);
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -37,7 +39,7 @@ export function LocationList() {
     { accessorKey: "name", header: "Location", cell: ({ row }) => <div className="flex min-w-48 items-center gap-3"><span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[var(--admin-accent-soft)] text-[var(--admin-warning)]"><MapPinIcon size={20} weight="duotone" aria-hidden /></span><p className="truncate font-bold">{row.original.name}</p></div> },
     { accessorKey: "city", header: "City" },
     { accessorKey: "address", header: "Address", cell: ({ row }) => <span className="block max-w-72 truncate">{row.original.address}</span> },
-    { id: "coordinates", header: "Coordinates", enableSorting: false, accessorFn: (row) => row.latitude, cell: ({ row }) => row.original.latitude !== null && row.original.longitude !== null ? <span className="whitespace-nowrap text-xs tabular-nums">{row.original.latitude}, {row.original.longitude}</span> : <span className="text-xs text-[var(--admin-muted)]">Not set</span> },
+    { id: "coordinates", header: "Coordinates", enableSorting: false, accessorFn: (row) => row.latitude, cell: ({ row }) => row.original.latitude !== null && row.original.longitude !== null ? <span className="whitespace-nowrap text-xs tabular-nums">{row.original.latitude}, {row.original.longitude}</span> : <Button size="sm" variant="outline" className="min-h-11 md:min-h-8" aria-label={`Add coordinates for ${row.original.name} by link`} onPress={() => setLinking(row.original)}><LinkIcon size={14} />Add by link</Button> },
     { id: "status", header: "Status", accessorFn: (row) => (row.active ? "active" : "inactive"), cell: ({ row }) => <AdminStatusBadge status={row.original.active ? "active" : "inactive"} /> },
   ];
 
@@ -63,6 +65,7 @@ export function LocationList() {
         </div>
         <AdminDataTable columns={columns} data={rows} label="Locations" emptyState="No locations found. Try another search or add a RideGo location." pagination={{ page: safePage, pageSize: PAGE_SIZE, total: filtered.length, onPageChange: setPage }} onRowNavigate={edit} rowActions={rowActions} minWidth={760} />
       </ContentSection>
+      <MapLinkDialog name={linking?.name ?? null} isOpen={Boolean(linking)} onOpenChange={(open) => !open && setLinking(null)} onSave={(coordinates) => setItems((current) => current.map((location) => location.id === linking?.id ? { ...location, ...coordinates } : location))} />
       <ConfirmationDialog isOpen={Boolean(changing)} onOpenChange={(open) => !open && setChanging(null)} title={changing?.active ? "Deactivate location?" : "Activate location?"} description={changing?.active ? `${changing.name} will not be available for new assignments.` : `${changing?.name ?? "This location"} will be available for vehicle assignment.`} confirmLabel={changing?.active ? "Deactivate" : "Activate"} danger={changing?.active} onConfirm={toggle} />
     </AdminPage>
   );

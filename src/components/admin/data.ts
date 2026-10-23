@@ -58,7 +58,7 @@ export const adminLocations: AdminLocation[] = [
   { id: "11111111-1111-4111-8111-111111111111", name: "Phnom Penh Central", city: "Phnom Penh", address: "125 Norodom Boulevard, Chamkarmon", latitude: 11.5504, longitude: 104.9212, active: true },
   { id: "22222222-2222-4222-8222-222222222222", name: "Siem Reap Riverside", city: "Siem Reap", address: "56 Sivutha Boulevard, Old Market", latitude: 13.354, longitude: 103.855, active: true },
   { id: "33333333-3333-4333-8333-333333333333", name: "Sihanoukville Port", city: "Sihanoukville", address: "18 Ekareach Street", latitude: 10.6253, longitude: 103.5234, active: true },
-  { id: "44444444-4444-4444-8444-444444444444", name: "Phnom Penh Airport", city: "Phnom Penh", address: "Russian Federation Boulevard", latitude: 11.5466, longitude: 104.8441, active: false },
+  { id: "44444444-4444-4444-8444-444444444444", name: "Phnom Penh Airport", city: "Phnom Penh", address: "Russian Federation Boulevard", latitude: null, longitude: null, active: false },
 ];
 
 const vehicleSeeds = [
