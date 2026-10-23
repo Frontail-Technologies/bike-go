@@ -1,5 +1,6 @@
 import { Elysia } from "elysia";
 import { ok, publicErrors } from "@/libs/api";
+import { publicCache } from "@/plugins/cache";
 import * as BannerModel from "./model";
 import { listLiveBanners, liveBannerImage } from "./service";
 
@@ -9,6 +10,7 @@ export const bannerRoutes = new Elysia({ name: "RideGo.Banner", prefix: "/api/v1
     {
       query: BannerModel.BannersGet.Query,
       response: { 200: BannerModel.BannersGet.Response, ...publicErrors },
+      afterHandle: publicCache(30),
       detail: {
         summary: "Banners that are showing right now",
         description:

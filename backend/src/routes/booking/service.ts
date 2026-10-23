@@ -1,21 +1,21 @@
-import { and, asc, count, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, type SQL } from "drizzle-orm";
 import { env } from "@/env";
 import { AppError, invalid } from "@/libs/api";
 import { rentalDays } from "@/libs/date";
 import { db } from "@/libs/db";
+import { alias } from "drizzle-orm/pg-core";
 import { PG, pgErrorCode } from "@/libs/db/errors";
 import { bookingAddonItems, bookingAddons, bookings, locations, vehicles } from "@/libs/db/schema";
 import { idempotently } from "@/libs/idempotency";
 import { paginate } from "@/libs/pagination";
 import { newReference } from "@/libs/reference";
 import { busyPeriods, UNRENTABLE_STATUSES } from "../availability/service";
-import { expireStaleHolds } from "./holds";
+import { effectiveBookingStatus, expireStaleHolds, withLapsedHold } from "./holds";
 import { priceBooking } from "./pricing";
 import type { Executor, Tx } from "@/libs/db/types";
 import type { Currency } from "@/libs/types";
 import type { BookingRequest, BookingView, BookingsGet, QuoteView } from "./types";
 import { matchIdOrSlug } from "@/libs/uuid";
-import { lockRows } from "@/libs/db/lock";
 import type { PreparedBooking } from "./types";
 
 export const MAX_RENTAL_DAYS = 90;
@@ -33,14 +33,9 @@ async function prepare(executor: Executor, request: BookingRequest, options: { f
   const days = rentalDays(pickupAt, returnAt);
   if (days > MAX_RENTAL_DAYS) throw invalid("returnAt", `Rentals are limited to ${MAX_RENTAL_DAYS} days.`);
 
-  const [found] = await executor.select({ id: vehicles.id }).from(vehicles).where(matchIdOrSlug(vehicles.id, vehicles.slug, request.vehicle)).limit(1);
-  if (!found) throw new AppError("NOT_FOUND", 404, "Vehicle not found.");
-
-  if (options.forUpdate) {
-    const locked = await lockRows(executor, vehicles, eq(vehicles.id, found.id));
-    if (locked.length === 0) throw new AppError("NOT_FOUND", 404, "Vehicle not found.");
-  }
-  const vehicle = (await executor.select().from(vehicles).where(eq(vehicles.id, found.id)).limit(1))[0]!;
+  const lookup = executor.select().from(vehicles).where(matchIdOrSlug(vehicles.id, vehicles.slug, request.vehicle)).limit(1);
+  const [vehicle] = await (options.forUpdate ? lookup.for("update") : lookup);
+  if (!vehicle) throw new AppError("NOT_FOUND", 404, "Vehicle not found.");
 
   if ((UNRENTABLE_STATUSES as readonly string[]).includes(vehicle.status)) {
     throw new AppError("VEHICLE_UNAVAILABLE", 409, "This vehicle cannot be rented right now.");
@@ -49,15 +44,17 @@ async function prepare(executor: Executor, request: BookingRequest, options: { f
   const pickupLocationId = request.pickupLocationId ?? vehicle.locationId;
   const returnLocationId = request.returnLocationId ?? pickupLocationId;
   if (pickupLocationId !== vehicle.locationId) throw invalid("pickupLocationId", "This vehicle is not at that location.");
-  const places = await executor.select({ id: locations.id, active: locations.active }).from(locations).where(inArray(locations.id, [...new Set([pickupLocationId, returnLocationId])]));
+  const wanted = new Map<string, number>();
+  for (const { code, quantity } of request.addons ?? []) wanted.set(code, (wanted.get(code) ?? 0) + (quantity ?? 1));
+
+  const [places, addonRows] = await Promise.all([
+    executor.select({ id: locations.id, active: locations.active }).from(locations).where(inArray(locations.id, [...new Set([pickupLocationId, returnLocationId])])),
+    wanted.size ? executor.select().from(bookingAddons).where(and(inArray(bookingAddons.code, [...wanted.keys()]), eq(bookingAddons.active, true))) : Promise.resolve([]),
+  ]);
   for (const [path, id] of [["pickupLocationId", pickupLocationId], ["returnLocationId", returnLocationId]] as const) {
     const place = places.find((p) => p.id === id);
     if (!place || !place.active) throw invalid(path, "That location is not available.");
   }
-
-  const wanted = new Map<string, number>();
-  for (const { code, quantity } of request.addons ?? []) wanted.set(code, (wanted.get(code) ?? 0) + (quantity ?? 1));
-  const addonRows = wanted.size ? await executor.select().from(bookingAddons).where(and(inArray(bookingAddons.code, [...wanted.keys()]), eq(bookingAddons.active, true))) : [];
   for (const code of wanted.keys()) {
     if (!addonRows.some((a) => a.code === code)) throw invalid("addons", `Unknown or unavailable add-on "${code}".`);
   }
@@ -162,43 +159,65 @@ export async function createBooking(userId: string, request: BookingRequest, ide
   }
 }
 
+const pickupLocation = alias(locations, "pickup_location");
+const returnLocation = alias(locations, "return_location");
+
+async function loadBookings(executor: Executor, where: SQL) {
+  const [rows, items] = await Promise.all([
+    executor
+      .select({ booking: bookings, vehicle: vehicles, pickup: pickupLocation, back: returnLocation })
+      .from(bookings)
+      .innerJoin(vehicles, eq(vehicles.id, bookings.vehicleId))
+      .innerJoin(pickupLocation, eq(pickupLocation.id, bookings.pickupLocationId))
+      .innerJoin(returnLocation, eq(returnLocation.id, bookings.returnLocationId))
+      .where(where),
+    executor
+      .select({ item: bookingAddonItems, code: bookingAddons.code })
+      .from(bookingAddonItems)
+      .innerJoin(bookingAddons, eq(bookingAddons.id, bookingAddonItems.addonId))
+      .where(inArray(bookingAddonItems.bookingId, executor.select({ id: bookings.id }).from(bookings).where(where))),
+  ]);
+  return rows.map((row) => ({ ...row, items: items.filter((entry) => entry.item.bookingId === row.booking.id) }));
+}
+
+type LoadedBooking = Awaited<ReturnType<typeof loadBookings>>[number];
+
+function presentBooking({ booking: row, vehicle, pickup, back, items }: LoadedBooking, now: Date): BookingView {
+  const place = (l: typeof pickup) => ({ id: l.id, name: l.name, city: l.city, address: l.address });
+  return {
+    reference: row.reference,
+    bookingStatus: withLapsedHold(row, now),
+    paymentStatus: row.paymentStatus,
+    vehicle: { id: vehicle.id, slug: vehicle.slug, name: vehicle.name, brand: vehicle.brand, model: vehicle.model },
+    pickupLocation: place(pickup),
+    returnLocation: place(back),
+    pickupAt: row.pickupAt.toISOString(),
+    returnAt: row.returnAt.toISOString(),
+    rentalDays: row.rentalDays,
+    currency: row.currency,
+    pricing: {
+      dailyRateMinor: row.dailyRateSnapshotMinor,
+      rentalSubtotalMinor: row.rentalSubtotalMinor,
+      addonsTotalMinor: row.addonsTotalMinor,
+      platformFeeMinor: row.platformFeeMinor,
+      taxesMinor: row.taxesMinor,
+      securityDepositMinor: row.securityDepositSnapshotMinor,
+      totalPayableMinor: row.totalPayableMinor,
+    },
+    addons: items.map(({ item, code }) => ({ code, name: item.nameSnapshot, unitPriceMinor: item.unitPriceSnapshotMinor, quantity: item.quantity, days: item.days, totalMinor: item.totalMinor })),
+    holdExpiresAt: row.holdExpiresAt?.toISOString() ?? null,
+    cancelledAt: row.cancelledAt?.toISOString() ?? null,
+    cancellationReason: row.cancellationReason,
+    createdAt: row.createdAt.toISOString(),
+  };
+}
+
 export async function bookingViews(executor: Executor, ids: string[]): Promise<BookingView[]> {
   if (ids.length === 0) return [];
-  const rows = await executor.query.bookings.findMany({
-    where: inArray(bookings.id, ids),
-    with: { vehicle: true, pickupLocation: true, returnLocation: true, addonItems: { with: { addon: true } } },
-  });
-  const byId = new Map(rows.map((row) => [row.id, row]));
-  return ids.map((id) => {
-    const row = byId.get(id)!;
-    const place = (l: typeof row.pickupLocation) => ({ id: l.id, name: l.name, city: l.city, address: l.address });
-    return {
-      reference: row.reference,
-      bookingStatus: row.bookingStatus,
-      paymentStatus: row.paymentStatus,
-      vehicle: { id: row.vehicle.id, slug: row.vehicle.slug, name: row.vehicle.name, brand: row.vehicle.brand, model: row.vehicle.model },
-      pickupLocation: place(row.pickupLocation),
-      returnLocation: place(row.returnLocation),
-      pickupAt: row.pickupAt.toISOString(),
-      returnAt: row.returnAt.toISOString(),
-      rentalDays: row.rentalDays,
-      currency: row.currency,
-      pricing: {
-        dailyRateMinor: row.dailyRateSnapshotMinor,
-        rentalSubtotalMinor: row.rentalSubtotalMinor,
-        addonsTotalMinor: row.addonsTotalMinor,
-        platformFeeMinor: row.platformFeeMinor,
-        taxesMinor: row.taxesMinor,
-        securityDepositMinor: row.securityDepositSnapshotMinor,
-        totalPayableMinor: row.totalPayableMinor,
-      },
-      addons: row.addonItems.map((item) => ({ code: item.addon.code, name: item.nameSnapshot, unitPriceMinor: item.unitPriceSnapshotMinor, quantity: item.quantity, days: item.days, totalMinor: item.totalMinor })),
-      holdExpiresAt: row.holdExpiresAt?.toISOString() ?? null,
-      cancelledAt: row.cancelledAt?.toISOString() ?? null,
-      cancellationReason: row.cancellationReason,
-      createdAt: row.createdAt.toISOString(),
-    };
-  });
+  const rows = await loadBookings(executor, inArray(bookings.id, ids));
+  const byId = new Map(rows.map((row) => [row.booking.id, row]));
+  const now = new Date();
+  return ids.map((id) => presentBooking(byId.get(id)!, now));
 }
 
 export async function bookingView(executor: Executor, id: string) {
@@ -206,8 +225,7 @@ export async function bookingView(executor: Executor, id: string) {
 }
 
 export async function listMyBookings(userId: string, query: BookingsGet["Query"]) {
-  await expireStaleHolds(db, { userId });
-  const where = and(eq(bookings.userId, userId), query.status ? eq(bookings.bookingStatus, query.status) : undefined);
+  const where = and(eq(bookings.userId, userId), query.status ? eq(effectiveBookingStatus, query.status) : undefined);
   return paginate(query, {
     rows: (page) => db.select({ id: bookings.id }).from(bookings).where(where).orderBy(desc(bookings.createdAt), asc(bookings.reference)).limit(page.limit).offset(page.offset),
     total: () => db.select({ n: count() }).from(bookings).where(where),
@@ -216,10 +234,9 @@ export async function listMyBookings(userId: string, query: BookingsGet["Query"]
 }
 
 export async function getMyBooking(userId: string, reference: string) {
-  await expireStaleHolds(db, { userId, reference });
-  const [row] = await db.select({ id: bookings.id }).from(bookings).where(and(eq(bookings.reference, reference), eq(bookings.userId, userId))).limit(1);
+  const [row] = await loadBookings(db, and(eq(bookings.reference, reference), eq(bookings.userId, userId))!);
   if (!row) throw new AppError("NOT_FOUND", 404, "Booking not found.");
-  return bookingView(db, row.id);
+  return presentBooking(row, new Date());
 }
 
 export async function cancelMyBooking(userId: string, reference: string, reason: string | undefined) {

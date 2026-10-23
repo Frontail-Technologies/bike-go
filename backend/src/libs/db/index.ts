@@ -22,7 +22,7 @@ async function connect(): Promise<{ db: Db; close: () => Promise<void> }> {
   }
 
   const client = postgres(env.DATABASE_URL, {
-    max: env.NODE_ENV === "production" ? 20 : 10,
+    max: env.DATABASE_POOL_MAX ?? (env.NODE_ENV === "production" ? 20 : 10),
     connection: { timezone: "UTC" },
   });
   return { db: drizzlePostgres(client, { schema: fullSchema }) as unknown as Db, close: () => client.end({ timeout: 5 }) };

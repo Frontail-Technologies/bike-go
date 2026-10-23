@@ -57,6 +57,13 @@
       "when": 1792728656037,
       "tag": "0007_stored_image_metadata",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792731019649,
+      "tag": "0008_bookings_created_index",
+      "breakpoints": true
     }
   ]
 }

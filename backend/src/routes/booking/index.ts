@@ -4,12 +4,13 @@ import { customerErrors, ok, okPage, publicErrors, sessionSecurity } from "@/lib
 import { db } from "@/libs/db";
 import { bookingAddons } from "@/libs/db/schema";
 import { authPlugin } from "@/plugins/auth";
+import { publicCache } from "@/plugins/cache";
 import * as BookingModel from "./model";
 import { cancelMyBooking, createBooking, getMyBooking, listMyBookings, quote } from "./service";
 
 export const addonRoutes = new Elysia({ name: "RideGo.Addons", prefix: "/api/v1/addons", tags: ["Bookings"] }).get(
   "",
-  { response: { 200: BookingModel.AddonsGet.Response, ...publicErrors }, detail: { summary: "Optional add-ons (helmet, jacket...) and their per-day prices" } },
+  { response: { 200: BookingModel.AddonsGet.Response, ...publicErrors }, afterHandle: publicCache(60), detail: { summary: "Optional add-ons (helmet, jacket...) and their per-day prices" } },
   async () =>
     ok(
       await db

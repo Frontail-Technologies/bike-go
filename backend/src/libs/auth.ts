@@ -66,7 +66,7 @@ export const auth = betterAuth({
     database: { generateId: "uuid" },
     useSecureCookies: env.NODE_ENV === "production",
   },
-  session: { expiresIn: 60 * 60 * 24 * 30, updateAge: 60 * 60 * 24 },
+  session: { expiresIn: 60 * 60 * 24 * 30, updateAge: 60 * 60 * 24, cookieCache: { enabled: true, maxAge: 60 } },
   rateLimit: { enabled: env.NODE_ENV !== "test" },
   user: {
     additionalFields: {

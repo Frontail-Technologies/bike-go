@@ -1,13 +1,14 @@
 import { and, count, desc, eq, gte, inArray, lt, sql } from "drizzle-orm";
+import { env } from "@/env";
 import { db } from "@/libs/db";
+import { cachedFor } from "@/libs/ttl-cache";
 import { bookings, loanApplications, user, vehicles } from "@/libs/db/schema";
-import { expireStaleHolds } from "@/routes/booking/holds";
+import { effectiveBookingStatus } from "@/routes/booking/holds";
 
 const toCounts = (rows: { key: string; n: number }[]) => Object.fromEntries(rows.map((r) => [r.key, Number(r.n)]));
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export async function getDashboard() {
-  await expireStaleHolds(db);
+async function loadDashboard() {
   const now = new Date();
   const soon = new Date(now.getTime() + 7 * DAY_MS);
   const thirtyDaysAgo = new Date(now.getTime() - 30 * DAY_MS);
@@ -15,7 +16,7 @@ export async function getDashboard() {
 
   const [vehicleStatus, bookingStatus, upcoming, revenue, loanStatus, customerTotal, customerNew, recentBookings, recentLoans] = await Promise.all([
     db.select({ key: vehicles.status, n: count() }).from(vehicles).groupBy(vehicles.status),
-    db.select({ key: bookings.bookingStatus, n: count() }).from(bookings).groupBy(bookings.bookingStatus),
+    db.select({ key: effectiveBookingStatus, n: count() }).from(bookings).groupBy(effectiveBookingStatus),
     db.select({ n: count() }).from(bookings).where(and(inArray(bookings.bookingStatus, ["confirmed", "ready_for_pickup"]), gte(bookings.pickupAt, now), lt(bookings.pickupAt, soon))),
     db
       .select({
@@ -30,7 +31,7 @@ export async function getDashboard() {
     db.select({ n: count() }).from(user).where(eq(user.role, "customer")),
     db.select({ n: count() }).from(user).where(and(eq(user.role, "customer"), gte(user.createdAt, thirtyDaysAgo))),
     db
-      .select({ reference: bookings.reference, bookingStatus: bookings.bookingStatus, customerName: user.name, vehicleName: vehicles.name, pickupAt: bookings.pickupAt, totalPayableMinor: bookings.totalPayableMinor, currency: bookings.currency })
+      .select({ reference: bookings.reference, bookingStatus: effectiveBookingStatus, customerName: user.name, vehicleName: vehicles.name, pickupAt: bookings.pickupAt, totalPayableMinor: bookings.totalPayableMinor, currency: bookings.currency })
       .from(bookings)
       .innerJoin(user, eq(user.id, bookings.userId))
       .innerJoin(vehicles, eq(vehicles.id, bookings.vehicleId))
@@ -67,3 +68,5 @@ export async function getDashboard() {
     recentLoans: recentLoans.map((l) => ({ ...l, createdAt: l.createdAt.toISOString() })),
   };
 }
+
+export const getDashboard = cachedFor(env.DASHBOARD_CACHE_SECONDS, loadDashboard);

@@ -5,7 +5,7 @@ import { PG, pgErrorCode } from "@/libs/db/errors";
 import { lockRows } from "@/libs/db/lock";
 import { bookings, payments as paymentsTable, vehicles } from "@/libs/db/schema";
 import { payments } from "@/providers/payment";
-import { expireStaleHolds } from "../booking/holds";
+import { expireStaleHolds, withLapsedHold } from "../booking/holds";
 import type { PaymentProvider, TransactionCheck } from "@/providers/payment/types";
 import type { PaymentReview, PaymentRow } from "./types";
 
@@ -113,7 +113,6 @@ export async function settlePayment(transactionId: string): Promise<PaymentRow |
 }
 
 export async function getBookingPayment(userId: string, reference: string) {
-  await expireStaleHolds(db, { userId, reference });
   const owned = and(eq(bookings.reference, reference), eq(bookings.userId, userId));
   const [found] = await db.select({ id: bookings.id }).from(bookings).where(owned).limit(1);
   if (!found) throw notFound("Booking");
@@ -130,7 +129,7 @@ export async function getBookingPayment(userId: string, reference: string) {
   const [booking] = await db.select().from(bookings).where(eq(bookings.id, found.id)).limit(1);
   const [latest] = await db.select().from(paymentsTable).where(eq(paymentsTable.bookingId, found.id)).orderBy(desc(paymentsTable.createdAt)).limit(1);
   return {
-    bookingStatus: booking!.bookingStatus,
+    bookingStatus: withLapsedHold(booking!),
     paymentStatus: booking!.paymentStatus,
     attempt: latest ? { transactionId: latest.transactionId, status: latest.status, paidAt: latest.paidAt?.toISOString() ?? null } : null,
   };

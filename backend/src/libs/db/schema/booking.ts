@@ -61,6 +61,7 @@ export const bookings = pgTable(
   },
   (table) => [
     index("bookings_user_created_idx").on(table.userId, table.createdAt),
+    index("bookings_created_idx").on(table.createdAt),
     index("bookings_vehicle_period_idx").on(table.vehicleId, table.pickupAt, table.returnAt),
     index("bookings_status_idx").on(table.bookingStatus),
     index("bookings_hold_idx").on(table.bookingStatus, table.holdExpiresAt),

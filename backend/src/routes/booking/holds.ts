@@ -1,8 +1,14 @@
-import { and, eq, lte } from "drizzle-orm";
+import { and, eq, lte, sql } from "drizzle-orm";
 import { db } from "@/libs/db";
 import { bookings } from "@/libs/db/schema";
 import type { Executor } from "@/libs/db/types";
-import type { HoldScope } from "./types";
+import type { BookingStatus, HoldScope } from "./types";
+
+export const effectiveBookingStatus = sql<BookingStatus>`CASE WHEN ${bookings.bookingStatus} = 'pending' AND ${bookings.holdExpiresAt} <= now() THEN 'expired' ELSE ${bookings.bookingStatus}::text END`;
+
+export function withLapsedHold<T extends BookingStatus>(row: { bookingStatus: T; holdExpiresAt: Date | null }, now: Date = new Date()): T | "expired" {
+  return row.bookingStatus === "pending" && row.holdExpiresAt && row.holdExpiresAt <= now ? "expired" : row.bookingStatus;
+}
 
 export async function expireStaleHolds(executor: Executor, scope: HoldScope = {}, now: Date = new Date()) {
   const expired = await executor

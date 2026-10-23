@@ -4,7 +4,7 @@ import { db } from "@/libs/db";
 import { PG, pgErrorCode } from "@/libs/db/errors";
 import { bookings, customerProfiles, user, vehicles } from "@/libs/db/schema";
 import { paginate } from "@/libs/pagination";
-import { expireStaleHolds } from "@/routes/booking/holds";
+import { effectiveBookingStatus, expireStaleHolds } from "@/routes/booking/holds";
 import { bookingViews } from "@/routes/booking/service";
 import { assertBookingTransition, STAFF_BOOKING_TRANSITIONS } from "@/routes/booking/rules";
 import type { BookingStatus } from "@/routes/booking/types";
@@ -33,36 +33,31 @@ async function adminViews(ids: string[]): Promise<AdminBookingView[]> {
 }
 
 export async function adminGetBooking(reference: string) {
-  await expireStaleHolds(db, { reference });
   return (await adminViews([await idByReference(bookings, reference, "Booking")]))[0]!;
 }
 
 export async function adminListBookings(query: BookingsGet["Query"]) {
-  await expireStaleHolds(db);
   const search = query.q ? `%${query.q}%` : undefined;
   const where = and(
-    query.status ? eq(bookings.bookingStatus, query.status) : undefined,
+    query.status ? eq(effectiveBookingStatus, query.status) : undefined,
     query.paymentStatus ? eq(bookings.paymentStatus, query.paymentStatus) : undefined,
     query.vehicleId ? eq(bookings.vehicleId, query.vehicleId) : undefined,
     query.locationId ? eq(bookings.pickupLocationId, query.locationId) : undefined,
     query.pickupFrom ? gte(bookings.pickupAt, new Date(query.pickupFrom)) : undefined,
     query.pickupTo ? lt(bookings.pickupAt, new Date(query.pickupTo)) : undefined,
-    search ? or(ilike(bookings.reference, search), ilike(user.name, search), ilike(user.email, search), ilike(vehicles.name, search)) : undefined,
+    search
+      ? or(
+          ilike(bookings.reference, search),
+          inArray(bookings.userId, db.select({ id: user.id }).from(user).where(or(ilike(user.name, search), ilike(user.email, search)))),
+          inArray(bookings.vehicleId, db.select({ id: vehicles.id }).from(vehicles).where(ilike(vehicles.name, search))),
+        )
+      : undefined,
   );
   const order = { newest: desc(bookings.createdAt), pickup_asc: asc(bookings.pickupAt), pickup_desc: desc(bookings.pickupAt), total_desc: desc(bookings.totalPayableMinor) }[query.sort ?? "newest"];
 
   return paginate(query, {
-    rows: (page) =>
-      db
-        .select({ id: bookings.id })
-        .from(bookings)
-        .innerJoin(user, eq(user.id, bookings.userId))
-        .innerJoin(vehicles, eq(vehicles.id, bookings.vehicleId))
-        .where(where)
-        .orderBy(order, asc(bookings.reference))
-        .limit(page.limit)
-        .offset(page.offset),
-    total: () => db.select({ n: count() }).from(bookings).innerJoin(user, eq(user.id, bookings.userId)).innerJoin(vehicles, eq(vehicles.id, bookings.vehicleId)).where(where),
+    rows: (page) => db.select({ id: bookings.id }).from(bookings).where(where).orderBy(order, asc(bookings.reference)).limit(page.limit).offset(page.offset),
+    total: () => db.select({ n: count() }).from(bookings).where(where),
     map: (rows) => adminViews(rows.map((r) => r.id)),
   });
 }

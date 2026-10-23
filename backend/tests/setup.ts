@@ -8,6 +8,7 @@ process.env.VAT_RATE_BPS = "1000";
 process.env.PLATFORM_FEE_USD_MINOR = "0";
 process.env.PLATFORM_FEE_KHR_MINOR = "0";
 process.env.BOOKING_HOLD_MINUTES = "15";
+process.env.DASHBOARD_CACHE_SECONDS = "0";
 
 const { startFakeS3, registerFakeS3 } = await import("./helpers/fake-s3");
 const fake = startFakeS3("ridego-test");

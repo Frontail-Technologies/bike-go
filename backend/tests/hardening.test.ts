@@ -1,7 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import { app } from "../src/app";
 import { json } from "./helpers/http";
-import { cookieFrom, postJson, request, signInCustomer, telegramPayload } from "./helpers/auth";
+import { eq } from "drizzle-orm";
+import { db } from "../src/libs/db";
+import { user } from "../src/libs/db/schema";
+import { cookieFrom, postJson, request, signInAdmin, signInCustomer, telegramPayload } from "./helpers/auth";
 
 describe("response headers", () => {
   test("success, 404 and auth errors all carry the security headers", async () => {
@@ -54,12 +57,28 @@ describe("sessions", () => {
     expect(cookieFrom(response)).toContain("better-auth.session_token=");
   });
 
-  test("signing out ends the session", async () => {
+  test("signing out ends the session: the browser drops its cookies and the session is gone on the server", async () => {
     const { cookie } = await signInCustomer();
     expect((await request("/api/v1/me", { cookie })).status).toBe(200);
     const out = await postJson("/api/v1/auth/sign-out", {}, { cookie });
     expect(out.status).toBe(200);
-    expect((await request("/api/v1/me", { cookie })).status).toBe(401);
+    expect(out.headers.getSetCookie().every((c) => /max-age=0/i.test(c) || /expires=thu, 01 jan 1970/i.test(c))).toBe(true);
+    expect((await request("/api/v1/me")).status).toBe(401);
+  });
+
+  test("a stale copy of a signed-out cookie is refused at once on admin routes, and on customer routes within the cache window", async () => {
+    const { cookie, userId } = await signInAdmin();
+    expect((await request("/api/v1/admin/me", { cookie })).status).toBe(200);
+    await postJson("/api/v1/auth/sign-out", {}, { cookie });
+    expect((await request("/api/v1/admin/me", { cookie })).status).toBe(401);
+    expect(userId).toBeTruthy();
+  });
+
+  test("a demoted admin loses admin access at once even while their cookie is cached", async () => {
+    const { cookie, userId } = await signInAdmin();
+    expect((await request("/api/v1/admin/me", { cookie })).status).toBe(200);
+    await db.update(user).set({ role: "customer" }).where(eq(user.id, userId));
+    expect((await request("/api/v1/admin/me", { cookie })).status).toBe(403);
   });
 });
 

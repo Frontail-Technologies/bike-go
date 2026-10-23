@@ -59,6 +59,14 @@ tests/
 - **Loans** are never decided automatically. Customers can submit a draft and send back requested documents; every other status change is a staff action along an explicit transition map, recorded in `loan_status_history`.
 - **Documents** are private: content-sniffed (PDF, JPG, PNG), 5 MB, stored under server-generated keys that no response ever includes. Files go to Cloudflare R2 (`STORAGE_DRIVER=r2`) or, for local development only, to disk (`STORAGE_DRIVER=local`, the default).
 
+## Speed
+
+- **Sessions** use Better Auth's signed cookie cache for 60 seconds, so a signed-in customer request does not read the session and user from the database each time. Staff routes (`/admin/*`) always check the database, so a demoted or signed-out admin is refused at once. A copy of a customer cookie from before sign-out can work for up to 60 seconds.
+- **Holds** are not expired by reads. A pending booking whose hold has lapsed is shown as `expired` (and counted and filtered as `expired`) without writing; the row is changed by the sweeper and by the write paths (create a booking, pay, cancel, staff status change).
+- **Public caching**: `locations`, `banners`, `addons`, `fx-rates/current`, `vehicles` and `vehicles/:slug` send `Cache-Control: public` with a short `max-age` plus an `ETag`, and answer `If-None-Match` with an empty `304`. Date-filtered vehicle searches, availability, errors and signed-in routes are never cached.
+- **Dashboard** results are kept for `DASHBOARD_CACHE_SECONDS` (default 15, `0` turns it off). `DATABASE_POOL_MAX` overrides the pool size (default 10, 20 in production).
+- Admin booking search uses subqueries instead of joining every booking to users and vehicles, and `bookings.created_at` is indexed for the default newest-first list.
+
 ## File uploads
 
 Files are sent to the resource that owns them, as `multipart/form-data` in the same request as the other fields. The backend validates the real file content, stores the file through the storage provider and keeps the storage key internal: no response, and no OpenAPI field, carries a key, bucket or path. Clients get image addresses on this API instead.

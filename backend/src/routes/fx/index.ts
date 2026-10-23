@@ -1,5 +1,6 @@
 import { Elysia } from "elysia";
 import { ok, publicErrors } from "@/libs/api";
+import { publicCache } from "@/plugins/cache";
 import * as FxModel from "./model";
 import { getCurrentRate } from "./service";
 
@@ -8,6 +9,7 @@ export const fxRoutes = new Elysia({ name: "RideGo.Fx", prefix: "/api/v1/fx-rate
   {
     query: FxModel.FxCurrentGet.Query,
     response: { 200: FxModel.FxCurrentGet.Response, ...publicErrors },
+    afterHandle: publicCache(60),
     detail: {
       summary: "The exchange rate currently in effect, with its source and effective date",
       description:

@@ -1,5 +1,6 @@
 import { Elysia } from "elysia";
 import { ok, okPage, publicErrors } from "@/libs/api";
+import { publicCache } from "@/plugins/cache";
 import * as VehicleModel from "./model";
 import { vehicleImageFile } from "./images";
 import { getVehicle, listVehicles } from "./service";
@@ -10,6 +11,7 @@ export const vehicleRoutes = new Elysia({ name: "RideGo.Vehicle", prefix: "/api/
     {
       query: VehicleModel.VehiclesGet.Query,
       response: { 200: VehicleModel.VehiclesGet.Response, ...publicErrors },
+      afterHandle: publicCache(30, { skip: (query) => Boolean(query.pickupAt || query.returnAt) }),
       detail: {
         summary: "Search the vehicle catalogue",
         description:
@@ -24,6 +26,7 @@ export const vehicleRoutes = new Elysia({ name: "RideGo.Vehicle", prefix: "/api/
     {
       params: VehicleModel.VehicleByIdGet.Params,
       response: { 200: VehicleModel.VehicleByIdGet.Response, ...publicErrors },
+      afterHandle: publicCache(30),
       detail: { summary: "One vehicle by slug or id" },
     },
     async ({ params }) => ok(await getVehicle(params.idOrSlug)),
