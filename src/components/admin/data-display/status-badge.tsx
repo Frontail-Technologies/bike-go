@@ -1,14 +1,14 @@
 import { cn } from "@/lib/cn";
 
 export type AdminStatus =
-  | "available" | "rented" | "maintenance" | "inactive" | "active"
+  | "available" | "rented" | "maintenance" | "inactive" | "active" | "scheduled"
   | "pending" | "confirmed" | "ongoing" | "completed" | "cancelled" | "no-show"
   | "paid" | "partially-paid" | "refunded" | "failed"
   | "under-review" | "approved" | "rejected"
   | "verified" | "needs-review" | "expired";
 
 const labels: Record<AdminStatus, string> = {
-  active: "Active", available: "Available", rented: "Rented", maintenance: "Maintenance", inactive: "Inactive",
+  active: "Active", scheduled: "Scheduled", available: "Available", rented: "Rented", maintenance: "Maintenance", inactive: "Inactive",
   pending: "Pending", confirmed: "Confirmed", ongoing: "Ongoing", completed: "Completed", cancelled: "Cancelled", "no-show": "No show",
   paid: "Paid", "partially-paid": "Partially paid", refunded: "Refunded", failed: "Failed",
   "under-review": "Under review", approved: "Approved", rejected: "Rejected",
@@ -17,6 +17,7 @@ const labels: Record<AdminStatus, string> = {
 
 const tones: Record<AdminStatus, string> = {
   active: "bg-[var(--admin-success-soft)] text-[var(--admin-success)]",
+  scheduled: "bg-[var(--admin-info-soft)] text-[var(--admin-info)]",
   available: "bg-[var(--admin-success-soft)] text-[var(--admin-success)]",
   completed: "bg-[var(--admin-success-soft)] text-[var(--admin-success)]",
   paid: "bg-[var(--admin-success-soft)] text-[var(--admin-success)]",
