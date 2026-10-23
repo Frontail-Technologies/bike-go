@@ -3,6 +3,7 @@ import { pack } from "../pack";
 export default pack(
   {
     welcomeAria: "Welcome",
+    signIn: "Sign in",
     welcomeToast: "Welcome to RideGo",
     slide1Line1: "EXPLORE",
     slide1Line2: "ON TWO",
@@ -30,6 +31,7 @@ export default pack(
   {
     km: {
       welcomeAria: "សូមស្វាគមន៍",
+      signIn: "ចូលគណនី",
       welcomeToast: "សូមស្វាគមន៍មកកាន់ RideGo",
       slide1Line1: "ស្វែងរក",
       slide1Line2: "លើកង់ពីរ",
@@ -56,6 +58,7 @@ export default pack(
     },
     zh: {
       welcomeAria: "欢迎",
+      signIn: "登录",
       welcomeToast: "欢迎来到 RideGo",
       slide1Line1: "两轮",
       slide1Line2: "探索",
@@ -82,6 +85,7 @@ export default pack(
     },
     ko: {
       welcomeAria: "환영합니다",
+      signIn: "로그인",
       welcomeToast: "RideGo에 오신 것을 환영합니다",
       slide1Line1: "두 바퀴로",
       slide1Line2: "떠나는",
