@@ -3,6 +3,7 @@
 import useEmblaCarousel from "embla-carousel-react";
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";
 
 type ImageCarouselProps = {
@@ -29,6 +30,7 @@ export function ImageCarousel({
 }: ImageCarouselProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, align: "center" });
   const [selected, setSelected] = useState(0);
+  const t = useTranslations();
 
   const sync = useCallback(() => {
     if (!emblaApi) return;
@@ -54,7 +56,7 @@ export function ImageCarousel({
   return (
     <div
       role="group"
-      aria-roledescription="carousel"
+      aria-roledescription={t("common.carousel")}
       aria-label={label}
       className={cn("relative overflow-hidden rounded-card bg-surface-secondary", className)}
     >
@@ -64,8 +66,8 @@ export function ImageCarousel({
             <div
               key={i}
               role="group"
-              aria-roledescription="slide"
-              aria-label={`${i + 1} of ${slides.length}`}
+              aria-roledescription={t("common.slide")}
+              aria-label={t("home.slideOf", { index: i + 1, total: slides.length })}
               className={cn("min-w-0 flex-[0_0_100%]", aspectClassName)}
             >
               {slide}
@@ -78,7 +80,7 @@ export function ImageCarousel({
         <>
           <button
             type="button"
-            aria-label="Previous image"
+            aria-label={t("common.previousImage")}
             onClick={() => emblaApi?.scrollPrev()}
             disabled={selected === 0}
             className="absolute top-1/2 left-2 hidden size-11 -translate-y-1/2 items-center justify-center rounded-full bg-surface/90 shadow-card transition-opacity disabled:opacity-0 md:flex"
@@ -87,7 +89,7 @@ export function ImageCarousel({
           </button>
           <button
             type="button"
-            aria-label="Next image"
+            aria-label={t("common.nextImage")}
             onClick={() => emblaApi?.scrollNext()}
             disabled={selected === slides.length - 1}
             className="absolute top-1/2 right-2 hidden size-11 -translate-y-1/2 items-center justify-center rounded-full bg-surface/90 shadow-card transition-opacity disabled:opacity-0 md:flex"

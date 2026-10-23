@@ -6,7 +6,8 @@ import { ListRow, SectionCard } from "@/components/shared/list-row";
 import { DesktopTitle, Screen } from "@/components/shared/screen";
 import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/cn";
-import { faqGroups, popularFaqIds } from "./faq";
+import { useTranslations } from "@/i18n/hooks";
+import { faqKey, popularFaqIds } from "./faq";
 
 const tileClass =
   "flex min-h-24 flex-col items-center justify-center gap-2 rounded-card border border-line bg-surface p-3 text-center text-sm leading-5 font-semibold shadow-card outline-none transition-transform duration-150 focus-visible:ring-2 focus-visible:ring-ink active:scale-[0.98] motion-reduce:transition-none";
@@ -23,42 +24,40 @@ function Tile({ icon, label, hint }: { icon: React.ReactNode; label: string; hin
   );
 }
 
-const popular = popularFaqIds
-  .map((id) => faqGroups.flatMap((g) => g.items).find((item) => item.id === id))
-  .filter((item): item is NonNullable<typeof item> => Boolean(item));
-
 export function HelpView() {
+  const t = useTranslations("help");
+
   return (
     <>
-      <AppBar leading="back" backFallback="/profile" title="Help and support" />
+      <AppBar leading="back" backFallback="/profile" title={t("title")} />
       <Screen enter="slide" className="flex flex-col gap-6 md:max-w-3xl">
-        <DesktopTitle title="Help and support" subtitle="We usually reply in under 2 minutes, day or night." />
+        <DesktopTitle title={t("title")} subtitle={t("subtitle")} />
 
-        <section aria-label="Contact us" className="grid grid-cols-3 gap-3">
-          <button type="button" className={tileClass} onClick={() => toast.info("Support will join in a moment", { description: "Typical reply: under 2 minutes." })}>
-            <Tile icon={<ChatCircleDotsIcon size={22} />} label="Chat" hint="Fastest" />
+        <section aria-label={t("contactAria")} className="grid grid-cols-3 gap-3">
+          <button type="button" className={tileClass} onClick={() => toast.info(t("supportToast"), { description: t("supportToastDesc") })}>
+            <Tile icon={<ChatCircleDotsIcon size={22} />} label={t("chat")} hint={t("fastest")} />
           </button>
           <a href="tel:+911800000000" className={tileClass}>
-            <Tile icon={<PhoneIcon size={22} />} label="Call" hint="24/7" />
+            <Tile icon={<PhoneIcon size={22} />} label={t("call")} hint={t("always")} />
           </a>
           <a href="mailto:help@ridego.example" className={tileClass}>
-            <Tile icon={<EnvelopeSimpleIcon size={22} />} label="Email" hint="Within a day" />
+            <Tile icon={<EnvelopeSimpleIcon size={22} />} label={t("email")} hint={t("withinDay")} />
           </a>
         </section>
 
-        <SectionCard id="popular-title" title="Popular questions">
-          {popular.map((item) => (
-            <ListRow key={item.id} icon={<QuestionIcon size={20} />} label={item.question} href={`/help/faq?open=${item.id}`} />
+        <SectionCard id="popular-title" title={t("popularQuestions")}>
+          {popularFaqIds.map((id) => (
+            <ListRow key={id} icon={<QuestionIcon size={20} />} label={t(faqKey(id, "q"))} href={`/help/faq?open=${id}`} />
           ))}
         </SectionCard>
 
-        <SectionCard id="more-title" title="More help">
-          <ListRow icon={<QuestionIcon size={20} />} label="All questions" description="Booking, payments, pickup and riding" href="/help/faq" />
-          <ListRow icon={<ReceiptIcon size={20} />} label="Help with a booking" description="Open it from My bookings" href="/bookings" />
-          <ListRow icon={<FlagIcon size={20} />} label="Report an issue" description="Something went wrong? Tell us" href="/help/report" />
+        <SectionCard id="more-title" title={t("moreHelp")}>
+          <ListRow icon={<QuestionIcon size={20} />} label={t("allQuestions")} description={t("allQuestionsHint")} href="/help/faq" />
+          <ListRow icon={<ReceiptIcon size={20} />} label={t("helpBooking")} description={t("helpBookingHint")} href="/bookings" />
+          <ListRow icon={<FlagIcon size={20} />} label={t("reportIssue")} description={t("reportIssueHint")} href="/help/report" />
         </SectionCard>
 
-        <p className={cn("px-1 text-center text-xs leading-5 text-subtle")}>RideGo support is available every day, 24 hours.</p>
+        <p className={cn("px-1 text-center text-xs leading-5 text-subtle")}>{t("available")}</p>
       </Screen>
     </>
   );

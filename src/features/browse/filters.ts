@@ -6,19 +6,19 @@ export const PRICE_MAX = 30;
 
 export type SortKey = "popular" | "price-asc" | "price-desc" | "rating";
 
-export const sortOptions: { id: SortKey; label: string }[] = [
-  { id: "popular", label: "Most popular" },
-  { id: "rating", label: "Top rated" },
-  { id: "price-asc", label: "Price: low to high" },
-  { id: "price-desc", label: "Price: high to low" },
+export const sortOptions: { id: SortKey; key: "sortPopular" | "sortRating" | "sortPriceAsc" | "sortPriceDesc" }[] = [
+  { id: "popular", key: "sortPopular" },
+  { id: "rating", key: "sortRating" },
+  { id: "price-asc", key: "sortPriceAsc" },
+  { id: "price-desc", key: "sortPriceDesc" },
 ];
 
 export type EngineBand = "under-200" | "200-400" | "over-400";
 
-export const engineBands: { id: EngineBand; label: string }[] = [
-  { id: "under-200", label: "Under 200cc" },
-  { id: "200-400", label: "200 – 400cc" },
-  { id: "over-400", label: "Over 400cc" },
+export const engineBands: { id: EngineBand; key: "engineUnder200" | "engine200400" | "engineOver400" }[] = [
+  { id: "under-200", key: "engineUnder200" },
+  { id: "200-400", key: "engine200400" },
+  { id: "over-400", key: "engineOver400" },
 ];
 
 export type Filters = {

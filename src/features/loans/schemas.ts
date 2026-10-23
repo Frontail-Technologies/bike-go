@@ -2,24 +2,51 @@ import { z } from "zod";
 import { formatPrice } from "@/lib/format";
 import { documentTypes, getLoanType, type LoanDraft } from "./data";
 
-export const loanDetailsSchema = z
-  .object({
-    loanType: z.string().min(1, "Choose a loan type."),
-    amount: z.string().regex(/^\d+$/, "Enter a whole amount, for example 5000."),
-    tenure: z.string().min(1, "Choose a tenure."),
-    purpose: z.string().min(1, "Choose a purpose for the loan."),
-  })
-  .superRefine((v, ctx) => {
-    const type = getLoanType(v.loanType);
-    if (!type) return;
-    const amount = Number(v.amount);
-    if (/^\d+$/.test(v.amount) && (amount < type.minAmount || amount > type.maxAmount)) {
-      ctx.addIssue({ code: "custom", path: ["amount"], message: `Enter between ${formatPrice(type.minAmount)} and ${formatPrice(type.maxAmount)}.` });
-    }
-    if (Number(v.tenure) > type.maxTenure) {
-      ctx.addIssue({ code: "custom", path: ["tenure"], message: `This loan runs up to ${type.maxTenure} months.` });
-    }
-  });
+export type ErrKey =
+  | "errLoanType"
+  | "errAmount"
+  | "errAmountRange"
+  | "errTenure"
+  | "errTenureMax"
+  | "errPurpose"
+  | "errFullName"
+  | "errMobile"
+  | "errEmail"
+  | "errDob"
+  | "errAge"
+  | "errNationality"
+  | "errCity"
+  | "errResidence"
+  | "errEmpType"
+  | "errEmployer"
+  | "errJobTitle"
+  | "errExperience"
+  | "errBank"
+  | "errIncome";
+
+export type Say = (key: ErrKey, values?: Record<string, string | number>) => string;
+
+export const keyOnly: Say = (key) => key;
+
+export const loanDetailsSchema = (say: Say) =>
+  z
+    .object({
+      loanType: z.string().min(1, say("errLoanType")),
+      amount: z.string().regex(/^\d+$/, say("errAmount")),
+      tenure: z.string().min(1, say("errTenure")),
+      purpose: z.string().min(1, say("errPurpose")),
+    })
+    .superRefine((v, ctx) => {
+      const type = getLoanType(v.loanType);
+      if (!type) return;
+      const amount = Number(v.amount);
+      if (/^\d+$/.test(v.amount) && (amount < type.minAmount || amount > type.maxAmount)) {
+        ctx.addIssue({ code: "custom", path: ["amount"], message: say("errAmountRange", { min: formatPrice(type.minAmount), max: formatPrice(type.maxAmount) }) });
+      }
+      if (Number(v.tenure) > type.maxTenure) {
+        ctx.addIssue({ code: "custom", path: ["tenure"], message: say("errTenureMax", { max: type.maxTenure }) });
+      }
+    });
 
 function ageOn(dob: string, today = new Date()) {
   const born = new Date(dob);
@@ -29,34 +56,36 @@ function ageOn(dob: string, today = new Date()) {
   return age;
 }
 
-export const personalSchema = z.object({
-  fullName: z.string().trim().min(2, "Enter your full name as on your passport."),
-  mobile: z.string().regex(/^\+?[\d\s-]{7,16}$/, "Enter a mobile number with the country code, for example +971 50 123 4567."),
-  email: z.email("Enter a valid email address."),
-  dob: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Enter your date of birth.")
-    .refine((v) => {
-      const age = ageOn(v);
-      return age >= 21 && age <= 60;
-    }, "You must be between 21 and 60 years old."),
-  nationality: z.string().trim().min(2, "Enter your nationality."),
-  city: z.string().trim().min(2, "Enter the city you live in."),
-  residence: z.string().min(1, "Choose your visa or residence status."),
-});
+export const personalSchema = (say: Say) =>
+  z.object({
+    fullName: z.string().trim().min(2, say("errFullName")),
+    mobile: z.string().regex(/^\+?[\d\s-]{7,16}$/, say("errMobile")),
+    email: z.email(say("errEmail")),
+    dob: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, say("errDob"))
+      .refine((v) => {
+        const age = ageOn(v);
+        return age >= 21 && age <= 60;
+      }, say("errAge")),
+    nationality: z.string().trim().min(2, say("errNationality")),
+    city: z.string().trim().min(2, say("errCity")),
+    residence: z.string().min(1, say("errResidence")),
+  });
 
-export const employmentSchema = z.object({
-  type: z.string().min(1, "Choose your employment type."),
-  employer: z.string().trim().min(2, "Enter your employer or business name."),
-  jobTitle: z.string().trim().min(2, "Enter your job title."),
-  experience: z.string().min(1, "Choose your work experience."),
-  bankAccount: z.string().min(1, "Tell us if you have an active bank account."),
-  monthlyIncome: z.string().regex(/^[1-9]\d*(\.\d{1,2})?$/, "Enter your monthly income as a number, for example 3200."),
-});
+export const employmentSchema = (say: Say) =>
+  z.object({
+    type: z.string().min(1, say("errEmpType")),
+    employer: z.string().trim().min(2, say("errEmployer")),
+    jobTitle: z.string().trim().min(2, say("errJobTitle")),
+    experience: z.string().min(1, say("errExperience")),
+    bankAccount: z.string().min(1, say("errBank")),
+    monthlyIncome: z.string().regex(/^[1-9]\d*(\.\d{1,2})?$/, say("errIncome")),
+  });
 
 export const loanDetailsOf = (d: LoanDraft) => ({ loanType: d.loanType, amount: String(d.amount), tenure: String(d.tenure), purpose: d.purpose });
 
-export const loanStepValid = (d: LoanDraft) => loanDetailsSchema.safeParse(loanDetailsOf(d)).success;
-export const personalStepValid = (d: LoanDraft) => personalSchema.safeParse(d.applicant).success;
-export const employmentStepValid = (d: LoanDraft) => employmentSchema.safeParse(d.employment).success;
+export const loanStepValid = (d: LoanDraft) => loanDetailsSchema(keyOnly).safeParse(loanDetailsOf(d)).success;
+export const personalStepValid = (d: LoanDraft) => personalSchema(keyOnly).safeParse(d.applicant).success;
+export const employmentStepValid = (d: LoanDraft) => employmentSchema(keyOnly).safeParse(d.employment).success;
 export const documentsStepValid = (d: LoanDraft) => documentTypes.every((doc) => Boolean(d.documents[doc.id]));

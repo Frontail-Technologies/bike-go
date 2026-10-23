@@ -1,3 +1,4 @@
+import { LoadingRegion } from "@/components/ui/loading-region";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { seedBookings } from "@/features/bookings/seed";
@@ -8,11 +9,11 @@ export const metadata: Metadata = { title: "Booking details" };
 
 function DetailsSkeleton() {
   return (
-    <div className="flex flex-col gap-4" role="status" aria-label="Loading booking">
+    <LoadingRegion className="flex flex-col gap-4">
       <BlockSkeleton className="h-8 w-48" />
       <BlockSkeleton className="h-40 w-full" />
       <BlockSkeleton className="h-56 w-full" />
-    </div>
+    </LoadingRegion>
   );
 }
 

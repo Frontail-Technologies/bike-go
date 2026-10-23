@@ -303,14 +303,7 @@ export function getBike(id: string) {
   return motorcycles.find((bike) => bike.id === id);
 }
 
-export const categories: { id: BikeCategory | "all"; label: string }[] = [
-  { id: "all", label: "All" },
-  { id: "cruiser", label: "Cruiser" },
-  { id: "sports", label: "Sports" },
-  { id: "adventure", label: "Adventure" },
-  { id: "touring", label: "Touring" },
-  { id: "scooter", label: "Scooter" },
-];
+export const categories: { id: BikeCategory | "all" }[] = [{ id: "all" }, { id: "cruiser" }, { id: "sports" }, { id: "adventure" }, { id: "touring" }, { id: "scooter" }];
 
 export const brands = [...new Set(motorcycles.map((bike) => bike.brand))].sort();
 

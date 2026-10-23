@@ -3,6 +3,7 @@
 import { SortAscendingIcon } from "@phosphor-icons/react";
 import { ResponsiveOverlay } from "@/components/shared/responsive-overlay";
 import { RadioGroup } from "@/components/ui/selection-controls";
+import { useTranslations } from "@/i18n/hooks";
 import { type SortKey, sortOptions } from "./filters";
 
 type SortControlProps = {
@@ -14,16 +15,18 @@ type SortControlProps = {
 
 /** Bottom sheet on mobile, popover on desktop. Choosing an option closes it. */
 export function SortControl({ value, onChange, iconOnly = false }: SortControlProps) {
-  const current = sortOptions.find((o) => o.id === value)?.label ?? "Sort";
+  const t = useTranslations("browse");
+  const found = sortOptions.find((o) => o.id === value);
+  const current = found ? t(found.key) : t("sortBy");
 
   return (
     <ResponsiveOverlay
-      title="Sort by"
+      title={t("sortBy")}
       popoverClassName="w-[280px]"
       triggerProps={
         iconOnly
-          ? { variant: "ghost", isIconOnly: true, "aria-label": `Sort: ${current}` }
-          : { variant: "secondary", size: "sm", "aria-label": `Sort: ${current}` }
+          ? { variant: "ghost", isIconOnly: true, "aria-label": t("sortCurrent", { current }) }
+          : { variant: "secondary", size: "sm", "aria-label": t("sortCurrent", { current }) }
       }
       triggerLabel={
         iconOnly ? (
@@ -38,13 +41,13 @@ export function SortControl({ value, onChange, iconOnly = false }: SortControlPr
     >
       {(close) => (
         <RadioGroup
-          label="Sort by"
+          label={t("sortBy")}
           value={value}
           onChange={(next) => {
             onChange(next as SortKey);
             close();
           }}
-          options={sortOptions.map((o) => ({ value: o.id, label: o.label }))}
+          options={sortOptions.map((o) => ({ value: o.id, label: t(o.key) }))}
         />
       )}
     </ResponsiveOverlay>

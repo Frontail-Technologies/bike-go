@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { motorcycles } from "@/features/mock/data";
 import { useBack } from "@/hooks/use-back";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { useTranslations } from "@/i18n/hooks";
 import { BikeFilters } from "./bike-filters";
 import { browseStore } from "./browse-store";
 import { DEFAULT_FILTERS, queryBikes } from "./filters";
@@ -21,6 +22,8 @@ export function FiltersScreen() {
   const router = useRouter();
   const hasSidebar = useMediaQuery("(min-width: 1024px)");
   const back = useBack("/bikes");
+  const t = useTranslations("browse");
+  const common = useTranslations("common");
   const { filters, query, sort, dates } = browseStore.useValue();
 
   useEffect(() => {
@@ -38,26 +41,26 @@ export function FiltersScreen() {
       <AppBar
         leading="back"
         backFallback="/bikes"
-        title="Filters"
+        title={t("filters")}
         actions={
           <Button variant="ghost" size="sm" onPress={reset}>
-            Reset
+            {common("reset")}
           </Button>
         }
       />
       <Screen enter="slide" bottom="footer" className="md:max-w-3xl">
         {/* Tablets have the website header instead of the app bar, so the title and Reset sit on the page. */}
         <div className="mb-6 hidden items-center justify-between md:flex">
-          <h1 className="text-2xl font-extrabold tracking-tight">Filters</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight">{t("filters")}</h1>
           <Button variant="ghost" size="sm" onPress={reset}>
-            Reset
+            {common("reset")}
           </Button>
         </div>
         <BikeFilters value={filters} onChange={(next) => browseStore.update((s) => ({ ...s, filters: next }))} />
       </Screen>
       <ScreenFooter>
         <Button size="lg" fullWidth isDisabled={count === 0} onPress={back}>
-          {count === 0 ? "No bikes match" : `Show ${count} ${count === 1 ? "bike" : "bikes"}`}
+          {count === 0 ? t("noBikesMatch") : t("showBikes", { count })}
         </Button>
       </ScreenFooter>
     </>

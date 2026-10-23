@@ -15,12 +15,14 @@ import type { Quote } from "@/features/bookings/pricing";
 import { quoteLines } from "@/features/bookings/pricing";
 import type { BookingDraft } from "@/features/bookings/types";
 import type { Motorcycle } from "@/features/mock/data";
+import { useTranslations } from "@/i18n/hooks";
 
 type PatchProps = { draft: BookingDraft; patch: (partial: Partial<BookingDraft>) => void };
 
 // ---------------------------------------------------------------- 1. Dates
 
 export function DatesStep({ bike, draft, patch }: PatchProps & { bike: Motorcycle }) {
+  const t = useTranslations("booking");
   const value: RentalSelection = { range: toRange(draft.start ?? undefined, draft.end ?? undefined), pickupTime: draft.pickupTime, dropTime: draft.dropTime };
 
   return (
@@ -38,12 +40,12 @@ export function DatesStep({ bike, draft, patch }: PatchProps & { bike: Motorcycl
         }
       />
       <fieldset className="flex flex-col">
-        <legend className="mb-1 text-sm font-semibold">Add-ons</legend>
+        <legend className="mb-1 text-sm font-semibold">{t("addOns")}</legend>
         <Checkbox isSelected={draft.addOns.helmet} onChange={(helmet) => patch({ addOns: { ...draft.addOns, helmet } })}>
-          Helmet · $2 / day
+          {t("addonHelmet")}
         </Checkbox>
         <Checkbox isSelected={draft.addOns.jacket} onChange={(jacket) => patch({ addOns: { ...draft.addOns, jacket } })}>
-          Riding jacket · $2 / day
+          {t("addonJacket")}
         </Checkbox>
       </fieldset>
     </div>
@@ -52,15 +54,21 @@ export function DatesStep({ bike, draft, patch }: PatchProps & { bike: Motorcycl
 
 // ---------------------------------------------------------------- 2. Rider
 
-const riderSchema = z.object({
-  name: z.string().trim().min(2, "Enter your full name."),
-  phone: z.string().regex(/^[6-9]\d{9}$/, "Enter a 10-digit mobile number."),
-  email: z.email("Enter a valid email address."),
-});
+type Say = (key: "errName" | "errPhone" | "errEmail" | "errLicence") => string;
+
+const riderSchema = (say: Say) =>
+  z.object({
+    name: z.string().trim().min(2, say("errName")),
+    phone: z.string().regex(/^[6-9]\d{9}$/, say("errPhone")),
+    email: z.email(say("errEmail")),
+  });
+
+const keyOnly: Say = (key) => key;
 
 export function RiderStep({ draft, patch, onValid, formId }: PatchProps & { onValid: () => void; formId: string }) {
+  const t = useTranslations("booking");
   const { control, handleSubmit } = useForm({
-    resolver: zodResolver(riderSchema),
+    resolver: zodResolver(riderSchema(t)),
     mode: "onBlur",
     values: draft.rider,
   });
@@ -80,7 +88,7 @@ export function RiderStep({ draft, patch, onValid, formId }: PatchProps & { onVa
         control={control}
         render={({ field, fieldState }) => (
           <TextInput
-            label="Full name"
+            label={t("fullName")}
             autoComplete="name"
             startIcon={<UserIcon size={20} />}
             value={field.value}
@@ -99,11 +107,11 @@ export function RiderStep({ draft, patch, onValid, formId }: PatchProps & { onVa
         control={control}
         render={({ field, fieldState }) => (
           <TextInput
-            label="Mobile number"
+            label={t("mobile")}
             type="tel"
             inputMode="numeric"
             autoComplete="tel-national"
-            description="We send pickup updates here."
+            description={t("mobileHint")}
             startIcon={<PhoneIcon size={20} />}
             value={field.value}
             onChange={(phone) => {
@@ -121,7 +129,7 @@ export function RiderStep({ draft, patch, onValid, formId }: PatchProps & { onVa
         control={control}
         render={({ field, fieldState }) => (
           <TextInput
-            label="Email"
+            label={t("email")}
             type="email"
             inputMode="email"
             autoComplete="email"
@@ -143,13 +151,15 @@ export function RiderStep({ draft, patch, onValid, formId }: PatchProps & { onVa
 
 // ---------------------------------------------------------------- 3. Licence
 
-const licenceSchema = z.object({
-  licenceNumber: z.string().regex(/^[A-Za-z]{2}\d{2}[\s-]?\d{4}[\s-]?\d{7}$/, "Use the format RJ14 2021 0012345."),
-});
+const licenceSchema = (say: Say) =>
+  z.object({
+    licenceNumber: z.string().regex(/^[A-Za-z]{2}\d{2}[\s-]?\d{4}[\s-]?\d{7}$/, say("errLicence")),
+  });
 
 export function LicenceStep({ draft, patch, onValid, formId }: PatchProps & { onValid: () => void; formId: string }) {
+  const t = useTranslations("booking");
   const { control, handleSubmit } = useForm({
-    resolver: zodResolver(licenceSchema),
+    resolver: zodResolver(licenceSchema(t)),
     mode: "onBlur",
     values: { licenceNumber: draft.licenceNumber },
   });
@@ -170,10 +180,10 @@ export function LicenceStep({ draft, patch, onValid, formId }: PatchProps & { on
           control={control}
           render={({ field, fieldState }) => (
             <TextInput
-              label="Driving licence number"
+              label={t("licenceNumber")}
               autoComplete="off"
               startIcon={<IdentificationCardIcon size={20} />}
-              description="As printed on your licence."
+              description={t("licenceHint")}
               value={field.value}
               onChange={(licenceNumber) => {
                 field.onChange(licenceNumber);
@@ -191,23 +201,23 @@ export function LicenceStep({ draft, patch, onValid, formId }: PatchProps & { on
         <span className="flex size-10 items-center justify-center rounded-full bg-surface-secondary text-subtle">
           <UploadSimpleIcon size={20} />
         </span>
-        <p className="text-sm font-semibold">Licence photo</p>
-        <p className="text-xs text-subtle">Upload is coming soon. Carry the original to pickup.</p>
+        <p className="text-sm font-semibold">{t("licencePhoto")}</p>
+        <p className="text-xs text-subtle">{t("uploadSoon")}</p>
       </div>
 
       <Checkbox isSelected={draft.licenceLater} onChange={(licenceLater) => patch({ licenceLater })}>
-        I will show my licence at pickup
+        {t("licenceLater")}
       </Checkbox>
     </form>
   );
 }
 
 export function licenceStepValid(draft: BookingDraft) {
-  return draft.licenceLater || licenceSchema.safeParse({ licenceNumber: draft.licenceNumber }).success;
+  return draft.licenceLater || licenceSchema(keyOnly).safeParse({ licenceNumber: draft.licenceNumber }).success;
 }
 
 export function riderStepValid(draft: BookingDraft) {
-  return riderSchema.safeParse(draft.rider).success;
+  return riderSchema(keyOnly).safeParse(draft.rider).success;
 }
 
 // ---------------------------------------------------------------- 4. Review
@@ -225,6 +235,9 @@ export function ReviewStep({
   agreed: boolean;
   onAgree: (agreed: boolean) => void;
 }) {
+  const t = useTranslations("booking");
+  const common = useTranslations("common");
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex gap-3 rounded-card border border-line bg-surface p-3">
@@ -239,32 +252,32 @@ export function ReviewStep({
             </p>
           ) : null}
           <p className="text-xs text-subtle">
-            {quote.days} {quote.days === 1 ? "day" : "days"}
+            {common("days", { count: quote.days })}
           </p>
         </div>
       </div>
 
       <dl className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4 text-sm">
         <div className="flex justify-between gap-4">
-          <dt className="text-subtle">Rider</dt>
+          <dt className="text-subtle">{t("reviewRider")}</dt>
           <dd className="text-right font-semibold">{draft.rider.name}</dd>
         </div>
         <div className="flex justify-between gap-4">
-          <dt className="text-subtle">Contact</dt>
+          <dt className="text-subtle">{t("reviewContact")}</dt>
           <dd className="text-right font-semibold">{draft.rider.phone}</dd>
         </div>
         <div className="flex items-center justify-between gap-4">
-          <dt className="text-subtle">Licence</dt>
+          <dt className="text-subtle">{t("reviewLicence")}</dt>
           <dd className="text-right font-semibold">
-            {draft.licenceLater ? <StatusBadge tone="brand">Show at pickup</StatusBadge> : draft.licenceNumber}
+            {draft.licenceLater ? <StatusBadge tone="brand">{t("showAtPickup")}</StatusBadge> : draft.licenceNumber}
           </dd>
         </div>
       </dl>
 
-      <BookingSummary lines={quoteLines(quote)} totalLabel="Total payable" />
+      <BookingSummary lines={quoteLines(quote)} totalLabel="totalPayable" />
 
       <Checkbox isSelected={agreed} onChange={onAgree}>
-        I accept the rental terms and cancellation policy
+        {t("acceptTerms")}
       </Checkbox>
     </div>
   );
@@ -277,11 +290,13 @@ export const paymentMethods = [
 ];
 
 export function PaymentStep({ patch }: Pick<PatchProps, "patch">) {
+  const t = useTranslations("booking");
+
   return (
     <div className="flex flex-col gap-4">
-      <RadioGroup label="Payment method" value="aba-khqr" onChange={(payment) => patch({ payment })} options={paymentMethods} />
+      <RadioGroup label={t("paymentMethod")} value="aba-khqr" onChange={(payment) => patch({ payment })} options={paymentMethods} />
       <p className="rounded-control bg-surface-secondary px-4 py-3 text-sm text-subtle">
-        Pay by scanning the ABA KHQR code. Payments are simulated in this preview: no money moves.
+        {t("payNote")}
       </p>
     </div>
   );

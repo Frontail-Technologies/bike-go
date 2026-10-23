@@ -1,4 +1,7 @@
+"use client";
+
 import { CheckIcon, XIcon } from "@phosphor-icons/react/ssr";
+import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";
 import type { CustomerBooking } from "./types";
 import { formatDay } from "./dates";
@@ -6,11 +9,13 @@ import { formatDay } from "./dates";
 type StepState = "done" | "current" | "todo" | "cancelled";
 type Step = { title: string; detail: string; state: StepState };
 
-export function timelineFor(b: CustomerBooking): Step[] {
-  const booked: Step = { title: "Booking confirmed", detail: formatDay(b.createdAt.slice(0, 10)), state: "done" };
+type T = ReturnType<typeof useTranslations<"booking">>;
+
+export function timelineFor(b: CustomerBooking, t: T): Step[] {
+  const booked: Step = { title: t("tlConfirmed"), detail: formatDay(b.createdAt.slice(0, 10)), state: "done" };
 
   if (b.status === "cancelled") {
-    return [booked, { title: "Booking cancelled", detail: b.cancelledAt ? formatDay(b.cancelledAt.slice(0, 10)) : "Cancelled", state: "cancelled" }];
+    return [booked, { title: t("tlCancelled"), detail: b.cancelledAt ? formatDay(b.cancelledAt.slice(0, 10)) : t("tlCancelledDetail"), state: "cancelled" }];
   }
 
   const rank = { upcoming: 1, ongoing: 2, completed: 4 }[b.status];
@@ -18,9 +23,9 @@ export function timelineFor(b: CustomerBooking): Step[] {
 
   return [
     booked,
-    { title: "Ready for pickup", detail: `${formatDay(b.startDate)} · ${b.pickupTime}`, state: state(1) },
-    { title: "On rent", detail: `${formatDay(b.startDate, false)} to ${formatDay(b.endDate, false)}`, state: state(2) },
-    { title: "Return bike", detail: `${formatDay(b.endDate)} · ${b.dropTime}`, state: state(3) },
+    { title: t("tlReady"), detail: `${formatDay(b.startDate)} · ${b.pickupTime}`, state: state(1) },
+    { title: t("tlOnRent"), detail: t("tlRange", { from: formatDay(b.startDate, false), to: formatDay(b.endDate, false) }), state: state(2) },
+    { title: t("tlReturn"), detail: `${formatDay(b.endDate)} · ${b.dropTime}`, state: state(3) },
   ];
 }
 
@@ -32,10 +37,11 @@ const dot: Record<StepState, string> = {
 };
 
 export function BookingTimeline({ booking }: { booking: CustomerBooking }) {
-  const steps = timelineFor(booking);
+  const t = useTranslations("booking");
+  const steps = timelineFor(booking, t);
 
   return (
-    <ol aria-label="Booking progress" className="flex flex-col">
+    <ol aria-label={t("progressAria")} className="flex flex-col">
       {steps.map((step, i) => (
         <li key={step.title} aria-current={step.state === "current" ? "step" : undefined} className="flex gap-3">
           <div className="flex flex-col items-center">

@@ -1,5 +1,6 @@
 import { PriceDisplay } from "@/components/customer/price-display";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";
 
 type StickyBookingBarProps = {
@@ -20,12 +21,14 @@ type StickyBookingBarProps = {
 export function StickyBookingBar({
   amount,
   unit = "day",
-  label = "Book this bike",
+  label,
   onPress,
   isDisabled,
   inline = false,
   className,
 }: StickyBookingBarProps) {
+  const t = useTranslations("bike");
+
   return (
     <div
       data-testid="sticky-cta"
@@ -40,7 +43,7 @@ export function StickyBookingBar({
       <div className="mx-auto flex max-w-md items-center justify-between gap-4 md:max-w-3xl">
         <PriceDisplay amount={amount} unit={unit} size="lg" />
         <Button onPress={onPress} isDisabled={isDisabled} className="min-w-40 flex-1 sm:flex-none">
-          {label}
+          {label ?? t("bookThisBike")}
         </Button>
       </div>
     </div>

@@ -8,6 +8,7 @@ import { Button, type ButtonProps } from "@/components/ui/button";
 import { type DateRange, DateRangeCalendar } from "@/components/ui/date-range-calendar";
 import { formatRange, toISO, toRange } from "@/features/bookings/dates";
 import { useToday } from "@/hooks/use-today";
+import { useTranslations } from "@/i18n/hooks";
 
 type RentalDatesButtonProps = {
   start?: string | null;
@@ -23,16 +24,17 @@ type RentalDatesButtonProps = {
 export function RentalDatesButton({ start, end, onChange, isDateUnavailable, triggerProps, iconOnly }: RentalDatesButtonProps) {
   const [draft, setDraft] = useState<DateRange | null>(toRange(start ?? undefined, end ?? undefined));
   const min = useToday();
+  const t = useTranslations("booking");
 
   return (
     <ResponsiveOverlay
-      title="Pickup dates"
+      title={t("pickupDates")}
       popoverClassName="w-[380px]"
       triggerProps={{ variant: "secondary", ...(iconOnly ? { isIconOnly: true } : {}), ...triggerProps }}
       triggerLabel={
         <>
           <CalendarBlankIcon size={20} />
-          <span className={iconOnly ? "sr-only" : undefined}>{start && end ? formatRange(start, end) : "Pickup dates"}</span>
+          <span className={iconOnly ? "sr-only" : undefined}>{start && end ? formatRange(start, end) : t("pickupDates")}</span>
         </>
       }
       footer={
@@ -42,12 +44,12 @@ export function RentalDatesButton({ start, end, onChange, isDateUnavailable, tri
           isDisabled={!draft}
           onPress={() => draft && onChange(toISO(draft.start), toISO(draft.end))}
         >
-          Apply dates
+          {t("applyDates")}
         </Button>
       }
     >
       <DateRangeCalendar
-        aria-label="Rental dates"
+        aria-label={t("rentalDates")}
         value={draft}
         onChange={setDraft}
         minValue={min}

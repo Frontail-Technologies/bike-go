@@ -4,6 +4,7 @@ import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { Logo } from "@/components/shared/logo";
 import { IconButton } from "@/components/ui/button";
 import { useBack } from "@/hooks/use-back";
+import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";
 
 type AppBarProps = {
@@ -31,6 +32,7 @@ type AppBarProps = {
  */
 export function AppBar({ title, subtitle, leading = "none", backFallback = "/", onBack, actions, floating = false, solid = true, titleAs = "h1", className }: AppBarProps) {
   const back = useBack(backFallback);
+  const t = useTranslations("common");
   const overHero = floating && !solid;
   const Title = titleAs;
 
@@ -46,7 +48,7 @@ export function AppBar({ title, subtitle, leading = "none", backFallback = "/", 
       <div className="flex h-14 items-center gap-1 px-2">
         {leading === "back" ? (
           <IconButton
-            label="Go back"
+            label={t("goBack")}
             icon={<ArrowLeftIcon size={24} />}
             className={cn("shrink-0", overHero && "bg-surface/90 shadow-card backdrop-blur-sm")}
             onPress={onBack ?? back}

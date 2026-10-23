@@ -17,6 +17,7 @@ import { formatDay } from "@/features/bookings/dates";
 import { profileStore } from "@/features/profile/store";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { cn } from "@/lib/cn";
+import { useTranslations } from "@/i18n/hooks";
 import { formatMoney, formatPrice } from "@/lib/format";
 import {
   type DocumentId,
@@ -27,15 +28,14 @@ import {
   employmentTypes,
   experienceBands,
   getLoanType,
-  labelOf,
   loanPurposes,
   loanTypes,
   MAX_EMI_SHARE,
   newLoanReference,
   residenceStatuses,
   tenuresFor,
-  yesNo,
 } from "./data";
+import { useLoanText } from "./use-loan-text";
 import { DocumentUpload } from "./document-upload";
 import {
   documentsStepValid,
@@ -49,7 +49,7 @@ import {
 } from "./schemas";
 import { addApplication, justAppliedStore, loanDraftStore } from "./store";
 
-const STEPS = ["Loan details", "Personal details", "Employment & income", "Documents", "Review & submit"] as const;
+const STEPS = ["applyStep1", "applyStep2", "applyStep3", "applyStep4", "applyStep5"] as const;
 const LAST_STEP = STEPS.length;
 const clampStep = (n: number) => Math.max(1, Math.min(LAST_STEP, Number.isFinite(n) ? n : 1));
 
@@ -183,7 +183,9 @@ function useAutosave<T extends FieldValues>(form: UseFormReturn<T>, save: (value
 // ------------------------------------------------------------------ 1. loan details
 
 function LoanStep({ draft, patch, formId, onValid }: PatchProps & { formId: string; onValid: () => void }) {
-  const form = useForm({ resolver: zodResolver(loanDetailsSchema), mode: "onBlur", values: loanDetailsOf(draft) });
+  const { t, typeShort, options } = useLoanText();
+  const intl = useTranslations("loans");
+  const form = useForm({ resolver: zodResolver(loanDetailsSchema(t)), mode: "onBlur", values: loanDetailsOf(draft) });
   useAutosave(form, (v) => {
     const type = getLoanType(v.loanType ?? "");
     patch({
@@ -203,8 +205,8 @@ function LoanStep({ draft, patch, formId, onValid }: PatchProps & { formId: stri
       <ChipField
         control={form.control}
         name="loanType"
-        label="Loan type"
-        options={loanTypes.map((t) => ({ id: t.id, label: t.name.replace(" Loan", "") }))}
+        label={t("applyLoanType")}
+        options={loanTypes.map((lt) => ({ id: lt.id, label: typeShort(lt.id) }))}
         onPick={(id) => {
           const next = getLoanType(id);
           if (!next) return;
@@ -215,9 +217,9 @@ function LoanStep({ draft, patch, formId, onValid }: PatchProps & { formId: stri
       />
 
       <div className="flex flex-col gap-3">
-        <Field control={form.control} name="amount" label="Required amount (USD)" inputMode="numeric" />
+        <Field control={form.control} name="amount" label={t("applyAmount")} inputMode="numeric" />
         <Slider
-          aria-label="Required amount"
+          aria-label={t("applyAmountAria")}
           className="w-full"
           minValue={type.minAmount}
           maxValue={type.maxAmount}
@@ -242,11 +244,11 @@ function LoanStep({ draft, patch, formId, onValid }: PatchProps & { formId: stri
         </Slider>
       </div>
 
-      <ChipField control={form.control} name="tenure" label="Preferred tenure (months)" options={tenuresFor(type).map((t) => ({ id: String(t), label: String(t) }))} />
-      <SelectField control={form.control} name="purpose" label="Purpose of loan" options={loanPurposes} />
+      <ChipField control={form.control} name="tenure" label={t("applyTenure")} options={tenuresFor(type).map((m) => ({ id: String(m), label: String(m) }))} />
+      <SelectField control={form.control} name="purpose" label={t("applyPurpose")} options={options("purpose", loanPurposes)} />
 
       <p className="rounded-control bg-surface-secondary px-4 py-3 text-sm" data-testid="emi-preview">
-        Estimated <span className="tabular font-bold">{formatMoney(emi.monthly)}</span> a month at {type.apr}% a year. Final terms are confirmed after review.
+        {intl.rich("applyEmiPreview", { amount: formatMoney(emi.monthly), rate: type.apr, b: (chunks) => <span className="tabular font-bold">{chunks}</span> })}
       </p>
     </form>
   );
@@ -255,18 +257,19 @@ function LoanStep({ draft, patch, formId, onValid }: PatchProps & { formId: stri
 // ------------------------------------------------------------------ 2. personal
 
 function PersonalStep({ draft, patch, formId, onValid }: PatchProps & { formId: string; onValid: () => void }) {
-  const form = useForm({ resolver: zodResolver(personalSchema), mode: "onBlur", values: draft.applicant });
+  const { t, options } = useLoanText();
+  const form = useForm({ resolver: zodResolver(personalSchema(t)), mode: "onBlur", values: draft.applicant });
   useAutosave(form, (v) => patch({ applicant: { ...draft.applicant, ...v } }));
 
   return (
     <form id={formId} noValidate className="flex flex-col gap-4" onSubmit={form.handleSubmit(onValid)}>
-      <Field control={form.control} name="fullName" label="Full name" autoComplete="name" description="As printed on your passport." />
-      <Field control={form.control} name="mobile" label="Mobile number" type="tel" inputMode="tel" autoComplete="tel" placeholder="+971 50 123 4567" />
-      <Field control={form.control} name="email" label="Email" type="email" inputMode="email" autoComplete="email" />
-      <Field control={form.control} name="dob" label="Date of birth" type="date" autoComplete="bday" />
-      <Field control={form.control} name="nationality" label="Nationality" autoComplete="country-name" />
-      <Field control={form.control} name="city" label="Current city" autoComplete="address-level2" />
-      <SelectField control={form.control} name="residence" label="Visa or residence status" options={residenceStatuses} />
+      <Field control={form.control} name="fullName" label={t("applyFullName")} autoComplete="name" description={t("applyFullNameHint")} />
+      <Field control={form.control} name="mobile" label={t("applyMobile")} type="tel" inputMode="tel" autoComplete="tel" placeholder={t("applyMobilePlaceholder")} />
+      <Field control={form.control} name="email" label={t("applyEmail")} type="email" inputMode="email" autoComplete="email" />
+      <Field control={form.control} name="dob" label={t("applyDob")} type="date" autoComplete="bday" />
+      <Field control={form.control} name="nationality" label={t("applyNationality")} autoComplete="country-name" />
+      <Field control={form.control} name="city" label={t("applyCity")} autoComplete="address-level2" />
+      <SelectField control={form.control} name="residence" label={t("applyResidence")} options={options("residence", residenceStatuses)} />
     </form>
   );
 }
@@ -274,7 +277,8 @@ function PersonalStep({ draft, patch, formId, onValid }: PatchProps & { formId: 
 // ------------------------------------------------------------------ 3. employment
 
 function EmploymentStep({ draft, patch, formId, onValid }: PatchProps & { formId: string; onValid: () => void }) {
-  const form = useForm({ resolver: zodResolver(employmentSchema), mode: "onBlur", values: draft.employment });
+  const { t, options, yesNo } = useLoanText();
+  const form = useForm({ resolver: zodResolver(employmentSchema(t)), mode: "onBlur", values: draft.employment });
   useAutosave(form, (v) => patch({ employment: { ...draft.employment, ...v } }));
 
   const income = Number(draft.employment.monthlyIncome);
@@ -284,15 +288,15 @@ function EmploymentStep({ draft, patch, formId, onValid }: PatchProps & { formId
 
   return (
     <form id={formId} noValidate className="flex flex-col gap-4" onSubmit={form.handleSubmit(onValid)}>
-      <ChipField control={form.control} name="type" label="Employment type" options={employmentTypes} />
-      <Field control={form.control} name="employer" label="Employer or business" autoComplete="organization" />
-      <Field control={form.control} name="jobTitle" label="Job title" autoComplete="organization-title" />
-      <Field control={form.control} name="monthlyIncome" label="Monthly income (USD)" inputMode="decimal" description="Before tax, from all regular sources." />
-      <SelectField control={form.control} name="experience" label="Work experience" options={experienceBands} />
-      <SelectField control={form.control} name="bankAccount" label="Do you have an active bank account?" options={yesNo} />
+      <ChipField control={form.control} name="type" label={t("applyEmpType")} options={options("emp", employmentTypes)} />
+      <Field control={form.control} name="employer" label={t("applyEmployer")} autoComplete="organization" />
+      <Field control={form.control} name="jobTitle" label={t("applyJobTitle")} autoComplete="organization-title" />
+      <Field control={form.control} name="monthlyIncome" label={t("applyIncome")} inputMode="decimal" description={t("applyIncomeHint")} />
+      <SelectField control={form.control} name="experience" label={t("applyExperience")} options={options("exp", experienceBands)} />
+      <SelectField control={form.control} name="bankAccount" label={t("applyBank")} options={yesNo} />
       {tooHigh ? (
         <p className="rounded-control bg-brand-soft px-4 py-3 text-sm" role="status">
-          The monthly payment of {formatMoney(emi)} is above half of this income, so approval is less likely. You can still apply, or go back and lower the amount.
+          {t("applyTooHigh", { emi: formatMoney(emi) })}
         </p>
       ) : null}
     </form>
@@ -302,15 +306,17 @@ function EmploymentStep({ draft, patch, formId, onValid }: PatchProps & { formId
 // ------------------------------------------------------------------ 4. documents
 
 function DocumentsStep({ draft, patch }: PatchProps) {
+  const { t, docLabel } = useLoanText();
+
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-subtle">PDF, JPG or PNG, up to 5 MB each. This preview only records the file name; nothing is uploaded.</p>
+      <p className="text-sm text-subtle">{t("applyDocsIntro")}</p>
       {documentTypes.map((doc) => (
         <DocumentUpload
           key={doc.id}
           doc={doc.id}
-          label={doc.label}
-          hint="Upload or take a photo"
+          label={docLabel(doc.id)}
+          hint={t("applyUploadHint")}
           file={draft.documents[doc.id]}
           onChange={(file) => {
             const documents = { ...draft.documents };
@@ -336,12 +342,14 @@ function ReviewRow({ label, value }: { label: string; value: React.ReactNode }) 
 }
 
 function ReviewCard({ title, step, onEdit, children }: { title: string; step: number; onEdit: (step: number) => void; children: React.ReactNode }) {
+  const intl = useTranslations("loans");
+
   return (
     <section aria-label={title} className="rounded-card border border-line bg-surface p-4">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-base font-bold">{title}</h2>
         <button type="button" onClick={() => onEdit(step)} className="min-h-11 px-2 text-sm font-semibold text-[#b45309] underline underline-offset-2">
-          Edit<span className="sr-only"> {title}</span>
+          {intl("rEdit")}<span className="sr-only"> {title}</span>
         </button>
       </div>
       <dl className="flex flex-col gap-2 text-sm">{children}</dl>
@@ -350,6 +358,7 @@ function ReviewCard({ title, step, onEdit, children }: { title: string; step: nu
 }
 
 function ReviewStep({ draft, agreed, onAgree, onEdit }: PatchProps & { agreed: boolean; onAgree: (v: boolean) => void; onEdit: (step: number) => void }) {
+  const { t, typeName, choice, yesNoLabel, docLabel } = useLoanText();
   const type = getLoanType(draft.loanType) ?? loanTypes[0];
   const emi = calculateEmi(draft.amount, type.apr, draft.tenure);
   const a = draft.applicant;
@@ -357,41 +366,41 @@ function ReviewStep({ draft, agreed, onAgree, onEdit }: PatchProps & { agreed: b
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm text-subtle">Please check your details before submitting.</p>
-      <ReviewCard title="Loan details" step={1} onEdit={onEdit}>
-        <ReviewRow label="Type" value={type.name} />
-        <ReviewRow label="Amount" value={formatMoney(draft.amount)} />
-        <ReviewRow label="Tenure" value={`${draft.tenure} months`} />
-        <ReviewRow label="Purpose" value={labelOf(loanPurposes, draft.purpose)} />
-        <ReviewRow label="Monthly payment" value={`${formatMoney(emi.monthly)} (${type.apr}% a year)`} />
+      <p className="text-sm text-subtle">{t("applyReviewIntro")}</p>
+      <ReviewCard title={t("reviewLoan")} step={1} onEdit={onEdit}>
+        <ReviewRow label={t("rType")} value={typeName(type.id)} />
+        <ReviewRow label={t("rAmount")} value={formatMoney(draft.amount)} />
+        <ReviewRow label={t("rTenure")} value={t("calcMonths", { count: draft.tenure })} />
+        <ReviewRow label={t("rPurpose")} value={choice("purpose", draft.purpose)} />
+        <ReviewRow label={t("rMonthly")} value={t("rMonthlyValue", { amount: formatMoney(emi.monthly), rate: type.apr })} />
       </ReviewCard>
-      <ReviewCard title="Personal details" step={2} onEdit={onEdit}>
-        <ReviewRow label="Name" value={a.fullName} />
-        <ReviewRow label="Mobile" value={a.mobile} />
-        <ReviewRow label="Email" value={a.email} />
-        <ReviewRow label="Date of birth" value={formatDay(a.dob)} />
-        <ReviewRow label="Nationality" value={a.nationality} />
-        <ReviewRow label="City" value={a.city} />
-        <ReviewRow label="Status" value={labelOf(residenceStatuses, a.residence)} />
+      <ReviewCard title={t("reviewPersonal")} step={2} onEdit={onEdit}>
+        <ReviewRow label={t("rName")} value={a.fullName} />
+        <ReviewRow label={t("rMobile")} value={a.mobile} />
+        <ReviewRow label={t("rEmail")} value={a.email} />
+        <ReviewRow label={t("rDob")} value={formatDay(a.dob)} />
+        <ReviewRow label={t("rNationality")} value={a.nationality} />
+        <ReviewRow label={t("rCity")} value={a.city} />
+        <ReviewRow label={t("rStatus")} value={choice("residence", a.residence)} />
       </ReviewCard>
-      <ReviewCard title="Employment details" step={3} onEdit={onEdit}>
-        <ReviewRow label="Type" value={labelOf(employmentTypes, e.type)} />
-        <ReviewRow label="Employer" value={e.employer} />
-        <ReviewRow label="Job title" value={e.jobTitle} />
-        <ReviewRow label="Monthly income" value={formatMoney(Number(e.monthlyIncome))} />
-        <ReviewRow label="Experience" value={labelOf(experienceBands, e.experience)} />
-        <ReviewRow label="Active bank account" value={labelOf(yesNo, e.bankAccount)} />
+      <ReviewCard title={t("reviewEmployment")} step={3} onEdit={onEdit}>
+        <ReviewRow label={t("rType")} value={choice("emp", e.type)} />
+        <ReviewRow label={t("rEmployer")} value={e.employer} />
+        <ReviewRow label={t("rJobTitle")} value={e.jobTitle} />
+        <ReviewRow label={t("rIncome")} value={formatMoney(Number(e.monthlyIncome))} />
+        <ReviewRow label={t("rExperience")} value={choice("exp", e.experience)} />
+        <ReviewRow label={t("rBank")} value={yesNoLabel(e.bankAccount)} />
       </ReviewCard>
-      <ReviewCard title="Documents" step={4} onEdit={onEdit}>
-        <ReviewRow label="Uploaded" value={`${documentTypes.filter((d) => draft.documents[d.id]).length} of ${documentTypes.length} documents`} />
+      <ReviewCard title={t("reviewDocs")} step={4} onEdit={onEdit}>
+        <ReviewRow label={t("rUploaded")} value={t("rUploadedValue", { done: documentTypes.filter((d) => draft.documents[d.id]).length, total: documentTypes.length })} />
         {documentTypes.map((doc) => (
-          <ReviewRow key={doc.id} label={doc.label} value={draft.documents[doc.id]?.name ?? "Missing"} />
+          <ReviewRow key={doc.id} label={docLabel(doc.id)} value={draft.documents[doc.id]?.name ?? t("rMissing")} />
         ))}
       </ReviewCard>
       <Checkbox isSelected={agreed} onChange={onAgree}>
-        I confirm that all the information provided is correct and complete
+        {t("applyConfirm")}
       </Checkbox>
-      <p className="text-xs text-subtle">Simulated: no credit check is run and nothing is sent to a lender.</p>
+      <p className="text-xs text-subtle">{t("applySimulated")}</p>
     </div>
   );
 }
@@ -400,14 +409,16 @@ function ReviewStep({ draft, agreed, onAgree, onEdit }: PatchProps & { agreed: b
 
 /** Numbered stepper (done steps are ticked) plus the current step's name. */
 function Progress({ step }: { step: number }) {
+  const intl = useTranslations("loans");
+
   return (
     <div className="flex flex-col gap-3">
-      <ol className="flex items-center" aria-label="Application progress">
+      <ol className="flex items-center" aria-label={intl("applyProgressAria")}>
         {STEPS.map((label, i) => (
           <li
             key={label}
             aria-current={i === step ? "step" : undefined}
-            aria-label={`${label}${i < step ? ", done" : i === step ? ", current" : ""}`}
+            aria-label={i < step ? intl("applyStepDone", { label: intl(label) }) : i === step ? intl("applyStepCurrent", { label: intl(label) }) : intl(label)}
             className={cn("flex items-center", i < STEPS.length - 1 && "flex-1")}
           >
             <span
@@ -424,9 +435,9 @@ function Progress({ step }: { step: number }) {
       </ol>
       <div>
         <p className="text-sm text-subtle" aria-live="polite">
-          Step {step + 1} of {STEPS.length}
+          {intl("applyStepOf", { step: step + 1, total: STEPS.length })}
         </p>
-        <p className="text-xl leading-7 font-extrabold">{STEPS[step]}</p>
+        <p className="text-xl leading-7 font-extrabold">{intl(STEPS[step]!)}</p>
       </div>
     </div>
   );
@@ -440,6 +451,8 @@ export function ApplyFlow() {
   const router = useRouter();
   const params = useSearchParams();
   const hydrated = useHydrated();
+  const { t, typeName } = useLoanText();
+  const intl = useTranslations("loans");
   const profile = profileStore.useValue();
   const stored = loanDraftStore.useValue();
   const [agreed, setAgreed] = useState(false);
@@ -515,18 +528,18 @@ export function ApplyFlow() {
   const type = getLoanType(draft.loanType) ?? loanTypes[0];
   const emi = calculateEmi(draft.amount, type.apr, draft.tenure).monthly;
 
-  const footerProps = { amount: emi, summaryLabel: "Monthly payment" } as const;
+  const footerProps = { amount: emi, summaryLabel: t("rMonthly") } as const;
   const footer =
     step === 1 ? (
-      <FlowFooter {...footerProps} label="Continue" formId="loan-form" />
+      <FlowFooter {...footerProps} label={t("continue")} formId="loan-form" />
     ) : step === 2 ? (
-      <FlowFooter {...footerProps} label="Continue" formId="personal-form" />
+      <FlowFooter {...footerProps} label={t("continue")} formId="personal-form" />
     ) : step === 3 ? (
-      <FlowFooter {...footerProps} label="Continue" formId="employment-form" />
+      <FlowFooter {...footerProps} label={t("continue")} formId="employment-form" />
     ) : step === 4 ? (
-      <FlowFooter {...footerProps} label="Continue" onPress={() => go(5)} isDisabled={!documentsStepValid(draft)} />
+      <FlowFooter {...footerProps} label={t("continue")} onPress={() => go(5)} isDisabled={!documentsStepValid(draft)} />
     ) : (
-      <FlowFooter {...footerProps} label="Submit application" onPress={submit} isPending={submitting} isDisabled={!agreed} />
+      <FlowFooter {...footerProps} label={t("applySubmit")} onPress={submit} isPending={submitting} isDisabled={!agreed} />
     );
 
   return (
@@ -536,16 +549,16 @@ export function ApplyFlow() {
         backFallback="/loans"
         // Steps are history entries, so Back is a real pop; step 1 falls through to the default (back to the loans page).
         onBack={step > 1 ? () => router.back() : undefined}
-        title="Expat loan"
-        subtitle="Application"
+        title={t("applyAppBarTitle")}
+        subtitle={t("applyAppBarSub")}
       />
 
       <Screen enter="slide" bottom="footer" className="flex flex-col gap-5 lg:pb-12">
-        <DesktopTitle title="Loan application" subtitle={type.name} />
+        <DesktopTitle title={t("applyDesktopTitle")} subtitle={typeName(type.id)} />
         <Progress step={step - 1} />
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-10">
-          <section aria-label={STEPS[step - 1]} className="min-w-0">
+          <section aria-label={intl(STEPS[step - 1]!)} className="min-w-0">
             <div key={step} className="rgo-page-in flex flex-col gap-5">
               {step === 1 ? <LoanStep formId="loan-form" draft={draft} patch={patch} onValid={() => go(2)} /> : null}
               {step === 2 ? <PersonalStep formId="personal-form" draft={draft} patch={patch} onValid={() => go(3)} /> : null}
@@ -556,14 +569,14 @@ export function ApplyFlow() {
             <div className="mt-6 hidden lg:block">{footer}</div>
           </section>
 
-          <aside aria-label="Loan summary" className="hidden lg:block">
+          <aside aria-label={t("applySummaryAria")} className="hidden lg:block">
             <div className="sticky top-24 flex flex-col gap-3 rounded-card border border-line bg-surface p-4 text-sm">
-              <p className="text-base font-bold">{type.name}</p>
-              <ReviewRow label="Amount" value={formatMoney(draft.amount)} />
-              <ReviewRow label="Tenure" value={`${draft.tenure} months`} />
-              <ReviewRow label="Rate" value={`${type.apr}% a year`} />
+              <p className="text-base font-bold">{typeName(type.id)}</p>
+              <ReviewRow label={t("rAmount")} value={formatMoney(draft.amount)} />
+              <ReviewRow label={t("rTenure")} value={t("calcMonths", { count: draft.tenure })} />
+              <ReviewRow label={t("rRate")} value={t("rRateValue", { rate: type.apr })} />
               <div className="border-t border-line pt-3">
-                <ReviewRow label="Monthly payment" value={formatMoney(emi)} />
+                <ReviewRow label={t("rMonthly")} value={formatMoney(emi)} />
               </div>
             </div>
           </aside>

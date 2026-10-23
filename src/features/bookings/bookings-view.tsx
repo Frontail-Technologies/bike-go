@@ -8,15 +8,16 @@ import { ButtonLink } from "@/components/ui/button-link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Tabs } from "@/components/ui/tabs";
 import { getBike } from "@/features/mock/data";
+import { useTranslations } from "@/i18n/hooks";
 import { BookingCard } from "./booking-card";
 import { bookingsStore } from "./store";
 import type { CustomerBooking } from "./types";
 
 const tabs = [
-  { id: "upcoming", label: "Upcoming", statuses: ["upcoming"], empty: "No upcoming bookings" },
-  { id: "active", label: "Active", statuses: ["ongoing"], empty: "No active rentals" },
-  { id: "completed", label: "Completed", statuses: ["completed"], empty: "No completed rides yet" },
-  { id: "cancelled", label: "Cancelled", statuses: ["cancelled"], empty: "No cancelled bookings" },
+  { id: "upcoming", label: "tabUpcoming", statuses: ["upcoming"], empty: "emptyUpcoming" },
+  { id: "active", label: "tabActive", statuses: ["ongoing"], empty: "emptyActive" },
+  { id: "completed", label: "tabCompleted", statuses: ["completed"], empty: "emptyCompleted" },
+  { id: "cancelled", label: "tabCancelled", statuses: ["cancelled"], empty: "emptyCancelled" },
 ] as const;
 
 function sortByStart(list: CustomerBooking[], desc: boolean) {
@@ -25,14 +26,15 @@ function sortByStart(list: CustomerBooking[], desc: boolean) {
 
 export function BookingsView() {
   const all = bookingsStore.useValue();
+  const t = useTranslations("booking");
 
   return (
     <>
-      <AppBar title="My bookings" />
+      <AppBar title={t("myBookings")} />
       <Screen bottom="nav" className="flex flex-col gap-4 md:gap-6">
-        <DesktopTitle title="My bookings" />
+        <DesktopTitle title={t("myBookings")} />
       <Tabs
-        aria-label="Booking status"
+        aria-label={t("bookingStatusAria")}
         items={tabs.map((tab) => {
           const list = sortByStart(
             all.filter((b) => (tab.statuses as readonly string[]).includes(b.status)),
@@ -40,14 +42,14 @@ export function BookingsView() {
           );
           return {
             id: tab.id,
-            label: tab.label,
+            label: t(tab.label),
             content:
               list.length === 0 ? (
                 <EmptyState
                   icon={<CalendarXIcon size={24} />}
-                  title={tab.empty}
-                  description="Pick a bike and your rides will show up here."
-                  action={<ButtonLink href="/bikes" size="sm">Browse bikes</ButtonLink>}
+                  title={t(tab.empty)}
+                  description={t("emptyText")}
+                  action={<ButtonLink href="/bikes" size="sm">{t("browseBikes")}</ButtonLink>}
                 />
               ) : (
                 <AnimatedGrid className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">

@@ -17,22 +17,26 @@ import { Screen } from "@/components/shared/screen";
 import { IconButton } from "@/components/ui/button";
 import { AppSearchField } from "@/components/ui/search-field";
 import { type BikeCategory, motorcycles } from "@/features/mock/data";
+import { LanguageSwitcher } from "@/components/shared/language-switcher";
+import { useTranslations } from "@/i18n/hooks";
 import { CategoryCircles } from "./category-circles";
 import { HomeBanner } from "./home-banner";
 
 const featured = [...motorcycles].sort((a, b) => b.rating - a.rating).slice(0, 6);
 
 const benefits = [
-  { Icon: SealCheckIcon, title: "Verified bikes", text: "Serviced before every ride" },
-  { Icon: TimerIcon, title: "Flexible pickup", text: "7 AM to 9 PM, 3 cities" },
-  { Icon: ArrowCounterClockwiseIcon, title: "Refundable deposit", text: "Back within 48 hours" },
-  { Icon: HeadsetIcon, title: "24/7 support", text: "Chat or call anytime" },
-];
+  { Icon: SealCheckIcon, key: "verified" },
+  { Icon: TimerIcon, key: "pickup" },
+  { Icon: ArrowCounterClockwiseIcon, key: "deposit" },
+  { Icon: HeadsetIcon, key: "support" },
+] as const;
 
 export function HomeView() {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<BikeCategory | null>(null);
+  const t = useTranslations("home");
+  const common = useTranslations("common");
 
   const popular = motorcycles
     .filter((bike) => !category || bike.category === category)
@@ -46,7 +50,12 @@ export function HomeView() {
 
   return (
     <>
-      <AppBar leading="logo" actions={<IconButton label="Notifications" icon={<BellIcon size={24} />} />} />
+      <AppBar leading="logo" actions={
+          <>
+            <LanguageSwitcher />
+            <IconButton label={common("notifications")} icon={<BellIcon size={24} />} />
+          </>
+        } />
       <Screen bottom="nav" className="flex flex-col gap-6 md:gap-10">
       {/* Top of the screen follows the reference: city, banner, search, categories, popular bikes. */}
       <div className="flex flex-col gap-4">
@@ -61,7 +70,7 @@ export function HomeView() {
             value={query}
             onChange={setQuery}
             onSubmit={() => search(query.trim() ? { q: query.trim() } : {})}
-            placeholder="Search bikes or brands"
+            placeholder={t("searchPlaceholder")}
             iconClassName="text-brand!"
             className="flex-1"
           />
@@ -72,7 +81,7 @@ export function HomeView() {
       <CategoryCircles value={category} onChange={setCategory} />
 
       <section aria-labelledby="popular" className="flex flex-col gap-3">
-        <SectionHeading id="popular" title="Popular Bikes" href={category ? `/bikes?category=${category}` : "/bikes"} />
+        <SectionHeading id="popular" title={t("popular")} href={category ? `/bikes?category=${category}` : "/bikes"} />
         {/* A sideways scroller on phones (next card peeks in); a regular grid from 768px. */}
         <AnimatedGrid
           key={category ?? "all"}
@@ -94,8 +103,8 @@ export function HomeView() {
             <BankIcon size={28} />
           </span>
           <span className="flex min-w-0 flex-1 flex-col">
-            <span className="text-base font-bold">Expat Loan</span>
-            <span className="text-sm text-subtle">Loans made simpler for expats</span>
+            <span className="text-base font-bold">{t("loanTitle")}</span>
+            <span className="text-sm text-subtle">{t("loanText")}</span>
           </span>
           <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand">
             <ArrowRightIcon size={18} weight="bold" />
@@ -105,37 +114,37 @@ export function HomeView() {
 
       <Reveal>
         <section aria-labelledby="featured" className="flex flex-col gap-4">
-          <SectionHeading id="featured" title="Featured" href="/bikes" />
+          <SectionHeading id="featured" title={t("featured")} href="/bikes" />
           <FeaturedBikeCarousel bikes={featured} bleed />
         </section>
       </Reveal>
 
       <Reveal>
-        <section aria-label="Offer" className="relative isolate flex items-center justify-start gap-4 overflow-hidden min-h-36 rounded-overlay bg-brand p-5 text-ink md:min-h-52 md:p-10">
+        <section aria-label={t("offerAria")} className="relative isolate flex items-center justify-start gap-4 overflow-hidden min-h-36 rounded-overlay bg-brand p-5 text-ink md:min-h-52 md:p-10">
           <Image src="/hero/offer-banner.jpg" alt="" fill sizes="(min-width: 1280px) 1216px, 100vw" className="-z-10 object-cover object-left md:object-right" />
           <div>
-            <p className="text-lg font-extrabold md:text-3xl">Free helmet on 3+ days</p>
-            <p className="text-sm text-ink/75 md:mt-1 md:text-base">Applied automatically at checkout.</p>
+            <p className="text-lg font-extrabold md:text-3xl">{t("offerTitle")}</p>
+            <p className="text-sm text-ink/75 md:mt-1 md:text-base">{t("offerText")}</p>
           </div>
           <Link
             href="/bikes"
             className="flex h-11 shrink-0 items-center rounded-control bg-ink px-4 text-sm md:h-12 md:px-6 md:text-base font-semibold text-white outline-none transition-transform duration-150 focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 active:scale-[0.97] motion-reduce:transition-none"
           >
-            Browse
+            {common("browse")}
           </Link>
         </section>
       </Reveal>
 
       <Reveal>
-        <section aria-label="Why RideGo">
+        <section aria-label={t("whyAria")}>
           <ul className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-            {benefits.map(({ Icon, title, text }) => (
-              <li key={title} className="flex flex-col gap-2 rounded-card border border-line bg-surface p-4">
+            {benefits.map(({ Icon, key }) => (
+              <li key={key} className="flex flex-col gap-2 rounded-card border border-line bg-surface p-4">
                 <span className="flex size-10 items-center justify-center rounded-control bg-brand-soft">
                   <Icon size={24} />
                 </span>
-                <p className="text-sm font-bold">{title}</p>
-                <p className="text-xs text-subtle">{text}</p>
+                <p className="text-sm font-bold">{t(`${key}Title`)}</p>
+                <p className="text-xs text-subtle">{t(`${key}Text`)}</p>
               </li>
             ))}
           </ul>

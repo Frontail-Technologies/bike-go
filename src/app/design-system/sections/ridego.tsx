@@ -84,8 +84,8 @@ export function RideGoSection() {
           <Demo title="BookingSummary (updates with the dates)">
             <BookingSummary
               lines={[
-                { label: `Bike rental (${hasRange ? days : 0} ${days === 1 ? "day" : "days"})`, amount: hasRange ? bike.pricePerDay * days : 0 },
-                { label: "Helmet", amount: hasRange ? 2 * days : 0 },
+                { id: "rental", days: hasRange ? days : 0, amount: hasRange ? bike.pricePerDay * days : 0 },
+                { id: "helmet", amount: hasRange ? 2 * days : 0 },
               ]}
             />
           </Demo>

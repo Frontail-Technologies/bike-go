@@ -1,6 +1,9 @@
+"use client";
+
 import { CheckIcon, WarningIcon, XIcon } from "@phosphor-icons/react/ssr";
 import { formatDay } from "@/features/bookings/dates";
 import { cn } from "@/lib/cn";
+import { useLoanText } from "./use-loan-text";
 import type { LoanApplication, LoanStatus } from "./data";
 
 type StepState = "done" | "current" | "todo" | "rejected" | "attention";
@@ -20,22 +23,24 @@ const position: Record<LoanStatus, { stage: number; state: StepState }> = {
   rejected: { stage: 3, state: "rejected" },
 };
 
-export function timelineFor(a: LoanApplication): Step[] {
-  const titles = ["Submitted", "Documents under review", "Eligibility review", a.status === "approved" ? "Approved" : a.status === "rejected" ? "Application not approved" : "Final decision"];
+type Text = ReturnType<typeof useLoanText>;
+
+export function timelineFor(a: LoanApplication, { t, note }: Pick<Text, "t" | "note">): Step[] {
+  const titles = [t("tlSubmitted"), t("tlDocsReview"), t("tlEligibility"), a.status === "approved" ? t("tlApproved") : a.status === "rejected" ? t("tlNotApproved") : t("tlFinal")];
   const { stage: current, state } = position[a.status];
 
   const notes: string[][] = [[], [], [], []];
-  for (const event of a.history) if (event.note) notes[stageOf[event.status]].push(event.note);
+  for (const event of a.history) if (event.note) notes[stageOf[event.status]].push(note(event.note));
 
   return titles.map((title, i) => {
     const stepState: StepState = i < current ? "done" : i === current ? state : "todo";
-    let detail = "Pending";
+    let detail = t("tlPending");
     if (i === 0) detail = formatWhen(a.createdAt);
-    else if (stepState === "current") detail = "In progress";
-    else if (stepState === "attention") detail = "Action needed";
+    else if (stepState === "current") detail = t("tlProgress");
+    else if (stepState === "attention") detail = t("tlAction");
     else if (stepState === "done" || stepState === "rejected") {
       const event = a.history.filter((h) => stageOf[h.status] >= i).at(0);
-      detail = event ? formatWhen(event.at) : "Done";
+      detail = event ? formatWhen(event.at) : t("tlDone");
     }
     return { title, detail, notes: notes[i], state: stepState };
   });
@@ -50,10 +55,11 @@ const dot: Record<StepState, string> = {
 };
 
 export function LoanTimeline({ application }: { application: LoanApplication }) {
-  const steps = timelineFor(application);
+  const text = useLoanText();
+  const steps = timelineFor(application, text);
 
   return (
-    <ol aria-label="Application progress" className="flex flex-col">
+    <ol aria-label={text.t("tlAria")} className="flex flex-col">
       {steps.map((step, i) => (
         <li key={step.title} aria-current={step.state === "current" || step.state === "attention" ? "step" : undefined} className="flex gap-3">
           <div className="flex flex-col items-center">

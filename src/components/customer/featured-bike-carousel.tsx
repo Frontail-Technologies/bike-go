@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { PriceDisplay } from "@/components/customer/price-display";
 import { BikeImage } from "@/components/shared/bike-image";
 import type { Motorcycle } from "@/features/mock/data";
+import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";
 
 type FeaturedBikeCarouselProps = {
@@ -33,6 +34,7 @@ export function FeaturedBikeCarousel({ bikes, hrefFor = (bike) => `/bikes/${bike
   const [snaps, setSnaps] = useState<number[]>([]);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(true);
+  const t = useTranslations();
 
   const sync = useCallback(() => {
     if (!emblaApi) return;
@@ -55,8 +57,8 @@ export function FeaturedBikeCarousel({ bikes, hrefFor = (bike) => `/bikes/${bike
   return (
     <div
       role="region"
-      aria-roledescription="carousel"
-      aria-label="Featured bikes"
+      aria-roledescription={t("common.carousel")}
+      aria-label={t("home.featuredAria")}
       className={cn("flex flex-col gap-4", bleed && "-mx-(--page-padding)", className)}
       onKeyDown={(event) => {
         if (event.key === "ArrowLeft") emblaApi?.scrollPrev();
@@ -72,8 +74,8 @@ export function FeaturedBikeCarousel({ bikes, hrefFor = (bike) => `/bikes/${bike
               <div
                 key={bike.id}
                 role="group"
-                aria-roledescription="slide"
-                aria-label={`${index + 1} of ${bikes.length}`}
+                aria-roledescription={t("common.slide")}
+                aria-label={t("home.slideOf", { index: index + 1, total: bikes.length })}
                 className="min-w-0 flex-[0_0_82%] pl-3 sm:flex-[0_0_46%] lg:flex-[0_0_32%]"
               >
                 <article className="flex h-full flex-col overflow-hidden rounded-card border border-line bg-surface shadow-card">
@@ -107,7 +109,7 @@ export function FeaturedBikeCarousel({ bikes, hrefFor = (bike) => `/bikes/${bike
                         href={hrefFor(bike)}
                         className="flex h-11 items-center rounded-control bg-brand px-4 text-sm font-semibold text-ink outline-none transition-transform duration-150 focus-visible:ring-2 focus-visible:ring-ink active:scale-[0.97] motion-reduce:transition-none"
                       >
-                        Book
+                        {t("common.book")}
                       </Link>
                     </div>
                   </div>
@@ -119,7 +121,7 @@ export function FeaturedBikeCarousel({ bikes, hrefFor = (bike) => `/bikes/${bike
 
         <button
           type="button"
-          aria-label="Previous bike"
+          aria-label={t("home.previousBike")}
           onClick={() => emblaApi?.scrollPrev()}
           disabled={!canPrev}
           className={cn(
@@ -131,7 +133,7 @@ export function FeaturedBikeCarousel({ bikes, hrefFor = (bike) => `/bikes/${bike
         </button>
         <button
           type="button"
-          aria-label="Next bike"
+          aria-label={t("home.nextBike")}
           onClick={() => emblaApi?.scrollNext()}
           disabled={!canNext}
           className={cn(

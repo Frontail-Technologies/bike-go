@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
+import { I18nProvider } from "@/i18n/provider";
 import { MotionProvider } from "@/components/motion/motion-provider";
 import { AppToaster } from "@/components/ui/toast";
 import "./globals.css";
@@ -35,7 +36,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${jakarta.variable} h-full`}>
       <body className="flex min-h-dvh flex-col">
-        <MotionProvider>{children}</MotionProvider>
+        <I18nProvider>
+          <MotionProvider>{children}</MotionProvider>
+        </I18nProvider>
         <AppToaster />
       </body>
     </html>

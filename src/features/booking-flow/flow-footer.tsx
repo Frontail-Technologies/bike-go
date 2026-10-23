@@ -1,6 +1,7 @@
 import { Spinner } from "@heroui/react";
 import { PriceDisplay } from "@/components/customer/price-display";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "@/i18n/hooks";
 
 type FlowFooterProps = {
   label: string;
@@ -16,7 +17,9 @@ type FlowFooterProps = {
 };
 
 /** Primary action pinned to the safe-area edge on mobile. The bottom nav is hidden in this flow. */
-export function FlowFooter({ label, amount, formId, onPress, isDisabled, isPending, summaryLabel = "Total payable" }: FlowFooterProps) {
+export function FlowFooter({ label, amount, formId, onPress, isDisabled, isPending, summaryLabel }: FlowFooterProps) {
+  const t = useTranslations("booking");
+
   return (
     <div
       data-testid="flow-footer"
@@ -24,7 +27,7 @@ export function FlowFooter({ label, amount, formId, onPress, isDisabled, isPendi
     >
       <div className="mx-auto flex max-w-md items-center justify-between gap-4 lg:max-w-none">
         <div className="lg:hidden">
-          <p className="text-xs text-subtle">{summaryLabel}</p>
+          <p className="text-xs text-subtle">{summaryLabel ?? t("summaryLabel")}</p>
           <PriceDisplay amount={amount} unit={null} size="md" precise />
         </div>
         {/*

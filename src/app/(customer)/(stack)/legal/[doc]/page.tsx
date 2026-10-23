@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getLegalDoc, legalDocs } from "@/features/legal/content";
 import { LegalDocument } from "@/features/legal/legal-views";
+import legal from "@/i18n/messages/legal";
 
 export function generateStaticParams() {
   return legalDocs.map((doc) => ({ doc: doc.id }));
@@ -9,7 +10,8 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ doc: string }> }): Promise<Metadata> {
   const { doc } = await params;
-  return { title: getLegalDoc(doc)?.title ?? "Legal" };
+  const found = getLegalDoc(doc);
+  return { title: found ? legal.en[`${found.key}_title`] : legal.en.title };
 }
 
 export default async function LegalDocPage({ params }: { params: Promise<{ doc: string }> }) {

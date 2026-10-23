@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import { BikeArt } from "@/components/shared/bike-art";
+import { useTranslations } from "@/i18n/hooks";
 
 /**
  * Banner artwork: the illustration from `bun run art` (public/hero/home-banner.jpg). Replace the file with a
@@ -9,8 +12,10 @@ const BANNER_IMAGE: string | null = "/hero/home-banner.jpg";
 
 /** "FREEDOM STARTS HERE" banner: copy on the left, rider and bike on the right. */
 export function HomeBanner() {
+  const t = useTranslations("home");
+
   return (
-    <section aria-label="Welcome" className="relative isolate h-52 overflow-hidden rounded-card bg-ink text-white md:h-80 md:rounded-overlay">
+    <section aria-label={t("welcomeAria")} className="relative isolate h-52 overflow-hidden rounded-card bg-ink text-white md:h-80 md:rounded-overlay">
       {BANNER_IMAGE ? (
         <Image src={BANNER_IMAGE} alt="" fill priority sizes="(min-width: 1280px) 1216px, 100vw" className="object-cover object-right" />
       ) : (
@@ -28,10 +33,10 @@ export function HomeBanner() {
       <div aria-hidden className="absolute inset-0 bg-linear-to-r from-ink via-ink/75 to-transparent" />
       <div className="relative z-10 flex h-full max-w-[52%] flex-col justify-center gap-2 p-5 md:max-w-lg md:gap-3 md:p-12">
         <p className="text-3xl leading-[1.05] font-extrabold tracking-tight md:text-6xl">
-          FREEDOM
-          <span className="block text-brand">STARTS HERE</span>
+          {t("bannerLine1")}
+          <span className="block text-brand">{t("bannerLine2")}</span>
         </p>
-        <p className="text-xs text-white/80 md:text-lg">Rent premium bikes for your next adventure.</p>
+        <p className="text-xs text-white/80 md:text-lg">{t("bannerSub")}</p>
       </div>
     </section>
   );

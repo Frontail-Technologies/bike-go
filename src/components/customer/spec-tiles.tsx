@@ -1,14 +1,18 @@
+"use client";
+
 import { GasPumpIcon, GaugeIcon, GearSixIcon, ScalesIcon } from "@phosphor-icons/react/ssr";
 import type { Motorcycle } from "@/features/mock/data";
+import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";
 
 /** Four key specs as tiles (reference: 350cc, 35 km/l, 5 speed, 160 kg). */
 export function SpecTiles({ bike, className }: { bike: Motorcycle; className?: string }) {
+  const t = useTranslations("bike");
   const specs = [
-    { Icon: GaugeIcon, value: `${bike.engineCc}cc`, label: "Engine" },
-    { Icon: GasPumpIcon, value: `${bike.mileageKmpl} km/l`, label: "Mileage" },
-    { Icon: GearSixIcon, value: bike.gears ? `${bike.gears} speed` : "Auto", label: "Gearbox" },
-    { Icon: ScalesIcon, value: `${bike.weightKg} kg`, label: "Weight" },
+    { Icon: GaugeIcon, value: `${bike.engineCc}cc`, label: t("engine") },
+    { Icon: GasPumpIcon, value: `${bike.mileageKmpl} km/l`, label: t("mileage") },
+    { Icon: GearSixIcon, value: bike.gears ? t("speed", { count: bike.gears }) : t("auto"), label: t("gearbox") },
+    { Icon: ScalesIcon, value: `${bike.weightKg} kg`, label: t("weight") },
   ];
 
   return (

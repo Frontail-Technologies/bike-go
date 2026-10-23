@@ -6,29 +6,31 @@ import { DesktopTitle, Screen } from "@/components/shared/screen";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { ButtonLink } from "@/components/ui/button-link";
 import { EmptyState } from "@/components/ui/empty-state";
+import { useTranslations } from "@/i18n/hooks";
 import { ApplicationCard } from "./application-card";
 import { loansStore } from "./store";
 
 export function ApplicationsView() {
   const applications = loansStore.useValue();
+  const t = useTranslations("profile");
 
   return (
     <>
-      <AppBar leading="back" backFallback="/profile" title="My applications" />
+      <AppBar leading="back" backFallback="/profile" title={t("applicationsTitle")} />
       <Screen enter="slide" className="flex flex-col gap-4">
         <div className="hidden md:block">
-          <Breadcrumbs items={[{ label: "Profile", href: "/profile" }, { label: "My applications" }]} />
+          <Breadcrumbs items={[{ label: t("title"), href: "/profile" }, { label: t("applicationsTitle") }]} />
         </div>
-        <DesktopTitle title="My applications" subtitle="Expat loan applications and their status" />
+        <DesktopTitle title={t("applicationsTitle")} subtitle={t("applicationsSub")} />
 
         {applications.length === 0 ? (
           <EmptyState
             icon={<BankIcon size={28} />}
-            title="No applications yet"
-            description="Check your eligibility and apply in a few steps. You can follow every step here."
+            title={t("applicationsEmptyTitle")}
+            description={t("applicationsEmptyText")}
             action={
               <ButtonLink href="/loans/apply" size="lg">
-                Apply for a loan
+                {t("applyForLoan")}
               </ButtonLink>
             }
           />
@@ -43,7 +45,7 @@ export function ApplicationsView() {
             </ul>
             <ButtonLink href="/loans/apply" variant="secondary" size="lg" className="md:self-start">
               <PlusIcon size={18} weight="bold" />
-              New application
+              {t("newApplication")}
             </ButtonLink>
           </>
         )}

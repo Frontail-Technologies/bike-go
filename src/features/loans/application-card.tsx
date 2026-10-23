@@ -1,11 +1,12 @@
 import { BankIcon, CaretRightIcon } from "@phosphor-icons/react/ssr";
 import Link from "next/link";
 import { formatDate, formatPrice } from "@/lib/format";
-import { type LoanApplication, getLoanType } from "./data";
+import type { LoanApplication } from "./data";
 import { LoanStatusBadge } from "./loan-status-badge";
+import { useLoanText } from "./use-loan-text";
 
 export function ApplicationCard({ application }: { application: LoanApplication }) {
-  const type = getLoanType(application.loanType);
+  const { t, typeName } = useLoanText();
 
   return (
     <Link
@@ -16,13 +17,13 @@ export function ApplicationCard({ application }: { application: LoanApplication 
         <BankIcon size={20} />
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="truncate text-sm font-bold">{type?.name ?? "Loan"}</span>
+        <span className="truncate text-sm font-bold">{typeName(application.loanType)}</span>
         <span className="tabular truncate text-xs text-subtle">
-          {formatPrice(application.amount)} · {application.tenure} months · {application.reference}
+          {formatPrice(application.amount)} · {t("cardMonths", { count: application.tenure })} · {application.reference}
         </span>
         <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
           <LoanStatusBadge status={application.status} />
-          <span className="text-xs text-subtle">Applied {formatDate(application.createdAt, { day: "numeric", month: "short" })}</span>
+          <span className="text-xs text-subtle">{t("cardApplied", { date: formatDate(application.createdAt, { day: "numeric", month: "short" }) })}</span>
         </span>
       </span>
       <CaretRightIcon size={16} className="shrink-0 text-subtle" />

@@ -3,14 +3,15 @@
 import { LightningIcon, MotorcycleIcon, MountainsIcon, RoadHorizonIcon } from "@phosphor-icons/react";
 import { AnimatedSelection, SelectionIndicator } from "@/components/motion/animated-selection";
 import type { BikeCategory } from "@/features/mock/data";
+import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";
 
 const items = [
-  { id: "adventure", label: "Adventure", Icon: MountainsIcon },
-  { id: "cruiser", label: "Cruiser", Icon: MotorcycleIcon },
-  { id: "sports", label: "Sports", Icon: LightningIcon },
-  { id: "touring", label: "Touring", Icon: RoadHorizonIcon },
-] satisfies { id: BikeCategory; label: string; Icon: typeof MotorcycleIcon }[];
+  { id: "adventure", Icon: MountainsIcon },
+  { id: "cruiser", Icon: MotorcycleIcon },
+  { id: "sports", Icon: LightningIcon },
+  { id: "touring", Icon: RoadHorizonIcon },
+] satisfies { id: BikeCategory; Icon: typeof MotorcycleIcon }[];
 
 type CategoryCirclesProps = {
   /** Selected category, or null for all bikes. Pressing the selected one again clears it. */
@@ -20,10 +21,12 @@ type CategoryCirclesProps = {
 
 /** Round category buttons (reference: Adventure, Cruiser, Sports, Touring). The yellow fill slides between them. */
 export function CategoryCircles({ value, onChange }: CategoryCirclesProps) {
+  const t = useTranslations("home");
+
   return (
     <AnimatedSelection>
-      <div role="group" aria-label="Bike category" className="mx-auto grid w-full max-w-md grid-cols-4 gap-2">
-        {items.map(({ id, label, Icon }) => {
+      <div role="group" aria-label={t("categoryAria")} className="mx-auto grid w-full max-w-md grid-cols-4 gap-2">
+        {items.map(({ id, Icon }) => {
           const selected = value === id;
           return (
             <button
@@ -42,7 +45,7 @@ export function CategoryCircles({ value, onChange }: CategoryCirclesProps) {
                 {selected ? <SelectionIndicator className="bg-brand" /> : null}
                 <Icon size={28} weight={selected ? "fill" : "regular"} />
               </span>
-              <span className={cn("text-xs", selected ? "font-bold" : "font-medium")}>{label}</span>
+              <span className={cn("text-xs", selected ? "font-bold" : "font-medium")}>{t(id)}</span>
             </button>
           );
         })}

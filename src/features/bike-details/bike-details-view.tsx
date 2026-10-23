@@ -22,6 +22,8 @@ import { getQuote, quoteLines } from "@/features/bookings/pricing";
 import { draftStore } from "@/features/bookings/store";
 import type { Motorcycle } from "@/features/mock/data";
 import { favoritesStore, toggleFavorite } from "@/features/profile/store";
+import { useTranslations } from "@/i18n/hooks";
+import { useBikeText } from "@/features/mock/use-bike-text";
 import { formatMoney } from "@/lib/format";
 import { PickupCard } from "./pickup-card";
 import { RentalTerms } from "./rental-terms";
@@ -42,6 +44,9 @@ export function BikeDetailsView({ bike }: { bike: Motorcycle }) {
   const router = useRouter();
   const params = useSearchParams();
   const favorite = favoritesStore.useValue().includes(bike.id);
+  const t = useTranslations("bike");
+  const common = useTranslations("common");
+  const text = useBikeText(bike);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [solidBar, setSolidBar] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
@@ -86,7 +91,7 @@ export function BikeDetailsView({ bike }: { bike: Motorcycle }) {
       if (navigator.share) await navigator.share({ title: bike.name, url });
       else {
         await navigator.clipboard.writeText(url);
-        toast.success("Link copied");
+        toast.success(t("linkCopied"));
       }
     } catch {
       /* dismissed share sheet or blocked clipboard: nothing to report */
@@ -95,7 +100,7 @@ export function BikeDetailsView({ bike }: { bike: Motorcycle }) {
 
   const saveButton = (className?: string) => (
     <IconButton
-      label={favorite ? "Remove from saved" : "Save bike"}
+      label={favorite ? t("removeSaved") : t("saveBike")}
       aria-pressed={favorite}
       icon={<HeartIcon size={24} weight={favorite ? "fill" : "regular"} className={favorite ? "text-danger" : undefined} />}
       className={className}
@@ -103,15 +108,15 @@ export function BikeDetailsView({ bike }: { bike: Motorcycle }) {
     />
   );
   const shareButton = (className?: string) => (
-    <IconButton label="Share" icon={<ShareNetworkIcon size={24} />} className={className} onPress={share} />
+    <IconButton label={t("share")} icon={<ShareNetworkIcon size={24} />} className={className} onPress={share} />
   );
 
   const selector = <RentalDateSelector value={selection} onChange={setSelection} isDateUnavailable={(date) => isBooked(bike, date)} />;
 
   const summary = quote ? (
-    <BookingSummary lines={quoteLines(quote)} totalLabel="Total payable" />
+    <BookingSummary lines={quoteLines(quote)} totalLabel="totalPayable" />
   ) : (
-    <p className="rounded-control bg-surface-secondary px-4 py-3 text-sm text-subtle">Select dates to see your total.</p>
+    <p className="rounded-control bg-surface-secondary px-4 py-3 text-sm text-subtle">{t("selectToSeeTotal")}</p>
   );
 
   const overHeroButton = "bg-surface/90 shadow-card backdrop-blur-sm";
@@ -169,12 +174,12 @@ export function BikeDetailsView({ bike }: { bike: Motorcycle }) {
                       <span className="tabular flex items-center gap-1 font-semibold">
                         <StarIcon size={16} weight="fill" className="text-brand" />
                         {bike.rating.toFixed(1)}
-                        <span className="font-normal text-subtle">({bike.reviews} reviews)</span>
+                        <span className="font-normal text-subtle">{t("reviews", { count: bike.reviews })}</span>
                       </span>
                       {bike.available ? (
-                        <StatusBadge tone="success">Available</StatusBadge>
+                        <StatusBadge tone="success">{t("available")}</StatusBadge>
                       ) : (
-                        <StatusBadge tone="danger">On rent{bike.availableFrom ? ` · back ${formatDay(bike.availableFrom, false)}` : ""}</StatusBadge>
+                        <StatusBadge tone="danger">{bike.availableFrom ? t("onRentBack", { date: formatDay(bike.availableFrom, false) }) : t("onRent")}</StatusBadge>
                       )}
                     </div>
                   </div>
@@ -183,7 +188,7 @@ export function BikeDetailsView({ bike }: { bike: Motorcycle }) {
               </Reveal>
 
               {/* Dates and total stay high on the page for mobile; desktop shows them in the side panel. */}
-              <DetailSection id="dates-title" title="Rental dates" className="lg:hidden">
+              <DetailSection id="dates-title" title={t("rentalDates")} className="lg:hidden">
                 <button
                   type="button"
                   onClick={() => setSheetOpen(true)}
@@ -193,9 +198,9 @@ export function BikeDetailsView({ bike }: { bike: Motorcycle }) {
                     <CalendarBlankIcon size={20} />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-bold">{dateLabel ?? "Select pickup and drop dates"}</span>
+                    <span className="block text-sm font-bold">{dateLabel ?? t("selectDates")}</span>
                     <span className="block text-xs text-subtle">
-                      {range ? `${days} ${days === 1 ? "day" : "days"} · ${selection.pickupTime} pickup` : "See availability and your total"}
+                      {range ? t("daysPickup", { days: common("days", { count: days }), time: selection.pickupTime }) : t("seeAvailability")}
                     </span>
                   </span>
                   <CaretRightIcon size={20} className="shrink-0 text-subtle" />
@@ -203,11 +208,11 @@ export function BikeDetailsView({ bike }: { bike: Motorcycle }) {
                 <div className="mt-3">{summary}</div>
               </DetailSection>
 
-              <DetailSection id="about-title" title="About this bike">
+              <DetailSection id="about-title" title={t("about")}>
                 <div className="flex flex-col gap-4 rounded-card border border-line bg-surface p-4">
-                  <p className="text-[15px] leading-7 text-ink/80">{bike.description}</p>
+                  <p className="text-[15px] leading-7 text-ink/80">{text.description}</p>
                   <ul className="flex flex-col gap-3 border-t border-line pt-4">
-                    {bike.highlights.map((highlight) => (
+                    {text.highlights.map((highlight) => (
                       <li key={highlight} className="flex items-start gap-3 text-sm leading-6 font-medium">
                         <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-brand text-ink">
                           <CheckIcon size={12} weight="bold" />
@@ -219,26 +224,26 @@ export function BikeDetailsView({ bike }: { bike: Motorcycle }) {
                 </div>
               </DetailSection>
 
-              <DetailSection id="pickup-title" title="Pickup location">
+              <DetailSection id="pickup-title" title={t("pickupLocation")}>
                 <PickupCard />
               </DetailSection>
 
-              <DetailSection id="terms-title" title="Rental terms">
+              <DetailSection id="terms-title" title={t("rentalTerms")}>
                 <RentalTerms />
               </DetailSection>
             </div>
           </div>
 
-          <aside aria-label="Book this bike" className="hidden lg:block">
+          <aside aria-label={t("bookAria")} className="hidden lg:block">
             <div className="sticky top-24 flex flex-col gap-4 rounded-card border border-line bg-surface p-5 shadow-card">
               <div className="flex items-baseline justify-between">
                 <PriceDisplay amount={bike.pricePerDay} size="lg" />
-                <span className="text-xs text-subtle">Free cancellation 24h before</span>
+                <span className="text-xs text-subtle">{t("freeCancel")}</span>
               </div>
               {selector}
               {summary}
               <Button size="lg" fullWidth onPress={goBook} isDisabled={!range}>
-                Book now
+                {t("bookNow")}
               </Button>
             </div>
           </aside>
@@ -248,10 +253,10 @@ export function BikeDetailsView({ bike }: { bike: Motorcycle }) {
       <BottomSheet
         isOpen={sheetOpen}
         onOpenChange={setSheetOpen}
-        title="Select dates"
+        title={t("selectDatesTitle")}
         footer={
           <Button slot="close" fullWidth isDisabled={!range}>
-            {range ? `Confirm ${days} ${days === 1 ? "day" : "days"}` : "Select dates"}
+            {range ? t("confirmDays", { days: common("days", { count: days }) }) : t("selectDatesButton")}
           </Button>
         }
       >
@@ -259,13 +264,13 @@ export function BikeDetailsView({ bike }: { bike: Motorcycle }) {
           {selector}
           {quote ? (
             <p className="tabular text-center text-sm text-subtle">
-              Total payable {formatMoney(quote.payable)}
+              {t("totalPayableInline", { amount: formatMoney(quote.payable) })}
             </p>
           ) : null}
         </div>
       </BottomSheet>
 
-      <StickyBookingBar className="lg:hidden" amount={bike.pricePerDay} label={range ? "Book now" : "Select dates"} onPress={goBook} />
+      <StickyBookingBar className="lg:hidden" amount={bike.pricePerDay} label={range ? t("bookNow") : t("selectDatesButton")} onPress={goBook} />
     </>
   );
 }

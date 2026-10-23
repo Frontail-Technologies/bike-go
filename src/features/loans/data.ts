@@ -4,8 +4,6 @@ export type LoanTypeId = "personal" | "vehicle" | "emergency";
 
 export type LoanType = {
   id: LoanTypeId;
-  name: string;
-  description: string;
   /** Annual percentage rate, as a percent. */
   apr: number;
   minAmount: number;
@@ -14,9 +12,9 @@ export type LoanType = {
 };
 
 export const loanTypes: LoanType[] = [
-  { id: "personal", name: "Personal Loan", description: "Flexible tenure", apr: 12, minAmount: 1000, maxAmount: 25000, maxTenure: 48 },
-  { id: "vehicle", name: "Vehicle Loan", description: "For new or used vehicles", apr: 9.5, minAmount: 1500, maxAmount: 15000, maxTenure: 60 },
-  { id: "emergency", name: "Emergency Loan", description: "Quick funds when you need them", apr: 14, minAmount: 500, maxAmount: 5000, maxTenure: 24 },
+  { id: "personal", apr: 12, minAmount: 1000, maxAmount: 25000, maxTenure: 48 },
+  { id: "vehicle", apr: 9.5, minAmount: 1500, maxAmount: 15000, maxTenure: 60 },
+  { id: "emergency", apr: 14, minAmount: 500, maxAmount: 5000, maxTenure: 24 },
 ];
 
 export const getLoanType = (id: string) => loanTypes.find((t) => t.id === id);
@@ -28,43 +26,13 @@ export const tenuresFor = (type: LoanType) => TENURES.filter((t) => t <= type.ma
 export const RATE_MIN = 6;
 export const RATE_MAX = 24;
 
-export const loanPurposes = [
-  { id: "home", label: "Home setup or renovation" },
-  { id: "relocation", label: "Relocation costs" },
-  { id: "education", label: "Education" },
-  { id: "medical", label: "Medical" },
-  { id: "travel", label: "Travel" },
-  { id: "other", label: "Other" },
-];
+export const loanPurposes = [{ id: "home" }, { id: "relocation" }, { id: "education" }, { id: "medical" }, { id: "travel" }, { id: "other" }];
 
-export const residenceStatuses = [
-  { id: "employment-visa", label: "Employment visa" },
-  { id: "investor-visa", label: "Investor visa" },
-  { id: "dependent-visa", label: "Dependent visa" },
-  { id: "residence-permit", label: "Residence permit" },
-  { id: "other", label: "Other" },
-];
+export const residenceStatuses = [{ id: "employment-visa" }, { id: "investor-visa" }, { id: "dependent-visa" }, { id: "residence-permit" }, { id: "other" }];
 
-export const employmentTypes = [
-  { id: "salaried", label: "Salaried" },
-  { id: "self-employed", label: "Self-employed" },
-  { id: "business-owner", label: "Business" },
-  { id: "contract", label: "Contract" },
-];
+export const employmentTypes = [{ id: "salaried" }, { id: "self-employed" }, { id: "business-owner" }, { id: "contract" }];
 
-export const experienceBands = [
-  { id: "under-1", label: "Under 1 year" },
-  { id: "1-3", label: "1 to 3 years" },
-  { id: "3-5", label: "3 to 5 years" },
-  { id: "5-plus", label: "5+ years" },
-];
-
-export const yesNo = [
-  { id: "yes", label: "Yes" },
-  { id: "no", label: "No" },
-];
-
-export const labelOf = (list: { id: string; label: string }[], id: string) => list.find((i) => i.id === id)?.label ?? id;
+export const experienceBands = [{ id: "under-1" }, { id: "1-3" }, { id: "3-5" }, { id: "5-plus" }];
 
 // ------------------------------------------------------------------ EMI
 
@@ -86,16 +54,7 @@ export const MAX_EMI_SHARE = 0.5;
 
 export type DocumentId = "passport" | "residence" | "employment" | "income" | "address" | "bank";
 
-export const documentTypes: { id: DocumentId; label: string; hint: string }[] = [
-  { id: "passport", label: "Passport", hint: "Photo page, valid for at least 6 months" },
-  { id: "residence", label: "Visa / residence permit", hint: "Both sides if it is a card" },
-  { id: "employment", label: "Employment proof", hint: "Employment letter or contract" },
-  { id: "income", label: "Salary slips / income proof", hint: "Last 3 payslips" },
-  { id: "address", label: "Address proof", hint: "Utility bill or tenancy agreement from the last 3 months" },
-  { id: "bank", label: "Bank statement", hint: "Last 6 months" },
-];
-
-export const labelOfDocument = (id: DocumentId) => documentTypes.find((d) => d.id === id)?.label ?? id;
+export const documentTypes: { id: DocumentId }[] = [{ id: "passport" }, { id: "residence" }, { id: "employment" }, { id: "income" }, { id: "address" }, { id: "bank" }];
 
 export const MAX_FILE_BYTES = 5 * 1024 * 1024;
 export const ACCEPTED_FILES = ".pdf,.jpg,.jpeg,.png";
@@ -106,12 +65,12 @@ export type StoredFile = { name: string; size: number };
 
 export type LoanStatus = "submitted" | "in-review" | "documents-required" | "approved" | "rejected";
 
-export const statusMeta: Record<LoanStatus, { label: string; tone: "info" | "brand" | "success" | "danger"; summary: string }> = {
-  submitted: { label: "Submitted", tone: "info", summary: "We have your application and will start the review shortly." },
-  "in-review": { label: "In review", tone: "brand", summary: "Our team is reviewing your application. This usually takes 1 to 2 working days." },
-  "documents-required": { label: "Additional documents required", tone: "brand", summary: "We need a few more documents before we can continue." },
-  approved: { label: "Approved", tone: "success", summary: "Your loan is approved. Our team will contact you to arrange the next steps." },
-  rejected: { label: "Rejected", tone: "danger", summary: "We could not approve this application. You are welcome to apply again with updated details." },
+export const statusMeta: Record<LoanStatus, { tone: "info" | "brand" | "success" | "danger" }> = {
+  submitted: { tone: "info" },
+  "in-review": { tone: "brand" },
+  "documents-required": { tone: "brand" },
+  approved: { tone: "success" },
+  rejected: { tone: "danger" },
 };
 
 export type StatusEvent = { status: LoanStatus; at: string; note?: string };

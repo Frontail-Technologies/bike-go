@@ -9,15 +9,19 @@ import { BikeImage } from "@/components/shared/bike-image";
 import { Screen } from "@/components/shared/screen";
 import { ButtonLink } from "@/components/ui/button-link";
 import { EmptyState } from "@/components/ui/empty-state";
-import { type City, pickupHubs } from "@/features/mock/data";
+import type { City } from "@/features/mock/data";
 import { quoteLines } from "@/features/bookings/pricing";
 import { duration, ease } from "@/design-system/motion";
+import { useTranslations } from "@/i18n/hooks";
 import { formatDay } from "./dates";
 import { useBooking } from "./use-booking";
 
 export function ConfirmationView({ reference }: { reference: string }) {
   const router = useRouter();
   const found = useBooking(reference);
+  const t = useTranslations("booking");
+  const common = useTranslations("common");
+  const places = useTranslations("places");
   // The flow is finished: Back goes Home rather than into the payment steps.
   const goHome = () => router.replace("/");
 
@@ -28,9 +32,9 @@ export function ConfirmationView({ reference }: { reference: string }) {
         <Screen enter="slide">
       <EmptyState
         icon={<MapPinIcon size={24} />}
-        title="Booking not found"
-        description="This confirmation is no longer available on this device."
-        action={<ButtonLink href="/bookings" size="sm">My bookings</ButtonLink>}
+        title={t("notFound")}
+        description={t("notFoundConfirmation")}
+        action={<ButtonLink href="/bookings" size="sm">{t("myBookings")}</ButtonLink>}
       />
         </Screen>
       </>
@@ -38,7 +42,7 @@ export function ConfirmationView({ reference }: { reference: string }) {
   }
 
   const { booking, bike } = found;
-  const hub = pickupHubs[(booking.city as City) in pickupHubs ? (booking.city as City) : "Jaipur"];
+  const city: City = booking.city === "Udaipur" || booking.city === "Jodhpur" ? booking.city : "Jaipur";
 
   return (
     <>
@@ -56,54 +60,54 @@ export function ConfirmationView({ reference }: { reference: string }) {
           <CheckIcon size={32} weight="bold" />
         </motion.span>
         <h1 id="done-title" className="text-2xl font-extrabold tracking-tight">
-          Booking confirmed
+          {t("confirmed")}
         </h1>
         <p className="text-sm text-subtle">
-          Reference <span data-testid="booking-ref" className="tabular font-bold text-ink">{booking.reference}</span>
+          {t("reference")} <span data-testid="booking-ref" className="tabular font-bold text-ink">{booking.reference}</span>
         </p>
       </section>
 
-      <section aria-label="Your ride" className="flex gap-3 rounded-card border border-line bg-surface p-3 shadow-card">
+      <section aria-label={t("yourRide")} className="flex gap-3 rounded-card border border-line bg-surface p-3 shadow-card">
         <div className="size-20 shrink-0 overflow-hidden rounded-control bg-canvas">
           <BikeImage bike={bike} decorative sizes="80px" />
         </div>
         <div className="flex min-w-0 flex-col justify-center gap-1">
           <p className="truncate text-sm font-bold">{bike.name}</p>
           <p className="tabular text-xs text-subtle">
-            {formatDay(booking.startDate, false)} {booking.pickupTime} to {formatDay(booking.endDate, false)} {booking.dropTime}
+            {t("dateRange", { from: `${formatDay(booking.startDate, false)} ${booking.pickupTime}`, to: `${formatDay(booking.endDate, false)} ${booking.dropTime}` })}
           </p>
           <p className="text-xs text-subtle">
-            {booking.quote.days} {booking.quote.days === 1 ? "day" : "days"}
+            {common("days", { count: booking.quote.days })}
           </p>
         </div>
       </section>
 
-      <section aria-label="Pickup" className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4 text-sm">
+      <section aria-label={t("pickup")} className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4 text-sm">
         <p className="flex items-start gap-3">
           <MapPinIcon size={20} weight="fill" className="mt-0.5 shrink-0" />
           <span>
-            <span className="block font-bold">{hub.name}</span>
-            <span className="block text-subtle">{hub.address}</span>
+            <span className="block font-bold">{places(`hubs.${city}.name`)}</span>
+            <span className="block text-subtle">{places(`hubs.${city}.address`)}</span>
           </span>
         </p>
         <p className="flex items-center gap-3 text-subtle">
           <ClockIcon size={20} className="shrink-0 text-ink" />
-          Arrive 15 minutes early. Open {hub.hours}.
+          {t("arriveEarly", { hours: places("hours") })}
         </p>
         <p className="flex items-center gap-3 text-subtle">
           <IdentificationCardIcon size={20} className="shrink-0 text-ink" />
-          Bring your original driving licence.
+          {t("bringLicence")}
         </p>
       </section>
 
-      <BookingSummary lines={quoteLines(booking.quote)} totalLabel="Total paid" />
+      <BookingSummary lines={quoteLines(booking.quote)} totalLabel="totalPaid" />
 
       <div className="grid grid-cols-2 gap-3">
         <ButtonLink href="/" variant="outline" size="lg">
-          Back home
+          {t("backHome")}
         </ButtonLink>
         <ButtonLink href={`/bookings/${booking.reference}`} size="lg">
-          View booking
+          {t("viewBooking")}
         </ButtonLink>
       </div>
       </div>

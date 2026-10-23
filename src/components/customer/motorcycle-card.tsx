@@ -8,6 +8,7 @@ import { BikeImage } from "@/components/shared/bike-image";
 import { IconButton } from "@/components/ui/button";
 import type { Motorcycle } from "@/features/mock/data";
 import { favoritesStore, toggleFavorite } from "@/features/profile/store";
+import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";
 
 type MotorcycleCardProps = {
@@ -19,6 +20,7 @@ type MotorcycleCardProps = {
 
 export function MotorcycleCard({ bike, href, className }: MotorcycleCardProps) {
   const favorite = favoritesStore.useValue().includes(bike.id);
+  const t = useTranslations("bike");
   const target = href === undefined ? `/bikes/${bike.id}` : href;
   const title = <h3 className="line-clamp-2 min-h-10 text-sm leading-5 font-bold">{bike.name}</h3>;
 
@@ -28,11 +30,11 @@ export function MotorcycleCard({ bike, href, className }: MotorcycleCardProps) {
         <BikeImage bike={bike} sizes="(min-width: 1024px) 25vw, 50vw" />
         {!bike.available ? (
           <span className="absolute bottom-2 left-2 rounded-full bg-ink/85 px-2.5 py-1 text-[11px] font-semibold text-white">
-            On rent
+            {t("onRent")}
           </span>
         ) : null}
         <IconButton
-          label={favorite ? `Remove ${bike.name} from saved` : `Save ${bike.name}`}
+          label={favorite ? t("removeNamed", { name: bike.name }) : t("saveNamed", { name: bike.name })}
           aria-pressed={favorite}
           variant="ghost"
           size="sm"

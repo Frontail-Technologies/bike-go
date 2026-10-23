@@ -9,9 +9,11 @@ import {
   AnimatedSelection,
   SelectionIndicator,
 } from "@/components/motion/animated-selection";
+import { LanguageSwitcher } from "@/components/shared/language-switcher";
 import { Logo } from "@/components/shared/logo";
 import { IconButton } from "@/components/ui/button";
 import { useOptimisticNav } from "@/hooks/use-optimistic-nav";
+import { useTranslations } from "@/i18n/hooks";
 import { initials, profileStore } from "@/features/profile/store";
 import { cn } from "@/lib/cn";
 
@@ -27,6 +29,8 @@ export function CustomerHeader({ className }: { className?: string }) {
   const pathname = usePathname();
   const { current, navigate } = useOptimisticNav(pathname);
   const profile = profileStore.useValue();
+  const t = useTranslations("nav");
+  const common = useTranslations("common");
 
   return (
     <header
@@ -38,10 +42,10 @@ export function CustomerHeader({ className }: { className?: string }) {
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-2 px-page md:gap-4">
         <Logo />
 
-        <nav aria-label="Primary" className="ml-6 hidden md:block">
+        <nav aria-label={t("primary")} className="ml-6 hidden md:block">
           <AnimatedSelection>
             <div className="flex items-center gap-1">
-              {headerNav.map(({ href, label }) => {
+              {headerNav.map(({ href, key }) => {
                 const active = isActive(current, href);
                 return (
                   <Link
@@ -62,7 +66,7 @@ export function CustomerHeader({ className }: { className?: string }) {
                         radius={RADIUS}
                       />
                     ) : null}
-                    {label}
+                    {t(key)}
                   </Link>
                 );
               })}
@@ -72,10 +76,11 @@ export function CustomerHeader({ className }: { className?: string }) {
 
         <div className="ml-auto flex items-center gap-1">
           <LocationPicker className="hidden lg:inline-flex" />
-          <IconButton label="Notifications" icon={<BellIcon size={24} />} />
+          <LanguageSwitcher variant="compact" />
+          <IconButton label={common("notifications")} icon={<BellIcon size={24} />} />
           <Link
             href="/profile"
-            aria-label="Your profile"
+            aria-label={t("yourProfile")}
             className="hidden size-11 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ink md:flex"
           >
             <span className="flex size-9 items-center justify-center rounded-full bg-ink text-xs font-bold text-white">

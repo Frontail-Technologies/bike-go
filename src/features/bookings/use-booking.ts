@@ -10,7 +10,7 @@ export function useBooking(reference: string) {
   return booking && bike ? { booking, bike } : undefined;
 }
 
-export function maskLicence(number: string | null) {
-  if (!number) return "Show at pickup";
+export function maskLicence(number: string | null, fallback = "") {
+  if (!number) return fallback;
   return `${number.slice(0, 4)} •••• ••••${number.slice(-3)}`;
 }

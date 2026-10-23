@@ -15,6 +15,7 @@ import { AppSearchField } from "@/components/ui/search-field";
 import { MotorcycleCardSkeleton } from "@/components/ui/skeleton";
 import { Tabs } from "@/components/ui/tabs";
 import { useMockLoad } from "@/hooks/use-mock-load";
+import { useTranslations } from "@/i18n/hooks";
 import { categories, motorcycles } from "@/features/mock/data";
 import { favoritesStore } from "@/features/profile/store";
 import { BikeFilters } from "./bike-filters";
@@ -32,6 +33,8 @@ export function BrowseView() {
   const loading = useMockLoad(450);
   const favorites = favoritesStore.useValue();
   const [searchOpen, setSearchOpen] = useState(false);
+  const t = useTranslations("browse");
+  const common = useTranslations("common");
 
   // Home hands over category / search / dates in the URL: take them into the store once, on arrival.
   useEffect(() => {
@@ -57,8 +60,8 @@ export function BrowseView() {
   const phoneCount = activeFilterCount(filters, true);
   const sidebarCount = activeFilterCount(filters);
   const set = (patch: Partial<typeof DEFAULT_BROWSE>) => browseStore.update((s) => ({ ...s, ...patch }));
-  const title = saved ? "Saved bikes" : "Bikes";
-  const subtitle = loading ? "Loading bikes" : `${results.length} ${results.length === 1 ? "bike" : "bikes"}`;
+  const title = saved ? t("saved") : t("title");
+  const subtitle = loading ? t("loading") : common("bikesCount", { count: results.length });
 
   return (
     <>
@@ -67,9 +70,9 @@ export function BrowseView() {
         title={title}
         actions={
           <>
-            <IconButton label="Search bikes" icon={<MagnifyingGlassIcon size={24} />} onPress={() => setSearchOpen(true)} />
+            <IconButton label={t("searchBikes")} icon={<MagnifyingGlassIcon size={24} />} onPress={() => setSearchOpen(true)} />
             <span className="relative">
-              <ButtonLink href="/bikes/filters" variant="ghost" iconOnly aria-label={phoneCount ? `Filters, ${phoneCount} active` : "Filters"}>
+              <ButtonLink href="/bikes/filters" variant="ghost" iconOnly aria-label={phoneCount ? t("filtersActive", { count: phoneCount }) : t("filters")}>
                 <FunnelIcon size={24} />
               </ButtonLink>
               {phoneCount ? (
@@ -118,7 +121,7 @@ export function BrowseView() {
               <MagnifyingGlassIcon size={16} />
               {query}
               <XIcon size={14} aria-hidden />
-              <span className="sr-only">Clear search</span>
+              <span className="sr-only">{common("clearSearch")}</span>
             </button>
           ) : null}
         </div>
@@ -130,10 +133,10 @@ export function BrowseView() {
             href="/bikes/filters"
             variant="secondary"
             className="shrink-0 lg:hidden"
-            aria-label={sidebarCount ? `Filters, ${sidebarCount} active` : "Filters"}
+            aria-label={sidebarCount ? t("filtersActive", { count: sidebarCount }) : t("filters")}
           >
             <FunnelIcon size={20} />
-            <span>Filters</span>
+            <span>{t("filters")}</span>
             {sidebarCount ? (
               <span className="flex size-5 items-center justify-center rounded-full bg-ink text-[11px] font-bold text-white">{sidebarCount}</span>
             ) : null}
@@ -141,27 +144,27 @@ export function BrowseView() {
         </div>
         <div className="hidden md:block">
           <Tabs
-            aria-label="Bike category"
+            aria-label={t("categoryAria")}
             selectedKey={filters.category}
             onSelectionChange={(category) => set({ filters: { ...filters, category } })}
-            items={categories.map((c) => ({ id: c.id, label: c.label }))}
+            items={categories.map((c) => ({ id: c.id, label: t(`cat_${c.id}` as "cat_all") }))}
           />
         </div>
 
         <div className="flex items-start gap-8">
-          <aside aria-label="Filters" className="sticky top-24 hidden w-72 shrink-0 rounded-card border border-line bg-surface p-5 shadow-card lg:block">
+          <aside aria-label={t("filters")} className="sticky top-24 hidden w-72 shrink-0 rounded-card border border-line bg-surface p-5 shadow-card lg:block">
             <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-base font-bold">Filters</h2>
+              <h2 className="text-base font-bold">{t("filters")}</h2>
               <Button variant="ghost" size="sm" onPress={() => set({ filters: { ...DEFAULT_FILTERS, category: filters.category } })} isDisabled={!sidebarCount}>
-                Reset
+                {common("reset")}
               </Button>
             </div>
             <BikeFilters value={filters} onChange={(next) => set({ filters: next })} />
           </aside>
 
-          <section aria-label="Results" className="flex min-w-0 flex-1 flex-col gap-4">
+          <section aria-label={t("resultsAria")} className="flex min-w-0 flex-1 flex-col gap-4">
             <div className="hidden items-center justify-between gap-2 md:flex">
-              <p className="text-sm text-subtle">{loading ? "Finding bikes…" : dates ? "Available for your dates" : "All bikes"}</p>
+              <p className="text-sm text-subtle">{loading ? t("finding") : dates ? t("availableForDates") : t("allBikes")}</p>
               <div className="flex items-center gap-2">
                 <RentalDatesButton
                   start={dates?.start}
@@ -174,7 +177,7 @@ export function BrowseView() {
             </div>
 
             {loading ? (
-              <div className={`${gridClass} lg:grid-cols-3`} role="status" aria-label="Loading bikes">
+              <div className={`${gridClass} lg:grid-cols-3`} role="status" aria-label={t("loadingAria")}>
                 {Array.from({ length: 6 }, (_, i) => (
                   <MotorcycleCardSkeleton key={i} />
                 ))}
@@ -182,11 +185,11 @@ export function BrowseView() {
             ) : results.length === 0 ? (
               <EmptyState
                 icon={<MagnifyingGlassIcon size={24} />}
-                title="No bikes match"
-                description="Try different dates, or remove a filter."
+                title={t("noMatchTitle")}
+                description={t("noMatchText")}
                 action={
                   <Button size="sm" onPress={() => browseStore.set(DEFAULT_BROWSE)}>
-                    Reset filters
+                    {t("resetFilters")}
                   </Button>
                 }
               />

@@ -6,6 +6,7 @@ import { DateRangeCalendar, type DateRange } from "@/components/ui/date-range-ca
 import { AppSelect } from "@/components/ui/select";
 import { timeSlots } from "@/features/mock/data";
 import { useToday } from "@/hooks/use-today";
+import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";
 
 export type RentalSelection = {
@@ -31,12 +32,14 @@ export function rentalDays(range: RentalSelection["range"]) {
 export function RentalDateSelector({ value, onChange, isDateUnavailable, className }: RentalDateSelectorProps) {
   const days = rentalDays(value.range);
   const minDate = useToday();
+  const t = useTranslations("booking");
+  const common = useTranslations("common");
 
   return (
     <div className={cn("flex flex-col gap-4", className)}>
       <div className="rounded-card border border-line bg-surface p-1 sm:p-4">
         <DateRangeCalendar
-          aria-label="Rental dates"
+          aria-label={t("rentalDates")}
           value={value.range}
           onChange={(range) => onChange({ ...value, range })}
           minValue={minDate}
@@ -46,13 +49,13 @@ export function RentalDateSelector({ value, onChange, isDateUnavailable, classNa
 
       <div className="grid grid-cols-2 gap-3">
         <AppSelect
-          label="Pickup time"
+          label={t("pickupTime")}
           options={timeSlots}
           value={value.pickupTime}
           onChange={(key) => key && onChange({ ...value, pickupTime: String(key) })}
         />
         <AppSelect
-          label="Drop time"
+          label={t("dropTime")}
           options={timeSlots}
           value={value.dropTime}
           onChange={(key) => key && onChange({ ...value, dropTime: String(key) })}
@@ -62,9 +65,9 @@ export function RentalDateSelector({ value, onChange, isDateUnavailable, classNa
       <div className="flex items-center justify-between rounded-control bg-brand-soft px-4 py-3 text-sm" aria-live="polite">
         <span className="flex items-center gap-2 font-medium">
           {value.range ? <ClockIcon size={20} /> : <CalendarBlankIcon size={20} />}
-          {value.range ? "Total duration" : "Select pickup and drop dates"}
+          {value.range ? t("totalDuration") : t("selectDatesPrompt")}
         </span>
-        {value.range ? <span className="tabular font-bold">{days} {days === 1 ? "day" : "days"}</span> : null}
+        {value.range ? <span className="tabular font-bold">{common("days", { count: days })}</span> : null}
       </div>
     </div>
   );

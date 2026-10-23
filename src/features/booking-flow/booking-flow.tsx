@@ -14,6 +14,7 @@ import type { BookingDraft } from "@/features/bookings/types";
 import { cityStore, profileStore } from "@/features/profile/store";
 import type { Motorcycle } from "@/features/mock/data";
 import { useHydrated } from "@/hooks/use-hydrated";
+import { useTranslations } from "@/i18n/hooks";
 import { BookingProgress, flowSteps } from "./booking-progress";
 import { FlowFooter } from "./flow-footer";
 import { DatesStep, LicenceStep, PaymentStep, RiderStep, ReviewStep, licenceStepValid, paymentMethods, riderStepValid } from "./steps";
@@ -33,6 +34,8 @@ export function BookingFlow({ bike }: { bike: Motorcycle }) {
   const params = useSearchParams();
   const pathname = usePathname();
   const hydrated = useHydrated();
+  const t = useTranslations("booking");
+  const common = useTranslations("common");
   const profile = profileStore.useValue();
   const stored = draftStore.useValue();
   const justBooked = justBookedStore.useValue();
@@ -127,20 +130,20 @@ export function BookingFlow({ bike }: { bike: Motorcycle }) {
 
   const footer =
     step === 1 ? (
-      <FlowFooter label="Continue" amount={quote.payable} onPress={() => go(2)} isDisabled={!hasDates || overlaps} />
+      <FlowFooter label={t("continue")} amount={quote.payable} onPress={() => go(2)} isDisabled={!hasDates || overlaps} />
     ) : step === 2 ? (
-      <FlowFooter label="Continue" amount={quote.payable} formId="rider-form" />
+      <FlowFooter label={t("continue")} amount={quote.payable} formId="rider-form" />
     ) : step === 3 ? (
       <FlowFooter
-        label="Continue"
+        label={t("continue")}
         amount={quote.payable}
         formId={draft.licenceLater ? undefined : "licence-form"}
         onPress={draft.licenceLater ? () => go(4) : undefined}
       />
     ) : step === 4 ? (
-      <FlowFooter label="Continue to payment" amount={quote.payable} onPress={() => go(5)} isDisabled={!agreed} />
+      <FlowFooter label={t("continueToPayment")} amount={quote.payable} onPress={() => go(5)} isDisabled={!agreed} />
     ) : (
-      <FlowFooter label={`Pay ${formatMoney(quote.payable)}`} amount={quote.payable} onPress={pay} isPending={paying} />
+      <FlowFooter label={t("pay", { amount: formatMoney(quote.payable) })} amount={quote.payable} onPress={pay} isPending={paying} />
     );
 
   return (
@@ -150,23 +153,23 @@ export function BookingFlow({ bike }: { bike: Motorcycle }) {
         backFallback={`/bikes/${bike.id}`}
         // Steps are history entries, so Back is a real pop; step 1 falls through to the default (back to the bike).
         onBack={step > 1 ? () => router.back() : undefined}
-        title="Book this bike"
+        title={t("bookThisBike")}
         subtitle={bike.name}
       />
 
       <Screen enter="slide" bottom="footer" className="flex flex-col gap-5 lg:pb-12">
-        <DesktopTitle title={`Book ${bike.name}`} />
+        <DesktopTitle title={t("bookNamed", { name: bike.name })} />
         <BookingProgress step={step - 1} />
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-10">
-          <section aria-label={flowSteps[step - 1]} className="min-w-0">
+          <section aria-label={t(flowSteps[step - 1]!)} className="min-w-0">
             <div key={step} className="rgo-page-in flex flex-col gap-5">
               {step === 1 ? (
                 <>
                   <DatesStep bike={bike} draft={draft} patch={patch} />
                   {overlaps ? (
                     <p className="text-sm text-danger" role="alert">
-                      This bike is booked for part of that range. Pick other dates.
+                      {t("conflict")}
                     </p>
                   ) : null}
                 </>
@@ -179,7 +182,7 @@ export function BookingFlow({ bike }: { bike: Motorcycle }) {
             <div className="mt-6 hidden lg:block">{footer}</div>
           </section>
 
-          <aside aria-label="Price summary" className="hidden lg:block">
+          <aside aria-label={t("priceSummary")} className="hidden lg:block">
             <div className="sticky top-24 flex flex-col gap-4">
               <div className="flex gap-3 rounded-card border border-line bg-surface p-3">
                 <div className="size-16 shrink-0 overflow-hidden rounded-control bg-canvas">
@@ -187,10 +190,10 @@ export function BookingFlow({ bike }: { bike: Motorcycle }) {
                 </div>
                 <div className="flex min-w-0 flex-col justify-center">
                   <p className="truncate text-sm font-bold">{bike.name}</p>
-                  <p className="text-xs text-subtle">{hasDates ? `${days} ${days === 1 ? "day" : "days"}` : "Choose dates"}</p>
+                  <p className="text-xs text-subtle">{hasDates ? common("days", { count: days }) : t("chooseDates")}</p>
                 </div>
               </div>
-              <BookingSummary lines={quoteLines(quote)} totalLabel="Total payable" />
+              <BookingSummary lines={quoteLines(quote)} totalLabel="totalPayable" />
             </div>
           </aside>
         </div>

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { customerNav, isActive } from "@/components/customer/nav-items";
 import { AnimatedSelection, SelectionIndicator } from "@/components/motion/animated-selection";
 import { useOptimisticNav } from "@/hooks/use-optimistic-nav";
+import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";
 
 type MobileBottomNavProps = {
@@ -19,11 +20,12 @@ type MobileBottomNavProps = {
 export function MobileBottomNav({ activeHref, onNavigate, inline = false, className }: MobileBottomNavProps) {
   const pathname = usePathname();
   const optimistic = useOptimisticNav(pathname);
+  const t = useTranslations("nav");
   const current = activeHref ?? optimistic.current;
 
   return (
     <nav
-      aria-label="Primary"
+      aria-label={t("primary")}
       className={cn(
         "z-40 border-t border-line bg-surface/95 pb-safe shadow-nav backdrop-blur-md",
         inline ? "relative" : "fixed inset-x-0 bottom-0 md:hidden",
@@ -32,7 +34,7 @@ export function MobileBottomNav({ activeHref, onNavigate, inline = false, classN
     >
       <AnimatedSelection>
         <ul className="mx-auto flex h-16 max-w-md items-stretch px-2">
-          {customerNav.map(({ href, label, Icon }) => {
+          {customerNav.map(({ href, key, Icon }) => {
             const active = isActive(current, href);
             return (
               <li key={href} className="flex-1">
@@ -57,7 +59,7 @@ export function MobileBottomNav({ activeHref, onNavigate, inline = false, classN
                   ) : null}
                   <Icon size={24} weight={active ? "fill" : "regular"} className={active ? "text-brand" : "text-subtle"} />
                   <span className={cn("text-[11px] leading-none", active ? "font-bold text-ink" : "font-medium text-subtle")}>
-                    {label}
+                    {t(key)}
                   </span>
                 </Link>
               </li>

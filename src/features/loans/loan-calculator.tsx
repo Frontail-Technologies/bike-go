@@ -6,6 +6,7 @@ import { useState } from "react";
 import { ButtonLink } from "@/components/ui/button-link";
 import { ChipGroup } from "@/components/ui/chip-group";
 import { formatMoney, formatPrice } from "@/lib/format";
+import { useTranslations } from "@/i18n/hooks";
 import { RATE_MAX, RATE_MIN, calculateEmi, getLoanType, tenuresFor } from "./data";
 
 const type = getLoanType("personal")!;
@@ -58,6 +59,7 @@ function SingleSlider({
 
 /** EMI estimate. Illustrative only: the final rate is set by the lender after review. */
 export function LoanCalculator() {
+  const t = useTranslations("loans");
   const [amount, setAmount] = useState(5000);
   const [tenure, setTenure] = useState(24);
   const [rate, setRate] = useState(type.apr);
@@ -68,7 +70,7 @@ export function LoanCalculator() {
     <div className="grid gap-5 md:grid-cols-2 md:gap-8">
       <div className="flex flex-col gap-6 rounded-card border border-line bg-surface p-4 shadow-card md:p-6">
         <SingleSlider
-          label="Loan amount"
+          label={t("calcLoanAmount")}
           value={amount}
           min={type.minAmount}
           max={type.maxAmount}
@@ -80,10 +82,10 @@ export function LoanCalculator() {
         />
 
         <div className="flex flex-col gap-2">
-          <p className="text-sm text-subtle">Tenure</p>
-          <p className="tabular text-2xl font-extrabold">{tenure} months</p>
+          <p className="text-sm text-subtle">{t("calcTenure")}</p>
+          <p className="tabular text-2xl font-extrabold">{t("calcMonths", { count: tenure })}</p>
           <ChipGroup
-            label="Tenure in months"
+            label={t("calcTenureAria")}
             options={tenures.map((t) => ({ id: String(t), label: String(t) }))}
             value={[String(tenure)]}
             onChange={(ids) => ids[0] && setTenure(Number(ids[0]))}
@@ -91,7 +93,7 @@ export function LoanCalculator() {
         </div>
 
         <SingleSlider
-          label="Interest rate (p.a.)"
+          label={t("calcRate")}
           value={rate}
           min={RATE_MIN}
           max={RATE_MAX}
@@ -105,31 +107,31 @@ export function LoanCalculator() {
 
       <div className="flex flex-col gap-4 rounded-card border border-line bg-surface p-4 shadow-card md:p-6">
         <div>
-          <p className="text-sm text-subtle">Estimated monthly EMI</p>
+          <p className="text-sm text-subtle">{t("calcEmi")}</p>
           <p data-testid="emi" className="tabular text-4xl font-extrabold">
             {formatMoney(emi.monthly)}
           </p>
         </div>
         <dl className="flex flex-col gap-3 border-t border-line pt-4 text-sm">
           <div className="flex justify-between gap-4">
-            <dt className="text-subtle">Principal amount</dt>
+            <dt className="text-subtle">{t("calcPrincipal")}</dt>
             <dd className="tabular font-semibold">{formatMoney(amount)}</dd>
           </div>
           <div className="flex justify-between gap-4">
-            <dt className="text-subtle">Estimated interest</dt>
+            <dt className="text-subtle">{t("calcInterest")}</dt>
             <dd className="tabular font-semibold">{formatMoney(emi.interest)}</dd>
           </div>
           <div className="flex justify-between gap-4 border-t border-line pt-3">
-            <dt className="font-bold">Total repayment</dt>
+            <dt className="font-bold">{t("calcTotal")}</dt>
             <dd className="tabular font-bold">{formatMoney(emi.total)}</dd>
           </div>
         </dl>
         <p className="flex items-start gap-2 text-xs leading-5 text-subtle">
           <InfoIcon size={16} className="mt-0.5 shrink-0" />
-          Estimated only. Final rates depend on eligibility and lender approval.
+          {t("calcNote")}
         </p>
         <ButtonLink href={`/loans/apply?type=personal&amount=${amount}&tenure=${tenure}`} size="lg" fullWidth className="mt-auto">
-          Apply for this loan
+          {t("calcApply")}
         </ButtonLink>
       </div>
     </div>

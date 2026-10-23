@@ -4,6 +4,7 @@ import { ChipGroup } from "@/components/ui/chip-group";
 import { RangeSlider } from "@/components/ui/range-slider";
 import { Switch } from "@/components/ui/selection-controls";
 import { brands, categories } from "@/features/mock/data";
+import { useTranslations } from "@/i18n/hooks";
 import { DEFAULT_FILTERS, type EngineBand, type Filters, PRICE_MAX, PRICE_MIN, engineBands } from "./filters";
 
 type BikeFiltersProps = {
@@ -22,21 +23,22 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
 
 /** The full filter set. Rendered in a sheet on mobile and a sticky sidebar on desktop. */
 export function BikeFilters({ value, onChange }: BikeFiltersProps) {
+  const t = useTranslations("browse");
   const set = <K extends keyof Filters>(key: K, next: Filters[K]) => onChange({ ...value, [key]: next });
 
   return (
     <div className="flex flex-col gap-6">
-      <Group title="Bike type">
+      <Group title={t("bikeType")}>
         <ChipGroup
-          label="Bike type"
-          options={categories.filter((c) => c.id !== "all")}
+          label={t("bikeType")}
+          options={categories.filter((c) => c.id !== "all").map((c) => ({ id: c.id, label: t(`cat_${c.id}` as "cat_all") }))}
           value={value.category === "all" ? [] : [value.category]}
           onChange={(ids) => set("category", ids[0] ?? "all")}
         />
       </Group>
 
       <RangeSlider
-        label="Price per day"
+        label={t("pricePerDay")}
         min={PRICE_MIN}
         max={PRICE_MAX}
         step={1}
@@ -44,9 +46,9 @@ export function BikeFilters({ value, onChange }: BikeFiltersProps) {
         onChange={(price) => set("price", price)}
       />
 
-      <Group title="Brand">
+      <Group title={t("brand")}>
         <ChipGroup
-          label="Brand"
+          label={t("brand")}
           multiple
           options={brands.map((b) => ({ id: b, label: b }))}
           value={value.brands}
@@ -54,30 +56,30 @@ export function BikeFilters({ value, onChange }: BikeFiltersProps) {
         />
       </Group>
 
-      <Group title="Transmission">
+      <Group title={t("transmission")}>
         <ChipGroup
-          label="Transmission"
+          label={t("transmission")}
           multiple
           options={[
-            { id: "manual", label: "Manual" },
-            { id: "automatic", label: "Automatic" },
+            { id: "manual", label: t("manual") },
+            { id: "automatic", label: t("automatic") },
           ]}
           value={value.transmission}
           onChange={(next) => set("transmission", next)}
         />
       </Group>
 
-      <Group title="Engine capacity">
+      <Group title={t("engineCapacity")}>
         <ChipGroup
-          label="Engine capacity"
-          options={engineBands}
+          label={t("engineCapacity")}
+          options={engineBands.map((band) => ({ id: band.id, label: t(band.key) }))}
           value={value.engine}
           onChange={(next) => set("engine", next as EngineBand[])}
         />
       </Group>
 
       <Switch isSelected={value.availableOnly} onChange={(next) => set("availableOnly", next)}>
-        Available bikes only
+        {t("availableOnly")}
       </Switch>
     </div>
   );

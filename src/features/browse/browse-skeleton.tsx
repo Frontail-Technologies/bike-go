@@ -1,10 +1,11 @@
+import { LoadingRegion } from "@/components/ui/loading-region";
 import { Screen } from "@/components/shared/screen";
 import { BlockSkeleton, MotorcycleCardSkeleton } from "@/components/ui/skeleton";
 
 /** Route-level fallback. Same wrapper, padding and columns as BrowseView, so nothing shifts when it loads. */
 export function BrowseSkeleton() {
   return (
-    <div role="status" aria-label="Loading bikes">
+    <LoadingRegion>
       <div className="sticky top-0 z-30 flex h-14 items-center border-b border-line bg-surface/95 px-4 pt-(--safe-top) md:hidden">
         <BlockSkeleton className="h-6 w-20" />
       </div>
@@ -27,6 +28,6 @@ export function BrowseSkeleton() {
           </div>
         </div>
       </Screen>
-    </div>
+    </LoadingRegion>
   );
 }

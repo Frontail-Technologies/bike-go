@@ -3,6 +3,7 @@
 import { RangeCalendar, type RangeCalendarProps } from "@heroui/react";
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
 import type { DateValue } from "@internationalized/date";
+import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";
 
 export type DateRange = NonNullable<RangeCalendarProps<DateValue>["value"]>;
@@ -11,14 +12,16 @@ type DateRangeCalendarProps = Omit<RangeCalendarProps<DateValue>, "children"> & 
 
 /** Responsive range calendar: fills its container, 44px+ day cells. */
 export function DateRangeCalendar({ className, ...props }: DateRangeCalendarProps) {
+  const t = useTranslations("common");
+
   return (
     <RangeCalendar firstDayOfWeek="mon" className={cn("w-full max-w-none", className)} {...props}>
       <RangeCalendar.Header>
         <RangeCalendar.Heading className="font-bold" />
-        <RangeCalendar.NavButton slot="previous" aria-label="Previous month">
+        <RangeCalendar.NavButton slot="previous" aria-label={t("previousMonth")}>
           <CaretLeftIcon size={20} />
         </RangeCalendar.NavButton>
-        <RangeCalendar.NavButton slot="next" aria-label="Next month">
+        <RangeCalendar.NavButton slot="next" aria-label={t("nextMonth")}>
           <CaretRightIcon size={20} />
         </RangeCalendar.NavButton>
       </RangeCalendar.Header>

@@ -14,36 +14,39 @@ import { TextAreaInput } from "@/components/ui/text-field";
 import { formatRange } from "@/features/bookings/dates";
 import { bookingsStore } from "@/features/bookings/store";
 import { getBike } from "@/features/mock/data";
+import { useTranslations } from "@/i18n/hooks";
 
 const categories = [
-  { id: "booking", label: "A booking" },
-  { id: "payment", label: "Payment or refund" },
-  { id: "bike", label: "Bike condition" },
-  { id: "pickup", label: "Pickup or return" },
-  { id: "app", label: "A problem with the app" },
-  { id: "other", label: "Something else" },
-];
+  { id: "booking", key: "reportCatBooking" },
+  { id: "payment", key: "reportCatPayment" },
+  { id: "bike", key: "reportCatBike" },
+  { id: "pickup", key: "reportCatPickup" },
+  { id: "app", key: "reportCatApp" },
+  { id: "other", key: "reportCatOther" },
+] as const;
 
-const schema = z.object({
-  category: z.string().min(1),
-  booking: z.string().min(1),
-  message: z.string().trim().min(20, "Please add a little more detail (at least 20 characters)."),
-});
+const schema = (message: string) =>
+  z.object({
+    category: z.string().min(1),
+    booking: z.string().min(1),
+    message: z.string().trim().min(20, message),
+  });
 
 const SIMULATED_SEND_MS = 700;
 
 export function ReportIssueView() {
   const bookings = bookingsStore.useValue();
+  const t = useTranslations("help");
   const [ticket, setTicket] = useState<string | null>(null);
   const { control, handleSubmit, formState } = useForm({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema(t("reportErrMessage"))),
     mode: "onBlur",
     defaultValues: { category: "booking", booking: "none", message: "" },
   });
 
   const bookingOptions = [
-    { id: "none", label: "Not about a booking" },
-    ...bookings.map((b) => ({ id: b.reference, label: `${b.reference} · ${getBike(b.bikeId)?.name ?? "Bike"} · ${formatRange(b.startDate, b.endDate)}` })),
+    { id: "none", label: t("reportNone") },
+    ...bookings.map((b) => ({ id: b.reference, label: `${b.reference} · ${getBike(b.bikeId)?.name ?? t("reportFallbackBike")} · ${formatRange(b.startDate, b.endDate)}` })),
   ];
 
   const send = handleSubmit(
@@ -59,21 +62,21 @@ export function ReportIssueView() {
   if (ticket) {
     return (
       <>
-        <AppBar leading="back" backFallback="/help" title="Report an issue" />
+        <AppBar leading="back" backFallback="/help" title={t("reportTitle")} />
         <Screen enter="slide" className="flex flex-col items-center gap-4 pt-10 text-center md:max-w-xl">
           <span className="flex size-16 items-center justify-center rounded-full bg-brand text-ink">
             <CheckIcon size={32} weight="bold" />
           </span>
-          <h2 className="text-2xl leading-8 font-extrabold tracking-tight">Report sent</h2>
+          <h2 className="text-2xl leading-8 font-extrabold tracking-tight">{t("reportSent")}</h2>
           <p className="text-[15px] leading-7 text-ink/80">
-            Thanks. Your reference is <span data-testid="ticket-ref" className="tabular font-bold text-ink">{ticket}</span>. We will reply within 24 hours, usually much sooner.
+            {t.rich("reportThanks", { ticket, ref: (chunks) => <span data-testid="ticket-ref" className="tabular font-bold text-ink">{chunks}</span> })}
           </p>
           <div className="mt-2 grid w-full grid-cols-2 gap-3">
             <ButtonLink href="/help" variant="outline" size="lg">
-              Back to help
+              {t("backToHelp")}
             </ButtonLink>
             <ButtonLink href="/bookings" size="lg">
-              My bookings
+              {t("myBookings")}
             </ButtonLink>
           </div>
         </Screen>
@@ -83,22 +86,22 @@ export function ReportIssueView() {
 
   return (
     <>
-      <AppBar leading="back" backFallback="/help" title="Report an issue" />
+      <AppBar leading="back" backFallback="/help" title={t("reportTitle")} />
       <Screen enter="slide" bottom="footer" className="md:max-w-2xl md:pb-12">
-        <DesktopTitle title="Report an issue" subtitle="Tell us what went wrong and we will make it right." className="mb-6" />
+        <DesktopTitle title={t("reportTitle")} subtitle={t("reportSubtitle")} className="mb-6" />
         <form id="report-form" noValidate className="flex flex-col gap-5" onSubmit={send}>
           <Controller
             name="category"
             control={control}
             render={({ field }) => (
-              <AppSelect label="What is it about?" options={categories} value={field.value} onChange={(key) => key && field.onChange(String(key))} />
+              <AppSelect label={t("reportAbout")} options={categories.map((c) => ({ id: c.id, label: t(c.key) }))} value={field.value} onChange={(key) => key && field.onChange(String(key))} />
             )}
           />
           <Controller
             name="booking"
             control={control}
             render={({ field }) => (
-              <AppSelect label="Which booking?" options={bookingOptions} value={field.value} onChange={(key) => key && field.onChange(String(key))} />
+              <AppSelect label={t("reportWhich")} options={bookingOptions} value={field.value} onChange={(key) => key && field.onChange(String(key))} />
             )}
           />
           <Controller
@@ -106,8 +109,8 @@ export function ReportIssueView() {
             control={control}
             render={({ field, fieldState }) => (
               <TextAreaInput
-                label="What happened?"
-                placeholder="Describe the problem, and when it happened."
+                label={t("reportWhat")}
+                placeholder={t("reportPlaceholder")}
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
@@ -118,14 +121,14 @@ export function ReportIssueView() {
           />
           <div className="hidden md:block">
             <Button type="submit" size="lg" isPending={formState.isSubmitting}>
-              Send report
+              {t("reportSend")}
             </Button>
           </div>
         </form>
       </Screen>
       <ScreenFooter hideFrom="md">
         <Button size="lg" fullWidth isPending={formState.isSubmitting} onPress={() => (document.getElementById("report-form") as HTMLFormElement | null)?.requestSubmit()}>
-          Send report
+          {t("reportSend")}
         </Button>
       </ScreenFooter>
     </>

@@ -1,3 +1,4 @@
+import type { SummaryLine } from "@/components/customer/booking-summary";
 import type { Motorcycle } from "@/features/mock/data";
 
 export const HELMET_PER_DAY = 2;
@@ -33,18 +34,17 @@ export function getQuote(bike: Motorcycle, days: number, addOns: AddOns): Quote 
   return { days, rental, helmet, jacket, tax, fee, deposit, payable: round2(rental + helmet + jacket + tax + fee + deposit) };
 }
 
-export type QuoteLine = { label: string; amount: number; hint?: string };
+export type QuoteLine = SummaryLine;
 
 /** Line items for BookingSummary, in display order. */
 export function quoteLines(quote: Quote): QuoteLine[] {
-  const unit = quote.days === 1 ? "day" : "days";
-  const lines: QuoteLine[] = [{ label: `Rental (${quote.days} ${unit})`, amount: quote.rental }];
-  if (quote.helmet) lines.push({ label: "Helmet", amount: quote.helmet });
-  if (quote.jacket) lines.push({ label: "Riding jacket", amount: quote.jacket });
+  const lines: QuoteLine[] = [{ id: "rental", days: quote.days, amount: quote.rental }];
+  if (quote.helmet) lines.push({ id: "helmet", amount: quote.helmet });
+  if (quote.jacket) lines.push({ id: "jacket", amount: quote.jacket });
   lines.push(
-    { label: "Taxes (18%)", amount: quote.tax },
-    { label: "Platform fee", amount: quote.fee },
-    { label: "Security deposit", amount: quote.deposit, hint: "Refundable" },
+    { id: "tax", rate: Math.round(TAX_RATE * 100), amount: quote.tax },
+    { id: "fee", amount: quote.fee },
+    { id: "deposit", amount: quote.deposit, refundable: true },
   );
   return lines;
 }

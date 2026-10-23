@@ -1,19 +1,23 @@
+"use client";
+
 import { CheckCircleIcon, ClockIcon, MotorcycleIcon, XCircleIcon } from "@phosphor-icons/react";
 import { StatusBadge, type BadgeTone } from "@/components/ui/status-badge";
 import type { BookingStatus } from "@/features/mock/data";
+import { useTranslations } from "@/i18n/hooks";
 
-const config: Record<BookingStatus, { label: string; tone: BadgeTone; icon: React.ReactNode }> = {
-  upcoming: { label: "Upcoming", tone: "info", icon: <ClockIcon size={14} weight="bold" /> },
-  ongoing: { label: "On rent", tone: "brand", icon: <MotorcycleIcon size={14} weight="bold" /> },
-  completed: { label: "Completed", tone: "success", icon: <CheckCircleIcon size={14} weight="bold" /> },
-  cancelled: { label: "Cancelled", tone: "danger", icon: <XCircleIcon size={14} weight="bold" /> },
+const config: Record<BookingStatus, { key: "statusUpcoming" | "statusOngoing" | "statusCompleted" | "statusCancelled"; tone: BadgeTone; icon: React.ReactNode }> = {
+  upcoming: { key: "statusUpcoming", tone: "info", icon: <ClockIcon size={14} weight="bold" /> },
+  ongoing: { key: "statusOngoing", tone: "brand", icon: <MotorcycleIcon size={14} weight="bold" /> },
+  completed: { key: "statusCompleted", tone: "success", icon: <CheckCircleIcon size={14} weight="bold" /> },
+  cancelled: { key: "statusCancelled", tone: "danger", icon: <XCircleIcon size={14} weight="bold" /> },
 };
 
 export function BookingStatusBadge({ status }: { status: BookingStatus }) {
-  const { label, tone, icon } = config[status];
+  const t = useTranslations("booking");
+  const { key, tone, icon } = config[status];
   return (
     <StatusBadge tone={tone} icon={icon}>
-      {label}
+      {t(key)}
     </StatusBadge>
   );
 }

@@ -15,7 +15,8 @@ import { ModalDialog } from "@/components/ui/modal-dialog";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { toast } from "@/components/ui/toast";
 import { Reveal } from "@/components/motion/reveal";
-import { type City, pickupHubs } from "@/features/mock/data";
+import type { City } from "@/features/mock/data";
+import { useTranslations } from "@/i18n/hooks";
 import { quoteLines } from "@/features/bookings/pricing";
 import { BookingTimeline } from "./booking-timeline";
 import { formatDay } from "./dates";
@@ -34,40 +35,44 @@ function Card({ title, children, id }: { title: string; children: React.ReactNod
   );
 }
 
-function statusHeadline(b: CustomerBooking, hubName: string) {
+type T = ReturnType<typeof useTranslations<"booking">>;
+
+function statusHeadline(b: CustomerBooking, hubName: string, t: T) {
   switch (b.status) {
     case "upcoming":
-      return `Pickup ${formatDay(b.startDate, false)} at ${b.pickupTime}, ${hubName}.`;
+      return t("headlineUpcoming", { date: formatDay(b.startDate, false), time: b.pickupTime, hub: hubName });
     case "ongoing":
-      return `On rent. Return by ${formatDay(b.endDate, false)}, ${b.dropTime}.`;
+      return t("headlineOngoing", { date: formatDay(b.endDate, false), time: b.dropTime });
     case "completed":
-      return "Ride complete. Your deposit is on its way back.";
+      return t("headlineCompleted");
     case "cancelled":
-      return "This booking was cancelled. Your payment is being refunded.";
+      return t("headlineCancelled");
   }
 }
 
-const depositNote: Record<CustomerBooking["status"], string> = {
-  upcoming: "Held. Refunded within 48 hours of return.",
-  ongoing: "Held until you return the bike.",
-  completed: "Refund processed. Allow up to 48 hours.",
-  cancelled: "Refunded with your payment.",
-};
+const depositNote = {
+  upcoming: "depositUpcoming",
+  ongoing: "depositOngoing",
+  completed: "depositCompleted",
+  cancelled: "depositCancelled",
+} as const;
 
 export function BookingDetailsView({ reference }: { reference: string }) {
   const found = useBooking(reference);
+  const t = useTranslations("booking");
+  const places = useTranslations("places");
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   if (!found) {
     return (
       <>
-        <AppBar leading="back" backFallback="/bookings" title="Booking details" />
+        <AppBar leading="back" backFallback="/bookings" title={t("details")} />
         <Screen enter="slide">
       <EmptyState
         icon={<MapPinIcon size={24} />}
-        title="Booking not found"
-        description="Check the reference, or open it from My bookings."
-        action={<ButtonLink href="/bookings" size="sm">My bookings</ButtonLink>}
+        title={t("notFound")}
+        description={t("notFoundText")}
+        action={<ButtonLink href="/bookings" size="sm">{t("myBookings")}</ButtonLink>}
       />
         </Screen>
       </>
@@ -75,23 +80,24 @@ export function BookingDetailsView({ reference }: { reference: string }) {
   }
 
   const { booking, bike } = found;
-  const hub = pickupHubs[(booking.city as City) in pickupHubs ? (booking.city as City) : "Jaipur"];
+  const city: City = booking.city === "Udaipur" || booking.city === "Jodhpur" ? booking.city : "Jaipur";
+  const hub = { name: places(`hubs.${city}.name`), address: places(`hubs.${city}.address`) };
 
   return (
     <>
-      <AppBar leading="back" backFallback="/bookings" title="Booking details" subtitle={<span className="tabular">{booking.reference}</span>} />
+      <AppBar leading="back" backFallback="/bookings" title={t("details")} subtitle={<span className="tabular">{booking.reference}</span>} />
       <Screen enter="slide" className="flex flex-col gap-4 md:gap-6">
-        <DesktopTitle title="Booking details" subtitle={<span className="tabular">{booking.reference}</span>} />
+        <DesktopTitle title={t("details")} subtitle={<span className="tabular">{booking.reference}</span>} />
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-8">
         <div className="flex min-w-0 flex-col gap-4">
           <Reveal y={8} blur={0}>
-            <section aria-label="Status" className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4 shadow-card">
+            <section aria-label={t("statusAria")} className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4 shadow-card">
               <div className="flex items-center justify-between gap-3">
                 <BookingStatusBadge status={booking.status} />
-                <span className="tabular text-xs text-subtle">Booked {formatDay(booking.createdAt.slice(0, 10))}</span>
+                <span className="tabular text-xs text-subtle">{t("booked", { date: formatDay(booking.createdAt.slice(0, 10)) })}</span>
               </div>
-              <p className="text-sm font-semibold" data-testid="status-message">{statusHeadline(booking, hub.name)}</p>
+              <p className="text-sm font-semibold" data-testid="status-message">{statusHeadline(booking, hub.name, t)}</p>
               <div className="flex gap-3 border-t border-line pt-3">
                 <div className="size-16 shrink-0 overflow-hidden rounded-control bg-canvas">
                   <BikeImage bike={bike} decorative sizes="64px" />
@@ -106,14 +112,14 @@ export function BookingDetailsView({ reference }: { reference: string }) {
             </section>
           </Reveal>
 
-          <Card id="timeline-title" title="Progress">
+          <Card id="timeline-title" title={t("progress")}>
             <BookingTimeline booking={booking} />
           </Card>
 
-          <Card id="trip-title" title="Pickup and return">
+          <Card id="trip-title" title={t("pickupAndReturn")}>
             <dl className="grid gap-4 sm:grid-cols-2">
               <div>
-                <dt className="text-xs font-semibold text-subtle uppercase">Pickup</dt>
+                <dt className="text-xs font-semibold text-subtle uppercase">{t("pickup")}</dt>
                 <dd className="mt-1 text-sm">
                   <span className="tabular block font-bold">{formatDay(booking.startDate)} · {booking.pickupTime}</span>
                   <span className="block text-subtle">{hub.name}</span>
@@ -121,67 +127,67 @@ export function BookingDetailsView({ reference }: { reference: string }) {
                 </dd>
               </div>
               <div>
-                <dt className="text-xs font-semibold text-subtle uppercase">Return</dt>
+                <dt className="text-xs font-semibold text-subtle uppercase">{t("return")}</dt>
                 <dd className="mt-1 text-sm">
                   <span className="tabular block font-bold">{formatDay(booking.endDate)} · {booking.dropTime}</span>
                   <span className="block text-subtle">{hub.name}</span>
-                  <span className="block text-subtle">Same hub as pickup</span>
+                  <span className="block text-subtle">{t("sameHub")}</span>
                 </dd>
               </div>
             </dl>
           </Card>
 
-          <Card id="rider-title" title="Rider">
+          <Card id="rider-title" title={t("rider")}>
             <dl className="flex flex-col gap-3 text-sm">
               <div className="flex justify-between gap-4">
-                <dt className="text-subtle">Name</dt>
+                <dt className="text-subtle">{t("name")}</dt>
                 <dd className="font-semibold">{booking.rider.name}</dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="text-subtle">Phone</dt>
+                <dt className="text-subtle">{t("phone")}</dt>
                 <dd className="tabular font-semibold">{booking.rider.phone}</dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="text-subtle">Email</dt>
+                <dt className="text-subtle">{t("email")}</dt>
                 <dd className="truncate font-semibold">{booking.rider.email}</dd>
               </div>
               <div className="flex items-center justify-between gap-4">
-                <dt className="text-subtle">Licence</dt>
-                <dd className="tabular font-semibold">{maskLicence(booking.licenceNumber)}</dd>
+                <dt className="text-subtle">{t("licence")}</dt>
+                <dd className="tabular font-semibold">{maskLicence(booking.licenceNumber, t("showAtPickup"))}</dd>
               </div>
             </dl>
           </Card>
         </div>
 
         <div className="flex min-w-0 flex-col gap-4 lg:sticky lg:top-24 lg:self-start">
-          <section aria-label="Payment" className="flex flex-col gap-3">
-            <BookingSummary lines={quoteLines(booking.quote)} totalLabel="Total paid" />
+          <section aria-label={t("paymentAria")} className="flex flex-col gap-3">
+            <BookingSummary lines={quoteLines(booking.quote)} totalLabel="totalPaid" />
             <div className="flex items-start gap-3 rounded-card border border-line bg-surface p-4 text-sm">
               <ShieldCheckIcon size={20} className="mt-0.5 shrink-0" />
               <div>
-                <p className="font-bold">Security deposit <StatusBadge tone="success" className="ml-1">Refundable</StatusBadge></p>
-                <p className="text-subtle">{depositNote[booking.status]}</p>
+                <p className="font-bold">{t("securityDeposit")} <StatusBadge tone="success" className="ml-1">{t("refundable")}</StatusBadge></p>
+                <p className="text-subtle">{t(depositNote[booking.status])}</p>
               </div>
             </div>
-            <p className="text-xs text-subtle">Paid with {booking.paymentMethod}.</p>
+            <p className="text-xs text-subtle">{t("paidWith", { method: booking.paymentMethod })}</p>
           </section>
 
-          <section aria-label="Actions" className="flex flex-col gap-2">
+          <section aria-label={t("actionsAria")} className="flex flex-col gap-2">
             <Button
               variant="secondary"
               fullWidth
-              onPress={() => toast.info("Support will join in a moment", { description: "Typical reply: under 2 minutes." })}
+              onPress={() => toast.info(t("supportToast"), { description: t("supportToastDesc") })}
             >
               <ChatCircleDotsIcon size={20} />
-              Chat with support
+              {t("chatSupport")}
             </Button>
             <ButtonLink href="tel:+911800000000" variant="outline" fullWidth>
               <PhoneIcon size={20} />
-              Call support
+              {t("callSupport")}
             </ButtonLink>
             {booking.status === "upcoming" ? (
               <Button variant="danger" fullWidth onPress={() => setConfirmOpen(true)}>
-                Cancel booking
+                {t("cancelBooking")}
               </Button>
             ) : null}
           </section>
@@ -191,27 +197,27 @@ export function BookingDetailsView({ reference }: { reference: string }) {
       <ModalDialog
         isOpen={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title="Cancel this booking?"
+        title={t("cancelTitle")}
         footer={
           <>
             <Button variant="secondary" slot="close">
-              Keep booking
+              {t("keepBooking")}
             </Button>
             <Button
               variant="danger"
               slot="close"
               onPress={() => {
                 cancelBooking(booking.reference);
-                toast.danger("Booking cancelled", { description: "Your payment will be refunded." });
+                toast.danger(t("cancelledToast"), { description: t("cancelledToastDesc") });
               }}
             >
-              Cancel booking
+              {t("cancelBooking")}
             </Button>
           </>
         }
       >
         <p className="text-sm text-subtle">
-          {bike.name}, {formatDay(booking.startDate, false)} to {formatDay(booking.endDate, false)}. Free cancellation applies up to 24 hours before pickup.
+          {t("cancelBody", { bike: bike.name, from: formatDay(booking.startDate, false), to: formatDay(booking.endDate, false) })}
         </p>
       </ModalDialog>
       </Screen>

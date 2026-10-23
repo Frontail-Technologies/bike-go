@@ -8,7 +8,7 @@
  * such as `rounded-control`, `rounded-card`, `rounded-overlay`, `px-page`.
  * ------------------------------------------------------------------------- */
 @theme {
-  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-jakarta), "Khmer UI", "Leelawadee UI", "Noto Sans Khmer", "Khmer Sangam MN", "Microsoft YaHei UI", "PingFang SC", "Noto Sans SC", "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", ui-sans-serif, system-ui, sans-serif;
 
   --color-brand: #ffc400;
   --color-brand-foreground: #111111;
