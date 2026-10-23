@@ -116,7 +116,7 @@ export function PaymentList() {
       </ContentSection>
 
       <Drawer.Backdrop isOpen={filterDrawer.isOpen} onOpenChange={filterDrawer.setOpen} className="adminOverlay">
-        <Drawer.Content placement="bottom" className="mx-auto w-full max-w-lg rounded-t-3xl">
+        <Drawer.Content placement="right" className="w-full max-w-md">
           <Drawer.Dialog aria-label="Filter payments">
             <Drawer.CloseTrigger />
             <Drawer.Header><Drawer.Heading>Filter payments</Drawer.Heading></Drawer.Header>
