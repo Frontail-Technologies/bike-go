@@ -35,7 +35,7 @@ const quickActions: ReadonlyArray<{ href: string; label: string; Icon: Icon; ton
   { href: "/admin/vehicles/new", label: "Add Vehicle", Icon: PlusIcon, tone: "bg-[var(--admin-accent-soft)] text-[var(--admin-warning)]" },
   { href: "/admin/bookings", label: "New Booking", Icon: CalendarCheckIcon, tone: "bg-[var(--admin-info-soft)] text-[var(--admin-info)]" },
   { href: "/admin/customers", label: "Add Customer", Icon: UserPlusIcon, tone: "bg-[var(--admin-success-soft)] text-[var(--admin-success)]" },
-  { href: "/admin/loan-applications", label: "Review Loans", Icon: HandCoinsIcon, tone: "bg-[var(--admin-warning-soft)] text-[var(--admin-warning)]" },
+  { href: "/admin/loans", label: "Review Loans", Icon: HandCoinsIcon, tone: "bg-[var(--admin-warning-soft)] text-[var(--admin-warning)]" },
   { href: "/admin/documents", label: "Review Documents", Icon: FileTextIcon, tone: "bg-[var(--admin-danger-soft)] text-[var(--admin-danger)]" },
   { href: "/admin/locations", label: "Manage Locations", Icon: BuildingsIcon, tone: "bg-[var(--admin-surface-muted)] text-[var(--admin-text)]" },
 ];

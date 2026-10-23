@@ -7,12 +7,12 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { AdminSearch, AdminSelect, CambodiaDateFilter, FilterBar, formatCambodiaDate } from "@/components/admin/controls";
 import { AdminDataTable } from "@/components/admin/data-display/admin-data-table";
-import { ActivityTimeline, AvatarCell, MoneyDisplay } from "@/components/admin/data-display/misc";
+import { AvatarCell, MoneyDisplay } from "@/components/admin/data-display/misc";
 import { AdminStatusBadge, type AdminStatus } from "@/components/admin/data-display/status-badge";
 import { AdminErrorState } from "@/components/admin/feedback";
 import { FormGrid, FormSection } from "@/components/admin/forms/form-layout";
 import { AdminPage, ContentSection, DetailList, InfoCard, PageHeader } from "@/components/admin/layout";
-import { adminDocuments, adminLoans, adminPayments, type AdminDocument, type AdminLoan, type AdminPayment } from "./data";
+import { adminDocuments, adminPayments, type AdminDocument, type AdminPayment } from "./data";
 
 const PAGE_SIZE = 6;
 const all = "all";
@@ -23,22 +23,6 @@ function ViewAction({ label, onPress }: { label: string; onPress: () => void }) 
 
 function ListFrame<T extends { id: string }>({ title, description, search, setSearch, status, setStatus, statusOptions, columns, rows, total, page, setPage, empty }: { title: string; description: string; search: string; setSearch: (value: string) => void; status: string; setStatus: (value: string) => void; statusOptions: string[]; columns: ColumnDef<T>[]; rows: T[]; total: number; page: number; setPage: (page: number) => void; empty: string }) {
   return <AdminPage><PageHeader title={title} description={description} /><ContentSection><FilterBar search={<AdminSearch className="sm:max-w-md" value={search} onChange={(value) => { setSearch(value); setPage(1); }} placeholder={`Search ${title.toLowerCase()}…`} />}><AdminSelect label="All statuses" value={status} onChange={(value) => { setStatus(value); setPage(1); }} options={[{ value: all, label: "All statuses" }, ...statusOptions.map((value) => ({ value, label: value.split("-").map((part) => part[0].toUpperCase() + part.slice(1)).join(" ") }))]} />{search || status !== all ? <Button size="sm" variant="ghost" onPress={() => { setSearch(""); setStatus(all); setPage(1); }}>Reset filters</Button> : null}</FilterBar><AdminDataTable columns={columns} data={rows} label={title} emptyState={empty} pagination={{ page, pageSize: PAGE_SIZE, total, onPageChange: setPage }} /></ContentSection></AdminPage>;
-}
-
-export function LoansScreen() {
-  const router = useRouter(); const [search, setSearch] = useState(""); const [status, setStatus] = useState(all); const [page, setPage] = useState(1);
-  const filtered = useMemo(() => adminLoans.filter((item) => (!search || `${item.reference} ${item.applicant} ${item.purpose}`.toLowerCase().includes(search.toLowerCase())) && (status === all || item.status === status)), [search, status]);
-  const rows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  const columns: ColumnDef<AdminLoan>[] = [
-    { accessorKey: "reference", header: "Application", cell: ({ row }) => <div><p className="font-bold">{row.original.reference}</p><p className="text-xs text-[var(--admin-muted)]">{formatCambodiaDate(row.original.submittedAt)}</p></div> },
-    { accessorKey: "applicant", header: "Applicant", cell: ({ row }) => <AvatarCell name={row.original.applicant} detail={row.original.occupation} /> },
-    { accessorKey: "requestedMinor", header: "Requested", cell: ({ row }) => <MoneyDisplay amount={row.original.requestedMinor} /> },
-    { accessorKey: "tenureMonths", header: "Tenure", cell: ({ row }) => `${row.original.tenureMonths} months` },
-    { accessorKey: "purpose", header: "Purpose" },
-    { accessorKey: "status", header: "Status", cell: ({ row }) => <AdminStatusBadge status={row.original.status} /> },
-    { id: "actions", header: "", enableSorting: false, cell: ({ row }) => <ViewAction label={`View application ${row.original.reference}`} onPress={() => router.push(`/admin/loan-applications/${row.original.id}`)} /> },
-  ];
-  return <ListFrame title="Loan Applications" description="Review applicant information, requested amounts, and decision status." search={search} setSearch={setSearch} status={status} setStatus={setStatus} statusOptions={["pending", "under-review", "approved", "rejected"]} columns={columns} rows={rows} total={filtered.length} page={page} setPage={setPage} empty="No loan applications match these filters." />;
 }
 
 export function DocumentsScreen() {
@@ -70,11 +54,6 @@ export function PaymentsScreen() {
 }
 
 function RecordNotFound({ title }: { title: string }) { return <AdminPage><PageHeader title={title} /><AdminErrorState title="Record not found" description="This UI preview does not contain that record." /></AdminPage>; }
-
-export function LoanDetailScreen({ id }: { id: string }) {
-  const item = adminLoans.find((loan) => loan.id === id); const [status, setStatus] = useState<AdminStatus | null>(item?.status ?? null); if (!item || !status) return <RecordNotFound title="Loan Application Details" />;
-  return <AdminPage><PageHeader eyebrow="Loan Applications" title={item.reference} description={`Submitted ${formatCambodiaDate(item.submittedAt)}`} actions={<AdminStatusBadge status={status} />} /><div className="grid gap-5 xl:grid-cols-[1fr_1fr_0.8fr]"><InfoCard title="Applicant information"><AvatarCell name={item.applicant} detail={item.email} /><DetailList items={[{ label: "Phone", value: item.phone }, { label: "Occupation", value: item.occupation }, { label: "Employer", value: item.employer }, { label: "Monthly income", value: <MoneyDisplay amount={item.monthlyIncomeMinor} /> }]} /></InfoCard><InfoCard title="Loan details"><DetailList items={[{ label: "Requested amount", value: <MoneyDisplay amount={item.requestedMinor} /> }, { label: "Tenure", value: `${item.tenureMonths} months` }, { label: "Purpose", value: item.purpose }]} /><div className="mt-5 flex gap-2"><Button variant="danger" onPress={() => setStatus("rejected")}><XCircleIcon />Reject</Button><Button variant="primary" onPress={() => setStatus("approved")}><CheckCircleIcon />Approve</Button></div></InfoCard><InfoCard title="Application timeline"><ActivityTimeline items={[{ id: "1", title: "Application submitted", detail: item.applicant, time: formatCambodiaDate(item.submittedAt), tone: "info" }, { id: "2", title: status === "approved" ? "Approved" : status === "rejected" ? "Rejected" : "Under review", detail: "Local UI decision state", time: "Current", tone: status === "approved" ? "success" : "warning" }]} /></InfoCard></div></AdminPage>;
-}
 
 export function DocumentDetailScreen({ id }: { id: string }) {
   const item = adminDocuments.find((document) => document.id === id); const [status, setStatus] = useState<AdminStatus | null>(item?.status ?? null); if (!item || !status) return <RecordNotFound title="Document Review" />;

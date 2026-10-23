@@ -25,7 +25,7 @@ export const adminNavigation = [
   { href: "/admin/banners", label: "Banners", Icon: ImagesSquareIcon },
   { href: "/admin/bookings", label: "Bookings", Icon: CalendarCheckIcon },
   { href: "/admin/customers", label: "Customers", Icon: UsersIcon },
-  { href: "/admin/loan-applications", label: "Loan Applications", Icon: HandCoinsIcon },
+  { href: "/admin/loans", label: "Loan Applications", Icon: HandCoinsIcon },
   { href: "/admin/documents", label: "Documents", Icon: FileTextIcon },
   { href: "/admin/payments", label: "Payments", Icon: CreditCardIcon },
   { href: "/admin/locations", label: "Locations", Icon: BuildingsIcon },

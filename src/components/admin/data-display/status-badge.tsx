@@ -1,14 +1,14 @@
 import { cn } from "@/lib/cn";
 
 export type AdminStatus =
-  | "available" | "rented" | "maintenance" | "inactive" | "active" | "scheduled" | "ready-for-pickup" | "unpaid" | "partially-refunded"
+  | "available" | "rented" | "maintenance" | "inactive" | "active" | "scheduled" | "ready-for-pickup" | "unpaid" | "partially-refunded" | "draft" | "submitted" | "action-required" | "eligibility"
   | "pending" | "confirmed" | "ongoing" | "completed" | "cancelled" | "no-show"
   | "paid" | "partially-paid" | "refunded" | "failed"
   | "under-review" | "approved" | "rejected"
   | "verified" | "needs-review" | "expired";
 
 const labels: Record<AdminStatus, string> = {
-  active: "Active", scheduled: "Scheduled", "ready-for-pickup": "Ready for pickup", unpaid: "Unpaid", "partially-refunded": "Partially refunded", available: "Available", rented: "Rented", maintenance: "Maintenance", inactive: "Inactive",
+  active: "Active", scheduled: "Scheduled", "ready-for-pickup": "Ready for pickup", draft: "Draft", submitted: "Submitted", "action-required": "Action required", eligibility: "Eligibility review", unpaid: "Unpaid", "partially-refunded": "Partially refunded", available: "Available", rented: "Rented", maintenance: "Maintenance", inactive: "Inactive",
   pending: "Pending", confirmed: "Confirmed", ongoing: "Ongoing", completed: "Completed", cancelled: "Cancelled", "no-show": "No show",
   paid: "Paid", "partially-paid": "Partially paid", refunded: "Refunded", failed: "Failed",
   "under-review": "Under review", approved: "Approved", rejected: "Rejected",
@@ -19,6 +19,10 @@ const tones: Record<AdminStatus, string> = {
   active: "bg-[var(--admin-success-soft)] text-[var(--admin-success)]",
   scheduled: "bg-[var(--admin-info-soft)] text-[var(--admin-info)]",
   "ready-for-pickup": "bg-[#efe9ff] text-[#6246c7]",
+  eligibility: "bg-[#efe9ff] text-[#6246c7]",
+  submitted: "bg-[var(--admin-info-soft)] text-[var(--admin-info)]",
+  "action-required": "bg-[#ffe9d6] text-[#b4540a]",
+  draft: "bg-[var(--admin-surface-muted)] text-[var(--admin-muted)]",
   unpaid: "bg-[var(--admin-surface-muted)] text-[var(--admin-muted)]",
   "partially-refunded": "bg-[var(--admin-warning-soft)] text-[var(--admin-warning)]",
   available: "bg-[var(--admin-success-soft)] text-[var(--admin-success)]",

@@ -99,7 +99,7 @@ export const adminDashboard: DashboardData = {
     { reference: "BND0120", bookingStatus: "pending", customerName: "Dara Kem", vehicleName: "Honda PCX 160", pickupAt: "2026-10-26T01:00:00.000Z", totalPayableMinor: 6000, currency: "USD" },
   ],
   recentLoans: [
-    { reference: "LNN0028", status: "documents_under_review", applicantName: "Davit Park", loanType: "vehicle", requestedAmountMinor: 500000, currency: "USD", createdAt: "2026-10-23T02:00:00.000Z" },
+    { reference: "LNN0028", status: "documents_under_review", applicantName: "Davit Park", loanType: "emergency", requestedAmountMinor: 500000, currency: "USD", createdAt: "2026-10-23T02:00:00.000Z" },
     { reference: "LNN0027", status: "approved", applicantName: "Kim Sopheap", loanType: "personal", requestedAmountMinor: 350000, currency: "USD", createdAt: "2026-10-22T07:00:00.000Z" },
   ],
   pendingDocumentReviews: 9,

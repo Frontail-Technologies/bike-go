@@ -10,6 +10,8 @@ import { adminVehicles } from "@/components/admin/data";
 import { AdminDataTable } from "@/components/admin/data-display/admin-data-table";
 import { ActivityTimeline, MoneyDisplay, type ActivityItem } from "@/components/admin/data-display/misc";
 import { AdminStatusBadge } from "@/components/admin/data-display/status-badge";
+import { CurrencyAmount } from "@/components/admin/money";
+import { LoanStatusBadge } from "@/components/admin/loans/loan-parts";
 import { AdminErrorState } from "@/components/admin/feedback";
 import { AdminPage, ContentSection, PageHeader } from "@/components/admin/layout";
 import { AdminBreadcrumbs, AdminTabs } from "@/components/admin/navigation";
@@ -66,7 +68,7 @@ export function CustomerDetail({ id }: { id: string }) {
   if (!base) return <AdminPage><PageHeader title="Customer Details" /><AdminErrorState title="Customer not found" description="This UI preview does not contain that customer." /></AdminPage>;
   const customer: Customer = { ...base, ...overrides };
   const openBooking = (booking: CustomerBooking) => router.push(`/admin/bookings/${booking.detailId}`);
-  const openLoan = (loan: CustomerLoan) => router.push(`/admin/loan-applications/${loan.detailId}`);
+  const openLoan = (loan: CustomerLoan) => router.push(`/admin/loans/${loan.detailId}`);
 
   const vehicleCell: ColumnDef<CustomerBooking> = {
     accessorKey: "vehicle", header: "Vehicle",
@@ -96,11 +98,11 @@ export function CustomerDetail({ id }: { id: string }) {
   const loanColumns: ColumnDef<CustomerLoan>[] = [
     { accessorKey: "reference", header: "Reference", cell: ({ row }) => <span className="font-bold">{row.original.reference}</span> },
     { accessorKey: "loanType", header: "Loan type" },
-    { accessorKey: "requestedMinor", header: "Requested", cell: ({ row }) => <MoneyDisplay amount={row.original.requestedMinor} /> },
-    { id: "currency", header: "Currency", accessorFn: () => "USD" },
+    { accessorKey: "requestedMinor", header: "Requested", cell: ({ row }) => <CurrencyAmount amount={row.original.requestedMinor} currency={row.original.currency} /> },
+    { id: "currency", header: "Currency", accessorFn: (row) => row.currency },
     { accessorKey: "tenureMonths", header: "Tenure", cell: ({ row }) => `${row.original.tenureMonths} months` },
     { accessorKey: "submittedAt", header: "Submitted", cell: ({ row }) => <span className="whitespace-nowrap">{formatCambodiaDate(row.original.submittedAt)}</span> },
-    { accessorKey: "status", header: "Status", cell: ({ row }) => <AdminStatusBadge status={row.original.status} /> },
+    { accessorKey: "status", header: "Status", cell: ({ row }) => <LoanStatusBadge status={row.original.status} /> },
   ];
   const recentLoanColumns: ColumnDef<CustomerLoan>[] = [loanColumns[1], loanColumns[2], { accessorKey: "submittedAt", header: "Submitted", cell: ({ row }) => <span className="whitespace-nowrap">{shortDate(row.original.submittedAt)}</span> }, loanColumns[6]];
   const documentColumns: ColumnDef<CustomerDocument>[] = [

@@ -1,5 +1,6 @@
 import { adminLocations, adminVehicles } from "@/components/admin/data";
 import type { AdminStatus } from "@/components/admin/data-display/status-badge";
+import { type LoanCurrency, type LoanStatus, loanTypes } from "@/components/admin/loans/loan-types";
 
 export type CustomerStatus = Extract<AdminStatus, "active" | "inactive">;
 
@@ -8,7 +9,7 @@ export type CustomerBooking = {
   amountMinor: number; status: AdminStatus; paymentStatus: AdminStatus; detailId: string;
 };
 export type CustomerLoan = {
-  id: string; reference: string; loanType: string; requestedMinor: number; tenureMonths: number; submittedAt: string; status: AdminStatus; detailId: string;
+  id: string; reference: string; loanType: string; requestedMinor: number; currency: LoanCurrency; tenureMonths: number; submittedAt: string; status: LoanStatus; detailId: string;
 };
 export type CustomerDocument = {
   id: string; type: string; loanReference: string; uploadedAt: string; status: AdminStatus; detailId: string;
@@ -38,8 +39,7 @@ const seeds = [
 
 const bookingStatuses: AdminStatus[] = ["completed", "ongoing", "completed", "confirmed", "completed", "cancelled", "completed"];
 const paymentStatuses: AdminStatus[] = ["paid", "paid", "paid", "partially-paid", "paid", "refunded", "paid"];
-const loanTypes = ["Vehicle purchase", "Personal loan", "Expat loan"];
-const loanStatuses: AdminStatus[] = ["under-review", "approved", "pending", "rejected"];
+const loanStatuses: LoanStatus[] = ["documents-review", "approved", "submitted", "rejected", "eligibility-review", "action-required", "draft"];
 const documentTypes = ["Passport", "Driving licence", "National ID", "Proof of address", "Visa"];
 const documentStatuses: AdminStatus[] = ["verified", "needs-review", "verified", "rejected", "verified"];
 
@@ -65,11 +65,15 @@ function build(seed: (typeof seeds)[number], index: number): Customer {
     };
   });
 
-  const loans: CustomerLoan[] = Array.from({ length: loanCount }, (_, slot) => ({
-    id: `${index + 1}-l${slot + 1}`, reference: `LNN${String(40 - index * 2 - slot).padStart(4, "0")}`, loanType: loanTypes[(index + slot) % loanTypes.length],
-    requestedMinor: (3000 + ((index + slot) % 4) * 1500) * 100, tenureMonths: [12, 18, 24, 36][(index + slot) % 4], submittedAt: stamp(9 - slot, 8 + index),
-    status: loanStatuses[(index + slot) % loanStatuses.length], detailId: `loan-${((index + slot) % 8) + 1}`,
-  }));
+  const loans: CustomerLoan[] = Array.from({ length: loanCount }, (_, slot) => {
+    const currency: LoanCurrency = (index + slot) % 3 === 2 ? "KHR" : "USD";
+    const usd = 3000 + ((index + slot) % 4) * 1500;
+    const reference = `LA-2026-${String(40 - index * 2 - slot).padStart(4, "0")}`;
+    return {
+      id: `${index + 1}-l${slot + 1}`, reference, loanType: loanTypes[(index + slot) % loanTypes.length], currency, requestedMinor: currency === "USD" ? usd * 100 : usd * 4100,
+      tenureMonths: [12, 18, 24, 36][(index + slot) % 4], submittedAt: stamp(9 - slot, 8 + index), status: loanStatuses[(index + slot) % loanStatuses.length], detailId: reference,
+    };
+  });
 
   const documents: CustomerDocument[] = loans.flatMap((loan, loanSlot) =>
     Array.from({ length: 2 }, (_, slot) => ({
