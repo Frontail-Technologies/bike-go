@@ -61,7 +61,7 @@ function build(seed: (typeof seeds)[number], index: number): Customer {
     return {
       id: `${index + 1}-b${slot + 1}`, reference: `BND${String(130 - index * 7 - slot).padStart(4, "0")}`, vehicle: vehicle.name, registration: vehicle.registrationNumber,
       pickupAt: start, returnAt: stamp(10 - Math.min(slot, 8), day + 2 + (slot % 3)), location: location.name, amountMinor: rental + vehicle.securityDepositMinor / 4,
-      status: bookingStatus, paymentStatus: bookingStatus === "ongoing" ? "paid" : paymentStatuses[(slot + index) % paymentStatuses.length], detailId: `booking-${((index + slot) % 12) + 1}`,
+      status: bookingStatus, paymentStatus: bookingStatus === "ongoing" ? "paid" : paymentStatuses[(slot + index) % paymentStatuses.length], detailId: `BK-${String(((index + slot) % 12) + 1).padStart(4, "0")}`,
     };
   });
 

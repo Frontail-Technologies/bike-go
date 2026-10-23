@@ -1,14 +1,14 @@
 import { cn } from "@/lib/cn";
 
 export type AdminStatus =
-  | "available" | "rented" | "maintenance" | "inactive" | "active" | "scheduled"
+  | "available" | "rented" | "maintenance" | "inactive" | "active" | "scheduled" | "ready-for-pickup" | "unpaid" | "partially-refunded"
   | "pending" | "confirmed" | "ongoing" | "completed" | "cancelled" | "no-show"
   | "paid" | "partially-paid" | "refunded" | "failed"
   | "under-review" | "approved" | "rejected"
   | "verified" | "needs-review" | "expired";
 
 const labels: Record<AdminStatus, string> = {
-  active: "Active", scheduled: "Scheduled", available: "Available", rented: "Rented", maintenance: "Maintenance", inactive: "Inactive",
+  active: "Active", scheduled: "Scheduled", "ready-for-pickup": "Ready for pickup", unpaid: "Unpaid", "partially-refunded": "Partially refunded", available: "Available", rented: "Rented", maintenance: "Maintenance", inactive: "Inactive",
   pending: "Pending", confirmed: "Confirmed", ongoing: "Ongoing", completed: "Completed", cancelled: "Cancelled", "no-show": "No show",
   paid: "Paid", "partially-paid": "Partially paid", refunded: "Refunded", failed: "Failed",
   "under-review": "Under review", approved: "Approved", rejected: "Rejected",
@@ -18,6 +18,9 @@ const labels: Record<AdminStatus, string> = {
 const tones: Record<AdminStatus, string> = {
   active: "bg-[var(--admin-success-soft)] text-[var(--admin-success)]",
   scheduled: "bg-[var(--admin-info-soft)] text-[var(--admin-info)]",
+  "ready-for-pickup": "bg-[#efe9ff] text-[#6246c7]",
+  unpaid: "bg-[var(--admin-surface-muted)] text-[var(--admin-muted)]",
+  "partially-refunded": "bg-[var(--admin-warning-soft)] text-[var(--admin-warning)]",
   available: "bg-[var(--admin-success-soft)] text-[var(--admin-success)]",
   completed: "bg-[var(--admin-success-soft)] text-[var(--admin-success)]",
   paid: "bg-[var(--admin-success-soft)] text-[var(--admin-success)]",
@@ -40,8 +43,8 @@ const tones: Record<AdminStatus, string> = {
   refunded: "bg-[var(--admin-surface-muted)] text-[var(--admin-muted)]",
 };
 
-export function AdminStatusBadge({ status, className }: { status: AdminStatus; className?: string }) {
-  return <span className={cn("inline-flex min-h-6 items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold", tones[status], className)}>{labels[status]}</span>;
+export function AdminStatusBadge({ status, className, label }: { status: AdminStatus; className?: string; label?: string }) {
+  return <span className={cn("inline-flex min-h-6 items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px] font-bold", tones[status], className)}>{label ?? labels[status]}</span>;
 }
 
 export const adminStatusVariants = Object.keys(labels) as AdminStatus[];

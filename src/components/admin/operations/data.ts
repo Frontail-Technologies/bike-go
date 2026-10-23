@@ -1,11 +1,5 @@
 import type { AdminStatus } from "@/components/admin/data-display/status-badge";
 
-export type AdminBooking = {
-  id: string; reference: string; customer: string; email: string; phone: string; vehicle: string; registration: string;
-  pickupAt: string; returnAt: string; location: string; status: AdminStatus; paymentStatus: AdminStatus;
-  rentalMinor: number; depositMinor: number; totalMinor: number;
-};
-
 export type AdminLoan = {
   id: string; reference: string; applicant: string; email: string; phone: string; occupation: string; employer: string;
   monthlyIncomeMinor: number; requestedMinor: number; tenureMonths: number; purpose: string; status: AdminStatus; submittedAt: string;
@@ -28,22 +22,6 @@ const people = [
   ["Chan Dara", "CD", "chan@example.com", "+855 11 111 222", "Phnom Penh"],
   ["Sokha Chan", "SC", "sokha@example.com", "+855 96 804 312", "Siem Reap"],
 ] as const;
-
-const bookingStatuses: AdminStatus[] = ["ongoing", "completed", "confirmed", "cancelled", "completed", "pending", "completed", "no-show", "ongoing", "confirmed", "completed", "pending"];
-const vehicles = ["Toyota Vios", "Honda Click 125", "Yamaha NMAX 155", "KTM Duke 250", "Honda PCX 160", "Toyota Fortuner"];
-
-export const adminBookings: AdminBooking[] = Array.from({ length: 12 }, (_, index) => {
-  const person = people[index % people.length];
-  const rentalMinor = 3600 + (index % 5) * 1200;
-  const depositMinor = 20000 + (index % 3) * 5000;
-  return {
-    id: `booking-${index + 1}`, reference: `BND${String(124 - index).padStart(4, "0")}`, customer: person[0], email: person[2], phone: person[3],
-    vehicle: vehicles[index % vehicles.length], registration: `RG-${String(index + 1).padStart(4, "0")}`,
-    pickupAt: `2026-10-${String(20 + (index % 8)).padStart(2, "0")}T03:00:00.000Z`, returnAt: `2026-10-${String(22 + (index % 8)).padStart(2, "0")}T03:00:00.000Z`,
-    location: index % 3 === 0 ? "Siem Reap Riverside" : "Phnom Penh Central", status: bookingStatuses[index], paymentStatus: index % 4 === 3 ? "partially-paid" : index % 5 === 4 ? "refunded" : "paid",
-    rentalMinor, depositMinor, totalMinor: rentalMinor + depositMinor,
-  };
-});
 
 const loanStatuses: AdminStatus[] = ["under-review", "approved", "pending", "rejected", "approved", "pending", "under-review", "approved"];
 export const adminLoans: AdminLoan[] = Array.from({ length: 8 }, (_, index) => {

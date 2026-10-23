@@ -12,7 +12,7 @@ import { AdminStatusBadge, type AdminStatus } from "@/components/admin/data-disp
 import { AdminErrorState } from "@/components/admin/feedback";
 import { FormGrid, FormSection } from "@/components/admin/forms/form-layout";
 import { AdminPage, ContentSection, DetailList, InfoCard, PageHeader } from "@/components/admin/layout";
-import { adminBookings, adminDocuments, adminLoans, adminPayments, type AdminBooking, type AdminDocument, type AdminLoan, type AdminPayment } from "./data";
+import { adminDocuments, adminLoans, adminPayments, type AdminDocument, type AdminLoan, type AdminPayment } from "./data";
 
 const PAGE_SIZE = 6;
 const all = "all";
@@ -23,22 +23,6 @@ function ViewAction({ label, onPress }: { label: string; onPress: () => void }) 
 
 function ListFrame<T extends { id: string }>({ title, description, search, setSearch, status, setStatus, statusOptions, columns, rows, total, page, setPage, empty }: { title: string; description: string; search: string; setSearch: (value: string) => void; status: string; setStatus: (value: string) => void; statusOptions: string[]; columns: ColumnDef<T>[]; rows: T[]; total: number; page: number; setPage: (page: number) => void; empty: string }) {
   return <AdminPage><PageHeader title={title} description={description} /><ContentSection><FilterBar search={<AdminSearch className="sm:max-w-md" value={search} onChange={(value) => { setSearch(value); setPage(1); }} placeholder={`Search ${title.toLowerCase()}…`} />}><AdminSelect label="All statuses" value={status} onChange={(value) => { setStatus(value); setPage(1); }} options={[{ value: all, label: "All statuses" }, ...statusOptions.map((value) => ({ value, label: value.split("-").map((part) => part[0].toUpperCase() + part.slice(1)).join(" ") }))]} />{search || status !== all ? <Button size="sm" variant="ghost" onPress={() => { setSearch(""); setStatus(all); setPage(1); }}>Reset filters</Button> : null}</FilterBar><AdminDataTable columns={columns} data={rows} label={title} emptyState={empty} pagination={{ page, pageSize: PAGE_SIZE, total, onPageChange: setPage }} /></ContentSection></AdminPage>;
-}
-
-export function BookingsScreen() {
-  const router = useRouter(); const [search, setSearch] = useState(""); const [status, setStatus] = useState(all); const [page, setPage] = useState(1);
-  const filtered = useMemo(() => adminBookings.filter((item) => (!search || `${item.reference} ${item.customer} ${item.vehicle}`.toLowerCase().includes(search.toLowerCase())) && (status === all || item.status === status)), [search, status]);
-  const rows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  const columns: ColumnDef<AdminBooking>[] = [
-    { accessorKey: "reference", header: "Booking", cell: ({ row }) => <div><p className="font-bold">{row.original.reference}</p><p className="text-xs text-[var(--admin-muted)]">{formatCambodiaDate(row.original.pickupAt)}</p></div> },
-    { accessorKey: "customer", header: "Customer", cell: ({ row }) => <AvatarCell name={row.original.customer} detail={row.original.phone} /> },
-    { accessorKey: "vehicle", header: "Vehicle", cell: ({ row }) => <div><p className="font-semibold">{row.original.vehicle}</p><p className="text-xs text-[var(--admin-muted)]">{row.original.registration}</p></div> },
-    { accessorKey: "location", header: "Pickup location" },
-    { accessorKey: "totalMinor", header: "Amount", cell: ({ row }) => <MoneyDisplay amount={row.original.totalMinor} /> },
-    { accessorKey: "status", header: "Status", cell: ({ row }) => <AdminStatusBadge status={row.original.status} /> },
-    { id: "actions", header: "", enableSorting: false, cell: ({ row }) => <ViewAction label={`View booking ${row.original.reference}`} onPress={() => router.push(`/admin/bookings/${row.original.id}`)} /> },
-  ];
-  return <ListFrame title="Bookings" description="Review reservations, rental periods, payment state, and handover details." search={search} setSearch={setSearch} status={status} setStatus={setStatus} statusOptions={["pending", "confirmed", "ongoing", "completed", "cancelled", "no-show"]} columns={columns} rows={rows} total={filtered.length} page={page} setPage={setPage} empty="No bookings match these filters." />;
 }
 
 export function LoansScreen() {
@@ -86,12 +70,6 @@ export function PaymentsScreen() {
 }
 
 function RecordNotFound({ title }: { title: string }) { return <AdminPage><PageHeader title={title} /><AdminErrorState title="Record not found" description="This UI preview does not contain that record." /></AdminPage>; }
-
-export function BookingDetailScreen({ id }: { id: string }) {
-  const item = adminBookings.find((booking) => booking.id === id); const [status, setStatus] = useState<AdminStatus | null>(item?.status ?? null);
-  if (!item || !status) return <RecordNotFound title="Booking Details" />;
-  return <AdminPage><PageHeader eyebrow="Bookings" title={item.reference} description="Booking and handover overview" actions={<><AdminStatusBadge status={status} /><Button variant="primary" onPress={() => setStatus(status === "completed" ? "ongoing" : "completed")}>Update status</Button></>} /><div className="grid gap-5 xl:grid-cols-3"><InfoCard title="Customer"><div className="mb-4"><p className="text-sm font-bold">{item.customer}</p><p className="text-xs text-[var(--admin-muted)]">{item.email}</p></div><DetailList items={[{ label: "Phone", value: item.phone }]} /></InfoCard><InfoCard title="Vehicle"><DetailList items={[{ label: "Vehicle", value: item.vehicle }, { label: "Registration", value: item.registration }, { label: "Pickup location", value: item.location }]} /></InfoCard><InfoCard title="Payment"><DetailList items={[{ label: "Rental", value: <MoneyDisplay amount={item.rentalMinor} /> }, { label: "Security deposit", value: <MoneyDisplay amount={item.depositMinor} /> }, { label: "Total", value: <MoneyDisplay amount={item.totalMinor} /> }, { label: "Status", value: <AdminStatusBadge status={item.paymentStatus} /> }]} /></InfoCard></div><InfoCard title="Booking schedule"><DetailList columns={2} items={[{ label: "Pickup — ICT", value: formatCambodiaDate(item.pickupAt, { hour: "2-digit", minute: "2-digit" }) }, { label: "Return — ICT", value: formatCambodiaDate(item.returnAt, { hour: "2-digit", minute: "2-digit" }) }]} /></InfoCard></AdminPage>;
-}
 
 export function LoanDetailScreen({ id }: { id: string }) {
   const item = adminLoans.find((loan) => loan.id === id); const [status, setStatus] = useState<AdminStatus | null>(item?.status ?? null); if (!item || !status) return <RecordNotFound title="Loan Application Details" />;
