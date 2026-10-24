@@ -14,8 +14,8 @@ import { AdminPage, ContentSection, PageHeader } from "@/components/admin/layout
 import { CurrencyAmount } from "@/components/admin/money";
 import { ApiError } from "@/lib/api/error";
 import { PAYMENT_PAGE_SIZE, usePaymentListState } from "../hooks/use-payment-list-state";
-import { usePaymentsQuery } from "../hooks/use-payments";
-import { fmtShort, providerLabel, statusLabels } from "../lib/payment-model";
+import { usePaymentMethodsQuery, usePaymentsQuery } from "../hooks/use-payments";
+import { badgeStatus, fmtShort, providerLabel, statusLabels } from "../lib/payment-model";
 import { paymentStatuses, type Payment, type PaymentCurrency, type PaymentSort, type PaymentStatus, type PaymentWindow } from "../types/payment";
 import { AdminPaymentCard } from "./admin-payment-card";
 
@@ -44,6 +44,7 @@ export function PaymentList() {
   const state = usePaymentListState();
   const { params } = state;
   const query = usePaymentsQuery(params);
+  const methods = usePaymentMethodsQuery();
   const [view, setView] = useState<ViewMode>("table");
   const [searchText, setSearchText] = useState(params.q ?? "");
 
@@ -65,7 +66,7 @@ export function PaymentList() {
   const total = query.data?.meta.total ?? 0;
   const pageCount = Math.max(1, query.data?.meta.totalPages ?? 1);
   const page = Math.min(params.page, pageCount);
-  const activeFilters = [params.status, params.currency, params.window].filter(Boolean).length;
+  const activeFilters = [params.status, params.method, params.currency, params.window].filter(Boolean).length;
   const filtersActive = Boolean(params.q || activeFilters);
   const reset = () => { setSearchText(""); state.reset(); };
   const open = (payment: Payment) => router.push(`/admin/payments/${encodeURIComponent(payment.transactionId)}`);
@@ -80,9 +81,10 @@ export function PaymentList() {
     { id: "payment", header: "Payment", enableSorting: false, accessorFn: (row) => row.transactionId, cell: ({ row }) => <span className="block max-w-40 truncate whitespace-nowrap font-bold" title={row.original.transactionId}>{row.original.transactionId}</span> },
     { id: "customer", header: "Customer", enableSorting: false, accessorFn: (row) => row.customer.name, cell: ({ row }) => <div className="flex min-w-36 max-w-44 items-center gap-2"><CustomerAvatar name={row.original.customer.name} size="sm" className="size-7 text-[10px]" /><div className="min-w-0"><p className="truncate font-semibold leading-tight">{row.original.customer.name}</p><p className="text-xs text-[var(--admin-muted)]">{row.original.customer.reference}</p></div></div> },
     { id: "related", header: "Related to", enableSorting: false, accessorFn: (row) => row.booking.reference, cell: ({ row }) => <div className="whitespace-nowrap text-sm"><p>Booking {row.original.booking.reference}</p><p className="text-xs text-[var(--admin-muted)]">{row.original.booking.vehicleName}</p></div> },
-    { id: "amount", header: "Amount", accessorFn: (row) => row.amountMinor, cell: ({ row }) => <div><CurrencyAmount amount={row.original.amountMinor} currency={row.original.currency} /><p className="text-[11px] text-[var(--admin-muted)]">{row.original.currency}</p></div> },
+    { id: "amount", header: "Amount", accessorFn: (row) => row.amountMinor, cell: ({ row }) => <div><CurrencyAmount amount={row.original.amountMinor} currency={row.original.currency} />{row.original.refundedMinor > 0 ? <p className="text-[11px] text-[var(--admin-danger)]">−<CurrencyAmount amount={row.original.refundedMinor} currency={row.original.currency} /> refunded</p> : <p className="text-[11px] text-[var(--admin-muted)]">{row.original.currency}</p>}</div> },
+    { id: "method", header: "Method", enableSorting: false, accessorFn: (row) => row.method ?? "", cell: ({ row }) => <span className="block max-w-28 truncate text-xs">{row.original.method ?? "—"}</span> },
     { id: "provider", header: "Provider", enableSorting: false, accessorFn: (row) => row.provider, cell: ({ row }) => <span className="block max-w-32 truncate text-xs">{providerLabel(row.original.provider)}</span> },
-    { id: "status", header: "Status", enableSorting: false, accessorFn: (row) => row.status, cell: ({ row }) => <PaymentStatusBadge status={row.original.status} /> },
+    { id: "status", header: "Status", enableSorting: false, accessorFn: (row) => row.status, cell: ({ row }) => <PaymentStatusBadge status={badgeStatus(row.original)} /> },
     { id: "created", header: "Date / time", accessorFn: (row) => row.createdAt, cell: ({ row }) => <span className="whitespace-nowrap text-xs">{fmtShort(row.original.createdAt)}</span> },
   ];
   const data = rows.map((payment) => ({ ...payment, id: payment.transactionId }));
@@ -90,6 +92,7 @@ export function PaymentList() {
   const filterControls = (className?: string) => (
     <>
       <AdminSelect className={className} label="All statuses" value={params.status ?? all} onChange={(value) => state.setFilters({ status: value === all ? undefined : (value as PaymentStatus) })} options={[{ value: all, label: "All statuses" }, ...paymentStatuses.map((value) => ({ value, label: statusLabels[value] }))]} />
+      <AdminSelect className={className} label="All methods" value={params.method ?? all} onChange={(value) => state.setFilters({ method: value === all ? undefined : value })} options={[{ value: all, label: "All methods" }, ...(methods.data ?? []).map((value) => ({ value, label: value }))]} />
       <AdminSelect className={className} label="All currencies" value={params.currency ?? all} onChange={(value) => state.setFilters({ currency: value === all ? undefined : (value as PaymentCurrency) })} options={[{ value: all, label: "All currencies" }, { value: "USD", label: "USD" }, { value: "KHR", label: "KHR" }]} />
       <AdminSelect className={className} label="Any date" value={params.window ?? all} onChange={(value) => state.setFilters({ window: value === all ? undefined : (value as PaymentWindow) })} options={dateOptions} />
     </>

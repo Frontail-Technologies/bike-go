@@ -8,7 +8,7 @@ export const PAYMENT_PAGE_SIZE = 10;
 const sorts: readonly PaymentSort[] = ["newest", "oldest", "amount_desc", "amount_asc"];
 const windows: readonly PaymentWindow[] = ["7", "30", "90"];
 const currencies = ["USD", "KHR"] as const;
-type Filters = Pick<PaymentListParams, "q" | "status" | "currency" | "window" | "sort">;
+type Filters = Pick<PaymentListParams, "q" | "status" | "method" | "currency" | "window" | "sort">;
 
 const oneOf = <T extends string>(values: readonly T[], value: string | null) => values.find((item) => item === value);
 
@@ -25,6 +25,7 @@ export function usePaymentListState() {
       pageSize: PAYMENT_PAGE_SIZE,
       q: searchParams.get("q")?.trim() || undefined,
       status: oneOf(paymentStatuses, searchParams.get("status")),
+      method: searchParams.get("method") || undefined,
       currency: oneOf(currencies, searchParams.get("currency")),
       window: oneOf(windows, searchParams.get("window")),
       sort: oneOf(sorts, searchParams.get("sort")),
@@ -47,6 +48,6 @@ export function usePaymentListState() {
     setPage: (page: number) => write({ page }),
     /** Changing any filter or the sort returns to the first page. */
     setFilters: (filters: Partial<Filters>) => write({ ...filters, page: 1 }),
-    reset: () => write({ q: undefined, status: undefined, currency: undefined, window: undefined, page: 1 }),
+    reset: () => write({ q: undefined, status: undefined, method: undefined, currency: undefined, window: undefined, page: 1 }),
   };
 }

@@ -2,14 +2,19 @@
 export const paymentStatuses = ["pending", "paid", "failed"] as const;
 export type PaymentStatus = (typeof paymentStatuses)[number];
 
+export type RefundState = "none" | "partial" | "full";
 export type PaymentCurrency = "USD" | "KHR";
 
 export type Payment = {
   transactionId: string;
-  /** The payment provider that handled the attempt. The backend does not record a finer payment method. */
+  /** The payment provider key, for example `aba_payway`. */
   provider: string;
+  /** The payer's method exactly as the provider reports it (ABA Pay, KHQR, VISA …); null until reported. */
+  method: string | null;
   status: PaymentStatus;
+  refundState: RefundState;
   amountMinor: number;
+  refundedMinor: number;
   currency: PaymentCurrency;
   paidAt: string | null;
   createdAt: string;
@@ -31,8 +36,47 @@ export type Payment = {
   customer: { id: string; reference: string; name: string; phone: string | null; email: string | null };
 };
 
-/** The detail adds the provider's review note, when there is one. */
-export type PaymentDetail = Payment & { review: string | null };
+export type RefundStatus = "pending" | "completed" | "failed";
+
+export type PaymentRefund = {
+  id: string;
+  amountMinor: number;
+  currency: PaymentCurrency;
+  status: RefundStatus;
+  reason: string;
+  initiatedBy: string | null;
+  providerCode: string | null;
+  providerMessage: string | null;
+  createdAt: string;
+  completedAt: string | null;
+  failedAt: string | null;
+};
+
+export type ProviderOperation = { status: string; amountMinor: number | null; at: string | null; bankRef: string | null };
+
+export type PaymentDetail = Payment & {
+  review: string | null;
+  /** The provider's own status for the transaction, for example APPROVED. */
+  providerStatus: string | null;
+  approvalCode: string | null;
+  bankRef: string | null;
+  /** Masked by the provider and again by the backend. */
+  payerAccount: string | null;
+  bankName: string | null;
+  cardSource: string | null;
+  paidAmountMinor: number | null;
+  paidCurrency: PaymentCurrency | null;
+  providerCreatedAt: string | null;
+  failedAt: string | null;
+  detailsSyncedAt: string | null;
+  providerOperations: ProviderOperation[];
+  refundableMinor: number;
+  refundEligibility: { allowed: boolean; reason: string | null; windowEndsAt: string };
+  refunds: PaymentRefund[];
+};
+
+export type RefundInput = { amountMinor: number; reason: string; idempotencyKey: string };
+export type RefundResult = { refund: PaymentRefund; payment: PaymentDetail };
 
 export type PaymentSort = "newest" | "oldest" | "amount_desc" | "amount_asc";
 /** Date presets (days back); resolved to a date range when the request is sent. */
@@ -43,6 +87,7 @@ export type PaymentListParams = {
   pageSize: number;
   q?: string;
   status?: PaymentStatus;
+  method?: string;
   currency?: PaymentCurrency;
   window?: PaymentWindow;
   sort?: PaymentSort;
