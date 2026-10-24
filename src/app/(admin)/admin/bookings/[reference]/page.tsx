@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { BookingDetail } from "@/components/admin/bookings/booking-detail";
+import { BookingDetail } from "@/features/admin/bookings/components/booking-detail";
 import { AdminLoadingState } from "@/components/admin/feedback";
 
 export const instant = false;

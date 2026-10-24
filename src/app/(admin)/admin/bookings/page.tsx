@@ -1,5 +1,7 @@
-import { BookingList } from "@/components/admin/bookings/booking-list";
+import { Suspense } from "react";
+import { AdminLoadingState } from "@/components/admin/feedback";
+import { BookingList } from "@/features/admin/bookings/components/booking-list";
 
 export default function BookingsPage() {
-  return <BookingList />;
+  return <Suspense fallback={<AdminLoadingState label="Loading bookings…" />}><BookingList /></Suspense>;
 }

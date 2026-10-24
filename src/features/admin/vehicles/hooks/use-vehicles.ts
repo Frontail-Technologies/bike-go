@@ -23,7 +23,7 @@ export function useVehicleMutations() {
   return {
     create: useMutation({ mutationFn: (input: VehicleCreateInput) => vehiclesApi.create(input), onSuccess: invalidate }),
     update: useMutation({ mutationFn: ({ id, ...input }: { id: string } & VehicleUpdateInput) => vehiclesApi.update(id, input), onSuccess: invalidate }),
-    setStatus: useMutation({ mutationFn: ({ id, status }: { id: string; status: "available" | "inactive" }) => vehiclesApi.update(id, { status }), onSuccess: invalidate }),
+    setStatus: useMutation({ mutationFn: ({ id, status }: { id: string; status: "available" | "inactive" | "maintenance" }) => vehiclesApi.update(id, { status }), onSuccess: invalidate }),
   };
 }
 

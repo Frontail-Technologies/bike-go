@@ -1,5 +1,5 @@
 import type { MetricPoint, RevenueTrendPoint, StatusMetric } from "@/components/admin/data";
-import { type BookingStatus, bookingStatuses } from "@/components/admin/bookings/booking-data";
+import { bookingStatuses, type BookingStatus } from "@/features/admin/bookings/types/booking";
 import type { DashboardOverview, DashboardRange } from "../types/dashboard";
 
 export const rangeOptions: ReadonlyArray<{ value: DashboardRange; label: string }> = [

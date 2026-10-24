@@ -4,7 +4,7 @@ import { Button } from "@heroui/react";
 import { ArrowRightIcon, CalendarCheckIcon, CheckCircleIcon, ClockIcon, CreditCardIcon, EnvelopeSimpleIcon, HandCoinsIcon, MapPinIcon, PhoneIcon, ReceiptIcon, XCircleIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
-import { fmtDateTime as bookingDateTime } from "@/components/admin/bookings/booking-data";
+import { fmtDateTime as bookingDateTime } from "@/components/admin/payments/payment-booking-mock";
 import { CustomerAvatar } from "@/components/admin/customers/customer-avatar";
 import { ActivityTimeline, type ActivityItem } from "@/components/admin/data-display/misc";
 import { AdminErrorState } from "@/components/admin/feedback";

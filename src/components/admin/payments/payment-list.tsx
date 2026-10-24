@@ -5,7 +5,7 @@ import { ArrowCounterClockwiseIcon, GridFourIcon, ListIcon, SlidersHorizontalIco
 import type { ColumnDef } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
 import { startTransition, useEffect, useMemo, useState } from "react";
-import { paymentLabels, paymentStatuses } from "@/components/admin/bookings/booking-data";
+import { paymentLabels, paymentStatuses } from "@/components/admin/payments/payment-booking-mock";
 import { AdminPagination, AdminSearch, AdminSelect, ViewToggle } from "@/components/admin/controls";
 import { CustomerAvatar } from "@/components/admin/customers/customer-avatar";
 import { AdminDataTable } from "@/components/admin/data-display/admin-data-table";
