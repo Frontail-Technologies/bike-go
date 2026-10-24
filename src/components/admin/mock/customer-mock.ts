@@ -1,6 +1,6 @@
 import { adminLocations, adminVehicles } from "@/components/admin/data";
 import type { AdminStatus } from "@/components/admin/data-display/status-badge";
-import { documentTypes, type LoanCurrency, type LoanStatus, loanTypes } from "@/components/admin/loans/loan-types";
+import { documentTypes, type LoanCurrency, type LoanStatus, loanTypes } from "@/components/admin/mock/loan-types";
 
 export type CustomerStatus = Extract<AdminStatus, "active" | "inactive">;
 

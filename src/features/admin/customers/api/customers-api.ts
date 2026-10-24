@@ -1,6 +1,6 @@
 import type { Booking } from "@/features/admin/bookings/types/booking";
 import { apiClient } from "@/lib/api/client";
-import type { Customer, CustomerActivity, CustomerDocument, CustomerListMeta, CustomerListParams, CustomerLoan, CustomerStats, CustomerSummary, CustomerUpdateInput, DocumentReviewInput, JoinedWindow, PageParams } from "../types/customer";
+import type { Customer, CustomerActivity, CustomerDocument, CustomerListMeta, CustomerListParams, CustomerLoan, CustomerStats, CustomerSummary, CustomerUpdateInput, JoinedWindow, PageParams } from "../types/customer";
 
 type Envelope<T> = { data: T; meta: Record<string, unknown> };
 const page = async <T>(path: string, params: object) => {
@@ -16,9 +16,6 @@ function toQuery({ joined, ...params }: CustomerListParams) {
   return { ...params, ...(joined ? { joinedFrom: joinedFrom(joined) } : {}) };
 }
 
-/** Where the browser can open a staff-only document download. */
-export const documentDownloadUrl = (fileUrl: string) => new URL(fileUrl, apiClient.defaults.baseURL).toString();
-
 export const customersApi = {
   list: (params: CustomerListParams) => page<CustomerSummary>("/admin/customers", toQuery(params)),
   stats: () => apiClient.get<Envelope<CustomerStats>>("/admin/customers/stats").then((response) => response.data.data),
@@ -28,6 +25,5 @@ export const customersApi = {
   // The shared admin lists, scoped to one customer.
   bookings: (id: string, params: PageParams) => page<Booking>("/admin/bookings", { ...params, customerId: id, sort: "newest" }),
   loans: (id: string, params: PageParams) => page<CustomerLoan>("/admin/loans", { ...params, customerId: id }),
-  documents: (id: string, params: PageParams) => page<CustomerDocument>("/admin/documents", { ...params, customerId: id }),
-  reviewDocument: (loanReference: string, documentId: string, input: DocumentReviewInput) => apiClient.patch(`/admin/loans/${loanReference}/documents/${documentId}/review`, input).then((response) => response.data),
+  documents: (id: string, params: PageParams) => page<CustomerDocument>("/admin/documents", { ...params, customerId: id })
 };

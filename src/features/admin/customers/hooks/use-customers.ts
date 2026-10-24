@@ -3,7 +3,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { customersApi } from "../api/customers-api";
 import { adminCustomerQueryKeys } from "../query-keys";
-import type { CustomerListParams, CustomerUpdateInput, DocumentReviewInput, PageParams } from "../types/customer";
+import type { CustomerListParams, CustomerUpdateInput, PageParams } from "../types/customer";
 
 export function useCustomersQuery(params: CustomerListParams) {
   return useQuery({ queryKey: adminCustomerQueryKeys.list(params), queryFn: () => customersApi.list(params), placeholderData: keepPreviousData });
@@ -49,10 +49,6 @@ export function useCustomerMutations() {
         client.setQueryData(adminCustomerQueryKeys.detail(customer.id), customer);
         void refresh();
       },
-    }),
-    reviewDocument: useMutation({
-      mutationFn: ({ loanReference, documentId, ...input }: { loanReference: string; documentId: string } & DocumentReviewInput) => customersApi.reviewDocument(loanReference, documentId, input),
-      onSuccess: refresh,
     }),
   };
 }

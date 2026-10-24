@@ -1,4 +1,4 @@
-import { type Customer, customers } from "@/components/admin/customers/customer-data";
+import { type Customer, customers } from "@/components/admin/mock/customer-mock";
 import { type DocumentType, documentTypes, type LoanCurrency, type LoanStatus, type LoanType } from "./loan-types";
 
 export { type DocumentType, documentTypes };
@@ -74,5 +74,17 @@ export const canRequestDocuments = (status: LoanStatus) => status === "submitted
 export const canApprove = (status: LoanStatus) => status === "eligibility-review";
 export const canReject = (status: LoanStatus) => ["submitted", "documents-review", "action-required", "eligibility-review"].includes(status);
 export const isOpenForReview = (status: LoanStatus) => !["draft", "approved", "rejected"].includes(status);
+
+const reviewTransitions: Record<LoanStatus, LoanStatus[]> = {
+  draft: ["submitted"],
+  submitted: ["documents-review"],
+  "documents-review": ["eligibility-review"],
+  "action-required": ["documents-review"],
+  "eligibility-review": [],
+  approved: [],
+  rejected: [],
+};
+
+export const nextReviewStatuses = (status: LoanStatus) => reviewTransitions[status];
 
 export const rejectionReasons = ["Income does not meet the minimum requirement", "Documents could not be verified", "Incomplete or inconsistent information", "Residency status not eligible", "Other"] as const;

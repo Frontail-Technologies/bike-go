@@ -66,6 +66,4 @@ export type CustomerDocument = {
   fileUrl: string;
 };
 
-export type DocumentReviewInput = { verificationStatus: "verified" | "needs_review" | "rejected"; note?: string };
-
 export type CustomerActivity = { id: string; kind: "account" | "booking" | "loan" | "document"; title: string; detail: string | null; reference: string | null; at: string };

@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, Button, FieldError, Label, ListBox, Modal, Select, TextArea, TextField, useOverlayState } from "@heroui/react";
+import { Button, useOverlayState } from "@heroui/react";
 import { ArrowRightIcon, CakeIcon, CalendarCheckIcon, CalendarDotsIcon, ClockIcon, DownloadSimpleIcon, EnvelopeSimpleIcon, EyeIcon, FileTextIcon, FlagIcon, HandCoinsIcon, HouseLineIcon, MapPinIcon, NotePencilIcon, PaperPlaneTiltIcon, PhoneIcon, SealCheckIcon, ShieldCheckIcon, UserCircleIcon, UserPlusIcon, WalletIcon } from "@phosphor-icons/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
@@ -19,12 +19,12 @@ import { AdminBreadcrumbs, AdminTabs } from "@/components/admin/navigation";
 import { VehiclePhoto } from "@/components/admin/vehicles/vehicle-photo";
 import { fmtShort, vehiclePhoto } from "@/features/admin/bookings/lib/booking-model";
 import type { Booking } from "@/features/admin/bookings/types/booking";
-import { toast } from "@/components/ui/toast";
 import { ApiError } from "@/lib/api/error";
 import { cn } from "@/lib/cn";
-import { documentDownloadUrl } from "../api/customers-api";
-import { useCustomerActivityQuery, useCustomerBookingsQuery, useCustomerDocumentsQuery, useCustomerLoansQuery, useCustomerMutations, useCustomerQuery } from "../hooks/use-customers";
-import { asBookingStatus, documentBadge, loanBadge, monthsSince, titleCase } from "../lib/customer-model";
+import { documentFileUrl } from "@/features/admin/documents/api/documents-api";
+import { toLoanBadge, toVerificationBadge } from "@/features/admin/loans/lib/loan-model";
+import { useCustomerActivityQuery, useCustomerBookingsQuery, useCustomerDocumentsQuery, useCustomerLoansQuery, useCustomerQuery } from "../hooks/use-customers";
+import { asBookingStatus, monthsSince, titleCase } from "../lib/customer-model";
 import type { Customer, CustomerDocument, CustomerLoan } from "../types/customer";
 import { CustomerEditDrawer } from "./customer-edit-drawer";
 
@@ -64,7 +64,7 @@ function ViewAll({ label, onPress }: { label: string; onPress: () => void }) {
   return <Button size="sm" variant="ghost" className="min-h-11 text-[var(--admin-info)] md:min-h-9" onPress={onPress}>{label}<ArrowRightIcon size={14} /></Button>;
 }
 
-const LoanStatus = ({ status }: { status: string }) => { const badge = loanBadge(status); return <AdminStatusBadge status={badge.status} label={badge.label} />; };
+const LoanStatus = ({ status }: { status: string }) => { const badge = toLoanBadge(status); return <AdminStatusBadge status={badge.status} label={badge.label} />; };
 
 function BookingsTab({ customerId, onOpen }: { customerId: string; onOpen: (booking: Booking) => void }) {
   const [page, setPage] = useState(1);
@@ -89,6 +89,7 @@ function BookingsTab({ customerId, onOpen }: { customerId: string; onOpen: (book
 }
 
 function LoansTab({ customerId }: { customerId: string }) {
+  const router = useRouter();
   const [page, setPage] = useState(1);
   const query = useCustomerLoansQuery(customerId, { page, pageSize: TAB_PAGE_SIZE });
   const columns: ColumnDef<CustomerLoan & { id: string }>[] = [
@@ -102,91 +103,28 @@ function LoansTab({ customerId }: { customerId: string }) {
   ];
   const data = (query.data?.data ?? []).map((row) => ({ ...row, id: row.reference }));
   if (query.isError && !query.data) return <AdminErrorState title="Couldn’t load loan applications" description={query.error instanceof ApiError ? query.error.message : "Try again in a moment."} onRetry={() => void query.refetch()} />;
-  return <ContentSection><AdminDataTable label="Customer loan applications" columns={columns} data={data} loading={query.isLoading} pagination={{ page, pageSize: TAB_PAGE_SIZE, total: query.data?.meta.total ?? 0, onPageChange: setPage }} minWidth={820} emptyState="This customer has no loan applications." /></ContentSection>;
-}
-
-const reviewOptions = [
-  { value: "verified", label: "Verified" },
-  { value: "needs_review", label: "Needs review" },
-  { value: "rejected", label: "Rejected" },
-] as const;
-
-function ReviewForm({ document, onClose }: { document: CustomerDocument; onClose: () => void }) {
-  const mutations = useCustomerMutations();
-  const [status, setStatus] = useState<(typeof reviewOptions)[number]["value"]>(document.verificationStatus === "verified" || document.verificationStatus === "rejected" ? document.verificationStatus : "verified");
-  const [note, setNote] = useState(document.reviewNote ?? "");
-  const [noteError, setNoteError] = useState("");
-  const [error, setError] = useState("");
-  const noteRequired = status !== "verified";
-
-  async function submit() {
-    if (noteRequired && !note.trim()) { setNoteError("A note is required — the customer sees it."); return; }
-    setError("");
-    try {
-      await mutations.reviewDocument.mutateAsync({ loanReference: document.loan.reference, documentId: document.id, verificationStatus: status, ...(note.trim() ? { note: note.trim() } : {}) });
-      toast.success(`${titleCase(document.type)} marked ${titleCase(status).toLowerCase()}`);
-      onClose();
-    } catch (failure) {
-      setError(failure instanceof ApiError ? failure.message : "Something went wrong. Try again.");
-    }
-  }
-
-  return (
-    <>
-      <Modal.Body className="space-y-4">
-        <p className="text-sm text-[var(--admin-muted)]">{titleCase(document.type)} · loan {document.loan.reference} · {document.originalFilename}</p>
-        <Select value={status} onChange={(key) => { if (key !== null) { setStatus(String(key) as typeof status); setNoteError(""); } }}>
-          <Label>Verification</Label>
-          <Select.Trigger className="min-h-11"><Select.Value /><Select.Indicator /></Select.Trigger>
-          <Select.Popover className="adminOverlay"><ListBox>{reviewOptions.map((option) => <ListBox.Item key={option.value} id={option.value} textValue={option.label}>{option.label}<ListBox.ItemIndicator /></ListBox.Item>)}</ListBox></Select.Popover>
-        </Select>
-        <TextField value={note} onChange={(value) => { setNote(value.slice(0, 500)); setNoteError(""); }} isInvalid={Boolean(noteError)} isRequired={noteRequired}>
-          <Label>Note{noteRequired ? "" : " (optional)"}</Label>
-          <TextArea rows={3} placeholder="Shown to the applicant when the document needs review or is rejected." />
-          <FieldError>{noteError}</FieldError>
-        </TextField>
-        {error ? <Alert status="danger"><Alert.Indicator /><Alert.Content><Alert.Title>Review was not saved</Alert.Title><Alert.Description>{error}</Alert.Description></Alert.Content></Alert> : null}
-      </Modal.Body>
-      <Modal.Footer className="flex justify-end gap-2">
-        <Button variant="tertiary" className="min-h-11" onPress={onClose}>Cancel</Button>
-        <Button variant="primary" className="min-h-11" isPending={mutations.reviewDocument.isPending} onPress={() => void submit()}>Save review</Button>
-      </Modal.Footer>
-    </>
-  );
+  return <ContentSection><AdminDataTable label="Customer loan applications" columns={columns} data={data} loading={query.isLoading} pagination={{ page, pageSize: TAB_PAGE_SIZE, total: query.data?.meta.total ?? 0, onPageChange: setPage }} minWidth={820} emptyState="This customer has no loan applications." onRowNavigate={(loan) => router.push(`/admin/loans/${loan.reference}`)} rowActions={(loan) => <Button size="sm" variant="outline" className="min-h-11 md:min-h-8" onPress={() => router.push(`/admin/loans/${loan.reference}`)}>Review Loan</Button>} /></ContentSection>;
 }
 
 function DocumentsTab({ customerId }: { customerId: string }) {
+  const router = useRouter();
   const [page, setPage] = useState(1);
-  const [reviewing, setReviewing] = useState<CustomerDocument | null>(null);
   const query = useCustomerDocumentsQuery(customerId, { page, pageSize: TAB_PAGE_SIZE });
   const columns: ColumnDef<CustomerDocument>[] = [
     { id: "type", header: "Document", enableSorting: false, accessorFn: (row) => row.type, cell: ({ row }) => <span className="inline-flex items-center gap-2 font-semibold"><FileTextIcon size={16} className="text-[var(--admin-muted)]" aria-hidden />{titleCase(row.original.type)}</span> },
     { id: "filename", header: "File", enableSorting: false, accessorFn: (row) => row.originalFilename, cell: ({ row }) => <span className="block max-w-56 truncate">{row.original.originalFilename}</span> },
     { id: "loan", header: "Loan reference", enableSorting: false, accessorFn: (row) => row.loan.reference },
     { id: "uploaded", header: "Uploaded", enableSorting: false, accessorFn: (row) => row.uploadedAt, cell: ({ row }) => <span className="whitespace-nowrap">{dateTime(row.original.uploadedAt)}</span> },
-    { id: "status", header: "Verification", enableSorting: false, accessorFn: (row) => row.verificationStatus, cell: ({ row }) => { const badge = documentBadge(row.original.verificationStatus); return <AdminStatusBadge status={badge.status} label={badge.label} />; } },
+    { id: "status", header: "Verification", enableSorting: false, accessorFn: (row) => row.verificationStatus, cell: ({ row }) => { const badge = toVerificationBadge(row.original.verificationStatus); return <AdminStatusBadge status={badge.status} label={badge.label} />; } },
   ];
   if (query.isError && !query.data) return <AdminErrorState title="Couldn’t load documents" description={query.error instanceof ApiError ? query.error.message : "Try again in a moment."} onRetry={() => void query.refetch()} />;
   const actions = (doc: CustomerDocument) => (
     <div className="flex justify-end gap-1.5">
-      <a href={documentDownloadUrl(doc.fileUrl)} target="_blank" rel="noopener noreferrer" aria-label={`Open ${doc.originalFilename}`} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-bold text-[var(--admin-info)] outline-none hover:bg-[var(--admin-surface-muted)] focus-visible:ring-2 focus-visible:ring-[var(--admin-accent-strong)] md:min-h-8"><DownloadSimpleIcon size={15} />Open</a>
-      <Button size="sm" variant="outline" className="min-h-11 md:min-h-8" onPress={() => setReviewing(doc)}><SealCheckIcon size={15} />Review</Button>
+      <a href={documentFileUrl(doc.fileUrl)} target="_blank" rel="noopener noreferrer" aria-label={`Open ${doc.originalFilename}`} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-bold text-[var(--admin-info)] outline-none hover:bg-[var(--admin-surface-muted)] focus-visible:ring-2 focus-visible:ring-[var(--admin-accent-strong)] md:min-h-8"><DownloadSimpleIcon size={15} />Open</a>
+      <Button size="sm" variant="outline" className="min-h-11 md:min-h-8" onPress={() => router.push(`/admin/documents/${doc.id}`)}><SealCheckIcon size={15} />Review</Button>
     </div>
   );
-  return (
-    <>
-      <ContentSection><AdminDataTable label="Customer documents" columns={columns} data={query.data?.data ?? []} loading={query.isLoading} pagination={{ page, pageSize: TAB_PAGE_SIZE, total: query.data?.meta.total ?? 0, onPageChange: setPage }} minWidth={860} emptyState="No loan documents have been uploaded." rowActions={actions} /></ContentSection>
-      <Modal.Backdrop isOpen={Boolean(reviewing)} onOpenChange={(open) => !open && setReviewing(null)} className="adminOverlay">
-        <Modal.Container size="md">
-          <Modal.Dialog aria-label="Review document">
-            <Modal.CloseTrigger />
-            <Modal.Header><Modal.Heading>Review document</Modal.Heading></Modal.Header>
-            {reviewing ? <ReviewForm key={reviewing.id} document={reviewing} onClose={() => setReviewing(null)} /> : null}
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
-    </>
-  );
+  return <ContentSection><AdminDataTable label="Customer documents" columns={columns} data={query.data?.data ?? []} loading={query.isLoading} pagination={{ page, pageSize: TAB_PAGE_SIZE, total: query.data?.meta.total ?? 0, onPageChange: setPage }} minWidth={860} emptyState="No loan documents have been uploaded." onRowNavigate={(doc) => router.push(`/admin/documents/${doc.id}`)} rowActions={actions} /></ContentSection>;
 }
 
 const activityIcon = { account: <UserPlusIcon size={16} />, booking: <CalendarCheckIcon size={16} />, loan: <HandCoinsIcon size={16} />, document: <FileTextIcon size={16} /> } as const;
@@ -280,7 +218,7 @@ function CustomerWorkspace({ customer }: { customer: Customer }) {
         <AdminDataTable label="Recent bookings" columns={recentBookingColumns} data={customer.recentBookings.map((row) => ({ ...row, id: row.reference }))} showPagination={false} minWidth={620} emptyState="This customer has no bookings." onRowNavigate={openBooking} />
       </Panel>
       <Panel title="Recent Loan Applications" action={<ViewAll label="View all" onPress={() => setTab("loans")} />} flush>
-        <AdminDataTable label="Recent loan applications" columns={recentLoanColumns} data={customer.recentLoans.map((row) => ({ ...row, id: row.reference }))} showPagination={false} minWidth={560} emptyState="This customer has no loan applications." />
+        <AdminDataTable label="Recent loan applications" columns={recentLoanColumns} data={customer.recentLoans.map((row) => ({ ...row, id: row.reference }))} showPagination={false} minWidth={560} emptyState="This customer has no loan applications." onRowNavigate={(loan) => router.push(`/admin/loans/${loan.reference}`)} />
       </Panel>
     </div>
   );

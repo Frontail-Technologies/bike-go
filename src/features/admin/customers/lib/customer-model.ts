@@ -1,32 +1,8 @@
-import type { AdminStatus } from "@/components/admin/data-display/status-badge";
 import { bookingStatuses, type BookingStatus } from "@/features/admin/bookings/types/booking";
 import type { CustomerEditValues } from "../schemas/customer-schemas";
 import type { Customer, CustomerUpdateInput } from "../types/customer";
 
 export const titleCase = (value: string) => value.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
-
-export const loanBadge = (status: string): { status: AdminStatus; label: string } => {
-  const map: Record<string, { status: AdminStatus; label: string }> = {
-    draft: { status: "draft", label: "Draft" },
-    submitted: { status: "submitted", label: "Submitted" },
-    documents_under_review: { status: "under-review", label: "Documents under review" },
-    additional_documents_required: { status: "action-required", label: "Additional documents required" },
-    eligibility_review: { status: "eligibility", label: "Eligibility review" },
-    approved: { status: "approved", label: "Approved" },
-    rejected: { status: "rejected", label: "Rejected" },
-  };
-  return map[status] ?? { status: "pending", label: titleCase(status) };
-};
-
-export const documentBadge = (status: string): { status: AdminStatus; label: string } => {
-  const map: Record<string, { status: AdminStatus; label: string }> = {
-    uploaded: { status: "submitted", label: "Uploaded" },
-    verified: { status: "verified", label: "Verified" },
-    needs_review: { status: "needs-review", label: "Needs review" },
-    rejected: { status: "rejected", label: "Rejected" },
-  };
-  return map[status] ?? { status: "pending", label: titleCase(status) };
-};
 
 export const asBookingStatus = (status: string): BookingStatus => ((bookingStatuses as readonly string[]).includes(status) ? (status as BookingStatus) : "pending");
 

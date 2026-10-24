@@ -1,7 +1,7 @@
 import { bookings, money } from "@/components/admin/payments/payment-booking-mock";
-import { loans } from "@/components/admin/loans/loan-data";
+import { loans } from "@/components/admin/mock/loan-mock";
 import type { Booking, PaymentStatus } from "@/components/admin/payments/payment-booking-mock";
-import type { Loan } from "@/components/admin/loans/loan-data";
+import type { Loan } from "@/components/admin/mock/loan-mock";
 import type { CurrencyCode } from "@/components/admin/money";
 import { customers } from "@/components/admin/mock/customer-mock";
 

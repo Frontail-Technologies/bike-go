@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { AdminLoadingState } from "@/components/admin/feedback";
-import { LoanDetail } from "@/components/admin/loans/loan-detail";
+import { LoanDetail } from "@/features/admin/loans/components/loan-detail";
 
 export const instant = false;
 
