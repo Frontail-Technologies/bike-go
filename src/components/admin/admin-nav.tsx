@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { adminNavigation } from "@/components/admin/config";
 import { cn } from "@/lib/cn";
+import { useAdminSessionQuery } from "@/features/admin/auth/hooks/use-admin-session-query";
 
 export const adminNav = adminNavigation;
 const highFrequencyRoutes = new Set(["/admin", "/admin/vehicles", "/admin/bookings", "/admin/customers", "/admin/loans", "/admin/documents"]);
@@ -19,11 +20,12 @@ export function AdminNavList({
   collapsed = false,
   onNavigate,
 }: AdminNavListProps) {
+  const session = useAdminSessionQuery();
   const [navigationIntent, setNavigationIntent] = useState<{ href: string; from: string } | null>(null);
   const effectiveHref = navigationIntent?.from === activeHref ? navigationIntent.href : activeHref;
   return (
     <ul className="flex flex-col gap-1">
-      {adminNavigation.map(({ href, label, Icon }) => {
+      {adminNavigation.filter((item) => !item.superAdminOnly || session.data?.role === "super_admin").map(({ href, label, Icon }) => {
         const active = href === "/admin" ? effectiveHref === href : effectiveHref.startsWith(href);
         return (
           <li key={href}>

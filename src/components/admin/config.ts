@@ -9,6 +9,7 @@ import {
   ImagesSquareIcon,
   SquaresFourIcon,
   UsersIcon,
+  UserGearIcon,
 } from "@phosphor-icons/react";
 
 export const adminCopy = {
@@ -25,6 +26,7 @@ export const adminNavigation = [
   { href: "/admin/banners", label: "Banners", Icon: ImagesSquareIcon },
   { href: "/admin/bookings", label: "Bookings", Icon: CalendarCheckIcon },
   { href: "/admin/customers", label: "Customers", Icon: UsersIcon },
+  { href: "/admin/admins", label: "Admin Users", Icon: UserGearIcon, superAdminOnly: true },
   { href: "/admin/loans", label: "Loan Applications", Icon: HandCoinsIcon },
   { href: "/admin/documents", label: "Documents", Icon: FileTextIcon },
   { href: "/admin/payments", label: "Payments", Icon: CreditCardIcon },
