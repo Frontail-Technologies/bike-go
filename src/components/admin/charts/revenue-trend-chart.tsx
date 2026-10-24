@@ -25,7 +25,7 @@ export function RevenueTrendChart({ data }: { data: RevenueTrendPoint[] }) {
           <AreaChart data={data} accessibilityLayer margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
             <defs><linearGradient id="booked-usd" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="var(--admin-accent-strong)" stopOpacity={0.28} /><stop offset="95%" stopColor="var(--admin-accent-strong)" stopOpacity={0} /></linearGradient></defs>
             <CartesianGrid stroke="var(--admin-border)" strokeDasharray="3 3" vertical={false} />
-            <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: "var(--admin-muted)", fontSize: 11 }} />
+            <XAxis dataKey="label" minTickGap={24} axisLine={false} tickLine={false} tick={{ fill: "var(--admin-muted)", fontSize: 11 }} />
             <YAxis axisLine={false} tickLine={false} tick={{ fill: "var(--admin-muted)", fontSize: 11 }} tickFormatter={(value) => formatAxisMoney(Number(value))} width={68} />
             <Tooltip content={({ active, payload, label }) => <AdminChartTooltip active={active} payload={payload} label={label} formatter={(value) => formatMoney(value)} />} />
             <Area type="monotone" dataKey="bookedMinor" name="Booked" stroke="var(--admin-accent-strong)" fill="url(#booked-usd)" strokeWidth={2.5} animationDuration={450} isAnimationActive={!reduceMotion} />
