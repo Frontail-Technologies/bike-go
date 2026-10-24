@@ -3,6 +3,7 @@
 import { Avatar, Button, Dropdown, SearchField, Tooltip } from "@heroui/react";
 import { BellIcon, CaretDownIcon } from "@phosphor-icons/react";
 import { adminCopy } from "@/components/admin/config";
+import { useAdminLogout } from "@/features/admin/auth/hooks/use-admin-logout";
 
 export function NotificationsButton({ className }: { className?: string }) {
   return (
@@ -17,6 +18,8 @@ export function NotificationsButton({ className }: { className?: string }) {
 }
 
 export function ProfileMenu({ compact = false }: { compact?: boolean }) {
+  const logout = useAdminLogout();
+
   return (
     <Dropdown>
       <Dropdown.Trigger className="flex h-11 items-center gap-2.5 rounded-xl px-1.5 outline-none transition-colors hover:bg-[var(--admin-surface-muted)] focus-visible:ring-2 focus-visible:ring-[var(--admin-accent-strong)]" aria-label="Open profile menu">
@@ -30,10 +33,15 @@ export function ProfileMenu({ compact = false }: { compact?: boolean }) {
         {compact ? null : <CaretDownIcon size={13} className="hidden text-[var(--admin-muted)] xl:block" aria-hidden />}
       </Dropdown.Trigger>
       <Dropdown.Popover className="adminOverlay">
-        <Dropdown.Menu aria-label="Profile actions">
+        <Dropdown.Menu
+          aria-label="Profile actions"
+          onAction={(key) => {
+            if (key === "sign-out") logout.mutate();
+          }}
+        >
           <Dropdown.Item id="profile">Profile</Dropdown.Item>
           <Dropdown.Item id="preferences">Preferences</Dropdown.Item>
-          <Dropdown.Item id="sign-out">Sign out</Dropdown.Item>
+          <Dropdown.Item id="sign-out" variant="danger" isDisabled={logout.isPending}>Sign out</Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown.Popover>
     </Dropdown>
