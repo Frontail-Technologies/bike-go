@@ -48,17 +48,13 @@ export function AdminRouteBoundary({ children }: { children: React.ReactNode }) 
     if (session.data.mustChangePassword) router.replace("/admin/change-password");
   }, [isLogin, isPasswordChange, router, session.data, session.error, session.isPending]);
 
-  if (isLogin) return <>{children}</>;
+  if (isLogin || isPasswordChange) return <>{children}</>;
 
-  if (session.isPending || !session.data) {
-    return <div data-admin-ui className="min-h-dvh bg-[var(--admin-workspace)]" />;
-  }
+  const blank = <div data-admin-ui className="min-h-dvh bg-[var(--admin-workspace)]" />;
+  if (!session.isPending && !session.data) return blank;
+  if (session.data?.mustChangePassword) return blank;
 
-  if (isPasswordChange) return <>{children}</>;
-
-  if (session.data.mustChangePassword) {
-    return <div data-admin-ui className="min-h-dvh bg-[var(--admin-workspace)]" />;
-  }
-
+  // The shell and the page render while the session resolves, so the route segment is always part of the tree
+  // and the shell never remounts. The API enforces access; an unauthenticated visitor is redirected above.
   return <AdminShell>{children}</AdminShell>;
 }

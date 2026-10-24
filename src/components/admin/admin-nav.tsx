@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { adminNavigation } from "@/components/admin/config";
 import { cn } from "@/lib/cn";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { useAdminSessionQuery } from "@/features/admin/auth/hooks/use-admin-session-query";
 
 export const adminNav = adminNavigation;
@@ -21,11 +22,12 @@ export function AdminNavList({
   onNavigate,
 }: AdminNavListProps) {
   const session = useAdminSessionQuery();
+  const hydrated = useHydrated();
   const [navigationIntent, setNavigationIntent] = useState<{ href: string; from: string } | null>(null);
   const effectiveHref = navigationIntent?.from === activeHref ? navigationIntent.href : activeHref;
   return (
     <ul className="flex flex-col gap-1">
-      {adminNavigation.filter((item) => !item.superAdminOnly || session.data?.role === "super_admin").map(({ href, label, Icon }) => {
+      {adminNavigation.filter((item) => !item.superAdminOnly || hydrated && session.data?.role === "super_admin").map(({ href, label, Icon }) => {
         const active = href === "/admin" ? effectiveHref === href : effectiveHref.startsWith(href);
         return (
           <li key={href}>
