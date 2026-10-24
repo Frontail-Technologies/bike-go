@@ -19,6 +19,10 @@ export type Payment = {
     bookingStatus: string;
     paymentStatus: string;
     vehicleName: string;
+    vehicleId: string;
+    vehicleType: "motorcycle" | "scooter" | "car" | "other";
+    /** The vehicle's primary image address; never a storage key. */
+    vehicleImage: { url: string | null; altText: string | null } | null;
     pickupAt: string;
     returnAt: string;
     pickupLocation: { name: string; city: string };
