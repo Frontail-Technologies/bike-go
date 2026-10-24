@@ -4,7 +4,7 @@ import { Suspense, useEffect } from "react";
 import "@/components/admin/admin-theme.module.css";
 import { AdminHeader } from "@/components/admin/shell/admin-header";
 import { AdminMobileBar, AdminSidebar } from "@/components/admin/shell/admin-sidebar";
-import { useAdminShellStore } from "@/stores/admin-shell-store";
+import { useAdminShellStore } from "@/stores/admin/shell-store";
 
 /** Admin layout foundation: collapsible sidebar on `lg+`, drawer bar below. */
 export function AdminShell({ children }: { children: React.ReactNode }) {
