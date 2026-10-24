@@ -3,8 +3,9 @@
 import { Button } from "@heroui/react";
 import { CalendarBlankIcon, EyeIcon, NotePencilIcon, SortAscendingIcon } from "@phosphor-icons/react";
 import { AdminStatusBadge } from "@/components/admin/data-display/status-badge";
+import { formatSchedule } from "../lib/banner-model";
+import type { Banner } from "../types/banner";
 import { BannerImage } from "./banner-image";
-import { type Banner, effectiveStatus, formatSchedule } from "./banner-data";
 import { BannerActions, type BannerHandlers, PlacementBadge } from "./banner-parts";
 
 export function AdminBannerCard({ banner, handlers }: { banner: Banner; handlers: BannerHandlers }) {
@@ -21,16 +22,16 @@ export function AdminBannerCard({ banner, handlers }: { banner: Banner; handlers
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h3 className="truncate text-[15px] font-extrabold leading-tight">{banner.title}</h3>
-            <p className="mt-0.5 truncate text-xs text-[var(--admin-muted)]">{banner.subtitle}</p>
+            <p className="mt-0.5 truncate text-xs text-[var(--admin-muted)]">{banner.subtitle ?? ""}</p>
           </div>
-          <AdminStatusBadge status={effectiveStatus(banner)} />
+          <AdminStatusBadge status={banner.effectiveStatus} />
         </div>
         <ul className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-[var(--admin-muted)]">
           <li className="inline-flex items-center gap-1.5"><CalendarBlankIcon size={14} aria-hidden />{formatSchedule(banner)}</li>
           <li className="inline-flex items-center gap-1.5"><SortAscendingIcon size={14} aria-hidden />Order {banner.displayOrder}</li>
         </ul>
         <div className="mt-auto flex items-center justify-between gap-2 border-t border-[var(--admin-border)] pt-3">
-          <span className="adminTile truncate rounded-lg px-2.5 py-1 text-xs font-semibold" title={banner.ctaUrl}>{banner.ctaLabel}</span>
+          <span className="adminTile truncate rounded-lg px-2.5 py-1 text-xs font-semibold" title={banner.ctaUrl ?? undefined}>{banner.ctaLabel ?? "No button"}</span>
           <div className="flex shrink-0 gap-1.5">
             <Button size="sm" variant="ghost" className="min-h-11 md:min-h-9" onPress={() => handlers.onPreview(banner)}><EyeIcon size={15} />Preview</Button>
             <Button size="sm" variant="outline" className="min-h-11 md:min-h-9" onPress={() => handlers.onEdit(banner)}><NotePencilIcon size={15} />Edit</Button>

@@ -5,20 +5,21 @@ import { useState } from "react";
 import { ViewToggle } from "@/components/admin/controls";
 import { AdminStatusBadge } from "@/components/admin/data-display/status-badge";
 import { cn } from "@/lib/cn";
+import { formatSchedule, placementMeta } from "../lib/banner-model";
+import { placements, type Banner, type BannerPlacement } from "../types/banner";
 import { BannerImage } from "./banner-image";
-import { type Banner, type BannerPlacement, effectiveStatus, formatSchedule, placementMeta, placements } from "./banner-data";
 import { PlacementBadge } from "./banner-parts";
 
 function Cta({ banner, className }: { banner: Banner; className?: string }) {
-  return <span className={cn("inline-flex min-h-8 items-center rounded-lg bg-[#111820] px-3 text-xs font-bold text-white", className)}>{banner.ctaLabel}</span>;
+  return <span className={cn("inline-flex min-h-8 items-center rounded-lg bg-[#111820] px-3 text-xs font-bold text-white", className)}>{banner.ctaLabel ?? ""}</span>;
 }
 
 function Frame({ placement, banner }: { placement: BannerPlacement; banner: Banner }) {
   const text = (
     <div className="absolute inset-y-0 left-0 flex w-3/5 flex-col justify-center gap-1.5 bg-gradient-to-r from-[#08131b]/85 via-[#08131b]/45 to-transparent p-4 text-white sm:p-6">
       <p className="text-base font-extrabold leading-tight sm:text-2xl">{banner.title}</p>
-      <p className="text-xs text-white/80 sm:text-sm">{banner.subtitle}</p>
-      <Cta banner={banner} className="mt-1 w-fit bg-[var(--admin-accent)] text-[#111820]" />
+      {banner.subtitle ? <p className="text-xs text-white/80 sm:text-sm">{banner.subtitle}</p> : null}
+      {banner.ctaLabel ? <Cta banner={banner} className="mt-1 w-fit bg-[var(--admin-accent)] text-[#111820]" /> : null}
     </div>
   );
   if (placement === "home_hero") {
@@ -56,11 +57,11 @@ function PreviewBody({ banner }: { banner: Banner }) {
       <div className="flex flex-wrap items-center gap-2">
         <p className="min-w-0 flex-1 truncate text-sm font-bold">{banner.title}</p>
         <PlacementBadge placement={banner.placement} />
-        <AdminStatusBadge status={effectiveStatus(banner)} />
+        <AdminStatusBadge status={banner.effectiveStatus} />
       </div>
       <div className="overflow-x-auto"><ViewToggle label="Preview placement" value={placement} onChange={setPlacement} options={placements.map((value) => ({ value, label: placementMeta[value].label, icon: null }))} /></div>
       <div className="adminTile rounded-2xl p-3 sm:p-4"><Frame placement={placement} banner={banner} /></div>
-      <p className="text-xs text-[var(--admin-muted)]">Contextual frame only, not the live page. Schedule: {formatSchedule(banner)} (ICT). Links to <span className="font-semibold text-[var(--admin-text)]">{banner.ctaUrl}</span>.</p>
+      <p className="text-xs text-[var(--admin-muted)]">Contextual frame only, not the live page. Schedule: {formatSchedule(banner)} (ICT). {banner.ctaUrl ? <>Links to <span className="font-semibold text-[var(--admin-text)]">{banner.ctaUrl}</span>.</> : null}</p>
     </>
   );
 }

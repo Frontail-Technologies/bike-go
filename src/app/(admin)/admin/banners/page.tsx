@@ -1,5 +1,7 @@
-import { BannerWorkspace } from "@/components/admin/banners/banner-workspace";
+import { Suspense } from "react";
+import { AdminLoadingState } from "@/components/admin/feedback";
+import { BannerWorkspace } from "@/features/admin/banners/components/banner-workspace";
 
 export default function BannersPage() {
-  return <BannerWorkspace />;
+  return <Suspense fallback={<AdminLoadingState label="Loading banners…" />}><BannerWorkspace /></Suspense>;
 }

@@ -3,7 +3,8 @@
 import { Button, Dropdown, Label } from "@heroui/react";
 import { CopyIcon, DotsThreeVerticalIcon, EyeIcon, NotePencilIcon, PowerIcon, TrashIcon } from "@phosphor-icons/react";
 import { cn } from "@/lib/cn";
-import { type Banner, type BannerPlacement, effectiveStatus, placementMeta } from "./banner-data";
+import { placementMeta } from "../lib/banner-model";
+import type { Banner, BannerPlacement } from "../types/banner";
 
 export function PlacementBadge({ placement, className }: { placement: BannerPlacement; className?: string }) {
   const meta = placementMeta[placement];
@@ -20,7 +21,6 @@ export type BannerHandlers = {
 
 export function BannerActions({ banner, handlers, className }: { banner: Banner; handlers: BannerHandlers; className?: string }) {
   const inactive = banner.status === "inactive";
-  const effective = effectiveStatus(banner);
   return (
     <Dropdown>
       <Button isIconOnly size="sm" variant="ghost" aria-label={`Actions for ${banner.title}`} className={cn("size-11 min-w-11 md:size-9 md:min-w-9", className)}><DotsThreeVerticalIcon size={20} weight="bold" /></Button>
@@ -29,7 +29,7 @@ export function BannerActions({ banner, handlers, className }: { banner: Banner;
           <Dropdown.Item id="edit" textValue="Edit banner" onAction={() => handlers.onEdit(banner)}><NotePencilIcon size={16} /><Label>Edit</Label></Dropdown.Item>
           <Dropdown.Item id="preview" textValue="Preview banner" onAction={() => handlers.onPreview(banner)}><EyeIcon size={16} /><Label>Preview</Label></Dropdown.Item>
           <Dropdown.Item id="duplicate" textValue="Duplicate banner" onAction={() => handlers.onDuplicate(banner)}><CopyIcon size={16} /><Label>Duplicate</Label></Dropdown.Item>
-          <Dropdown.Item id="toggle" textValue={inactive ? "Activate banner" : "Deactivate banner"} onAction={() => handlers.onToggle(banner)}><PowerIcon size={16} /><Label>{inactive ? "Activate" : effective === "expired" ? "Deactivate" : "Deactivate"}</Label></Dropdown.Item>
+          <Dropdown.Item id="toggle" textValue={inactive ? "Activate banner" : "Deactivate banner"} onAction={() => handlers.onToggle(banner)}><PowerIcon size={16} /><Label>{inactive ? "Activate" : "Deactivate"}</Label></Dropdown.Item>
           <Dropdown.Item id="delete" textValue="Delete banner" variant="danger" onAction={() => handlers.onDelete(banner)}><TrashIcon size={16} /><Label>Delete</Label></Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown.Popover>
