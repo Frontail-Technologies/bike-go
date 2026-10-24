@@ -1,4 +1,4 @@
-import { VehicleFormPage } from "@/components/admin/vehicles/vehicle-form";
+import { VehicleFormPage } from "@/features/admin/vehicles/components/vehicle-form";
 import { Suspense } from "react";
 import { AdminLoadingState } from "@/components/admin/feedback";
 

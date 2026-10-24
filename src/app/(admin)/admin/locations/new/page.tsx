@@ -1,2 +1,2 @@
-import { LocationFormPage } from "@/components/admin/locations/location-form";
+import { LocationFormPage } from "@/features/admin/locations/components/location-form";
 export default function NewLocationPage() { return <LocationFormPage />; }

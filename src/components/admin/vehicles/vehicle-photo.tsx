@@ -1,6 +1,6 @@
 import { CarProfileIcon } from "@phosphor-icons/react/ssr";
 import Image from "next/image";
-import type { AdminVehicle, VehicleType } from "@/components/admin/data";
+import type { VehicleType } from "@/components/admin/data";
 import { BikeArt } from "@/components/shared/bike-art";
 import { cn } from "@/lib/cn";
 
@@ -8,7 +8,7 @@ const tints = ["#FFC400", "#E5484D", "#2563B9", "#12805C", "#F97316", "#0F172A"]
 const tintFor = (seed: string) => tints[[...seed].reduce((sum, char) => sum + char.charCodeAt(0), 0) % tints.length];
 
 type VehiclePhotoProps = {
-  vehicle: Pick<AdminVehicle, "id" | "name" | "vehicleType" | "images">;
+  vehicle: { id: string; name: string; vehicleType: VehicleType; images: ReadonlyArray<{ url: string | null; altText: string | null }> };
   index?: number;
   sizes?: string;
   priority?: boolean;

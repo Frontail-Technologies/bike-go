@@ -5,37 +5,57 @@ import { DotsThreeVerticalIcon, LinkIcon, MapPinIcon, NotePencilIcon, PlusIcon, 
 import type { ColumnDef } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { adminLocations, type AdminLocation } from "@/components/admin/data";
 import { AdminSearch } from "@/components/admin/controls";
 import { AdminDataTable } from "@/components/admin/data-display/admin-data-table";
 import { AdminStatusBadge } from "@/components/admin/data-display/status-badge";
-import { ConfirmationDialog } from "@/components/admin/feedback";
+import { AdminErrorState, ConfirmationDialog } from "@/components/admin/feedback";
 import { AdminPage, ContentSection, PageHeader } from "@/components/admin/layout";
+import { toast } from "@/components/ui/toast";
+import { ApiError } from "@/lib/api/error";
+import { useLocationMutations, useLocationsQuery } from "../hooks/use-locations";
+import type { Location } from "../types/location";
 import { MapLinkDialog } from "./map-link-dialog";
 
 const PAGE_SIZE = 10;
 
 export function LocationList() {
   const router = useRouter();
-  const [items, setItems] = useState(adminLocations);
+  const query = useLocationsQuery();
+  const mutations = useLocationMutations();
+  const items = useMemo(() => query.data ?? [], [query.data]);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [changing, setChanging] = useState<AdminLocation | null>(null);
-  const [linking, setLinking] = useState<AdminLocation | null>(null);
+  const [changing, setChanging] = useState<Location | null>(null);
+  const [linking, setLinking] = useState<Location | null>(null);
 
   const filtered = useMemo(() => items.filter((location) => `${location.name} ${location.city} ${location.address}`.toLowerCase().includes(search.trim().toLowerCase())), [items, search]);
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount);
   const rows = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
-  const edit = (location: AdminLocation) => router.push(`/admin/locations/${location.id}/edit`);
+  const edit = (location: Location) => router.push(`/admin/locations/${location.id}/edit`);
 
-  function toggle() {
+  async function toggle() {
     if (!changing) return;
-    setItems((current) => current.map((location) => location.id === changing.id ? { ...location, active: !location.active } : location));
+    try {
+      await mutations.update.mutateAsync({ id: changing.id, active: !changing.active });
+      toast.success(`${changing.name} ${changing.active ? "deactivated" : "activated"}`);
+    } catch (error) {
+      toast.danger(error instanceof ApiError ? error.message : "The location could not be updated.");
+    }
     setChanging(null);
   }
 
-  const columns: ColumnDef<AdminLocation>[] = [
+  async function saveCoordinates(coordinates: { latitude: number; longitude: number }) {
+    if (!linking) return;
+    try {
+      await mutations.update.mutateAsync({ id: linking.id, ...coordinates });
+      toast.success("Coordinates saved");
+    } catch (error) {
+      toast.danger(error instanceof ApiError ? error.message : "The coordinates could not be saved.");
+    }
+  }
+
+  const columns: ColumnDef<Location>[] = [
     { accessorKey: "name", header: "Location", cell: ({ row }) => <div className="flex min-w-48 items-center gap-3"><span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[var(--admin-accent-soft)] text-[var(--admin-warning)]"><MapPinIcon size={20} weight="duotone" aria-hidden /></span><p className="truncate font-bold">{row.original.name}</p></div> },
     { accessorKey: "city", header: "City" },
     { accessorKey: "address", header: "Address", cell: ({ row }) => <span className="block max-w-72 truncate">{row.original.address}</span> },
@@ -43,7 +63,7 @@ export function LocationList() {
     { id: "status", header: "Status", accessorFn: (row) => (row.active ? "active" : "inactive"), cell: ({ row }) => <AdminStatusBadge status={row.original.active ? "active" : "inactive"} /> },
   ];
 
-  const rowActions = (location: AdminLocation) => (
+  const rowActions = (location: Location) => (
     <Dropdown>
       <Button isIconOnly size="sm" variant="ghost" aria-label={`Actions for ${location.name}`} className="size-11 min-w-11 md:size-9 md:min-w-9"><DotsThreeVerticalIcon size={20} weight="bold" /></Button>
       <Dropdown.Popover className="adminOverlay">
@@ -55,6 +75,8 @@ export function LocationList() {
     </Dropdown>
   );
 
+  if (query.isError && !query.data) return <AdminPage><PageHeader title="Locations" description="Manage Cambodia pickup and return locations." /><AdminErrorState title="Couldn’t load locations" description={query.error instanceof ApiError ? query.error.message : "Try again in a moment."} onRetry={() => void query.refetch()} /></AdminPage>;
+
   return (
     <AdminPage>
       <PageHeader title="Locations" description="Manage Cambodia pickup and return locations." actions={<Button onPress={() => router.push("/admin/locations/new")} variant="primary" className="min-h-11"><PlusIcon />Add Location</Button>} />
@@ -63,10 +85,10 @@ export function LocationList() {
           <AdminSearch value={search} onChange={(value) => { setSearch(value); setPage(1); }} placeholder="Search locations…" className="max-w-none sm:max-w-sm" />
           <p className="ml-auto hidden text-xs font-semibold text-[var(--admin-muted)] sm:block" aria-live="polite">{filtered.length} location{filtered.length === 1 ? "" : "s"}</p>
         </div>
-        <AdminDataTable columns={columns} data={rows} label="Locations" emptyState="No locations found. Try another search or add a RideGo location." pagination={{ page: safePage, pageSize: PAGE_SIZE, total: filtered.length, onPageChange: setPage }} onRowNavigate={edit} rowActions={rowActions} minWidth={760} />
+        <AdminDataTable columns={columns} data={rows} label="Locations" emptyState={query.isLoading ? "Loading locations…" : "No locations found. Try another search or add a RideGo location."} loading={query.isLoading} pagination={{ page: safePage, pageSize: PAGE_SIZE, total: filtered.length, onPageChange: setPage }} onRowNavigate={edit} rowActions={rowActions} minWidth={760} />
       </ContentSection>
-      <MapLinkDialog name={linking?.name ?? null} isOpen={Boolean(linking)} onOpenChange={(open) => !open && setLinking(null)} onSave={(coordinates) => setItems((current) => current.map((location) => location.id === linking?.id ? { ...location, ...coordinates } : location))} />
-      <ConfirmationDialog isOpen={Boolean(changing)} onOpenChange={(open) => !open && setChanging(null)} title={changing?.active ? "Deactivate location?" : "Activate location?"} description={changing?.active ? `${changing.name} will not be available for new assignments.` : `${changing?.name ?? "This location"} will be available for vehicle assignment.`} confirmLabel={changing?.active ? "Deactivate" : "Activate"} danger={changing?.active} onConfirm={toggle} />
+      <MapLinkDialog name={linking?.name ?? null} isOpen={Boolean(linking)} onOpenChange={(open) => !open && setLinking(null)} onSave={(coordinates) => void saveCoordinates(coordinates)} />
+      <ConfirmationDialog isOpen={Boolean(changing)} onOpenChange={(open) => !open && setChanging(null)} title={changing?.active ? "Deactivate location?" : "Activate location?"} description={changing?.active ? `${changing.name} will not be available for new assignments.` : `${changing?.name ?? "This location"} will be available for vehicle assignment.`} confirmLabel={changing?.active ? "Deactivate" : "Activate"} danger={changing?.active} onConfirm={() => void toggle()} />
     </AdminPage>
   );
 }

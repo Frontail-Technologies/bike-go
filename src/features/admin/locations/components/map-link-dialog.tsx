@@ -26,7 +26,6 @@ function LinkForm({ name, onClose, onSave }: { name: string; onClose: () => void
           <Description>{found ? `Found: ${found.latitude}, ${found.longitude}` : "Google Maps link, or “latitude, longitude”."}</Description>
           <FieldError>{error}</FieldError>
         </TextField>
-        <p className="text-xs text-[var(--admin-muted)]">Demo only — changes reset after reload.</p>
       </Modal.Body>
       <Modal.Footer className="flex justify-end gap-2">
         <Button type="button" variant="tertiary" className="min-h-11" onPress={onClose}>Cancel</Button>

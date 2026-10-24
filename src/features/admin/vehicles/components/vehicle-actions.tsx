@@ -2,10 +2,10 @@
 
 import { Button, Dropdown, Label } from "@heroui/react";
 import { DotsThreeVerticalIcon, EyeIcon, NotePencilIcon, PowerIcon } from "@phosphor-icons/react";
-import type { AdminVehicle } from "@/components/admin/data";
+import type { Vehicle } from "../types/vehicle";
 
 type VehicleActionsProps = {
-  vehicle: Pick<AdminVehicle, "name" | "status">;
+  vehicle: Pick<Vehicle, "name" | "status">;
   onView: () => void;
   onEdit: () => void;
   onToggle: () => void;

@@ -1,2 +1,2 @@
-import { LocationList } from "@/components/admin/locations/location-list";
+import { LocationList } from "@/features/admin/locations/components/location-list";
 export default function LocationsPage() { return <LocationList />; }

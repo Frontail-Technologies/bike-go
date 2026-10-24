@@ -1,13 +1,13 @@
 "use client";
 
 import { GasPumpIcon, GearIcon, MapPinIcon, SpeedometerIcon, UsersIcon } from "@phosphor-icons/react";
-import type { AdminVehicle } from "@/components/admin/data";
+import type { Vehicle } from "../types/vehicle";
 import { MoneyDisplay } from "@/components/admin/data-display/misc";
 import { AdminStatusBadge } from "@/components/admin/data-display/status-badge";
 import { VehicleActions } from "./vehicle-actions";
-import { VehiclePhoto } from "./vehicle-photo";
+import { VehiclePhoto } from "@/components/admin/vehicles/vehicle-photo";
 
-export function AdminVehicleCard({ vehicle, onView, onEdit, onToggle }: { vehicle: AdminVehicle; onView: () => void; onEdit: () => void; onToggle: () => void }) {
+export function AdminVehicleCard({ vehicle, onView, onEdit, onToggle }: { vehicle: Vehicle; onView: () => void; onEdit: () => void; onToggle: () => void }) {
   const specs = [
     vehicle.engineCc ? { Icon: SpeedometerIcon, label: `${vehicle.engineCc} cc` } : null,
     vehicle.transmission ? { Icon: GearIcon, label: vehicle.transmission } : null,

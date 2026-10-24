@@ -4,17 +4,20 @@ import { Button } from "@heroui/react";
 import { CaretLeftIcon, CaretRightIcon, GasPumpIcon, GearIcon, IdentificationCardIcon, MapPinIcon, NotePencilIcon, PowerIcon, SpeedometerIcon, TagIcon, UsersIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
-import { adminVehicles, type AdminVehicle } from "@/components/admin/data";
 import { MoneyDisplay } from "@/components/admin/data-display/misc";
 import { AdminStatusBadge } from "@/components/admin/data-display/status-badge";
-import { AdminErrorState, ConfirmationDialog } from "@/components/admin/feedback";
+import { AdminErrorState, AdminLoadingState, ConfirmationDialog } from "@/components/admin/feedback";
 import { AdminPage, ContentSection, PageHeader } from "@/components/admin/layout";
 import { AdminBreadcrumbs } from "@/components/admin/navigation";
-import { AvailabilityBlocks } from "@/components/admin/vehicles/availability-blocks";
 import { VehiclePhoto } from "@/components/admin/vehicles/vehicle-photo";
+import { toast } from "@/components/ui/toast";
+import { ApiError } from "@/lib/api/error";
+import { useVehicleMutations, useVehicleQuery } from "../hooks/use-vehicles";
+import type { Vehicle } from "../types/vehicle";
+import { AvailabilityBlocks } from "./availability-blocks";
 import { cn } from "@/lib/cn";
 
-function Gallery({ vehicle }: { vehicle: AdminVehicle }) {
+function Gallery({ vehicle }: { vehicle: Vehicle }) {
   const count = Math.max(1, vehicle.images.length);
   const [selected, setSelected] = useState(0);
   const step = (direction: -1 | 1) => setSelected((current) => (current + direction + count) % count);
@@ -56,12 +59,27 @@ function Tile({ icon, label, children }: { icon: ReactNode; label: string; child
 
 export function VehicleDetail({ id }: { id: string }) {
   const router = useRouter();
-  const [vehicle, setVehicle] = useState(() => adminVehicles.find((item) => item.id === id));
+  const query = useVehicleQuery(id);
+  const mutations = useVehicleMutations();
   const [confirming, setConfirming] = useState(false);
+  const vehicle = query.data;
 
-  if (!vehicle) return <AdminPage><PageHeader title="Vehicle Details" /><AdminErrorState title="Vehicle not found" description="This UI preview does not contain that vehicle." /></AdminPage>;
+  if (query.isError && !vehicle) {
+    const notFound = query.error instanceof ApiError && query.error.status === 404;
+    return <AdminPage><PageHeader title="Vehicle Details" /><AdminErrorState title={notFound ? "Vehicle not found" : "Couldn’t load the vehicle"} description={query.error instanceof ApiError ? query.error.message : "Try again in a moment."} onRetry={notFound ? undefined : () => void query.refetch()} /></AdminPage>;
+  }
+  if (!vehicle) return <AdminPage><PageHeader title="Vehicle Details" /><AdminLoadingState label="Loading vehicle…" /></AdminPage>;
   const inactive = vehicle.status === "inactive";
-  function toggle() { setVehicle((current) => current ? { ...current, status: current.status === "inactive" ? "available" : "inactive" } : current); setConfirming(false); }
+  async function toggle() {
+    const next = inactive ? "available" : "inactive";
+    try {
+      await mutations.setStatus.mutateAsync({ id: vehicle!.id, status: next });
+      toast.success(`${vehicle!.name} ${inactive ? "activated" : "deactivated"}`);
+    } catch (error) {
+      toast.danger(error instanceof ApiError ? error.message : "The status could not be changed.");
+    }
+    setConfirming(false);
+  }
   const subtitle = [`${vehicle.brand} ${vehicle.model}`, vehicle.vehicleType, vehicle.category].filter((part, index, parts) => part.toLowerCase() !== vehicle.name.toLowerCase() && parts.findIndex((other) => other.toLowerCase() === part.toLowerCase()) === index).join(" · ");
   const specs = [
     { icon: <SpeedometerIcon size={18} />, label: "Engine", value: vehicle.engineCc ? `${vehicle.engineCc} cc` : "—" },

@@ -1,4 +1,4 @@
-import { VehicleDetail } from "@/components/admin/vehicles/vehicle-detail";
+import { VehicleDetail } from "@/features/admin/vehicles/components/vehicle-detail";
 import { Suspense } from "react";
 import { AdminLoadingState } from "@/components/admin/feedback";
 
