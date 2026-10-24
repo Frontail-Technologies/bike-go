@@ -74,13 +74,13 @@ function EditForm({ customer, onClose }: { customer: Customer; onClose: () => vo
   );
 }
 
-export function CustomerEditDrawer({ customer, isOpen, onOpenChange }: { customer: Customer; isOpen: boolean; onOpenChange: (open: boolean) => void }) {
+export function CustomerEditDrawer({ customer, isOpen, onOpenChange }: { customer: Customer | null; isOpen: boolean; onOpenChange: (open: boolean) => void }) {
   return (
     <Drawer.Backdrop isOpen={isOpen} onOpenChange={onOpenChange} className="adminOverlay">
       <Drawer.Content placement="right" className="w-full max-w-md">
         <Drawer.Dialog aria-label="Edit customer">
           <Drawer.CloseTrigger />
-          <EditForm key={customer.id} customer={customer} onClose={() => onOpenChange(false)} />
+          {customer ? <EditForm key={customer.id} customer={customer} onClose={() => onOpenChange(false)} /> : null}
         </Drawer.Dialog>
       </Drawer.Content>
     </Drawer.Backdrop>

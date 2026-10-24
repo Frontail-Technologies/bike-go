@@ -1,7 +1,7 @@
 "use client";
 
-import { Button, useOverlayState } from "@heroui/react";
-import { ArrowRightIcon, CakeIcon, CalendarCheckIcon, CalendarDotsIcon, ClockIcon, EnvelopeSimpleIcon, EyeIcon, FileTextIcon, FlagIcon, HandCoinsIcon, HouseLineIcon, MapPinIcon, NotePencilIcon, PaperPlaneTiltIcon, PhoneIcon, ShieldCheckIcon, UserCircleIcon } from "@phosphor-icons/react";
+import { Alert, Button, FieldError, Label, ListBox, Modal, Select, TextArea, TextField, useOverlayState } from "@heroui/react";
+import { ArrowRightIcon, CakeIcon, CalendarCheckIcon, CalendarDotsIcon, ClockIcon, DownloadSimpleIcon, EnvelopeSimpleIcon, EyeIcon, FileTextIcon, FlagIcon, HandCoinsIcon, HouseLineIcon, MapPinIcon, NotePencilIcon, PaperPlaneTiltIcon, PhoneIcon, SealCheckIcon, ShieldCheckIcon, UserCircleIcon, UserPlusIcon, WalletIcon } from "@phosphor-icons/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
@@ -9,6 +9,7 @@ import { BookingStatusBadge } from "@/components/admin/bookings/booking-parts";
 import { formatCambodiaDate } from "@/components/admin/controls";
 import { CustomerAvatar } from "@/components/admin/customers/customer-avatar";
 import { AdminDataTable } from "@/components/admin/data-display/admin-data-table";
+import { ActivityTimeline, type ActivityItem } from "@/components/admin/data-display/misc";
 import { AdminStatusBadge } from "@/components/admin/data-display/status-badge";
 import { PaymentStatusBadge } from "@/components/admin/bookings/booking-parts";
 import { AdminErrorState, AdminLoadingState } from "@/components/admin/feedback";
@@ -18,9 +19,11 @@ import { AdminBreadcrumbs, AdminTabs } from "@/components/admin/navigation";
 import { VehiclePhoto } from "@/components/admin/vehicles/vehicle-photo";
 import { fmtShort, vehiclePhoto } from "@/features/admin/bookings/lib/booking-model";
 import type { Booking } from "@/features/admin/bookings/types/booking";
+import { toast } from "@/components/ui/toast";
 import { ApiError } from "@/lib/api/error";
 import { cn } from "@/lib/cn";
-import { useCustomerBookingsQuery, useCustomerDocumentsQuery, useCustomerLoansQuery, useCustomerQuery } from "../hooks/use-customers";
+import { documentDownloadUrl } from "../api/customers-api";
+import { useCustomerActivityQuery, useCustomerBookingsQuery, useCustomerDocumentsQuery, useCustomerLoansQuery, useCustomerMutations, useCustomerQuery } from "../hooks/use-customers";
 import { asBookingStatus, documentBadge, loanBadge, monthsSince, titleCase } from "../lib/customer-model";
 import type { Customer, CustomerDocument, CustomerLoan } from "../types/customer";
 import { CustomerEditDrawer } from "./customer-edit-drawer";
@@ -102,8 +105,59 @@ function LoansTab({ customerId }: { customerId: string }) {
   return <ContentSection><AdminDataTable label="Customer loan applications" columns={columns} data={data} loading={query.isLoading} pagination={{ page, pageSize: TAB_PAGE_SIZE, total: query.data?.meta.total ?? 0, onPageChange: setPage }} minWidth={820} emptyState="This customer has no loan applications." /></ContentSection>;
 }
 
+const reviewOptions = [
+  { value: "verified", label: "Verified" },
+  { value: "needs_review", label: "Needs review" },
+  { value: "rejected", label: "Rejected" },
+] as const;
+
+function ReviewForm({ document, onClose }: { document: CustomerDocument; onClose: () => void }) {
+  const mutations = useCustomerMutations();
+  const [status, setStatus] = useState<(typeof reviewOptions)[number]["value"]>(document.verificationStatus === "verified" || document.verificationStatus === "rejected" ? document.verificationStatus : "verified");
+  const [note, setNote] = useState(document.reviewNote ?? "");
+  const [noteError, setNoteError] = useState("");
+  const [error, setError] = useState("");
+  const noteRequired = status !== "verified";
+
+  async function submit() {
+    if (noteRequired && !note.trim()) { setNoteError("A note is required — the customer sees it."); return; }
+    setError("");
+    try {
+      await mutations.reviewDocument.mutateAsync({ loanReference: document.loan.reference, documentId: document.id, verificationStatus: status, ...(note.trim() ? { note: note.trim() } : {}) });
+      toast.success(`${titleCase(document.type)} marked ${titleCase(status).toLowerCase()}`);
+      onClose();
+    } catch (failure) {
+      setError(failure instanceof ApiError ? failure.message : "Something went wrong. Try again.");
+    }
+  }
+
+  return (
+    <>
+      <Modal.Body className="space-y-4">
+        <p className="text-sm text-[var(--admin-muted)]">{titleCase(document.type)} · loan {document.loan.reference} · {document.originalFilename}</p>
+        <Select value={status} onChange={(key) => { if (key !== null) { setStatus(String(key) as typeof status); setNoteError(""); } }}>
+          <Label>Verification</Label>
+          <Select.Trigger className="min-h-11"><Select.Value /><Select.Indicator /></Select.Trigger>
+          <Select.Popover className="adminOverlay"><ListBox>{reviewOptions.map((option) => <ListBox.Item key={option.value} id={option.value} textValue={option.label}>{option.label}<ListBox.ItemIndicator /></ListBox.Item>)}</ListBox></Select.Popover>
+        </Select>
+        <TextField value={note} onChange={(value) => { setNote(value.slice(0, 500)); setNoteError(""); }} isInvalid={Boolean(noteError)} isRequired={noteRequired}>
+          <Label>Note{noteRequired ? "" : " (optional)"}</Label>
+          <TextArea rows={3} placeholder="Shown to the applicant when the document needs review or is rejected." />
+          <FieldError>{noteError}</FieldError>
+        </TextField>
+        {error ? <Alert status="danger"><Alert.Indicator /><Alert.Content><Alert.Title>Review was not saved</Alert.Title><Alert.Description>{error}</Alert.Description></Alert.Content></Alert> : null}
+      </Modal.Body>
+      <Modal.Footer className="flex justify-end gap-2">
+        <Button variant="tertiary" className="min-h-11" onPress={onClose}>Cancel</Button>
+        <Button variant="primary" className="min-h-11" isPending={mutations.reviewDocument.isPending} onPress={() => void submit()}>Save review</Button>
+      </Modal.Footer>
+    </>
+  );
+}
+
 function DocumentsTab({ customerId }: { customerId: string }) {
   const [page, setPage] = useState(1);
+  const [reviewing, setReviewing] = useState<CustomerDocument | null>(null);
   const query = useCustomerDocumentsQuery(customerId, { page, pageSize: TAB_PAGE_SIZE });
   const columns: ColumnDef<CustomerDocument>[] = [
     { id: "type", header: "Document", enableSorting: false, accessorFn: (row) => row.type, cell: ({ row }) => <span className="inline-flex items-center gap-2 font-semibold"><FileTextIcon size={16} className="text-[var(--admin-muted)]" aria-hidden />{titleCase(row.original.type)}</span> },
@@ -113,7 +167,51 @@ function DocumentsTab({ customerId }: { customerId: string }) {
     { id: "status", header: "Verification", enableSorting: false, accessorFn: (row) => row.verificationStatus, cell: ({ row }) => { const badge = documentBadge(row.original.verificationStatus); return <AdminStatusBadge status={badge.status} label={badge.label} />; } },
   ];
   if (query.isError && !query.data) return <AdminErrorState title="Couldn’t load documents" description={query.error instanceof ApiError ? query.error.message : "Try again in a moment."} onRetry={() => void query.refetch()} />;
-  return <ContentSection><AdminDataTable label="Customer documents" columns={columns} data={query.data?.data ?? []} loading={query.isLoading} pagination={{ page, pageSize: TAB_PAGE_SIZE, total: query.data?.meta.total ?? 0, onPageChange: setPage }} minWidth={820} emptyState="No loan documents have been uploaded." /></ContentSection>;
+  const actions = (doc: CustomerDocument) => (
+    <div className="flex justify-end gap-1.5">
+      <a href={documentDownloadUrl(doc.fileUrl)} target="_blank" rel="noopener noreferrer" aria-label={`Open ${doc.originalFilename}`} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-bold text-[var(--admin-info)] outline-none hover:bg-[var(--admin-surface-muted)] focus-visible:ring-2 focus-visible:ring-[var(--admin-accent-strong)] md:min-h-8"><DownloadSimpleIcon size={15} />Open</a>
+      <Button size="sm" variant="outline" className="min-h-11 md:min-h-8" onPress={() => setReviewing(doc)}><SealCheckIcon size={15} />Review</Button>
+    </div>
+  );
+  return (
+    <>
+      <ContentSection><AdminDataTable label="Customer documents" columns={columns} data={query.data?.data ?? []} loading={query.isLoading} pagination={{ page, pageSize: TAB_PAGE_SIZE, total: query.data?.meta.total ?? 0, onPageChange: setPage }} minWidth={860} emptyState="No loan documents have been uploaded." rowActions={actions} /></ContentSection>
+      <Modal.Backdrop isOpen={Boolean(reviewing)} onOpenChange={(open) => !open && setReviewing(null)} className="adminOverlay">
+        <Modal.Container size="md">
+          <Modal.Dialog aria-label="Review document">
+            <Modal.CloseTrigger />
+            <Modal.Header><Modal.Heading>Review document</Modal.Heading></Modal.Header>
+            {reviewing ? <ReviewForm key={reviewing.id} document={reviewing} onClose={() => setReviewing(null)} /> : null}
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
+    </>
+  );
+}
+
+const activityIcon = { account: <UserPlusIcon size={16} />, booking: <CalendarCheckIcon size={16} />, loan: <HandCoinsIcon size={16} />, document: <FileTextIcon size={16} /> } as const;
+const activityTone = { account: "info", booking: "info", loan: "warning", document: "success" } as const;
+
+function ActivityTab({ customerId }: { customerId: string }) {
+  const [page, setPage] = useState(1);
+  const query = useCustomerActivityQuery(customerId, { page, pageSize: 15 });
+  if (query.isError && !query.data) return <AdminErrorState title="Couldn’t load activity" description={query.error instanceof ApiError ? query.error.message : "Try again in a moment."} onRetry={() => void query.refetch()} />;
+  const meta = query.data?.meta;
+  const items: ActivityItem[] = (query.data?.data ?? []).map((entry) => ({ id: entry.id, title: entry.title, detail: entry.detail ?? undefined, time: `${dateTime(entry.at)} · ICT`, tone: activityTone[entry.kind], icon: activityIcon[entry.kind] }));
+  return (
+    <Panel title="Account activity">
+      {query.isLoading ? <div role="status" aria-label="Loading activity" className="h-32 animate-pulse rounded-xl bg-[var(--admin-surface-muted)]" /> : items.length ? <ActivityTimeline items={items} /> : <p className="text-sm text-[var(--admin-muted)]">No activity yet.</p>}
+      {meta && meta.totalPages > 1 ? (
+        <div className="mt-4 flex items-center justify-between gap-3 border-t border-[var(--admin-border)] pt-3 text-xs text-[var(--admin-muted)]">
+          <span>Page {meta.page} of {meta.totalPages}</span>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" className="min-h-11 md:min-h-9" isDisabled={page <= 1} onPress={() => setPage(page - 1)}>Newer</Button>
+            <Button size="sm" variant="outline" className="min-h-11 md:min-h-9" isDisabled={page >= meta.totalPages} onPress={() => setPage(page + 1)}>Older</Button>
+          </div>
+        </div>
+      ) : null}
+    </Panel>
+  );
 }
 
 export function CustomerDetail({ id }: { id: string }) {
@@ -170,8 +268,10 @@ function CustomerWorkspace({ customer }: { customer: Customer }) {
         </Panel>
         <Panel title="Quick Stats">
           <dl className="space-y-4">
-            <QuickStat tone="bg-[var(--admin-info-soft)] text-[var(--admin-info)]" icon={<CalendarCheckIcon size={20} weight="duotone" />} label="Total bookings" value={customer.bookingCount} />
+            <QuickStat tone="bg-[var(--admin-info-soft)] text-[var(--admin-info)]" icon={<CalendarCheckIcon size={20} weight="duotone" />} label="Total bookings" value={customer.metrics.totalBookings} />
+            <QuickStat tone="bg-[var(--admin-accent-soft)] text-[var(--admin-warning)]" icon={<WalletIcon size={20} weight="duotone" />} label="Total spent (USD, paid)" value={<CurrencyAmount amount={customer.metrics.totalSpentMinor} currency="USD" className="text-lg font-extrabold" />} />
             <QuickStat tone="bg-[var(--admin-success-soft)] text-[var(--admin-success)]" icon={<HandCoinsIcon size={20} weight="duotone" />} label="Loan applications" value={customer.loanCount} />
+            <QuickStat tone="bg-[var(--admin-success-soft)] text-[var(--admin-success)]" icon={<CalendarCheckIcon size={20} weight="duotone" />} label="Active rentals" value={customer.metrics.activeRentals} />
             <QuickStat tone="bg-[#efe9ff] text-[#6246c7]" icon={<ClockIcon size={20} weight="duotone" />} label="Member since" value={`${monthsSince(customer.createdAt)} months`} />
           </dl>
         </Panel>
@@ -192,8 +292,11 @@ function CustomerWorkspace({ customer }: { customer: Customer }) {
       <header className="flex items-center gap-3 sm:gap-4">
         <CustomerAvatar name={customer.name} size="lg" className="size-14 text-lg sm:size-16 sm:text-xl" />
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-xl font-extrabold tracking-tight sm:text-2xl">{customer.name}</h1>
-          <p className="text-sm text-[var(--admin-muted)]">Customer since {formatCambodiaDate(customer.createdAt)}</p>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <h1 className="truncate text-xl font-extrabold tracking-tight sm:text-2xl">{customer.name}</h1>
+            <AdminStatusBadge status={customer.status} />
+          </div>
+          <p className="text-sm text-[var(--admin-muted)]">{customer.reference}</p>
         </div>
         <Button variant="outline" aria-label="Edit customer" className="min-h-11 shrink-0 max-sm:size-11 max-sm:min-w-11 max-sm:p-0" onPress={editDrawer.open}><NotePencilIcon /><span className="max-sm:sr-only">Edit</span></Button>
       </header>
@@ -207,6 +310,7 @@ function CustomerWorkspace({ customer }: { customer: Customer }) {
           { id: "bookings", label: "Bookings", content: <BookingsTab customerId={customer.id} onOpen={openBooking} /> },
           { id: "loans", label: "Loan Applications", content: <LoansTab customerId={customer.id} /> },
           { id: "documents", label: "Documents", content: <DocumentsTab customerId={customer.id} /> },
+          { id: "activity", label: "Activity", content: <ActivityTab customerId={customer.id} /> },
         ]}
       />
 

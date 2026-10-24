@@ -2,10 +2,15 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo } from "react";
-import type { CustomerListParams, CustomerSort } from "../types/customer";
+import type { CustomerListParams, CustomerSort, CustomerStatus, JoinedWindow } from "../types/customer";
 
 export const CUSTOMER_PAGE_SIZE = 10;
 const sorts: readonly CustomerSort[] = ["newest", "oldest", "name"];
+const statuses: readonly CustomerStatus[] = ["active", "inactive"];
+const windows: readonly JoinedWindow[] = ["30", "90", "180"];
+type Filters = Pick<CustomerListParams, "q" | "status" | "city" | "joined" | "sort">;
+
+const oneOf = <T extends string>(values: readonly T[], value: string | null) => values.find((item) => item === value);
 
 /** The list's whole state lives in the URL, so it survives refresh and back/forward navigation. */
 export function useCustomerListState() {
@@ -19,7 +24,10 @@ export function useCustomerListState() {
       page: Number.isFinite(page) && page > 0 ? page : 1,
       pageSize: CUSTOMER_PAGE_SIZE,
       q: searchParams.get("q")?.trim() || undefined,
-      sort: sorts.find((item) => item === searchParams.get("sort")),
+      status: oneOf(statuses, searchParams.get("status")),
+      city: searchParams.get("city") || undefined,
+      joined: oneOf(windows, searchParams.get("joined")),
+      sort: oneOf(sorts, searchParams.get("sort")),
     };
   }, [searchParams]);
 
@@ -37,8 +45,8 @@ export function useCustomerListState() {
   return {
     params,
     setPage: (page: number) => write({ page }),
-    /** Changing the search or the sort returns to the first page. */
-    setFilters: (filters: Partial<Pick<CustomerListParams, "q" | "sort">>) => write({ ...filters, page: 1 }),
-    reset: () => write({ q: undefined, page: 1 }),
+    /** Changing any filter or the sort returns to the first page. */
+    setFilters: (filters: Partial<Filters>) => write({ ...filters, page: 1 }),
+    reset: () => write({ q: undefined, status: undefined, city: undefined, joined: undefined, page: 1 }),
   };
 }
