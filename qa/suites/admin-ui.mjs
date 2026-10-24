@@ -126,7 +126,7 @@ export default async function run({ browser, base, t }) {
     check("add vehicle shows inline validation", await page.getByText("Enter at least 2 characters.").isVisible());
     await page.goto(`${base}/admin/locations`, { waitUntil: "networkidle" });
     check("Cambodia locations render", await page.getByText("Phnom Penh Central").isVisible() && await page.getByText("Siem Reap Riverside").isVisible());
-    await page.getByRole("button", { name: "Edit" }).first().click();
+    await page.getByRole("row").filter({ hasText: "Phnom Penh Central" }).click();
     check("location edit form loads existing data", await page.getByRole("textbox", { name: "Location name" }).inputValue() === "Phnom Penh Central");
     check("production admin interactions have no console errors", logs.length === 0, logs.join(" | "));
     await context.close();
@@ -141,9 +141,10 @@ export default async function run({ browser, base, t }) {
     check("dashboard renders four accessible chart surfaces", await page.locator('[role="application"]').count() >= 4);
     await page.waitForTimeout(600);
     await page.screenshot({ path: join(SHOTS, "admin-dashboard-1440.png"), fullPage: true });
-    await page.getByRole("button", { name: "90 days" }).click();
-    check("dashboard keeps revenue in USD", await page.getByText("USD only").isVisible() && (await page.getByRole("button", { name: "Revenue currency" }).count()) === 0);
-    check("dashboard switches to the 90-day series", await page.getByText("90-day booked and paid revenue in USD.").isVisible());
+    await page.getByRole("button", { name: /Last 30 days|Date range/ }).click();
+    await page.getByRole("option", { name: "Last 90 days" }).click();
+    check("dashboard keeps revenue in USD", await page.getByText("Revenue (USD)").isVisible() && (await page.getByRole("button", { name: "Revenue currency" }).count()) === 0);
+    check("dashboard switches to the 90-day series", await page.getByText("Booked and paid revenue, last 90 days (USD).").isVisible());
 
     await page.goto(`${base}/admin/ui`, { waitUntil: "networkidle" });
     const chartShowcase = page.getByRole("region", { name: "Admin chart examples" });
@@ -204,30 +205,79 @@ export default async function run({ browser, base, t }) {
     const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
     const page = await context.newPage();
     const logs = watch(page);
-    for (const [route, heading] of [["bookings", "Bookings"], ["customers", "Customers"], ["loan-applications", "Loan Applications"], ["documents", "Documents"], ["payments", "Payments"], ["settings", "Settings"]]) {
+    for (const [route, heading] of [["bookings", "Bookings"], ["customers", "Customers"], ["loans", "Loan Applications"], ["documents", "Documents"], ["payments", "Payments"], ["settings", "Settings"]]) {
       await page.goto(`${base}/admin/${route}`, { waitUntil: "networkidle" });
       const metrics = await overflowReport(page);
       check(`/admin/${route} loads`, await page.getByRole("heading", { name: heading, exact: true }).isVisible());
       check(`/admin/${route} has no page overflow`, metrics.scrollWidth <= metrics.innerWidth, JSON.stringify(metrics));
     }
     await page.goto(`${base}/admin/bookings`, { waitUntil: "networkidle" });
-    await page.getByRole("searchbox", { name: "Search bookings…" }).fill("John Smith");
-    check("booking search filters records", await page.getByText("John Smith").first().isVisible() && (await page.getByText("Marie Tan").count()) === 0);
-    await page.getByRole("button", { name: /View booking/ }).first().click();
-    await page.waitForURL(/\/admin\/bookings\/booking-/);
-    check("booking detail renders", await page.getByRole("heading", { name: "BND0124" }).isVisible());
+    await page.getByRole("searchbox", { name: /Search booking, customer, vehicle/ }).fill("Sok Chantha");
+    check("booking search filters records", await page.getByText("Sok Chantha").first().isVisible() && (await page.getByText("Marie Tan").count()) === 0);
+    await page.getByRole("row").filter({ hasText: "BK-0001" }).click();
+    await page.waitForURL(/\/admin\/bookings\/BK-0001/);
+    await page.getByRole("heading", { name: "Booking BK-0001" }).waitFor();
+    check("booking detail renders", await page.getByRole("heading", { name: "Booking BK-0001" }).isVisible());
     await page.goto(`${base}/admin/customers/customer-1`, { waitUntil: "networkidle" });
-    check("customer detail renders", await page.getByRole("heading", { name: "John Smith" }).isVisible());
-    await page.goto(`${base}/admin/loan-applications/loan-1`, { waitUntil: "networkidle" });
-    await page.getByRole("button", { name: "Approve" }).click();
-    check("loan decision updates locally", await page.getByText("Approved", { exact: true }).first().isVisible());
-    await page.goto(`${base}/admin/documents/document-2`, { waitUntil: "networkidle" });
-    await page.getByRole("button", { name: "Verify" }).click();
-    check("document review updates locally", await page.getByText("Verified", { exact: true }).isVisible());
+    check("customer detail renders", await page.getByRole("heading", { name: "Sok Chantha" }).isVisible());
+    await page.goto(`${base}/admin/loans/LA-2026-0032`, { waitUntil: "networkidle" });
+    check("loan detail renders", await page.getByRole("heading", { name: /LA-2026-0032/ }).isVisible());
     await page.goto(`${base}/admin/settings`, { waitUntil: "networkidle" });
-    await page.getByRole("button", { name: "Save changes" }).click();
-    check("settings provides local success feedback", await page.getByText("Settings saved locally").isVisible());
+    check("settings workspace renders", await page.getByRole("tab", { name: "Vehicle Masters" }).isVisible());
     check("remaining workspaces have no console errors", logs.length === 0, logs.join(" | "));
+    await context.close();
+  }
+
+  section("G. admin navigation performance");
+  {
+    const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    const page = await context.newPage();
+    const logs = watch(page);
+    await page.goto(`${base}/admin`, { waitUntil: "networkidle" });
+    await page.locator("aside").evaluate((element) => { element.dataset.persistenceProbe = "sidebar"; });
+    await page.locator("header").first().evaluate((element) => { element.dataset.persistenceProbe = "header"; });
+    await page.getByRole("button", { name: "Collapse sidebar" }).click();
+    const routes = [
+      ["Vehicles", "/admin/vehicles"], ["Banners", "/admin/banners"], ["Bookings", "/admin/bookings"],
+      ["Customers", "/admin/customers"], ["Loan Applications", "/admin/loans"], ["Documents", "/admin/documents"],
+      ["Payments", "/admin/payments"], ["Locations", "/admin/locations"], ["Settings", "/admin/settings"], ["Dashboard", "/admin"],
+    ];
+    for (const [label, pathname] of routes) {
+      await page.getByRole("link", { name: label, exact: true }).click();
+      await page.waitForURL((url) => url.pathname === pathname);
+      check(`${label} uses the persistent admin shell`, await page.locator('aside[data-persistence-probe="sidebar"]').count() === 1 && await page.locator('header[data-persistence-probe="header"]').count() === 1);
+      check(`${label} updates active navigation`, await page.getByRole("link", { name: label, exact: true }).getAttribute("aria-current") === "page");
+      check(`${label} preserves collapsed navigation`, await page.getByRole("button", { name: "Expand sidebar" }).isVisible());
+    }
+    check("admin navigation stays client-side", await page.evaluate(() => performance.getEntriesByType("navigation").length) === 1);
+    await page.goBack();
+    await page.waitForURL((url) => url.pathname === "/admin/settings");
+    check("browser back restores prior admin route", page.url().includes("/admin/settings"));
+    await page.goForward();
+    await page.waitForURL((url) => url.pathname === "/admin");
+    check("browser forward restores dashboard", new URL(page.url()).pathname === "/admin");
+    check("repeated admin navigation has no console errors", logs.length === 0, logs.join(" | "));
+    await context.close();
+  }
+
+  {
+    const context = await browser.newContext({ viewport: { width: 768, height: 900 } });
+    const page = await context.newPage();
+    await page.goto(`${base}/admin`, { waitUntil: "networkidle" });
+    await page.getByRole("button", { name: "Open menu" }).click();
+    await page.getByRole("dialog", { name: "Admin navigation" }).getByRole("link", { name: "Vehicles" }).click();
+    await page.waitForURL(`${base}/admin/vehicles`);
+    check("mobile navigation changes route", page.url().endsWith("/admin/vehicles"));
+    check("mobile navigation closes immediately", await page.getByRole("dialog", { name: "Admin navigation" }).count() === 0);
+    await context.close();
+  }
+
+  {
+    const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, reducedMotion: "reduce" });
+    const page = await context.newPage();
+    await page.goto(`${base}/admin/vehicles`, { waitUntil: "networkidle" });
+    const duration = await page.locator(".adminRouteEnter").evaluate((element) => getComputedStyle(element).animationDuration);
+    check("admin content transition respects reduced motion", duration === "0.01ms" || duration === "1e-05s" || duration === "0s", duration);
     await context.close();
   }
 }

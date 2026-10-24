@@ -1,4 +1,6 @@
 import { LocationFormPage } from "@/components/admin/locations/location-form";
+
+export const instant = false;
 import { Suspense } from "react";
 import { AdminLoadingState } from "@/components/admin/feedback";
 

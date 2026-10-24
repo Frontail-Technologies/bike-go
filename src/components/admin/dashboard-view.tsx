@@ -3,16 +3,16 @@
 import { Button } from "@heroui/react";
 import { BuildingsIcon, CalendarBlankIcon, CalendarCheckIcon, CarProfileIcon, CurrencyDollarIcon, FileTextIcon, HandCoinsIcon, PlusIcon, UserPlusIcon, UsersIcon, type Icon } from "@phosphor-icons/react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { AdminChartCard, MetricBarChart, RevenueTrendChart, StatusDonutChart } from "@/components/admin/charts";
 import { AdminSelect, formatCambodiaDate } from "@/components/admin/controls";
 import { MoneyDisplay } from "@/components/admin/data-display/misc";
 import { StatCard } from "@/components/admin/data-display/stat-card";
 import { AdminStatusBadge, type AdminStatus } from "@/components/admin/data-display/status-badge";
 import { adminCopy } from "@/components/admin/config";
 import { adminDashboard, adminVehicles, type DashboardPeriod, type StatusMetric } from "@/components/admin/data";
-import { AdminPage, PageHeader } from "@/components/admin/layout";
+import { AdminPage, ContentSection, PageHeader } from "@/components/admin/layout";
 import { cn } from "@/lib/cn";
 
 const statusTone = (status: string): AdminStatus =>
@@ -43,6 +43,13 @@ const quickActions: ReadonlyArray<{ href: string; label: string; Icon: Icon; ton
 const vehicleStatusColors: Record<string, string> = { available: "var(--admin-success)", rented: "var(--admin-info)", maintenance: "var(--admin-warning)", inactive: "var(--admin-muted)" };
 
 const initials = (name: string) => name.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+
+function ChartSectionSkeleton() {
+  return <div aria-label="Loading dashboard charts" role="status" className="grid gap-5 xl:grid-cols-[minmax(0,1.9fr)_minmax(300px,1fr)]"><div className="adminHero h-[360px] animate-pulse rounded-2xl bg-[var(--admin-surface-muted)] motion-reduce:animate-none" /><div className="adminHero h-[360px] animate-pulse rounded-2xl bg-[var(--admin-surface-muted)] motion-reduce:animate-none" /></div>;
+}
+
+const DashboardPrimaryCharts = dynamic(() => import("@/components/admin/dashboard-charts").then((module) => module.DashboardPrimaryCharts), { loading: ChartSectionSkeleton });
+const DashboardActivityCharts = dynamic(() => import("@/components/admin/dashboard-charts").then((module) => module.DashboardActivityCharts), { loading: ChartSectionSkeleton });
 
 export function DashboardView() {
   const router = useRouter();
@@ -75,13 +82,10 @@ export function DashboardView() {
         <StatCard tone="warning" label="Loan Applications" value={data.loans.total} icon={<HandCoinsIcon size={22} weight="duotone" />} secondary={`${data.loans.awaitingReview} awaiting review · ${data.pendingDocumentReviews} documents`} />
       </section>
 
-      <section aria-label="Dashboard charts" className="grid gap-5 xl:grid-cols-[minmax(0,1.9fr)_minmax(300px,1fr)]">
-        <AdminChartCard title="Booking Trends" description={`Booked and paid revenue, last ${period} days (USD).`}><RevenueTrendChart data={data.charts.revenue.USD[period]} /></AdminChartCard>
-        <AdminChartCard title="Vehicle Status" description={`${data.vehicles.total} vehicles across the fleet.`}><StatusDonutChart compact data={vehicleStatus} centerLabel="Vehicles" /></AdminChartCard>
-      </section>
+      <DashboardPrimaryCharts period={period} vehicleStatus={vehicleStatus} />
 
       <section aria-label="Operations" className="grid gap-5 xl:grid-cols-[minmax(0,1.9fr)_minmax(300px,1fr)]">
-        <AdminChartCard title="Recent Bookings" actions={<Link className="rounded-md px-1 text-xs font-bold text-[var(--admin-info)] outline-none hover:underline focus-visible:ring-2 focus-visible:ring-[var(--admin-accent-strong)]" href="/admin/bookings">View all</Link>}>
+        <ContentSection title="Recent Bookings" actions={<Link className="rounded-md px-1 text-xs font-bold text-[var(--admin-info)] outline-none hover:underline focus-visible:ring-2 focus-visible:ring-[var(--admin-accent-strong)]" href="/admin/bookings">View all</Link>}><div className="p-5">
           <ul className="-my-1 divide-y divide-[var(--admin-border)]">
             {data.recentBookings.map((booking) => (
               <li key={booking.reference} className="flex items-center gap-3 py-3">
@@ -98,9 +102,9 @@ export function DashboardView() {
               </li>
             ))}
           </ul>
-        </AdminChartCard>
+        </div></ContentSection>
 
-        <AdminChartCard title="Quick Actions">
+        <ContentSection title="Quick Actions"><div className="p-5">
           <ul className="grid grid-cols-2 gap-2.5">
             {quickActions.map(({ href, label, Icon, tone }) => (
               <li key={href}>
@@ -111,13 +115,10 @@ export function DashboardView() {
               </li>
             ))}
           </ul>
-        </AdminChartCard>
+        </div></ContentSection>
       </section>
 
-      <section aria-label="Activity breakdown" className="grid gap-5 xl:grid-cols-[minmax(0,1.9fr)_minmax(300px,1fr)]">
-        <AdminChartCard title="Booking Volume" description={`Bookings per period, last ${period} days.`}><MetricBarChart data={data.charts.bookingVolume[period]} /></AdminChartCard>
-        <AdminChartCard title="Loan Status" description="Current loan application pipeline."><StatusDonutChart compact data={data.charts.loanStatus} centerLabel="Applications" /></AdminChartCard>
-      </section>
+      <DashboardActivityCharts period={period} />
     </AdminPage>
   );
 }

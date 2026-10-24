@@ -69,14 +69,14 @@
   outline-offset: 2px;
 }
 
-.adminReveal {
-  animation: adminReveal 320ms ease-out both;
+.adminRouteEnter {
+  animation: adminRouteEnter 180ms ease-out both;
 }
 
-@keyframes adminReveal {
+@keyframes adminRouteEnter {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(5px);
   }
   to {
     opacity: 1;

@@ -3,6 +3,7 @@
 import { Button, Drawer, Dropdown, Label, useOverlayState } from "@heroui/react";
 import { ArrowCounterClockwiseIcon, ArrowSquareOutIcon, DotsThreeVerticalIcon, EyeIcon, FilePdfIcon, GridFourIcon, ImageIcon, ListIcon, SealCheckIcon, SlidersHorizontalIcon } from "@phosphor-icons/react";
 import type { ColumnDef } from "@tanstack/react-table";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { startTransition, useEffect, useMemo, useState } from "react";
 import { AdminPagination, AdminSearch, AdminSelect, ViewToggle } from "@/components/admin/controls";
@@ -12,7 +13,8 @@ import { AdminPage, ContentSection, PageHeader } from "@/components/admin/layout
 import { AdminDocumentCard } from "./admin-document-card";
 import { allDocumentTypes, documents as seed, fmtShort, NOW, type ReviewDocument, reviewLabels, reviewStatuses, type ReviewStatus } from "./document-data";
 import { DocumentTypeIcon, ReviewStatusBadge } from "./document-parts";
-import { DocumentReviewDrawer } from "./document-review-drawer";
+
+const DocumentReviewDrawer = dynamic(() => import("./document-review-drawer").then((module) => module.DocumentReviewDrawer));
 
 const PAGE_SIZE = 8;
 const all = "all";
@@ -148,7 +150,7 @@ export function DocumentList({ initialId }: { initialId?: string }) {
         </Drawer.Content>
       </Drawer.Backdrop>
 
-      <DocumentReviewDrawer document={selected} isOpen={reviewDrawer.isOpen} onOpenChange={reviewDrawer.setOpen} onReview={applyReview} onOpenLoan={openLoan} />
+      {selected || reviewDrawer.isOpen ? <DocumentReviewDrawer document={selected} isOpen={reviewDrawer.isOpen} onOpenChange={reviewDrawer.setOpen} onReview={applyReview} onOpenLoan={openLoan} /> : null}
     </AdminPage>
   );
 }

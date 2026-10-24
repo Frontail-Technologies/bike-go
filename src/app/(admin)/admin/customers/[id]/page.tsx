@@ -2,6 +2,8 @@ import { CustomerDetail as CustomerWorkspace } from "@/components/admin/customer
 import { Suspense } from "react";
 import { AdminLoadingState } from "@/components/admin/feedback";
 
+export const instant = false;
+
 async function CustomerDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   return <CustomerWorkspace id={id} />;

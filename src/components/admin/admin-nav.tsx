@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { adminNavigation } from "@/components/admin/config";
 import { cn } from "@/lib/cn";
 
 export const adminNav = adminNavigation;
+const highFrequencyRoutes = new Set(["/admin", "/admin/vehicles", "/admin/bookings", "/admin/customers", "/admin/loans", "/admin/documents"]);
 
 type AdminNavListProps = {
   activeHref: string;
@@ -17,23 +19,23 @@ export function AdminNavList({
   collapsed = false,
   onNavigate,
 }: AdminNavListProps) {
+  const [navigationIntent, setNavigationIntent] = useState<{ href: string; from: string } | null>(null);
+  const effectiveHref = navigationIntent?.from === activeHref ? navigationIntent.href : activeHref;
   return (
     <ul className="flex flex-col gap-1">
       {adminNavigation.map(({ href, label, Icon }) => {
-        const active =
-          href === "/admin" ? activeHref === href : activeHref.startsWith(href);
+        const active = href === "/admin" ? effectiveHref === href : effectiveHref.startsWith(href);
         return (
           <li key={href}>
             <Link
               href={href}
+              prefetch={highFrequencyRoutes.has(href) ? true : undefined}
               aria-current={active ? "page" : undefined}
               aria-label={collapsed ? label : undefined}
               title={collapsed ? label : undefined}
               onClick={(event) => {
-                if (onNavigate) {
-                  event.preventDefault();
-                  onNavigate(href);
-                }
+                if (event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) setNavigationIntent({ href, from: activeHref });
+                onNavigate?.(href);
               }}
               className={cn(
                 "flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-(--admin-accent)",
