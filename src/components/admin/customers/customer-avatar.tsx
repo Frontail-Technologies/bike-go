@@ -1,5 +1,5 @@
 import { cn } from "@/lib/cn";
-import { initialsOf } from "./customer-data";
+const initialsOf = (name: string) => name.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
 
 const palettes = [
   "bg-[var(--admin-accent-soft)] text-[var(--admin-warning)]",

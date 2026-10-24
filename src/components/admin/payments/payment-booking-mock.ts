@@ -1,6 +1,6 @@
 import { adminLocations, adminVehicles, type AdminVehicle } from "@/components/admin/data";
 import type { AdminStatus } from "@/components/admin/data-display/status-badge";
-import { customers } from "@/components/admin/customers/customer-data";
+import { customers } from "@/components/admin/mock/customer-mock";
 
 export const bookingStatuses = ["pending", "confirmed", "ready_for_pickup", "active", "returned", "completed", "cancelled", "expired", "no_show"] as const;
 export type BookingStatus = (typeof bookingStatuses)[number];

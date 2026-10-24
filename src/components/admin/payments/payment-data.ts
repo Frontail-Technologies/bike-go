@@ -3,7 +3,7 @@ import { loans } from "@/components/admin/loans/loan-data";
 import type { Booking, PaymentStatus } from "@/components/admin/payments/payment-booking-mock";
 import type { Loan } from "@/components/admin/loans/loan-data";
 import type { CurrencyCode } from "@/components/admin/money";
-import { customers } from "@/components/admin/customers/customer-data";
+import { customers } from "@/components/admin/mock/customer-mock";
 
 export const NOW = Date.parse("2026-10-23T03:00:00.000Z");
 export const paymentTypes = ["booking", "loan"] as const;

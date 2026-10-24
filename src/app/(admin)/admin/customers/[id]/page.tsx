@@ -1,4 +1,4 @@
-import { CustomerDetail as CustomerWorkspace } from "@/components/admin/customers/customer-detail";
+import { CustomerDetail as CustomerWorkspace } from "@/features/admin/customers/components/customer-detail";
 import { Suspense } from "react";
 import { AdminLoadingState } from "@/components/admin/feedback";
 
