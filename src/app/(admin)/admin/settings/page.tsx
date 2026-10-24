@@ -1,5 +1,7 @@
-import { SettingsView } from "@/components/admin/settings/settings-view";
+import { SettingsPage } from "@/features/admin/settings/components/settings-page";
 
-export default function SettingsPage() {
-  return <SettingsView />;
+export const instant = false;
+
+export default function AdminSettingsPage() {
+  return <SettingsPage />;
 }

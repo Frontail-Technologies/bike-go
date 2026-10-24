@@ -1,3 +1,4 @@
+import type { Icon } from "@phosphor-icons/react";
 import {
   BuildingsIcon,
   CalendarCheckIcon,
@@ -20,7 +21,9 @@ export const adminCopy = {
   adminRole: "Super Admin",
 } as const;
 
-export const adminNavigation = [
+export type AdminNavItem = { href: string; label: string; Icon: Icon; superAdminOnly?: boolean };
+
+export const adminNavigation: ReadonlyArray<AdminNavItem> = [
   { href: "/admin", label: "Dashboard", Icon: SquaresFourIcon },
   { href: "/admin/vehicles", label: "Vehicles", Icon: CarProfileIcon },
   { href: "/admin/banners", label: "Banners", Icon: ImagesSquareIcon },
@@ -32,4 +35,4 @@ export const adminNavigation = [
   { href: "/admin/payments", label: "Payments", Icon: CreditCardIcon },
   { href: "/admin/locations", label: "Locations", Icon: BuildingsIcon },
   { href: "/admin/settings", label: "Settings", Icon: GearIcon },
-] as const;
+];

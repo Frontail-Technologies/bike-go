@@ -3,6 +3,7 @@
 import { MotorcycleIcon, ReceiptIcon, StarIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
+import { AdminQueryProvider } from "@/components/admin/providers/admin-query-provider";
 import { CustomerHeader } from "@/components/customer/desktop-header";
 import { MobileBottomNav } from "@/components/customer/mobile-bottom-nav";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
@@ -34,6 +35,7 @@ export function NavigationSection() {
 
         <Demo title="Admin sidebar (collapsible)" className="overflow-hidden p-0 md:p-0">
           <div className="flex h-[420px] bg-canvas">
+            <AdminQueryProvider>
             <AdminSidebar
               inline
               activeHref={adminHref}
@@ -41,6 +43,7 @@ export function NavigationSection() {
               collapsed={collapsed}
               onCollapsedChange={setCollapsed}
             />
+            </AdminQueryProvider>
             <div className="flex flex-1 items-center justify-center p-4 text-center text-sm text-subtle">
               {adminHref === "/admin" ? "Dashboard" : adminHref.replace("/admin/", "")}
             </div>
