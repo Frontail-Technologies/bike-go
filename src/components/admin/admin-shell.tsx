@@ -1,13 +1,19 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect } from "react";
 import "@/components/admin/admin-theme.module.css";
 import { AdminHeader } from "@/components/admin/shell/admin-header";
 import { AdminMobileBar, AdminSidebar } from "@/components/admin/shell/admin-sidebar";
+import { useAdminShellStore } from "@/stores/admin-shell-store";
 
 /** Admin layout foundation: collapsible sidebar on `lg+`, drawer bar below. */
 export function AdminShell({ children }: { children: React.ReactNode }) {
-  const [collapsed, setCollapsed] = useState(false);
+  const collapsed = useAdminShellStore((state) => state.sidebarCollapsed);
+  const setCollapsed = useAdminShellStore((state) => state.setSidebarCollapsed);
+
+  useEffect(() => {
+    void useAdminShellStore.persist.rehydrate();
+  }, []);
 
   return (
     <div data-admin-ui className="adminRoot flex min-h-dvh">
