@@ -14,6 +14,9 @@ declare global {
   }
 }
 
+/** PayWay's checkout plugin. It builds the payment window around the form below; the form action decides sandbox or production. */
+const PLUGIN_URL = process.env.NEXT_PUBLIC_PAYWAY_SCRIPT_URL ?? "https://checkout.payway.com.kh/plugins/checkout2-0.js";
+
 const money = (minor: number, currency: string) => new Intl.NumberFormat("en-US", { style: "currency", currency }).format(minor / 100);
 
 /**
@@ -24,20 +27,26 @@ export function PaywayCheckout({ reference, onPaid }: { reference: string; onPai
   const start = useStartPayment(reference);
   const formRef = useRef<HTMLFormElement>(null);
   const [payment, setPayment] = useState<StartedPayment | null>(null);
-  const [scriptReady, setScriptReady] = useState(false);
   const opened = useRef(false);
   const status = useBookingPayment(reference, payment !== null);
   const attempt = status.data?.attempt;
   const state = attempt?.status ?? (payment ? "pending" : "idle");
   const expired = status.data?.bookingStatus === "expired";
 
-  // Open PayWay's checkout once the signed form is in the page and its script has loaded.
+  // Open PayWay's window once the signed form is in the page. The plugin may still be loading, so wait for it briefly.
   useEffect(() => {
-    if (payment && scriptReady && !opened.current && window.AbaPayway) {
+    if (!payment || opened.current) return;
+    const open = () => {
+      if (!window.AbaPayway) return false;
       window.AbaPayway.checkout();
       opened.current = true;
-    }
-  }, [payment, scriptReady]);
+      return true;
+    };
+    if (open()) return;
+    const timer = window.setInterval(() => { if (open()) window.clearInterval(timer); }, 250);
+    const giveUp = window.setTimeout(() => window.clearInterval(timer), 15_000);
+    return () => { window.clearInterval(timer); window.clearTimeout(giveUp); };
+  }, [payment]);
 
   useEffect(() => {
     if (state === "paid") onPaid?.();
@@ -48,20 +57,25 @@ export function PaywayCheckout({ reference, onPaid }: { reference: string; onPai
     setPayment(await start.mutateAsync());
   }
 
-  const scriptUrl = payment ? `${new URL(payment.checkout.action).origin}/plugins/checkout2-0.js` : null;
-
   return (
     <section aria-label="Payment" className="flex flex-col gap-3">
+      {/* The plugin looks for this modal shell when it loads, so it is always present; the signed form is filled in when a payment starts. */}
+      <Script id="aba-payway-checkout" src={PLUGIN_URL} strategy="afterInteractive" />
+      <div id="aba_main_modal" className="aba-modal">
+        <div className="aba-modal-content">
+          {payment ? (
+            <form ref={formRef} method="POST" target="aba_webservice" action={payment.checkout.action} id="aba_merchant_request">
+              {Object.entries(payment.checkout.fields).map(([name, value]) => <input key={name} type="hidden" name={name} value={value} />)}
+            </form>
+          ) : null}
+        </div>
+      </div>
       {payment ? (
         <>
           <dl className="flex items-baseline justify-between gap-3 text-sm">
             <dt className="text-subtle">Booking {reference}</dt>
             <dd className="text-lg font-extrabold">{money(payment.amountMinor, payment.currency)}</dd>
           </dl>
-          {scriptUrl ? <Script src={scriptUrl} strategy="afterInteractive" onLoad={() => setScriptReady(true)} onReady={() => setScriptReady(true)} /> : null}
-          <form ref={formRef} id="aba_merchant_request" method="POST" target="aba_webservice" action={payment.checkout.action} className="hidden">
-            {Object.entries(payment.checkout.fields).map(([name, value]) => <input key={name} type="hidden" name={name} value={value} />)}
-          </form>
         </>
       ) : null}
 
