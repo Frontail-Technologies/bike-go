@@ -6,7 +6,7 @@ import { MoneyDisplay } from "@/components/admin/data-display/misc";
 import { CustomerAvatar } from "@/components/admin/customers/customer-avatar";
 import { VehiclePhoto } from "@/components/admin/vehicles/vehicle-photo";
 import { type Booking, fmtDate, fmtShort, money } from "./booking-data";
-import { BookingActions, type BookingHandlers, BookingStatusBadge, PaymentStatusBadge } from "./booking-parts";
+import { BookingActions, type BookingHandlers, BookingOperationalStatus, PaymentStatusBadge } from "./booking-parts";
 
 export function AdminBookingCard({ booking, handlers }: { booking: Booking; handlers: BookingHandlers }) {
   const sameLocation = booking.pickupLocation === booking.returnLocation;
@@ -17,7 +17,7 @@ export function AdminBookingCard({ booking, handlers }: { booking: Booking; hand
           <h3 className="text-[15px] font-extrabold leading-tight">{booking.reference}</h3>
           <p className="text-xs text-[var(--admin-muted)]">Booked {fmtDate(booking.createdAt)}</p>
         </div>
-        <BookingStatusBadge status={booking.status} />
+        <BookingOperationalStatus booking={booking} />
         <BookingActions booking={booking} handlers={handlers} className="-mr-2 -mt-1.5" />
       </header>
       <div className="flex items-center gap-3">

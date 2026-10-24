@@ -4,7 +4,7 @@ import { AlertDialog, Button, Description, Label, ListBox, Modal, Select, TextAr
 import { BellIcon, CalendarBlankIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { VehiclePhoto } from "@/components/admin/vehicles/vehicle-photo";
-import { type Booking, type BookingStatus, bookingLabels, fmtShort, nextStatuses } from "./booking-data";
+import { type Booking, type BookingStatus, bookingLabels, fmtShort } from "./booking-data";
 import { BookingStatusBadge } from "./booking-parts";
 
 const NOTE_LIMIT = 500;
@@ -20,7 +20,7 @@ function Summary({ booking }: { booking: Booking }) {
 }
 
 function StatusForm({ booking, initial, onCancelBooking, onConfirm, onClose }: { booking: Booking; initial: BookingStatus | null; onCancelBooking: () => void; onConfirm: (status: BookingStatus, note: string) => void; onClose: () => void }) {
-  const options = nextStatuses(booking.status);
+  const options: BookingStatus[] = booking.status === "pending" ? ["confirmed"] : booking.status === "confirmed" ? ["ready_for_pickup"] : [];
   const [next, setNext] = useState<BookingStatus | null>(initial && options.includes(initial) ? initial : options[0] ?? null);
   const [note, setNote] = useState("");
   const cancelling = next === "cancelled";
@@ -100,6 +100,24 @@ export function CancelBookingDialog({ booking, isOpen, onOpenChange, onConfirm }
             {booking ? <CancelForm key={booking.reference} booking={booking} onConfirm={(reason) => onConfirm(booking, reason)} /> : null}
           </AlertDialog.Dialog>
         </AlertDialog.Container>
+      </AlertDialog.Backdrop>
+    </AlertDialog>
+  );
+}
+
+export function NoShowDialog({ booking, isOpen, onOpenChange, onConfirm }: { booking: Booking | null; isOpen: boolean; onOpenChange: (open: boolean) => void; onConfirm: (booking: Booking) => void }) {
+  return (
+    <AlertDialog>
+      <AlertDialog.Trigger className="hidden" aria-hidden="true">Open no-show dialog</AlertDialog.Trigger>
+      <AlertDialog.Backdrop isOpen={isOpen} onOpenChange={onOpenChange} className="adminOverlay">
+        <AlertDialog.Container><AlertDialog.Dialog>
+          <AlertDialog.Header><AlertDialog.Icon status="warning" /><AlertDialog.Heading>Mark {booking?.reference} as No Show?</AlertDialog.Heading></AlertDialog.Header>
+          <AlertDialog.Body className="space-y-4">
+            <p className="text-sm text-[var(--admin-muted)]">Use this only when the scheduled pickup has passed and the customer did not arrive. This mock status cannot be reversed.</p>
+            {booking ? <Summary booking={booking} /> : null}
+          </AlertDialog.Body>
+          <AlertDialog.Footer><Button variant="tertiary" slot="close" className="min-h-11">Keep Booking</Button><Button variant="danger" slot="close" className="min-h-11" onPress={() => booking && onConfirm(booking)}>Mark No Show</Button></AlertDialog.Footer>
+        </AlertDialog.Dialog></AlertDialog.Container>
       </AlertDialog.Backdrop>
     </AlertDialog>
   );

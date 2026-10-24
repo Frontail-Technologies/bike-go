@@ -2,14 +2,14 @@ import { cn } from "@/lib/cn";
 
 export type AdminStatus =
   | "available" | "rented" | "maintenance" | "inactive" | "active" | "scheduled" | "ready-for-pickup" | "unpaid" | "partially-refunded" | "draft" | "submitted" | "action-required" | "eligibility"
-  | "pending" | "confirmed" | "ongoing" | "completed" | "cancelled" | "no-show"
+  | "pending" | "confirmed" | "ongoing" | "returned" | "completed" | "cancelled" | "no-show"
   | "paid" | "partially-paid" | "refunded" | "failed"
   | "under-review" | "approved" | "rejected"
   | "verified" | "needs-review" | "expired";
 
 const labels: Record<AdminStatus, string> = {
   active: "Active", scheduled: "Scheduled", "ready-for-pickup": "Ready for pickup", draft: "Draft", submitted: "Submitted", "action-required": "Action required", eligibility: "Eligibility review", unpaid: "Unpaid", "partially-refunded": "Partially refunded", available: "Available", rented: "Rented", maintenance: "Maintenance", inactive: "Inactive",
-  pending: "Pending", confirmed: "Confirmed", ongoing: "Ongoing", completed: "Completed", cancelled: "Cancelled", "no-show": "No show",
+  pending: "Pending", confirmed: "Confirmed", ongoing: "On Rent", returned: "Returned", completed: "Completed", cancelled: "Cancelled", "no-show": "No Show",
   paid: "Paid", "partially-paid": "Partially paid", refunded: "Refunded", failed: "Failed",
   "under-review": "Under review", approved: "Approved", rejected: "Rejected",
   verified: "Verified", "needs-review": "Needs review", expired: "Expired",
@@ -32,6 +32,7 @@ const tones: Record<AdminStatus, string> = {
   verified: "bg-[var(--admin-success-soft)] text-[var(--admin-success)]",
   confirmed: "bg-[var(--admin-info-soft)] text-[var(--admin-info)]",
   ongoing: "bg-[var(--admin-info-soft)] text-[var(--admin-info)]",
+  returned: "bg-[#e8f5f2] text-[#147d68]",
   rented: "bg-[var(--admin-info-soft)] text-[var(--admin-info)]",
   pending: "bg-[var(--admin-warning-soft)] text-[var(--admin-warning)]",
   "under-review": "bg-[var(--admin-warning-soft)] text-[var(--admin-warning)]",

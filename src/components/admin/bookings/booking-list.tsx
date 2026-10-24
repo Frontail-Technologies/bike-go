@@ -12,9 +12,9 @@ import { MoneyDisplay } from "@/components/admin/data-display/misc";
 import { AdminPage, ContentSection, PageHeader } from "@/components/admin/layout";
 import { VehiclePhoto } from "@/components/admin/vehicles/vehicle-photo";
 import { AdminBookingCard } from "./admin-booking-card";
-import { type Booking, type BookingStatus, bookingLabels, bookingStatuses, bookings as seed, fmtDate, fmtShort, money, NOW, paymentLabels, paymentStatuses } from "./booking-data";
-import { CancelBookingDialog, UpdateStatusModal } from "./booking-dialogs";
-import { BookingActions, type BookingHandlers, BookingStatusBadge, PaymentStatusBadge } from "./booking-parts";
+import { type Booking, type BookingStatus, bookingLabels, bookingStatuses, bookings as seed, fmtDate, fmtShort, isOverdue, money, NOW, paymentLabels, paymentStatuses } from "./booking-data";
+import { CancelBookingDialog, NoShowDialog, UpdateStatusModal } from "./booking-dialogs";
+import { BookingActions, type BookingHandlers, BookingOperationalStatus, PaymentStatusBadge } from "./booking-parts";
 
 const PAGE_SIZE = 8;
 const all = "all";
@@ -33,6 +33,7 @@ export function BookingList() {
   const filterDrawer = useOverlayState();
   const statusModal = useOverlayState();
   const cancelDialog = useOverlayState();
+  const noShowDialog = useOverlayState();
   const [items, setItems] = useState<Booking[]>(seed);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState(all);
@@ -57,7 +58,7 @@ export function BookingList() {
     const term = search.trim().toLowerCase();
     const pickup = Date.parse(item.pickupAt);
     return (!term || `${item.reference} ${item.customer.name} ${item.customer.phone} ${item.vehicle.name} ${item.vehicle.registrationNumber}`.toLowerCase().includes(term))
-      && (status === all || item.status === status) && (payment === all || item.paymentStatus === payment)
+      && (status === all || (status === "overdue" ? isOverdue(item) : item.status === status)) && (payment === all || item.paymentStatus === payment)
       && (type === all || item.vehicle.vehicleType === type) && (location === all || item.pickupLocation === location)
       && (dates === all || (dates === "today" && Math.abs(pickup - NOW) < DAY) || (dates === "week" && pickup >= NOW - DAY / 2 && pickup <= NOW + 7 * DAY) || (dates === "past" && Date.parse(item.returnAt) < NOW));
   }).sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)), [items, search, status, payment, type, location, dates]);
@@ -74,6 +75,8 @@ export function BookingList() {
     onView: (booking) => router.push(`/admin/bookings/${booking.reference}`),
     onAdvance: (booking, next) => { setTarget(booking); setInitialStatus(next); statusModal.open(); },
     onCancel: (booking) => { setTarget(booking); cancelDialog.open(); },
+    onNoShow: (booking) => { setTarget(booking); noShowDialog.open(); },
+    onOperate: (booking) => router.push(`/admin/bookings/${booking.reference}`),
   };
   const patch = (reference: string, change: Partial<Booking>) => setItems((current) => current.map((item) => item.reference === reference ? { ...item, ...change } : item));
 
@@ -84,14 +87,14 @@ export function BookingList() {
     { id: "period", header: "Rental period", accessorFn: (row) => row.pickupAt, cell: ({ row }) => <div className="min-w-24 whitespace-nowrap text-xs"><p className="font-medium">{fmtShort(row.original.pickupAt)}</p><p className="text-[var(--admin-muted)]">{fmtShort(row.original.returnAt)}</p></div> },
     { id: "location", header: "Location", accessorFn: (row) => row.pickupLocation, cell: ({ row }) => <div className="min-w-24 max-w-28 text-xs"><p className="font-medium">{row.original.pickupLocation}</p>{row.original.returnLocation !== row.original.pickupLocation ? <p className="text-[var(--admin-muted)]">Return: {row.original.returnLocation}</p> : null}</div> },
     { id: "amount", header: "Amount", accessorFn: (row) => money(row).total, cell: ({ row }) => <div><MoneyDisplay amount={money(row.original).total} /></div> },
-    { accessorKey: "status", header: "Status", cell: ({ row }) => <BookingStatusBadge status={row.original.status} /> },
+    { accessorKey: "status", header: "Status", cell: ({ row }) => <BookingOperationalStatus booking={row.original} /> },
     { accessorKey: "paymentStatus", header: "Payment", cell: ({ row }) => <PaymentStatusBadge status={row.original.paymentStatus} /> },
   ];
   const data = rows.map((row) => ({ ...row, id: row.reference }));
 
   const filterControls = (className?: string) => (
     <>
-      <AdminSelect className={className} label="All statuses" value={status} onChange={update(setStatus)} options={[{ value: all, label: "All statuses" }, ...bookingStatuses.map((value) => ({ value, label: bookingLabels[value] }))]} />
+      <AdminSelect className={className} label="All statuses" value={status} onChange={update(setStatus)} options={[{ value: all, label: "All statuses" }, ...bookingStatuses.map((value) => ({ value, label: bookingLabels[value] })), { value: "overdue", label: "Overdue" }]} />
       <AdminSelect className={className} label="All payments" value={payment} onChange={update(setPayment)} options={[{ value: all, label: "All payments" }, ...paymentStatuses.map((value) => ({ value, label: paymentLabels[value] }))]} />
       <AdminSelect className={className} label="All vehicle types" value={type} onChange={update(setType)} options={[{ value: all, label: "All vehicle types" }, ...(["motorcycle", "scooter", "car", "other"] as const).map((value) => ({ value, label: value[0].toUpperCase() + value.slice(1) }))]} />
       <AdminSelect className={className} label="All locations" value={location} onChange={update(setLocation)} options={[{ value: all, label: "All locations" }, ...locations.map((value) => ({ value, label: value }))]} />
@@ -149,8 +152,9 @@ export function BookingList() {
         </Drawer.Content>
       </Drawer.Backdrop>
 
-      <UpdateStatusModal booking={target} initial={initialStatus} isOpen={statusModal.isOpen} onOpenChange={statusModal.setOpen} onCancelBooking={(booking) => { setTarget(booking); cancelDialog.open(); }} onConfirm={(booking, next) => patch(booking.reference, { status: next })} />
-      <CancelBookingDialog booking={target} isOpen={cancelDialog.isOpen} onOpenChange={cancelDialog.setOpen} onConfirm={(booking, reason) => patch(booking.reference, { status: "cancelled", cancelledAt: new Date(NOW).toISOString(), cancelReason: reason.trim() || "Cancelled by an admin." })} />
+      <UpdateStatusModal booking={target} initial={initialStatus} isOpen={statusModal.isOpen} onOpenChange={statusModal.setOpen} onCancelBooking={(booking) => { setTarget(booking); cancelDialog.open(); }} onConfirm={(booking, next) => patch(booking.reference, { status: next, confirmedAt: next === "confirmed" ? new Date(NOW).toISOString() : booking.confirmedAt, readyAt: next === "ready_for_pickup" ? new Date(NOW).toISOString() : booking.readyAt })} />
+      <CancelBookingDialog booking={target} isOpen={cancelDialog.isOpen} onOpenChange={cancelDialog.setOpen} onConfirm={(booking, reason) => patch(booking.reference, { status: "cancelled", cancelledAt: new Date(NOW).toISOString(), cancelReason: reason.trim() || "Cancelled by an admin.", vehicle: booking.vehicle.status === "maintenance" || booking.vehicle.status === "inactive" ? booking.vehicle : { ...booking.vehicle, status: "available" } })} />
+      <NoShowDialog booking={target} isOpen={noShowDialog.isOpen} onOpenChange={noShowDialog.setOpen} onConfirm={(booking) => patch(booking.reference, { status: "no_show", noShowAt: new Date(NOW).toISOString(), vehicle: booking.vehicle.status === "maintenance" || booking.vehicle.status === "inactive" ? booking.vehicle : { ...booking.vehicle, status: "available" } })} />
     </AdminPage>
   );
 }
