@@ -50,6 +50,13 @@
   min-height: 2.75rem;
 }
 
+/* HeroUI draws a thin vertical separator between table column headers; the
+   admin tables read cleaner without it. */
+.adminRoot .table__column::after,
+.adminOverlay .table__column::after {
+  content: none;
+}
+
 /* Level 2: data surfaces such as tables, forms and info panels. */
 .adminSurface {
   border: 1px solid var(--admin-border);
