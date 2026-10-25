@@ -42,4 +42,26 @@ export const customerApiManifest = [
       { name: "getVehicleAvailability", hook: "useVehicleAvailabilityQuery", kind: "query", method: "GET", path: "/vehicles/:idOrSlug/availability", queryType: "VehicleAvailabilityParams", responseType: "VehicleAvailability" },
     ],
   },
+  {
+    domain: "bookings",
+    featureDir: "src/features/bookings",
+    keyName: "customerBookingKeys",
+    operations: [
+      { name: "listAddons", hook: "useBookingAddonsQuery", kind: "query", method: "GET", path: "/addons", responseType: "BookingAddon", array: true },
+      { name: "quoteBooking", hook: "useBookingQuoteMutation", kind: "mutation", method: "POST", path: "/bookings/quote", bodyType: "BookingRequest", responseType: "BookingQuote" },
+      { name: "listBookings", hook: "useBookingsQuery", kind: "query", method: "GET", path: "/bookings", queryType: "BookingListParams", responseType: "ApiBooking", paginated: true },
+      { name: "createBooking", hook: "useCreateBookingMutation", kind: "mutation", method: "POST", path: "/bookings", bodyType: "BookingRequest", responseType: "ApiBooking", idempotency: true, invalidate: true },
+      { name: "getBooking", hook: "useBookingQuery", kind: "query", method: "GET", path: "/bookings/:reference", responseType: "ApiBooking" },
+      { name: "cancelBooking", hook: "useCancelBookingMutation", kind: "mutation", method: "POST", path: "/bookings/:reference/cancel", bodyType: "BookingCancelInput", responseType: "ApiBooking", invalidate: true },
+    ],
+  },
+  {
+    domain: "payments",
+    featureDir: "src/features/payments",
+    keyName: "customerPaymentKeys",
+    operations: [
+      { name: "startPayment", hook: "useStartPaymentMutation", kind: "mutation", method: "POST", path: "/bookings/:reference/payments", responseType: "StartedPayment", invalidate: true },
+      { name: "getPayment", hook: "usePaymentQuery", kind: "query", method: "GET", path: "/bookings/:reference/payment", responseType: "BookingPayment" },
+    ],
+  },
 ];

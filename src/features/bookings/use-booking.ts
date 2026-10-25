@@ -1,12 +1,11 @@
 "use client";
 
-import { getBike } from "@/features/mock/data";
-import { bookingsStore } from "./store";
+import { useBookingQuery } from "./hooks/generated";
+import { apiBookingToView } from "./booking-mapper";
 
 export function useBooking(reference: string) {
-  const booking = bookingsStore.useValue().find((b) => b.reference === reference);
-  const bike = booking ? getBike(booking.bikeId) : undefined;
-  return booking && bike ? { booking, bike } : undefined;
+  const query = useBookingQuery(reference);
+  return query.data ? apiBookingToView(query.data) : undefined;
 }
 
 export function maskLicence(number: string | null, fallback = "") {

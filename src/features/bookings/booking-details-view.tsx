@@ -15,14 +15,14 @@ import { ModalDialog } from "@/components/ui/modal-dialog";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { toast } from "@/components/ui/toast";
 import { Reveal } from "@/components/motion/reveal";
-import type { City } from "@/features/mock/data";
 import { useTranslations } from "@/i18n/hooks";
 import { quoteLines } from "@/features/bookings/pricing";
 import { BookingTimeline } from "./booking-timeline";
 import { formatDay } from "./dates";
-import { cancelBooking } from "./store";
 import type { CustomerBooking } from "./types";
 import { maskLicence, useBooking } from "./use-booking";
+import { useCancelBookingMutation } from "./hooks/generated";
+import { useCustomerProfileQuery } from "@/features/profile/hooks/generated";
 
 function Card({ title, children, id }: { title: string; children: React.ReactNode; id: string }) {
   return (
@@ -60,8 +60,9 @@ const depositNote = {
 export function BookingDetailsView({ reference }: { reference: string }) {
   const found = useBooking(reference);
   const t = useTranslations("booking");
-  const places = useTranslations("places");
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const cancel = useCancelBookingMutation();
+  const profile = useCustomerProfileQuery();
 
   if (!found) {
     return (
@@ -80,8 +81,8 @@ export function BookingDetailsView({ reference }: { reference: string }) {
   }
 
   const { booking, bike } = found;
-  const city: City = booking.city === "Udaipur" || booking.city === "Jodhpur" ? booking.city : "Jaipur";
-  const hub = { name: places(`hubs.${city}.name`), address: places(`hubs.${city}.address`) };
+  booking.rider = { name: profile.data?.fullName ?? "", phone: profile.data?.phone ?? "", email: profile.data?.email ?? "" };
+  const hub = { name: found.booking.city, address: "RideGo pickup location" };
 
   return (
     <>
@@ -207,8 +208,9 @@ export function BookingDetailsView({ reference }: { reference: string }) {
               variant="danger"
               slot="close"
               onPress={() => {
-                cancelBooking(booking.reference);
-                toast.danger(t("cancelledToast"), { description: t("cancelledToastDesc") });
+                void cancel.mutateAsync({ reference: booking.reference, input: {} }).then(() => {
+                  toast.danger(t("cancelledToast"), { description: t("cancelledToastDesc") });
+                }).catch((error) => toast.danger(error instanceof Error ? error.message : "The booking could not be cancelled."));
               }}
             >
               {t("cancelBooking")}

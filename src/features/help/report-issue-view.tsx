@@ -13,8 +13,7 @@ import { AppSelect } from "@/components/ui/select";
 import { TextAreaInput } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { formatRange } from "@/features/bookings/dates";
-import { bookingsStore } from "@/features/bookings/store";
-import { getBike } from "@/features/mock/data";
+import { useBookingsQuery } from "@/features/bookings/hooks/generated";
 import { supportTicketsApi, type SupportTicketCategory } from "@/features/help/api/support-tickets-api";
 import { useTranslations } from "@/i18n/hooks";
 import { ApiError } from "@/lib/api/error";
@@ -36,7 +35,15 @@ const schema = (message: string) =>
   });
 
 export function ReportIssueView() {
-  const bookings = bookingsStore.useValue();
+  const bookingQuery = useBookingsQuery({ page: 1, pageSize: 100 });
+  const bookings = (bookingQuery.data?.data ?? []).map((booking) => ({
+    reference: booking.reference,
+    bikeId: booking.vehicle.slug,
+    startDate: booking.pickupAt,
+    endDate: booking.returnAt,
+    vehicleName: booking.vehicle.name,
+  }));
+  const getBike = (id: string) => bookings.find((booking) => booking.bikeId === id) ? { name: bookings.find((booking) => booking.bikeId === id)!.vehicleName } : undefined;
   const t = useTranslations("help");
   const [ticket, setTicket] = useState<string | null>(null);
   const { control, handleSubmit, formState } = useForm({

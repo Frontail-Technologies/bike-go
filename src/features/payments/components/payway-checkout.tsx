@@ -4,7 +4,6 @@ import { Alert } from "@heroui/react";
 import Script from "next/script";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ApiError } from "@/lib/api/error";
 import type { StartedPayment } from "../api/checkout-api";
 import { useBookingPayment, useStartPayment } from "../hooks/use-checkout";
 
@@ -24,6 +23,7 @@ const money = (minor: number, currency: string) => new Intl.NumberFormat("en-US"
  * The signed form comes from the backend; the browser never holds the signing key and success is only ever read back from the server.
  */
 export function PaywayCheckout({ reference, onPaid }: { reference: string; onPaid?: () => void }) {
+  const paymentsEnabled = process.env.NEXT_PUBLIC_PAYMENTS_ENABLED === "true";
   const start = useStartPayment(reference);
   const formRef = useRef<HTMLFormElement>(null);
   const [payment, setPayment] = useState<StartedPayment | null>(null);
@@ -53,12 +53,14 @@ export function PaywayCheckout({ reference, onPaid }: { reference: string; onPai
   }, [state, onPaid]);
 
   async function pay() {
+    if (!paymentsEnabled) return;
     opened.current = false;
     setPayment(await start.mutateAsync());
   }
 
   return (
     <section aria-label="Payment" className="flex flex-col gap-3">
+      {!paymentsEnabled ? <Alert status="warning"><Alert.Indicator /><Alert.Content><Alert.Title>Online payments are not available yet</Alert.Title><Alert.Description>Your booking can be created, but checkout remains disabled until RideGo enables payments.</Alert.Description></Alert.Content></Alert> : null}
       {/* The plugin looks for this modal shell when it loads, so it is always present; the signed form is filled in when a payment starts. */}
       <Script id="aba-payway-checkout" src={PLUGIN_URL} strategy="afterInteractive" />
       <div id="aba_main_modal" className="aba-modal">
@@ -88,9 +90,9 @@ export function PaywayCheckout({ reference, onPaid }: { reference: string; onPai
       {state === "paid" ? <Alert status="success"><Alert.Indicator /><Alert.Content><Alert.Title>Payment confirmed</Alert.Title><Alert.Description>{attempt?.method ? `Paid with ${attempt.method}. ` : ""}Your booking {reference} is confirmed.</Alert.Description></Alert.Content></Alert> : null}
       {state === "failed" ? <Alert status="danger"><Alert.Indicator /><Alert.Content><Alert.Title>Payment failed</Alert.Title><Alert.Description>The payment was not completed and you have not been charged. You can try again.</Alert.Description></Alert.Content></Alert> : null}
       {expired ? <Alert status="warning"><Alert.Indicator /><Alert.Content><Alert.Title>Booking expired</Alert.Title><Alert.Description>The hold on this vehicle ran out before payment. Start a new booking.</Alert.Description></Alert.Content></Alert> : null}
-      {start.isError ? <Alert status="danger"><Alert.Indicator /><Alert.Content><Alert.Title>Payment could not be started</Alert.Title><Alert.Description>{start.error instanceof ApiError ? start.error.message : "Try again in a moment."}</Alert.Description></Alert.Content></Alert> : null}
+      {start.isError ? <Alert status="danger"><Alert.Indicator /><Alert.Content><Alert.Title>Payment could not be started</Alert.Title><Alert.Description>Try again in a moment.</Alert.Description></Alert.Content></Alert> : null}
 
-      {state !== "paid" && !expired && (state === "idle" || state === "failed") ? (
+      {paymentsEnabled && state !== "paid" && !expired && (state === "idle" || state === "failed") ? (
         <Button variant="primary" className="min-h-12 w-full" isPending={start.isPending} onPress={() => void pay().catch(() => undefined)}>
           {state === "failed" ? "Try payment again" : "Pay with ABA PayWay"}
         </Button>

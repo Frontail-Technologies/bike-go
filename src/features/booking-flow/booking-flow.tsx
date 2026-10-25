@@ -1,43 +1,48 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Spinner } from "@heroui/react";
 import { BookingSummary } from "@/components/customer/booking-summary";
 import { LoadingRegion } from "@/components/ui/loading-region";
 import { AppBar } from "@/components/shared/app-bar";
 import { BikeImage } from "@/components/shared/bike-image";
 import { DesktopTitle, Screen } from "@/components/shared/screen";
-import { rangeOverlapsBooking, rentalDaysBetween } from "@/features/bookings/dates";
-import { getQuote, quoteLines } from "@/features/bookings/pricing";
+import { rentalDaysBetween } from "@/features/bookings/dates";
+import { quoteLines, type Quote } from "@/features/bookings/pricing";
 import { formatMoney } from "@/lib/format";
-import { addBooking, draftStore, justBookedStore, newReference } from "@/features/bookings/store";
+import { draftStore, justBookedStore } from "@/features/bookings/store";
 import type { BookingDraft } from "@/features/bookings/types";
-import { cityStore, profileStore } from "@/features/profile/store";
 import type { Motorcycle } from "@/features/mock/data";
+import type { Vehicle } from "@/features/vehicles/types";
+import { useCustomerProfileQuery } from "@/features/profile/hooks/generated";
+import { useCreateBookingMutation } from "@/features/bookings/hooks/generated";
+import { useBookingQuoteQuery } from "@/features/bookings/hooks/use-booking-quote";
+import { bookingQuoteToView } from "@/features/bookings/booking-mapper";
+import { cambodiaRentalDateTime } from "@/lib/cambodia-time";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { useTranslations } from "@/i18n/hooks";
 import { BookingProgress, flowSteps } from "./booking-progress";
 import { FlowFooter } from "./flow-footer";
-import { DatesStep, LicenceStep, PaymentStep, RiderStep, ReviewStep, licenceStepValid, paymentMethods, riderStepValid } from "./steps";
+import { DatesStep, LicenceStep, PaymentStep, RiderStep, ReviewStep, licenceStepValid, riderStepValid } from "./steps";
 
-const PAY_DELAY_MS = 900;
 const LAST_STEP = flowSteps.length;
+const EMPTY_QUOTE: Quote = { days: 0, rental: 0, helmet: 0, jacket: 0, tax: 0, fee: 0, deposit: 0, payable: 0, taxRate: 0 };
 
 const clampStep = (n: number) => Math.max(1, Math.min(LAST_STEP, Number.isFinite(n) ? n : 1));
 
-export function BookingFlow({ bike }: { bike: Motorcycle }) {
+export function BookingFlow({ bike, vehicle }: { bike: Motorcycle; vehicle: Vehicle }) {
   const router = useRouter();
   const params = useSearchParams();
   const pathname = usePathname();
   const hydrated = useHydrated();
   const t = useTranslations("booking");
   const common = useTranslations("common");
-  const profile = profileStore.useValue();
+  const profile = useCustomerProfileQuery();
+  const createBooking = useCreateBookingMutation();
   const stored = draftStore.useValue();
   const justBooked = justBookedStore.useValue();
   const [agreed, setAgreed] = useState(false);
-  const [paying, setPaying] = useState(false);
   const [completing, setCompleting] = useState(false);
   const paid = useRef(false);
 
@@ -51,17 +56,26 @@ export function BookingFlow({ bike }: { bike: Motorcycle }) {
         pickupTime: params.get("pt") ?? "10:00 AM",
         dropTime: params.get("dt") ?? "10:00 AM",
         addOns: { helmet: false, jacket: false },
-        rider: { name: profile.name, phone: profile.phone, email: profile.email },
-        licenceNumber: profile.licence?.number ?? "",
+        rider: { name: profile.data?.fullName ?? "", phone: profile.data?.phone ?? "", email: profile.data?.email ?? "" },
+        licenceNumber: "",
         licenceLater: false,
         payment: "aba-khqr",
       };
 
   const patch = (partial: Partial<BookingDraft>) => draftStore.set({ ...draft, ...partial });
   const hasDates = Boolean(draft.start && draft.end);
-  const overlaps = hasDates && rangeOverlapsBooking(bike, draft.start!, draft.end!);
   const days = hasDates ? rentalDaysBetween(draft.start!, draft.end!) : 0;
-  const quote = getQuote(bike, Math.max(days, 1), draft.addOns);
+  const bookingRequest = useMemo(() => !hasDates ? null : ({
+    vehicle: vehicle.slug,
+    pickupLocationId: vehicle.location.id,
+    returnLocationId: vehicle.location.id,
+    pickupAt: cambodiaRentalDateTime(draft.start!, draft.pickupTime),
+    returnAt: cambodiaRentalDateTime(draft.end!, draft.dropTime),
+    addons: [draft.addOns.helmet ? { code: "helmet", quantity: 1 } : null, draft.addOns.jacket ? { code: "riding-jacket", quantity: 1 } : null].filter((item): item is { code: string; quantity: number } => item !== null),
+  }), [draft.addOns.helmet, draft.addOns.jacket, draft.dropTime, draft.end, draft.pickupTime, draft.start, hasDates, vehicle.location.id, vehicle.slug]);
+  const quoteQuery = useBookingQuoteQuery(bookingRequest);
+  const quote = quoteQuery.data ? bookingQuoteToView(quoteQuery.data) : { ...EMPTY_QUOTE, days };
+  const overlaps = quoteQuery.isError;
 
   const maxStep = !hasDates || overlaps || !hasStored ? 1 : !riderStepValid(draft) ? 2 : !licenceStepValid(draft) ? 3 : agreed ? LAST_STEP : 4;
   const requested = clampStep(Number(params.get("step") ?? 1));
@@ -92,32 +106,20 @@ export function BookingFlow({ bike }: { bike: Motorcycle }) {
     router.push(withStep(next), { scroll: false });
   }
 
-  function pay() {
-    setPaying(true);
-    window.setTimeout(() => {
-      const reference = newReference();
-      addBooking({
-        reference,
-        bikeId: bike.id,
-        status: "upcoming",
-        startDate: draft.start!,
-        endDate: draft.end!,
-        pickupTime: draft.pickupTime,
-        dropTime: draft.dropTime,
-        city: cityStore.get(),
-        addOns: draft.addOns,
-        quote: getQuote(bike, days, draft.addOns),
-        rider: draft.rider,
-        licenceNumber: draft.licenceLater ? null : draft.licenceNumber,
-        paymentMethod: paymentMethods.find((m) => m.value === draft.payment)?.label ?? "ABA KHQR",
-        createdAt: new Date().toISOString(),
-      });
+  async function pay() {
+    if (!bookingRequest) return;
+    const idempotencyKey = draft.idempotencyKey ?? crypto.randomUUID();
+    if (!draft.idempotencyKey) patch({ idempotencyKey });
+    try {
+      const booking = await createBooking.mutateAsync({ input: bookingRequest, idempotencyKey });
       paid.current = true;
       setCompleting(true);
       draftStore.set(null);
-      justBookedStore.set(reference);
-      router.replace(`/bookings/${reference}/confirmation`);
-    }, PAY_DELAY_MS);
+      justBookedStore.set(booking.reference);
+      router.replace(`/bookings/${booking.reference}/confirmation`);
+    } catch {
+      setCompleting(false);
+    }
   }
 
   if (completing) {
@@ -130,7 +132,7 @@ export function BookingFlow({ bike }: { bike: Motorcycle }) {
 
   const footer =
     step === 1 ? (
-      <FlowFooter label={t("continue")} amount={quote.payable} onPress={() => go(2)} isDisabled={!hasDates || overlaps} />
+      <FlowFooter label={t("continue")} amount={quote.payable} onPress={() => go(2)} isDisabled={!hasDates || overlaps || quoteQuery.isPending} />
     ) : step === 2 ? (
       <FlowFooter label={t("continue")} amount={quote.payable} formId="rider-form" />
     ) : step === 3 ? (
@@ -143,7 +145,7 @@ export function BookingFlow({ bike }: { bike: Motorcycle }) {
     ) : step === 4 ? (
       <FlowFooter label={t("continueToPayment")} amount={quote.payable} onPress={() => go(5)} isDisabled={!agreed} />
     ) : (
-      <FlowFooter label={t("pay", { amount: formatMoney(quote.payable) })} amount={quote.payable} onPress={pay} isPending={paying} />
+      <FlowFooter label={`Create booking · ${formatMoney(quote.payable)}`} amount={quote.payable} onPress={() => void pay()} isPending={createBooking.isPending} isDisabled={!quoteQuery.data} />
     );
 
   return (

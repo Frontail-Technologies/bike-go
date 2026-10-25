@@ -7,11 +7,11 @@ import { DesktopTitle, Screen } from "@/components/shared/screen";
 import { ButtonLink } from "@/components/ui/button-link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Tabs } from "@/components/ui/tabs";
-import { getBike } from "@/features/mock/data";
 import { useTranslations } from "@/i18n/hooks";
 import { BookingCard } from "./booking-card";
-import { bookingsStore } from "./store";
 import type { CustomerBooking } from "./types";
+import { useBookingsQuery } from "./hooks/generated";
+import { apiBookingToView } from "./booking-mapper";
 
 const tabs = [
   { id: "upcoming", label: "tabUpcoming", statuses: ["upcoming"], empty: "emptyUpcoming" },
@@ -25,7 +25,8 @@ function sortByStart(list: CustomerBooking[], desc: boolean) {
 }
 
 export function BookingsView() {
-  const all = bookingsStore.useValue();
+  const bookings = useBookingsQuery({ page: 1, pageSize: 100 });
+  const all = (bookings.data?.data ?? []).map((item) => apiBookingToView(item));
   const t = useTranslations("booking");
 
   return (
@@ -37,7 +38,7 @@ export function BookingsView() {
         aria-label={t("bookingStatusAria")}
         items={tabs.map((tab) => {
           const list = sortByStart(
-            all.filter((b) => (tab.statuses as readonly string[]).includes(b.status)),
+            all.map((item) => item.booking).filter((b) => (tab.statuses as readonly string[]).includes(b.status)),
             tab.id !== "upcoming",
           );
           return {
@@ -54,7 +55,7 @@ export function BookingsView() {
               ) : (
                 <AnimatedGrid className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
                   {list.map((booking) => {
-                    const bike = getBike(booking.bikeId);
+                    const bike = all.find((item) => item.booking.reference === booking.reference)?.bike;
                     return bike ? <BookingCard key={booking.reference} booking={booking} bike={bike} /> : null;
                   })}
                 </AnimatedGrid>

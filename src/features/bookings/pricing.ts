@@ -19,6 +19,7 @@ export type Quote = {
   fee: number;
   deposit: number;
   payable: number;
+  taxRate?: number;
 };
 
 export function getQuote(bike: Motorcycle, days: number, addOns: AddOns): Quote {
@@ -28,7 +29,7 @@ export function getQuote(bike: Motorcycle, days: number, addOns: AddOns): Quote 
   const tax = round2((rental + helmet + jacket) * TAX_RATE);
   const fee = PLATFORM_FEE;
   const deposit = bike.deposit;
-  return { days, rental, helmet, jacket, tax, fee, deposit, payable: round2(rental + helmet + jacket + tax + fee + deposit) };
+  return { days, rental, helmet, jacket, tax, fee, deposit, payable: round2(rental + helmet + jacket + tax + fee + deposit), taxRate: TAX_RATE * 100 };
 }
 
 export type QuoteLine = SummaryLine;
@@ -38,7 +39,7 @@ export function quoteLines(quote: Quote): QuoteLine[] {
   if (quote.helmet) lines.push({ id: "helmet", amount: quote.helmet });
   if (quote.jacket) lines.push({ id: "jacket", amount: quote.jacket });
   lines.push(
-    { id: "tax", rate: Math.round(TAX_RATE * 100), amount: quote.tax },
+    { id: "tax", rate: Math.round(quote.taxRate ?? TAX_RATE * 100), amount: quote.tax },
     { id: "fee", amount: quote.fee },
     { id: "deposit", amount: quote.deposit, refundable: true },
   );

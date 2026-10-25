@@ -9,7 +9,6 @@ import { BikeImage } from "@/components/shared/bike-image";
 import { Screen } from "@/components/shared/screen";
 import { ButtonLink } from "@/components/ui/button-link";
 import { EmptyState } from "@/components/ui/empty-state";
-import type { City } from "@/features/mock/data";
 import { quoteLines } from "@/features/bookings/pricing";
 import { duration, ease } from "@/design-system/motion";
 import { useTranslations } from "@/i18n/hooks";
@@ -21,7 +20,6 @@ export function ConfirmationView({ reference }: { reference: string }) {
   const found = useBooking(reference);
   const t = useTranslations("booking");
   const common = useTranslations("common");
-  const places = useTranslations("places");
   const goHome = () => router.replace("/");
 
   if (!found) {
@@ -41,7 +39,6 @@ export function ConfirmationView({ reference }: { reference: string }) {
   }
 
   const { booking, bike } = found;
-  const city: City = booking.city === "Udaipur" || booking.city === "Jodhpur" ? booking.city : "Jaipur";
 
   return (
     <>
@@ -84,13 +81,13 @@ export function ConfirmationView({ reference }: { reference: string }) {
         <p className="flex items-start gap-3">
           <MapPinIcon size={20} weight="fill" className="mt-0.5 shrink-0" />
           <span>
-            <span className="block font-bold">{places(`hubs.${city}.name`)}</span>
-            <span className="block text-subtle">{places(`hubs.${city}.address`)}</span>
+            <span className="block font-bold">{booking.city}</span>
+            <span className="block text-subtle">RideGo pickup location</span>
           </span>
         </p>
         <p className="flex items-center gap-3 text-subtle">
           <ClockIcon size={20} className="shrink-0 text-ink" />
-          {t("arriveEarly", { hours: places("hours") })}
+          {t("arriveEarly", { hours: "07:00–21:00 ICT" })}
         </p>
         <p className="flex items-center gap-3 text-subtle">
           <IdentificationCardIcon size={20} className="shrink-0 text-ink" />
