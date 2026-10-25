@@ -11,10 +11,13 @@ import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { AppSelect } from "@/components/ui/select";
 import { TextAreaInput } from "@/components/ui/text-field";
+import { toast } from "@/components/ui/toast";
 import { formatRange } from "@/features/bookings/dates";
 import { bookingsStore } from "@/features/bookings/store";
 import { getBike } from "@/features/mock/data";
+import { supportTicketsApi, type SupportTicketCategory } from "@/features/help/api/support-tickets-api";
 import { useTranslations } from "@/i18n/hooks";
+import { ApiError } from "@/lib/api/error";
 
 const categories = [
   { id: "booking", key: "reportCatBooking" },
@@ -32,8 +35,6 @@ const schema = (message: string) =>
     message: z.string().trim().min(20, message),
   });
 
-const SIMULATED_SEND_MS = 700;
-
 export function ReportIssueView() {
   const bookings = bookingsStore.useValue();
   const t = useTranslations("help");
@@ -49,15 +50,18 @@ export function ReportIssueView() {
     ...bookings.map((b) => ({ id: b.reference, label: `${b.reference} · ${getBike(b.bikeId)?.name ?? t("reportFallbackBike")} · ${formatRange(b.startDate, b.endDate)}` })),
   ];
 
-  const send = handleSubmit(
-    () =>
-      new Promise<void>((resolve) => {
-        window.setTimeout(() => {
-          setTicket(`SUP-${Math.floor(10000 + Math.random() * 89999)}`);
-          resolve();
-        }, SIMULATED_SEND_MS);
-      }),
-  );
+  const send = handleSubmit(async (values) => {
+    try {
+      const created = await supportTicketsApi.create({
+        category: values.category as SupportTicketCategory,
+        bookingReference: values.booking === "none" ? null : values.booking,
+        message: values.message,
+      });
+      setTicket(created.reference);
+    } catch (error) {
+      toast.danger(error instanceof ApiError ? error.message : "The issue could not be sent. Try again.");
+    }
+  });
 
   if (ticket) {
     return (

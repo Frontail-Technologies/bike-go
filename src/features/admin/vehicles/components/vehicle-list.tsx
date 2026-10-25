@@ -172,6 +172,6 @@ export function VehicleList() {
       </Drawer.Content>
     </Drawer.Backdrop>
 
-    <ConfirmationDialog isOpen={Boolean(changing)} onOpenChange={(isOpen) => !isOpen && setChanging(null)} title={changing?.status === "inactive" ? "Activate vehicle?" : "Deactivate vehicle?"} description={changing?.status === "inactive" ? `${changing.name} will return to the available catalogue.` : `${changing?.name ?? "This vehicle"} will no longer be available for new bookings.`} confirmLabel={changing?.status === "inactive" ? "Activate" : "Deactivate"} danger={changing?.status !== "inactive"} onConfirm={() => void toggleVehicle()} />
+    <ConfirmationDialog isOpen={Boolean(changing)} onOpenChange={(isOpen) => !isOpen && setChanging(null)} title={changing?.status === "inactive" ? "Activate vehicle?" : "Deactivate vehicle?"} description={changing?.status === "inactive" ? `${changing.name} will return to the available catalogue.` : `${changing?.name ?? "This vehicle"} will no longer be available for new bookings.`} confirmLabel={changing?.status === "inactive" ? "Activate" : "Deactivate"} danger={changing?.status !== "inactive"} isPending={mutations.setStatus.isPending} onConfirm={() => void toggleVehicle()} />
   </AdminPage>;
 }

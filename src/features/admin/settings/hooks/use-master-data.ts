@@ -18,5 +18,6 @@ export function useMasterDataMutations(kind: MasterKind) {
     reorder: useMutation({ mutationFn: (ids: string[]) => masterDataApi.reorder(kind, ids), onSuccess: invalidate }),
     setImage: useMutation({ mutationFn: ({ id, image }: { id: string; image: File }) => masterDataApi.setImage(kind, id, image), onSuccess: invalidate }),
     removeImage: useMutation({ mutationFn: (id: string) => masterDataApi.removeImage(kind, id), onSuccess: invalidate }),
+    remove: useMutation({ mutationFn: (id: string) => masterDataApi.remove(kind, id), onSuccess: invalidate }),
   };
 }

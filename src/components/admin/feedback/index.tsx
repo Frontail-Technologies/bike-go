@@ -20,15 +20,16 @@ export function AdminSuccessState({ title, description }: { title: string; descr
   return <Alert status="success"><Alert.Indicator /><Alert.Content><Alert.Title>{title}</Alert.Title>{description ? <Alert.Description>{description}</Alert.Description> : null}</Alert.Content></Alert>;
 }
 
-export function ConfirmationDialog({ isOpen, onOpenChange, title, description, confirmLabel = "Confirm", cancelLabel = "Cancel", danger = false, onConfirm }: { isOpen: boolean; onOpenChange: (open: boolean) => void; title: string; description: string; confirmLabel?: string; cancelLabel?: string; danger?: boolean; onConfirm: () => void }) {
+export function ConfirmationDialog({ isOpen, onOpenChange, title, description, confirmLabel = "Confirm", cancelLabel = "Cancel", danger = false, isPending = false, onConfirm }: { isOpen: boolean; onOpenChange: (open: boolean) => void; title: string; description: string; confirmLabel?: string; cancelLabel?: string; danger?: boolean; isPending?: boolean; onConfirm: () => void }) {
   return <AlertDialog>
     <AlertDialog.Trigger className="hidden" aria-hidden="true">Open confirmation</AlertDialog.Trigger>
-    <AlertDialog.Backdrop isOpen={isOpen} onOpenChange={onOpenChange} isKeyboardDismissDisabled={false} className="adminOverlay">
+    <AlertDialog.Backdrop isOpen={isOpen} onOpenChange={onOpenChange} isKeyboardDismissDisabled={isPending} isDismissable={!isPending} className="adminOverlay">
       <AlertDialog.Container>
         <AlertDialog.Dialog>
           <AlertDialog.Header><AlertDialog.Icon status={danger ? "danger" : "accent"} /><AlertDialog.Heading>{title}</AlertDialog.Heading></AlertDialog.Header>
           <AlertDialog.Body><p className="text-sm text-[var(--admin-muted)]">{description}</p></AlertDialog.Body>
-          <AlertDialog.Footer><Button variant="tertiary" slot="close">{cancelLabel}</Button><Button slot="close" variant={danger ? "danger" : "primary"} onPress={onConfirm}>{confirmLabel}</Button></AlertDialog.Footer>
+          {/* The confirm button no longer auto-closes (no slot="close"): the caller keeps the dialog open until its mutation settles, then closes it itself. */}
+          <AlertDialog.Footer><Button variant="tertiary" slot="close" isDisabled={isPending}>{cancelLabel}</Button><Button variant={danger ? "danger" : "primary"} isPending={isPending} isDisabled={isPending} onPress={onConfirm}>{confirmLabel}</Button></AlertDialog.Footer>
         </AlertDialog.Dialog>
       </AlertDialog.Container>
     </AlertDialog.Backdrop>

@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Dropdown, Label } from "@heroui/react";
-import { ArrowDownIcon, ArrowUpIcon, DotsThreeVerticalIcon, NotePencilIcon, PowerIcon } from "@phosphor-icons/react";
+import { ArrowDownIcon, ArrowUpIcon, DotsThreeVerticalIcon, NotePencilIcon, PowerIcon, TrashIcon } from "@phosphor-icons/react";
 
 type ItemRowActionsProps = {
   name: string;
@@ -10,9 +10,10 @@ type ItemRowActionsProps = {
   onToggle: () => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
+  onDelete?: () => void;
 };
 
-export function ItemRowActions({ name, active, onEdit, onToggle, onMoveUp, onMoveDown }: ItemRowActionsProps) {
+export function ItemRowActions({ name, active, onEdit, onToggle, onMoveUp, onMoveDown, onDelete }: ItemRowActionsProps) {
   return (
     <Dropdown>
       <Button isIconOnly size="sm" variant="ghost" aria-label={`Actions for ${name}`} className="size-11 min-w-11 md:size-9 md:min-w-9">
@@ -38,6 +39,12 @@ export function ItemRowActions({ name, active, onEdit, onToggle, onMoveUp, onMov
             <Dropdown.Item id="down" textValue="Move down" onAction={onMoveDown}>
               <ArrowDownIcon size={16} />
               <Label>Move down</Label>
+            </Dropdown.Item>
+          ) : null}
+          {onDelete ? (
+            <Dropdown.Item id="delete" textValue="Delete" variant="danger" onAction={onDelete}>
+              <TrashIcon size={16} />
+              <Label>Delete</Label>
             </Dropdown.Item>
           ) : null}
         </Dropdown.Menu>

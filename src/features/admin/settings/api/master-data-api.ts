@@ -17,4 +17,5 @@ export const masterDataApi = {
     return apiClient.put<Envelope<MasterItem>>(`/admin/master-data/${kind}/${id}/image`, body).then((response) => response.data.data);
   },
   removeImage: (kind: MasterKind, id: string) => apiClient.delete<Envelope<MasterItem>>(`/admin/master-data/${kind}/${id}/image`).then((response) => response.data.data),
+  remove: (kind: MasterKind, id: string) => apiClient.delete<Envelope<{ id: string }>>(`/admin/master-data/${kind}/${id}`).then((response) => response.data.data),
 };

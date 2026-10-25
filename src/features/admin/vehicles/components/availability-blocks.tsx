@@ -100,7 +100,7 @@ export function AvailabilityBlocks({ vehicleId }: { vehicleId: string }) {
           </Drawer.Dialog>
         </Drawer.Content>
       </Drawer.Backdrop>
-      <ConfirmationDialog isOpen={Boolean(removing)} onOpenChange={(open) => { if (!open) setRemoving(null); }} title="Remove availability block?" description="The vehicle becomes available for booking during this period again." confirmLabel="Remove block" danger onConfirm={removeBlock} />
+      <ConfirmationDialog isOpen={Boolean(removing)} onOpenChange={(open) => { if (!open) setRemoving(null); }} title="Remove availability block?" description="The vehicle becomes available for booking during this period again." confirmLabel="Remove block" danger isPending={mutations.remove.isPending} onConfirm={removeBlock} />
     </>
   );
 }

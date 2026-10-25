@@ -3,6 +3,7 @@ import {
   BuildingsIcon,
   CalendarCheckIcon,
   CarProfileIcon,
+  ChatCircleTextIcon,
   CreditCardIcon,
   FileTextIcon,
   GearIcon,
@@ -33,6 +34,7 @@ export const adminNavigation: ReadonlyArray<AdminNavItem> = [
   { href: "/admin/loans", label: "Loan Applications", Icon: HandCoinsIcon },
   { href: "/admin/documents", label: "Documents", Icon: FileTextIcon },
   { href: "/admin/payments", label: "Payments", Icon: CreditCardIcon },
+  { href: "/admin/feedback", label: "Feedback", Icon: ChatCircleTextIcon },
   { href: "/admin/locations", label: "Locations", Icon: BuildingsIcon },
   { href: "/admin/settings", label: "Settings", Icon: GearIcon },
 ];

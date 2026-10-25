@@ -190,8 +190,8 @@ export function BannerWorkspace() {
 
       <BannerPreview banner={previewing} isOpen={preview.isOpen} onOpenChange={preview.setOpen} />
 
-      <ConfirmationDialog isOpen={Boolean(deactivating)} onOpenChange={(open) => !open && setDeactivating(null)} title="Deactivate banner?" description={`“${deactivating?.title ?? "This banner"}” will stop displaying to customers. Its content and schedule are kept, so you can activate it again later.`} confirmLabel="Deactivate" danger onConfirm={() => deactivating && void setActive(deactivating, "inactive")} />
-      <ConfirmationDialog isOpen={Boolean(deleting)} onOpenChange={(open) => !open && setDeleting(null)} title="Delete banner?" description={`“${deleting?.title ?? "This banner"}” will be permanently removed, together with its own image. This can’t be undone.`} confirmLabel="Delete Banner" danger onConfirm={() => deleting && void remove(deleting)} />
+      <ConfirmationDialog isOpen={Boolean(deactivating)} onOpenChange={(open) => !open && setDeactivating(null)} title="Deactivate banner?" description={`“${deactivating?.title ?? "This banner"}” will stop displaying to customers. Its content and schedule are kept, so you can activate it again later.`} confirmLabel="Deactivate" danger isPending={mutations.setStatus.isPending} onConfirm={() => deactivating && void setActive(deactivating, "inactive")} />
+      <ConfirmationDialog isOpen={Boolean(deleting)} onOpenChange={(open) => !open && setDeleting(null)} title="Delete banner?" description={`“${deleting?.title ?? "This banner"}” will be permanently removed, together with its own image. This can’t be undone.`} confirmLabel="Delete Banner" danger isPending={mutations.remove.isPending} onConfirm={() => deleting && void remove(deleting)} />
     </AdminPage>
   );
 }

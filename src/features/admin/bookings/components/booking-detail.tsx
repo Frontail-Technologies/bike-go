@@ -120,6 +120,8 @@ function BookingWorkspace({ booking }: { booking: Booking }) {
       await vehicles.setStatus.mutateAsync({ id: vehicle.id, status: "maintenance" });
       toast.success(`${vehicle.name} moved to maintenance`);
       void client.invalidateQueries({ queryKey: adminBookingQueryKeys.root() });
+      // The confirm button no longer auto-closes the dialog; close it ourselves once the move succeeds.
+      maintenanceDialog.close();
     } catch (error) {
       toast.danger(actionErrorMessage(error));
     }
@@ -161,6 +163,6 @@ function BookingWorkspace({ booking }: { booking: Booking }) {
     <HandoverDrawer booking={booking} isOpen={handoverDrawer.isOpen} onOpenChange={handoverDrawer.setOpen} onConfirm={(input) => actions.startRental(booking, input)} />
     <ReturnInspectionDrawer booking={booking} isOpen={returnDrawer.isOpen} onOpenChange={returnDrawer.setOpen} onConfirm={(input) => actions.returnVehicle(booking, input)} />
     <CompleteBookingDialog booking={booking} isOpen={completeDialog.isOpen} onOpenChange={completeDialog.setOpen} onConfirm={() => actions.advance(booking, "completed")} />
-    <ConfirmationDialog isOpen={maintenanceDialog.isOpen} onOpenChange={maintenanceDialog.setOpen} title="Move vehicle to maintenance?" description="The return inspection found new damage. This marks the vehicle as Maintenance so it stays unavailable after completion; it does not complete the booking." confirmLabel="Move to Maintenance" onConfirm={() => void moveToMaintenance()} />
+    <ConfirmationDialog isOpen={maintenanceDialog.isOpen} onOpenChange={maintenanceDialog.setOpen} title="Move vehicle to maintenance?" description="The return inspection found new damage. This marks the vehicle as Maintenance so it stays unavailable after completion; it does not complete the booking." confirmLabel="Move to Maintenance" isPending={vehicles.setStatus.isPending} onConfirm={() => void moveToMaintenance()} />
   </AdminPage>;
 }

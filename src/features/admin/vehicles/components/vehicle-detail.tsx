@@ -132,6 +132,6 @@ export function VehicleDetail({ id }: { id: string }) {
     </div>
 
     <AvailabilityBlocks vehicleId={vehicle.id} />
-    <ConfirmationDialog isOpen={confirming} onOpenChange={setConfirming} title={inactive ? "Activate vehicle?" : "Deactivate vehicle?"} description={inactive ? "This vehicle will be available for bookings again." : "This vehicle will be removed from the active catalogue."} confirmLabel={inactive ? "Activate" : "Deactivate"} danger={!inactive} onConfirm={toggle} />
+    <ConfirmationDialog isOpen={confirming} onOpenChange={setConfirming} title={inactive ? "Activate vehicle?" : "Deactivate vehicle?"} description={inactive ? "This vehicle will be available for bookings again." : "This vehicle will be removed from the active catalogue."} confirmLabel={inactive ? "Activate" : "Deactivate"} danger={!inactive} isPending={mutations.setStatus.isPending} onConfirm={toggle} />
   </AdminPage>;
 }

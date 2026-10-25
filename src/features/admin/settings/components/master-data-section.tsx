@@ -64,6 +64,7 @@ export function MasterDataSection({
   const [editing, setEditing] = useState<MasterItem | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deactivating, setDeactivating] = useState<MasterItem | null>(null);
+  const [deleting, setDeleting] = useState<MasterItem | null>(null);
 
   const params: MasterPageParams = {
     page,
@@ -115,15 +116,27 @@ export function MasterDataSection({
     toast.success(editing ? `${saved.name} updated` : `${saved.name} added`);
   }
 
-  function setActive(item: MasterItem, active: boolean) {
+  function setActive(item: MasterItem, active: boolean, onSettled?: () => void) {
     mutations.update.mutate(
       { id: item.id, active },
       {
-        onSuccess: () =>
-          toast.success(`${item.name} ${active ? "activated" : "deactivated"}`),
+        onSuccess: () => {
+          toast.success(`${item.name} ${active ? "activated" : "deactivated"}`);
+          onSettled?.();
+        },
         onError: (error) => toast.danger(failure(error)),
       },
     );
+  }
+
+  function remove(item: MasterItem, onSettled?: () => void) {
+    mutations.remove.mutate(item.id, {
+      onSuccess: () => {
+        toast.success(`${item.name} deleted`);
+        onSettled?.();
+      },
+      onError: (error) => toast.danger(failure(error)),
+    });
   }
 
   function move(index: number, direction: -1 | 1) {
@@ -267,6 +280,7 @@ export function MasterDataSection({
                     ? () => move(index, 1)
                     : undefined
                 }
+                onDelete={() => setDeleting(item)}
               />
             </li>
           ))}
@@ -300,9 +314,22 @@ export function MasterDataSection({
         description={deactivateCopy(deactivating?.name ?? "This item")}
         confirmLabel="Deactivate"
         danger
+        isPending={mutations.update.isPending}
         onConfirm={() => {
-          if (deactivating) setActive(deactivating, false);
-          setDeactivating(null);
+          // Close only once the mutation settles, so the dialog can't be dismissed mid-request or submitted twice.
+          if (deactivating) setActive(deactivating, false, () => setDeactivating(null));
+        }}
+      />
+      <ConfirmationDialog
+        isOpen={Boolean(deleting)}
+        onOpenChange={(open) => !open && setDeleting(null)}
+        title={`Delete ${deleting?.name ?? noun}?`}
+        description={`This cannot be undone. Vehicles or loans that already used “${deleting?.name ?? "this item"}” keep that text; only new selections are affected.`}
+        confirmLabel="Delete"
+        danger
+        isPending={mutations.remove.isPending}
+        onConfirm={() => {
+          if (deleting) remove(deleting, () => setDeleting(null));
         }}
       />
     </section>

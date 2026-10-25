@@ -88,7 +88,7 @@ export function LocationList() {
         <AdminDataTable columns={columns} data={rows} label="Locations" emptyState={query.isLoading ? "Loading locations…" : "No locations found. Try another search or add a RideGo location."} loading={query.isLoading} pagination={{ page: safePage, pageSize: PAGE_SIZE, total: filtered.length, onPageChange: setPage }} onRowNavigate={edit} rowActions={rowActions} minWidth={760} />
       </ContentSection>
       <MapLinkDialog name={linking?.name ?? null} isOpen={Boolean(linking)} onOpenChange={(open) => !open && setLinking(null)} onSave={(coordinates) => void saveCoordinates(coordinates)} />
-      <ConfirmationDialog isOpen={Boolean(changing)} onOpenChange={(open) => !open && setChanging(null)} title={changing?.active ? "Deactivate location?" : "Activate location?"} description={changing?.active ? `${changing.name} will not be available for new assignments.` : `${changing?.name ?? "This location"} will be available for vehicle assignment.`} confirmLabel={changing?.active ? "Deactivate" : "Activate"} danger={changing?.active} onConfirm={() => void toggle()} />
+      <ConfirmationDialog isOpen={Boolean(changing)} onOpenChange={(open) => !open && setChanging(null)} title={changing?.active ? "Deactivate location?" : "Activate location?"} description={changing?.active ? `${changing.name} will not be available for new assignments.` : `${changing?.name ?? "This location"} will be available for vehicle assignment.`} confirmLabel={changing?.active ? "Deactivate" : "Activate"} danger={changing?.active} isPending={mutations.update.isPending} onConfirm={() => void toggle()} />
     </AdminPage>
   );
 }

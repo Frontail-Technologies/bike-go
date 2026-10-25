@@ -109,8 +109,8 @@ export function AddonsSection() {
   const term = search.trim().toLowerCase();
   const items = useMemo(() => (query.data ?? []).filter((addon) => !term || `${addon.name} ${addon.code}`.toLowerCase().includes(term)), [query.data, term]);
 
-  function setActive(addon: Addon, active: boolean) {
-    mutations.update.mutate({ id: addon.id, active }, { onSuccess: () => toast.success(`${addon.name} ${active ? "activated" : "deactivated"}`), onError: (error) => toast.danger(failure(error)) });
+  function setActive(addon: Addon, active: boolean, onSettled?: () => void) {
+    mutations.update.mutate({ id: addon.id, active }, { onSuccess: () => { toast.success(`${addon.name} ${active ? "activated" : "deactivated"}`); onSettled?.(); }, onError: (error) => toast.danger(failure(error)) });
   }
 
   return (
@@ -164,7 +164,7 @@ export function AddonsSection() {
           </Modal.Dialog>
         </Modal.Container>
       </Modal.Backdrop>
-      <ConfirmationDialog isOpen={Boolean(deactivating)} onOpenChange={(next) => !next && setDeactivating(null)} title={`Deactivate ${deactivating?.name ?? "add-on"}?`} description={deactivateCopy(deactivating?.name ?? "This add-on")} confirmLabel="Deactivate" danger onConfirm={() => { if (deactivating) setActive(deactivating, false); setDeactivating(null); }} />
+      <ConfirmationDialog isOpen={Boolean(deactivating)} onOpenChange={(next) => !next && setDeactivating(null)} title={`Deactivate ${deactivating?.name ?? "add-on"}?`} description={deactivateCopy(deactivating?.name ?? "This add-on")} confirmLabel="Deactivate" danger isPending={mutations.update.isPending} onConfirm={() => { if (deactivating) setActive(deactivating, false, () => setDeactivating(null)); }} />
     </section>
   );
 }
