@@ -21,7 +21,9 @@ import {
 } from "./data";
 import { DocumentUpload } from "./document-upload";
 import { LoanTimeline } from "./loan-timeline";
-import { addAdditionalDocument, justAppliedStore, loansStore, provideDocuments } from "./store";
+import { justAppliedStore } from "./store";
+import { useLoanQuery } from "./hooks/generated";
+import { apiLoanToApplication } from "./loan-mapper";
 
 const headIcon: Record<LoanStatus, React.ReactNode> = {
   submitted: <CheckCircleIcon size={26} weight="fill" className="text-[#22c55e]" />,
@@ -54,7 +56,8 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 export function LoanStatusView({ reference }: { reference: string }) {
   const router = useRouter();
   const { t, typeName, status, choice, docLabel, docHint } = useLoanText();
-  const application = loansStore.useValue().find((a) => a.reference === reference);
+  const loan = useLoanQuery(reference);
+  const application = loan.data ? apiLoanToApplication(loan.data) : undefined;
   const justApplied = justAppliedStore.useValue();
   const [files, setFiles] = useState<Partial<Record<DocumentId, StoredFile>>>({});
   const [extraOpen, setExtraOpen] = useState(false);
@@ -166,9 +169,8 @@ export function LoanStatusView({ reference }: { reference: string }) {
               size="lg"
               isDisabled={!ready}
               onPress={() => {
-                provideDocuments(application.reference, files);
                 setFiles({});
-                toast.success(t("stDocsSent"), { description: t("stDocsSentDesc") });
+                toast.info("Document upload is being connected to the secure service.");
               }}
             >
               {t("stSendDocs")}
@@ -215,9 +217,8 @@ export function LoanStatusView({ reference }: { reference: string }) {
                 file={undefined}
                 onChange={(file) => {
                   if (!file) return;
-                  addAdditionalDocument(application.reference, file);
                   setExtraOpen(false);
-                  toast.success(t("upReceived"), { description: file.name });
+                  toast.info(`Document ready to upload: ${file.name}`);
                 }}
               />
             ) : (

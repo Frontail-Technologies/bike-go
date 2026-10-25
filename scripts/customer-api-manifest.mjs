@@ -64,4 +64,28 @@ export const customerApiManifest = [
       { name: "getPayment", hook: "usePaymentQuery", kind: "query", method: "GET", path: "/bookings/:reference/payment", responseType: "BookingPayment" },
     ],
   },
+  {
+    domain: "loans",
+    featureDir: "src/features/loans",
+    keyName: "customerLoanKeys",
+    operations: [
+      { name: "listLoans", hook: "useLoansQuery", kind: "query", method: "GET", path: "/loans", queryType: "LoanListParams", responseType: "ApiLoan", paginated: true },
+      { name: "createLoan", hook: "useCreateLoanMutation", kind: "mutation", method: "POST", path: "/loans", bodyType: "LoanCreateInput", responseType: "ApiLoan", invalidate: true },
+      { name: "getLoan", hook: "useLoanQuery", kind: "query", method: "GET", path: "/loans/:reference", responseType: "ApiLoan" },
+      { name: "updateLoan", hook: "useUpdateLoanMutation", kind: "mutation", method: "PATCH", path: "/loans/:reference", bodyType: "LoanUpdateInput", responseType: "ApiLoan", invalidate: true },
+      { name: "submitLoan", hook: "useSubmitLoanMutation", kind: "mutation", method: "POST", path: "/loans/:reference/submit", responseType: "ApiLoan", idempotency: true, invalidate: true },
+      { name: "resubmitLoan", hook: "useResubmitLoanMutation", kind: "mutation", method: "POST", path: "/loans/:reference/resubmit", responseType: "ApiLoan", invalidate: true },
+    ],
+  },
+  {
+    domain: "loan-documents",
+    featureDir: "src/features/loans/documents",
+    keyName: "customerLoanDocumentKeys",
+    operations: [
+      { name: "listLoanDocuments", hook: "useLoanDocumentsQuery", kind: "query", method: "GET", path: "/loans/:reference/documents", responseType: "LoanDocument", array: true },
+      { name: "uploadLoanDocument", hook: "useUploadLoanDocumentMutation", kind: "mutation", method: "POST", path: "/loans/:reference/documents", bodyType: "LoanDocumentUpload", responseType: "LoanDocument", invalidate: true },
+      { name: "replaceLoanDocument", hook: "useReplaceLoanDocumentMutation", kind: "mutation", method: "PATCH", path: "/loans/:reference/documents/:documentId", bodyType: "LoanDocumentReplace", responseType: "LoanDocument", invalidate: true },
+      { name: "deleteLoanDocument", hook: "useDeleteLoanDocumentMutation", kind: "mutation", method: "DELETE", path: "/loans/:reference/documents/:documentId", responseType: "DeletedLoanDocument", invalidate: true },
+    ],
+  },
 ];

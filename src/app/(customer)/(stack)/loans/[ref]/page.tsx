@@ -2,7 +2,6 @@ import { LoadingRegion } from "@/components/ui/loading-region";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { BlockSkeleton } from "@/components/ui/skeleton";
-import { seedApplications } from "@/features/loans/data";
 import { LoanStatusView } from "@/features/loans/status-view";
 
 export const metadata: Metadata = { title: "Application status" };
@@ -17,9 +16,7 @@ function StatusSkeleton() {
   );
 }
 
-export function generateStaticParams() {
-  return seedApplications.map((application) => ({ ref: application.reference }));
-}
+export const instant = false;
 
 export default function LoanStatusPage({ params }: { params: Promise<{ ref: string }> }) {
   return (

@@ -8,10 +8,12 @@ import { ButtonLink } from "@/components/ui/button-link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useTranslations } from "@/i18n/hooks";
 import { ApplicationCard } from "./application-card";
-import { loansStore } from "./store";
+import { useLoansQuery } from "./hooks/generated";
+import { apiLoanToApplication } from "./loan-mapper";
 
 export function ApplicationsView() {
-  const applications = loansStore.useValue();
+  const loans = useLoansQuery({ page: 1, pageSize: 100 });
+  const applications = (loans.data?.data ?? []).map(apiLoanToApplication);
   const t = useTranslations("profile");
 
   return (

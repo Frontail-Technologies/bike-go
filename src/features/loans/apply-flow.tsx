@@ -14,13 +14,13 @@ import { Checkbox } from "@/components/ui/selection-controls";
 import { TextInput } from "@/components/ui/text-field";
 import { FlowFooter } from "@/features/booking-flow/flow-footer";
 import { formatDay } from "@/features/bookings/dates";
-import { profileStore } from "@/features/profile/store";
+import { useCustomerProfileQuery } from "@/features/profile/hooks/generated";
+import { useCreateLoanMutation } from "./hooks/generated";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { cn } from "@/lib/cn";
 import { useTranslations } from "@/i18n/hooks";
 import { formatMoney, formatPrice } from "@/lib/format";
 import {
-  type DocumentId,
   type LoanDraft,
   type LoanTypeId,
   calculateEmi,
@@ -31,7 +31,6 @@ import {
   loanPurposes,
   loanTypes,
   MAX_EMI_SHARE,
-  newLoanReference,
   residenceStatuses,
   tenuresFor,
 } from "./data";
@@ -47,7 +46,7 @@ import {
   personalSchema,
   personalStepValid,
 } from "./schemas";
-import { addApplication, justAppliedStore, loanDraftStore } from "./store";
+import { justAppliedStore, loanDraftStore } from "./store";
 
 const STEPS = ["applyStep1", "applyStep2", "applyStep3", "applyStep4", "applyStep5"] as const;
 const LAST_STEP = STEPS.length;
@@ -432,7 +431,8 @@ export function ApplyFlow() {
   const hydrated = useHydrated();
   const { t, typeName } = useLoanText();
   const intl = useTranslations("loans");
-  const profile = profileStore.useValue();
+  const profile = useCustomerProfileQuery();
+  const createLoan = useCreateLoanMutation();
   const stored = loanDraftStore.useValue();
   const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -447,7 +447,7 @@ export function ApplyFlow() {
       amount: Math.min(queryType.maxAmount, Math.max(queryType.minAmount, Number(params.get("amount")) || 5000)),
       tenure: Number(params.get("tenure")) || 24,
       purpose: "",
-      applicant: { fullName: profile.name, mobile: profile.phone ? `+${profile.phone}` : "", email: profile.email, dob: "", nationality: "", city: "", residence: "" },
+      applicant: { fullName: profile.data?.fullName ?? "", mobile: profile.data?.phone ?? "", email: profile.data?.email ?? "", dob: "", nationality: "", city: "", residence: "" },
       employment: { type: "", employer: "", jobTitle: "", monthlyIncome: "", experience: "", bankAccount: "" },
       documents: {},
     };
@@ -474,32 +474,35 @@ export function ApplyFlow() {
     router.push(withStep(next), { scroll: false });
   }
 
-  function submit() {
+  async function submit() {
     setSubmitting(true);
-    window.setTimeout(() => {
-      const type = getLoanType(draft.loanType) ?? loanTypes[0];
-      const reference = newLoanReference();
-      const now = new Date().toISOString();
+    try {
+      const application = await createLoan.mutateAsync({ input: {
+        loanType: draft.loanType,
+        requestedAmountMinor: Math.round(draft.amount * 100),
+        tenureMonths: draft.tenure,
+        purpose: draft.purpose || undefined,
+        fullName: draft.applicant.fullName || undefined,
+        mobile: draft.applicant.mobile || undefined,
+        email: draft.applicant.email || undefined,
+        dateOfBirth: draft.applicant.dob || undefined,
+        nationality: draft.applicant.nationality || undefined,
+        currentCity: draft.applicant.city || undefined,
+        residenceStatus: draft.applicant.residence || undefined,
+        employmentType: draft.employment.type || undefined,
+        employerName: draft.employment.employer || undefined,
+        jobTitle: draft.employment.jobTitle || undefined,
+        monthlyIncomeMinor: draft.employment.monthlyIncome ? Math.round(Number(draft.employment.monthlyIncome) * 100) : undefined,
+        workExperienceMonths: 0,
+        hasActiveBankAccount: draft.employment.bankAccount === "yes",
+      } });
       submitted.current = true;
-      addApplication({
-        reference,
-        loanType: type.id,
-        amount: draft.amount,
-        tenure: draft.tenure,
-        purpose: draft.purpose,
-        emi: calculateEmi(draft.amount, type.apr, draft.tenure).monthly,
-        status: "submitted",
-        applicant: draft.applicant,
-        employment: { ...draft.employment, monthlyIncome: Number(draft.employment.monthlyIncome) },
-        documents: draft.documents as Partial<Record<DocumentId, { name: string; size: number }>>,
-        requestedDocuments: [],
-        history: [{ status: "submitted", at: now }],
-        createdAt: now,
-      });
       loanDraftStore.set(null);
-      justAppliedStore.set(reference);
-      router.replace(`/loans/${reference}`);
-    }, 900);
+      justAppliedStore.set(application.reference);
+      router.replace(`/loans/${application.reference}`);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   const type = getLoanType(draft.loanType) ?? loanTypes[0];
@@ -516,7 +519,7 @@ export function ApplyFlow() {
     ) : step === 4 ? (
       <FlowFooter {...footerProps} label={t("continue")} onPress={() => go(5)} isDisabled={!documentsStepValid(draft)} />
     ) : (
-      <FlowFooter {...footerProps} label={t("applySubmit")} onPress={submit} isPending={submitting} isDisabled={!agreed} />
+      <FlowFooter {...footerProps} label={t("applySubmit")} onPress={() => void submit()} isPending={submitting} isDisabled={!agreed} />
     );
 
   return (
