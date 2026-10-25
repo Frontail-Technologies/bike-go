@@ -1,11 +1,11 @@
 "use client";
 
 import { Button, Drawer, useOverlayState } from "@heroui/react";
-import { ArrowCounterClockwiseIcon, CheckCircleIcon, FileTextIcon, GridFourIcon, HourglassIcon, ListIcon, SlidersHorizontalIcon, XCircleIcon } from "@phosphor-icons/react";
+import { ArrowCounterClockwiseIcon, CheckCircleIcon, FileTextIcon, HourglassIcon, SlidersHorizontalIcon, XCircleIcon } from "@phosphor-icons/react";
 import type { ColumnDef, OnChangeFn, SortingState } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
 import { startTransition, useEffect, useState } from "react";
-import { AdminPagination, AdminSearch, AdminSelect, ViewToggle } from "@/components/admin/controls";
+import { AdminSearch, AdminSelect } from "@/components/admin/controls";
 import { CustomerAvatar } from "@/components/admin/customers/customer-avatar";
 import { AdminDataTable } from "@/components/admin/data-display/admin-data-table";
 import { StatCard } from "@/components/admin/data-display/stat-card";
@@ -18,11 +18,9 @@ import { LOAN_PAGE_SIZE, useLoanListState } from "../hooks/use-loan-list-state";
 import { useLoansQuery, useLoanStatsQuery } from "../hooks/use-loans";
 import { employmentLabels, loanStatusLabels, loanTypeLabel } from "../lib/loan-model";
 import { loanStatuses, loanTypes, type Loan, type LoanCurrency, type LoanSort, type LoanStatus, type LoanType, type SubmittedWindow } from "../types/loan";
-import { AdminLoanApplicationCard } from "./admin-loan-card";
 import { fmtDateTime } from "./loan-format";
 
 const all = "all";
-type ViewMode = "table" | "cards";
 const dateOptions = [
   { value: all, label: "Any date" },
   { value: "7", label: "Last 7 days" },
@@ -47,14 +45,8 @@ export function LoanList() {
   const { params } = state;
   const query = useLoansQuery(params);
   const stats = useLoanStatsQuery();
-  const [view, setView] = useState<ViewMode>("table");
   const [searchText, setSearchText] = useState(params.q ?? "");
 
-  useEffect(() => {
-    const saved = window.localStorage.getItem("ridego-admin-loan-view");
-    const next: ViewMode = saved === "table" || saved === "cards" ? saved : window.innerWidth < 768 ? "cards" : "table";
-    startTransition(() => setView(next));
-  }, []);
   // The URL is the source of truth; keep the input in step when it changes from outside (reset, back/forward).
   useEffect(() => { startTransition(() => setSearchText(params.q ?? "")); }, [params.q]);
   useEffect(() => {
@@ -62,7 +54,6 @@ export function LoanList() {
     const timer = window.setTimeout(() => state.setFilters({ q: searchText.trim() || undefined }), 300);
     return () => window.clearTimeout(timer);
   }, [searchText]);
-  function changeView(next: ViewMode) { setView(next); window.localStorage.setItem("ridego-admin-loan-view", next); }
 
   const rows = query.data?.data ?? [];
   const total = query.data?.meta.total ?? 0;
@@ -99,7 +90,6 @@ export function LoanList() {
     </>
   );
   const emptyText = query.isLoading ? "Loading applications…" : filtersActive ? "No loan applications match these filters." : "No loan applications yet.";
-  const empty = <p className="py-12 text-center text-sm text-[var(--admin-muted)]">{emptyText}</p>;
   const summary = stats.data;
 
   if (query.isError && !query.data) return <AdminPage><PageHeader title="Loan Applications" description="Review customer loan applications, check documents and make decisions." /><AdminErrorState title="Couldn’t load loan applications" description={query.error instanceof ApiError ? query.error.message : "Try again in a moment."} onRetry={() => void query.refetch()} /></AdminPage>;
@@ -108,7 +98,7 @@ export function LoanList() {
     <AdminPage>
       <PageHeader title="Loan Applications" description="Review customer loan applications, check documents and make decisions." />
       <section aria-label="Loan application summary" aria-busy={stats.isLoading} className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-        <StatCard loading={stats.isLoading} tone="info" label="Total Applications" value={summary?.total ?? 0} icon={<FileTextIcon size={22} weight="duotone" />} />
+        <StatCard loading={stats.isLoading} tone="purple" label="Total Applications" value={summary?.total ?? 0} icon={<FileTextIcon size={22} weight="duotone" />} />
         <StatCard loading={stats.isLoading} tone="warning" label="Under Review" value={summary?.underReview ?? 0} icon={<HourglassIcon size={22} weight="duotone" />} />
         <StatCard loading={stats.isLoading} tone="success" label="Approved" value={summary?.approved ?? 0} icon={<CheckCircleIcon size={22} weight="duotone" />} />
         <StatCard loading={stats.isLoading} tone="danger" label="Rejected" value={summary?.rejected ?? 0} icon={<XCircleIcon size={22} weight="duotone" />} />
@@ -121,7 +111,6 @@ export function LoanList() {
               <SlidersHorizontalIcon size={18} /><span className="max-sm:sr-only">Filters</span>
               {activeFilters ? <span className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-[var(--admin-accent)] text-[11px] font-extrabold text-[#111820]">{activeFilters}</span> : null}
             </Button>
-            <div className="ml-auto"><ViewToggle label="Loan view" value={view} onChange={changeView} options={[{ value: "table", label: "Table", icon: <ListIcon size={17} /> }, { value: "cards", label: "Cards", icon: <GridFourIcon size={17} /> }]} /></div>
           </div>
           <div className="hidden flex-wrap items-center gap-2 lg:flex">
             {filterControls()}
@@ -129,17 +118,7 @@ export function LoanList() {
             <p className="ml-auto text-xs font-semibold text-[var(--admin-muted)]" aria-live="polite">{total} application{total === 1 ? "" : "s"}</p>
           </div>
         </div>
-        {view === "table" ? (
-          <AdminDataTable columns={columns} data={data} label="Loan applications" emptyState={emptyText} pagination={{ page, pageSize: LOAN_PAGE_SIZE, total, onPageChange: state.setPage }} manualSorting sorting={sorting} onSortingChange={changeSorting} loading={query.isLoading} onRowNavigate={review} rowActions={(loan) => <Button size="sm" variant="outline" className="min-h-11 md:min-h-8" aria-label={`Review application ${loan.reference}`} onPress={() => review(loan)}>Review</Button>} minWidth={900} />
-        ) : (
-          <>
-            <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">
-              {rows.map((loan) => <AdminLoanApplicationCard key={loan.reference} loan={loan} onReview={review} />)}
-              {!rows.length ? <div className="col-span-full">{empty}</div> : null}
-            </div>
-            <div className="border-t border-[var(--admin-border)]"><AdminPagination page={page} pageCount={pageCount} total={total} pageSize={LOAN_PAGE_SIZE} onPageChange={state.setPage} /></div>
-          </>
-        )}
+        <AdminDataTable columns={columns} data={data} label="Loan applications" emptyState={emptyText} pagination={{ page, pageSize: LOAN_PAGE_SIZE, total, onPageChange: state.setPage }} manualSorting sorting={sorting} onSortingChange={changeSorting} loading={query.isLoading} onRowNavigate={review} rowActions={(loan) => <Button size="sm" variant="outline" className="min-h-11 md:min-h-8" aria-label={`Review application ${loan.reference}`} onPress={() => review(loan)}>Review</Button>} minWidth={900} />
       </ContentSection>
 
       <Drawer.Backdrop isOpen={filterDrawer.isOpen} onOpenChange={filterDrawer.setOpen} className="adminOverlay">

@@ -132,12 +132,12 @@ function PaymentWorkspace({ payment }: { payment: PaymentDetailData }) {
           </Card>
 
           <div className="grid items-stretch gap-5 md:grid-cols-2">
-            <Card title="Customer" action={<Button size="sm" variant="ghost" className="min-h-11 text-[var(--admin-info)] md:min-h-9" onPress={() => router.push(`/admin/customers/${customer.id}`)}>View<ArrowRightIcon size={14} /></Button>}>
+            <Card title="Customer" action={<Button size="sm" variant="ghost" className="min-h-11 text-[var(--admin-accent-strong)] md:min-h-9" onPress={() => router.push(`/admin/customers/${customer.id}`)}>View<ArrowRightIcon size={14} /></Button>}>
               <div className="mb-4 flex items-center gap-3"><CustomerAvatar name={customer.name} size="md" /><div className="min-w-0"><p className="truncate text-sm font-extrabold">{customer.name}</p><p className="text-xs text-[var(--admin-muted)]">{customer.reference}</p></div></div>
               <ul className="space-y-2.5 text-sm"><li className="flex items-center gap-2"><PhoneIcon size={16} className="shrink-0 text-[var(--admin-muted)]" aria-hidden />{customer.phone ?? dash}</li><li className="flex items-center gap-2 break-all"><EnvelopeSimpleIcon size={16} className="shrink-0 text-[var(--admin-muted)]" aria-hidden />{customer.email ?? dash}</li></ul>
             </Card>
 
-            <Card title="Related Booking" action={<Button size="sm" variant="ghost" className="min-h-11 text-[var(--admin-info)] md:min-h-9" onPress={() => router.push(`/admin/bookings/${booking.reference}`)}>View Booking<ArrowRightIcon size={14} /></Button>}>
+            <Card title="Related Booking" action={<Button size="sm" variant="ghost" className="min-h-11 text-[var(--admin-accent-strong)] md:min-h-9" onPress={() => router.push(`/admin/bookings/${booking.reference}`)}>View Booking<ArrowRightIcon size={14} /></Button>}>
               <div className="mb-3 flex items-center gap-3"><VehiclePhoto vehicle={{ id: booking.vehicleId, name: booking.vehicleName, vehicleType: booking.vehicleType, images: booking.vehicleImage ? [booking.vehicleImage] : [] }} className="h-14 w-20 shrink-0 rounded-xl border border-[var(--admin-border)]" sizes="80px" /><div className="min-w-0"><p className="truncate text-sm font-extrabold">{booking.vehicleName}</p><p className="text-xs text-[var(--admin-muted)]">{booking.reference}</p></div></div>
               <ul className="space-y-2 text-sm">
                 <li className="flex items-start gap-2"><CalendarCheckIcon size={16} className="mt-0.5 shrink-0 text-[var(--admin-muted)]" aria-hidden />{fmtDateTime(booking.pickupAt)} → {fmtDateTime(booking.returnAt)}</li>

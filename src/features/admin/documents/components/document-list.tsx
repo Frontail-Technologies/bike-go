@@ -1,12 +1,12 @@
 "use client";
 
 import { Button, Drawer, Dropdown, Label, useOverlayState } from "@heroui/react";
-import { ArrowCounterClockwiseIcon, ArrowSquareOutIcon, DotsThreeVerticalIcon, DownloadSimpleIcon, FilePdfIcon, GridFourIcon, ImageIcon, ListIcon, SealCheckIcon, SlidersHorizontalIcon } from "@phosphor-icons/react";
+import { ArrowCounterClockwiseIcon, ArrowSquareOutIcon, DotsThreeVerticalIcon, DownloadSimpleIcon, FilePdfIcon, ImageIcon, SealCheckIcon, SlidersHorizontalIcon } from "@phosphor-icons/react";
 import type { ColumnDef, OnChangeFn, SortingState } from "@tanstack/react-table";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { startTransition, useEffect, useState } from "react";
-import { AdminPagination, AdminSearch, AdminSelect, ViewToggle } from "@/components/admin/controls";
+import { AdminSearch, AdminSelect } from "@/components/admin/controls";
 import { CustomerAvatar } from "@/components/admin/customers/customer-avatar";
 import { AdminDataTable } from "@/components/admin/data-display/admin-data-table";
 import { AdminErrorState } from "@/components/admin/feedback";
@@ -18,13 +18,11 @@ import { documentFileUrl } from "../api/documents-api";
 import { DOCUMENT_PAGE_SIZE, useDocumentListState } from "../hooks/use-document-list-state";
 import { useDocumentsQuery, useDocumentStatsQuery } from "../hooks/use-documents";
 import type { ReviewDocument, UploadedWindow } from "../types/document";
-import { AdminDocumentCard } from "./admin-document-card";
 import { DocumentTypeIcon, fmtShort, isPdf, ReviewStatusBadge } from "./document-parts";
 
 const DocumentReviewDrawer = dynamic(() => import("./document-review-drawer").then((module) => module.DocumentReviewDrawer));
 
 const all = "all";
-type ViewMode = "table" | "cards";
 const dateOptions = [{ value: all, label: "Any upload date" }, { value: "7", label: "Last 7 days" }, { value: "30", label: "Last 30 days" }, { value: "90", label: "Last 90 days" }];
 const statCount = { uploaded: "uploaded", verified: "verified", needs_review: "needsReview", rejected: "rejected" } as const;
 
@@ -36,15 +34,9 @@ export function DocumentList({ initialId }: { initialId?: string }) {
   const { params } = state;
   const query = useDocumentsQuery(params);
   const stats = useDocumentStatsQuery();
-  const [view, setView] = useState<ViewMode>("table");
   const [selectedId, setSelectedId] = useState<string | null>(initialId ?? null);
   const [searchText, setSearchText] = useState(params.q ?? "");
 
-  useEffect(() => {
-    const saved = window.localStorage.getItem("ridego-admin-document-view");
-    const next: ViewMode = saved === "table" || saved === "cards" ? saved : window.innerWidth < 768 ? "cards" : "table";
-    startTransition(() => setView(next));
-  }, []);
   // The URL is the source of truth; keep the input in step when it changes from outside (reset, back/forward).
   useEffect(() => { startTransition(() => setSearchText(params.q ?? "")); }, [params.q]);
   useEffect(() => {
@@ -52,7 +44,6 @@ export function DocumentList({ initialId }: { initialId?: string }) {
     const timer = window.setTimeout(() => state.setFilters({ q: searchText.trim() || undefined }), 300);
     return () => window.clearTimeout(timer);
   }, [searchText]);
-  function changeView(next: ViewMode) { setView(next); window.localStorage.setItem("ridego-admin-document-view", next); }
 
   const rows = query.data?.data ?? [];
   const total = query.data?.meta.total ?? 0;
@@ -100,7 +91,6 @@ export function DocumentList({ initialId }: { initialId?: string }) {
     </>
   );
   const emptyText = query.isLoading ? "Loading documents…" : filtersActive ? "No documents match these filters." : "No documents have been uploaded yet.";
-  const empty = <p className="py-12 text-center text-sm text-[var(--admin-muted)]">{emptyText}</p>;
 
   if (query.isError && !query.data) return <AdminPage><PageHeader title="Documents" description="Review and verify documents submitted with loan applications." /><AdminErrorState title="Couldn’t load documents" description={query.error instanceof ApiError ? query.error.message : "Try again in a moment."} onRetry={() => void query.refetch()} /></AdminPage>;
 
@@ -118,7 +108,6 @@ export function DocumentList({ initialId }: { initialId?: string }) {
               <SlidersHorizontalIcon size={18} /><span className="max-sm:sr-only">Filters</span>
               {activeFilters ? <span className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-[var(--admin-accent)] text-[11px] font-extrabold text-[#111820]">{activeFilters}</span> : null}
             </Button>
-            <div className="ml-auto"><ViewToggle label="Document view" value={view} onChange={changeView} options={[{ value: "table", label: "Table", icon: <ListIcon size={17} /> }, { value: "cards", label: "Cards", icon: <GridFourIcon size={17} /> }]} /></div>
           </div>
           <div className="hidden flex-wrap items-center gap-2 lg:flex">
             {filterControls()}
@@ -126,17 +115,7 @@ export function DocumentList({ initialId }: { initialId?: string }) {
             <p className="ml-auto text-xs font-semibold text-[var(--admin-muted)]" aria-live="polite">{total} document{total === 1 ? "" : "s"}</p>
           </div>
         </div>
-        {view === "table" ? (
-          <AdminDataTable columns={columns} data={rows} label="Documents" emptyState={emptyText} pagination={{ page, pageSize: DOCUMENT_PAGE_SIZE, total, onPageChange: state.setPage }} manualSorting sorting={sorting} onSortingChange={changeSorting} loading={query.isLoading} onRowNavigate={review} rowActions={rowActions} minWidth={900} />
-        ) : (
-          <>
-            <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3 2xl:grid-cols-4">
-              {rows.map((doc) => <AdminDocumentCard key={doc.id} document={doc} onReview={review} onOpenLoan={openLoan} />)}
-              {!rows.length ? <div className="col-span-full">{empty}</div> : null}
-            </div>
-            <div className="border-t border-[var(--admin-border)]"><AdminPagination page={page} pageCount={pageCount} total={total} pageSize={DOCUMENT_PAGE_SIZE} onPageChange={state.setPage} /></div>
-          </>
-        )}
+        <AdminDataTable columns={columns} data={rows} label="Documents" emptyState={emptyText} pagination={{ page, pageSize: DOCUMENT_PAGE_SIZE, total, onPageChange: state.setPage }} manualSorting sorting={sorting} onSortingChange={changeSorting} loading={query.isLoading} onRowNavigate={review} rowActions={rowActions} minWidth={900} />
       </ContentSection>
 
       <Drawer.Backdrop isOpen={filterDrawer.isOpen} onOpenChange={filterDrawer.setOpen} className="adminOverlay">

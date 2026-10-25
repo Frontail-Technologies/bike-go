@@ -94,7 +94,7 @@ function Body({ document, onOpenLoan }: { document: ReviewDocumentDetail; onOpen
         {decision ? <DecisionForm document={document} decision={decision} onBack={() => setDecision(null)} onDone={() => setDecision(null)} /> : null}
 
         <section aria-label="Review history"><h3 className="mb-3 text-sm font-extrabold">Review history</h3><ActivityTimeline items={history} /></section>
-        <Button variant="ghost" className="min-h-11 text-[var(--admin-info)]" onPress={() => onOpenLoan(document)}>Open loan application<ArrowSquareOutIcon size={15} /></Button>
+        <Button variant="ghost" className="min-h-11 text-[var(--admin-accent-strong)]" onPress={() => onOpenLoan(document)}>Open loan application<ArrowSquareOutIcon size={15} /></Button>
       </Drawer.Body>
       {decision ? null : (
         <Drawer.Footer className="flex flex-wrap gap-2">

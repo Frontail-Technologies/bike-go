@@ -65,7 +65,7 @@ function Workspace({ ticket }: { ticket: SupportTicket }) {
           <p className="whitespace-pre-wrap text-sm leading-6">{ticket.message}</p>
           {ticket.bookingReference ? (
             <p className="text-sm text-[var(--admin-muted)]">
-              Referenced booking: <button type="button" className="font-bold text-[var(--admin-info)] underline-offset-2 hover:underline" onClick={() => router.push(`/admin/bookings/${ticket.bookingReference}`)}>{ticket.bookingReference}</button>
+              Referenced booking: <button type="button" className="font-bold text-[var(--admin-accent-strong)] underline-offset-2 hover:underline" onClick={() => router.push(`/admin/bookings/${ticket.bookingReference}`)}>{ticket.bookingReference}</button>
             </p>
           ) : null}
         </section>
@@ -75,7 +75,7 @@ function Workspace({ ticket }: { ticket: SupportTicket }) {
           <div className="flex items-start gap-3">
             <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[var(--admin-surface-muted)] text-[var(--admin-muted)]"><UserCircleIcon size={18} /></span>
             <div className="min-w-0 flex-1">
-              <button type="button" className="truncate text-sm font-semibold text-[var(--admin-info)] hover:underline" onClick={() => router.push(`/admin/customers/${ticket.customer.id}`)}>{ticket.customer.name}</button>
+              <button type="button" className="truncate text-sm font-semibold text-[var(--admin-accent-strong)] hover:underline" onClick={() => router.push(`/admin/customers/${ticket.customer.id}`)}>{ticket.customer.name}</button>
             </div>
           </div>
           <div className="flex items-start gap-3">

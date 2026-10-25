@@ -68,7 +68,7 @@ function ExistingImages({ vehicle, kept, primary, onRemove, onPrimary }: { vehic
       {images.map((image) => (
         <li key={image.id} className="space-y-1.5">
           <div className={cn("relative aspect-[4/3] overflow-hidden rounded-xl border-2 bg-[var(--admin-surface-muted)]", image.id === primary ? "border-[var(--admin-accent)]" : "border-transparent")}>
-            {image.url ? <Image src={image.url} alt={image.altText ?? vehicle.name} fill sizes="120px" className="object-cover" /> : null}
+            {image.url ? <Image src={image.url} alt={image.altText ?? vehicle.name} fill sizes="120px" unoptimized className="object-cover" /> : null}
             {image.id === primary ? <span className="absolute left-1 top-1 flex size-5 items-center justify-center rounded-full bg-[var(--admin-accent)]" aria-label="Primary image"><StarIcon size={11} weight="fill" /></span> : null}
           </div>
           <div className="flex justify-between">

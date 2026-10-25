@@ -34,6 +34,22 @@
     var(--admin-canvas);
 }
 
+/* HeroUI positions right drawers with a full-viewport content wrapper. Width
+   belongs to the dialog panel; legacy max-width utilities on the wrapper must
+   not pull the sheet away from the viewport edge. */
+.adminOverlay.drawer__backdrop .drawer__content--right {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+/* HeroUI's Input has no fixed height (just padding), while Select/Button use
+   min-h-11 (44px). Align them so a text input and a selector never mismatch
+   height when placed side by side. Textareas are excluded on purpose. */
+.adminRoot [data-slot="input"],
+.adminOverlay [data-slot="input"] {
+  min-height: 2.75rem;
+}
+
 /* Level 2: data surfaces such as tables, forms and info panels. */
 .adminSurface {
   border: 1px solid var(--admin-border);

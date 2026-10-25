@@ -1,21 +1,9 @@
 "use client";
 
-import { Avatar, Button, Dropdown, SearchField, Tooltip } from "@heroui/react";
-import { BellIcon, CaretDownIcon } from "@phosphor-icons/react";
+import { Avatar, Dropdown, SearchField } from "@heroui/react";
+import { CaretDownIcon } from "@phosphor-icons/react";
 import { adminCopy } from "@/components/admin/config";
 import { useAdminLogout } from "@/features/admin/auth/hooks/use-admin-logout";
-
-export function NotificationsButton({ className }: { className?: string }) {
-  return (
-    <Tooltip delay={300}>
-      <Button isIconOnly variant="ghost" aria-label="Notifications" className={`relative size-11 min-w-11 ${className ?? ""}`}>
-        <BellIcon size={21} aria-hidden />
-        <span className="absolute right-2.5 top-2.5 size-2 rounded-full border-2 border-white bg-[var(--admin-danger)]" aria-hidden />
-      </Button>
-      <Tooltip.Content className="adminOverlay">Notifications</Tooltip.Content>
-    </Tooltip>
-  );
-}
 
 export function ProfileMenu({ compact = false }: { compact?: boolean }) {
   const logout = useAdminLogout();
@@ -39,8 +27,6 @@ export function ProfileMenu({ compact = false }: { compact?: boolean }) {
             if (key === "sign-out") logout.mutate();
           }}
         >
-          <Dropdown.Item id="profile">Profile</Dropdown.Item>
-          <Dropdown.Item id="preferences">Preferences</Dropdown.Item>
           <Dropdown.Item id="sign-out" variant="danger" isDisabled={logout.isPending}>Sign out</Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown.Popover>
@@ -55,8 +41,6 @@ export function AdminHeader() {
         <SearchField.Group><SearchField.SearchIcon /><SearchField.Input placeholder={adminCopy.searchPlaceholder} /><SearchField.ClearButton /></SearchField.Group>
       </SearchField>
       <div className="ml-auto flex items-center gap-1">
-        <NotificationsButton />
-        <span className="mx-1 h-6 w-px bg-[var(--admin-border)]" aria-hidden />
         <ProfileMenu />
       </div>
     </header>

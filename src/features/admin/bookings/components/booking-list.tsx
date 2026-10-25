@@ -1,12 +1,12 @@
 "use client";
 
 import { Button, Drawer, useOverlayState } from "@heroui/react";
-import { ArrowCounterClockwiseIcon, GridFourIcon, ListIcon, SlidersHorizontalIcon } from "@phosphor-icons/react";
+import { ArrowCounterClockwiseIcon, SlidersHorizontalIcon } from "@phosphor-icons/react";
 import type { ColumnDef, OnChangeFn, SortingState } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
 import { startTransition, useEffect, useState } from "react";
 import { PaymentStatusBadge } from "@/components/admin/bookings/booking-parts";
-import { AdminPagination, AdminSearch, AdminSelect, ViewToggle } from "@/components/admin/controls";
+import { AdminSearch, AdminSelect } from "@/components/admin/controls";
 import { CustomerAvatar } from "@/components/admin/customers/customer-avatar";
 import { AdminDataTable } from "@/components/admin/data-display/admin-data-table";
 import { AdminErrorState } from "@/components/admin/feedback";
@@ -21,13 +21,11 @@ import { useBookingsQuery } from "../hooks/use-bookings";
 import { useNow } from "../hooks/use-now";
 import { bookingLabels, fmtDate, fmtShort, paymentLabels, vehiclePhoto } from "../lib/booking-model";
 import { bookingStatuses, paymentStatuses, type Booking, type BookingSort, type BookingStatus, type PaymentStatus, type PickupWindow } from "../types/booking";
-import { AdminBookingCard } from "./admin-booking-card";
 import { BookingActions, type BookingHandlers, BookingOperationalStatus } from "./booking-actions";
 import { CancelBookingDialog, NoShowDialog, UpdateStatusModal } from "./booking-dialogs";
 
 const all = "all";
 const overdueValue = "overdue";
-type ViewMode = "table" | "cards";
 
 const pickupOptions: Array<{ value: string; label: string }> = [
   { value: all, label: "All dates" },
@@ -59,16 +57,10 @@ export function BookingList() {
   const query = useBookingsQuery(params);
   const locationsQuery = useLocationsQuery();
   const actions = useBookingActions();
-  const [view, setView] = useState<ViewMode>("table");
   const [target, setTarget] = useState<Booking | null>(null);
   const [initialStatus, setInitialStatus] = useState<BookingStatus | null>(null);
   const [searchText, setSearchText] = useState(params.q ?? "");
 
-  useEffect(() => {
-    const saved = window.localStorage.getItem("ridego-admin-booking-view");
-    const next: ViewMode = saved === "table" || saved === "cards" ? saved : window.innerWidth < 768 ? "cards" : "table";
-    startTransition(() => setView(next));
-  }, []);
   // The URL is the source of truth; keep the input in step when it changes from outside (reset, back/forward).
   useEffect(() => { startTransition(() => setSearchText(params.q ?? "")); }, [params.q]);
   useEffect(() => {
@@ -76,7 +68,6 @@ export function BookingList() {
     const timer = window.setTimeout(() => state.setFilters({ q: searchText.trim() || undefined }), 300);
     return () => window.clearTimeout(timer);
   }, [searchText]);
-  function changeView(next: ViewMode) { setView(next); window.localStorage.setItem("ridego-admin-booking-view", next); }
 
   const rows = query.data?.data ?? [];
   const total = query.data?.meta.total ?? 0;
@@ -122,8 +113,6 @@ export function BookingList() {
   );
 
   const emptyText = query.isLoading ? "Loading bookings…" : filtersActive ? "No bookings match these filters." : "No bookings yet.";
-  const empty = <p className="py-12 text-center text-sm text-[var(--admin-muted)]">{emptyText}</p>;
-  const pagination = <div className="border-t border-[var(--admin-border)]"><AdminPagination page={page} pageCount={pageCount} total={total} pageSize={BOOKING_PAGE_SIZE} onPageChange={state.setPage} /></div>;
 
   if (query.isError && !query.data) return <AdminPage><PageHeader title="Bookings" description="Manage vehicle bookings, rental status, and customer activity." /><AdminErrorState title="Couldn’t load bookings" description={query.error instanceof ApiError ? query.error.message : "Try again in a moment."} onRetry={() => void query.refetch()} /></AdminPage>;
 
@@ -138,7 +127,6 @@ export function BookingList() {
               <SlidersHorizontalIcon size={18} /><span className="max-sm:sr-only">Filters</span>
               {activeFilters ? <span className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-[var(--admin-accent)] text-[11px] font-extrabold text-[#111820]">{activeFilters}</span> : null}
             </Button>
-            <div className="ml-auto"><ViewToggle label="Booking view" value={view} onChange={changeView} options={[{ value: "table", label: "Table", icon: <ListIcon size={17} /> }, { value: "cards", label: "Cards", icon: <GridFourIcon size={17} /> }]} /></div>
           </div>
           <div className="hidden flex-wrap items-center gap-2 lg:flex">
             {filterControls()}
@@ -147,17 +135,7 @@ export function BookingList() {
           </div>
         </div>
 
-        {view === "table" ? (
-          <AdminDataTable columns={columns} data={data} label="Bookings" emptyState={emptyText} pagination={{ page, pageSize: BOOKING_PAGE_SIZE, total, onPageChange: state.setPage }} manualSorting sorting={sorting} onSortingChange={changeSorting} loading={query.isLoading} onRowNavigate={handlers.onView} rowActions={(booking) => <BookingActions booking={booking} handlers={handlers} now={now} />} minWidth={960} />
-        ) : (
-          <>
-            <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5 2xl:grid-cols-3">
-              {rows.map((booking) => <AdminBookingCard key={booking.reference} booking={booking} handlers={handlers} now={now} />)}
-              {!rows.length ? <div className="col-span-full">{empty}</div> : null}
-            </div>
-            {pagination}
-          </>
-        )}
+        <AdminDataTable columns={columns} data={data} label="Bookings" emptyState={emptyText} pagination={{ page, pageSize: BOOKING_PAGE_SIZE, total, onPageChange: state.setPage }} manualSorting sorting={sorting} onSortingChange={changeSorting} loading={query.isLoading} onRowNavigate={handlers.onView} rowActions={(booking) => <BookingActions booking={booking} handlers={handlers} now={now} />} minWidth={960} />
       </ContentSection>
 
       <Drawer.Backdrop isOpen={filterDrawer.isOpen} onOpenChange={filterDrawer.setOpen} className="adminOverlay">

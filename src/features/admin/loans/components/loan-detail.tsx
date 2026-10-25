@@ -97,7 +97,7 @@ function LoanWorkspace({ loan }: { loan: Loan }) {
   );
 
   const applicantCard = (
-    <Card title="Applicant" action={<Button size="sm" variant="ghost" className="min-h-11 text-[var(--admin-info)] md:min-h-9" onPress={() => router.push(`/admin/customers/${loan.userId}`)}>View customer<ArrowRightIcon size={14} /></Button>}>
+    <Card title="Applicant" action={<Button size="sm" variant="ghost" className="min-h-11 text-[var(--admin-accent-strong)] md:min-h-9" onPress={() => router.push(`/admin/customers/${loan.userId}`)}>View customer<ArrowRightIcon size={14} /></Button>}>
       <div className="mb-4 flex items-center gap-3"><CustomerAvatar name={loan.customer.name} size="md" /><div className="min-w-0"><p className="truncate text-sm font-extrabold">{applicant.fullName ?? loan.customer.name}</p><p className="text-xs text-[var(--admin-muted)]">{loan.customer.reference}</p></div></div>
       <dl className="grid gap-4 sm:grid-cols-2">
         <Row icon={<PhoneIcon size={18} />} label="Phone">{applicant.mobile ?? loan.customer.phone ?? dash}</Row>
@@ -135,7 +135,7 @@ function LoanWorkspace({ loan }: { loan: Loan }) {
             <div className="flex w-full justify-end gap-1.5 sm:w-auto">
               {doc ? (
                 <>
-                  <a href={documentFileUrl(loanDocumentPath(loan.reference, doc.id))} target="_blank" rel="noopener noreferrer" aria-label={`Open ${doc.originalFilename}`} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-bold text-[var(--admin-info)] outline-none hover:bg-[var(--admin-surface-muted)] focus-visible:ring-2 focus-visible:ring-[var(--admin-accent-strong)] md:min-h-8"><DownloadSimpleIcon size={15} />Open</a>
+                  <a href={documentFileUrl(loanDocumentPath(loan.reference, doc.id))} target="_blank" rel="noopener noreferrer" aria-label={`Open ${doc.originalFilename}`} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-bold text-[var(--admin-accent-strong)] outline-none hover:bg-[var(--admin-surface-muted)] focus-visible:ring-2 focus-visible:ring-[var(--admin-accent-strong)] md:min-h-8"><DownloadSimpleIcon size={15} />Open</a>
                   <Button size="sm" variant="outline" className="min-h-11 md:min-h-8" onPress={() => router.push(`/admin/documents/${doc.id}`)}>Review</Button>
                 </>
               ) : canRequest ? <Button size="sm" variant="outline" className="min-h-11 md:min-h-8" onPress={requestDrawer.open}>Request Document</Button> : null}

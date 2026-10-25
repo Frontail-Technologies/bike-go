@@ -1,12 +1,12 @@
 "use client";
 
 import { Button, Drawer, useOverlayState } from "@heroui/react";
-import { ArrowCounterClockwiseIcon, GridFourIcon, ListIcon, SlidersHorizontalIcon } from "@phosphor-icons/react";
+import { ArrowCounterClockwiseIcon, SlidersHorizontalIcon } from "@phosphor-icons/react";
 import type { ColumnDef, OnChangeFn, SortingState } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
 import { startTransition, useEffect, useState } from "react";
 import { PaymentStatusBadge } from "@/components/admin/bookings/booking-parts";
-import { AdminPagination, AdminSearch, AdminSelect, ViewToggle } from "@/components/admin/controls";
+import { AdminSearch, AdminSelect } from "@/components/admin/controls";
 import { CustomerAvatar } from "@/components/admin/customers/customer-avatar";
 import { AdminDataTable } from "@/components/admin/data-display/admin-data-table";
 import { AdminErrorState } from "@/components/admin/feedback";
@@ -17,10 +17,8 @@ import { PAYMENT_PAGE_SIZE, usePaymentListState } from "../hooks/use-payment-lis
 import { usePaymentMethodsQuery, usePaymentsQuery } from "../hooks/use-payments";
 import { badgeStatus, fmtShort, providerLabel, statusLabels } from "../lib/payment-model";
 import { paymentStatuses, type Payment, type PaymentCurrency, type PaymentSort, type PaymentStatus, type PaymentWindow } from "../types/payment";
-import { AdminPaymentCard } from "./admin-payment-card";
 
 const all = "all";
-type ViewMode = "table" | "cards";
 const dateOptions = [
   { value: all, label: "Any date" },
   { value: "7", label: "Last 7 days" },
@@ -45,14 +43,8 @@ export function PaymentList() {
   const { params } = state;
   const query = usePaymentsQuery(params);
   const methods = usePaymentMethodsQuery();
-  const [view, setView] = useState<ViewMode>("table");
   const [searchText, setSearchText] = useState(params.q ?? "");
 
-  useEffect(() => {
-    const saved = window.localStorage.getItem("ridego-admin-payment-view");
-    const next: ViewMode = saved === "table" || saved === "cards" ? saved : window.innerWidth < 768 ? "cards" : "table";
-    startTransition(() => setView(next));
-  }, []);
   // The URL is the source of truth; keep the input in step when it changes from outside (reset, back/forward).
   useEffect(() => { startTransition(() => setSearchText(params.q ?? "")); }, [params.q]);
   useEffect(() => {
@@ -60,7 +52,6 @@ export function PaymentList() {
     const timer = window.setTimeout(() => state.setFilters({ q: searchText.trim() || undefined }), 300);
     return () => window.clearTimeout(timer);
   }, [searchText]);
-  function changeView(next: ViewMode) { setView(next); window.localStorage.setItem("ridego-admin-payment-view", next); }
 
   const rows = query.data?.data ?? [];
   const total = query.data?.meta.total ?? 0;
@@ -98,7 +89,6 @@ export function PaymentList() {
     </>
   );
   const emptyText = query.isLoading ? "Loading payments…" : filtersActive ? "No payments match these filters." : "No payments yet.";
-  const empty = <p className="py-12 text-center text-sm text-[var(--admin-muted)]">{emptyText}</p>;
 
   if (query.isError && !query.data) return <AdminPage><PageHeader title="Payments" description="View payment attempts for bookings and follow each one to its booking and customer." /><AdminErrorState title="Couldn’t load payments" description={query.error instanceof ApiError ? query.error.message : "Try again in a moment."} onRetry={() => void query.refetch()} /></AdminPage>;
 
@@ -113,7 +103,6 @@ export function PaymentList() {
               <SlidersHorizontalIcon size={18} /><span className="max-sm:sr-only">Filters</span>
               {activeFilters ? <span className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-[var(--admin-accent)] text-[11px] font-extrabold text-[#111820]">{activeFilters}</span> : null}
             </Button>
-            <div className="ml-auto"><ViewToggle label="Payment view" value={view} onChange={changeView} options={[{ value: "table", label: "Table", icon: <ListIcon size={17} /> }, { value: "cards", label: "Cards", icon: <GridFourIcon size={17} /> }]} /></div>
           </div>
           <div className="hidden flex-wrap items-center gap-2 lg:flex">
             {filterControls()}
@@ -121,17 +110,7 @@ export function PaymentList() {
             <p className="ml-auto text-xs font-semibold text-[var(--admin-muted)]" aria-live="polite">{total} payment{total === 1 ? "" : "s"}</p>
           </div>
         </div>
-        {view === "table" ? (
-          <AdminDataTable columns={columns} data={data} label="Payments" emptyState={emptyText} pagination={{ page, pageSize: PAYMENT_PAGE_SIZE, total, onPageChange: state.setPage }} manualSorting sorting={sorting} onSortingChange={changeSorting} loading={query.isLoading} onRowNavigate={open} minWidth={900} />
-        ) : (
-          <>
-            <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">
-              {rows.map((payment) => <AdminPaymentCard key={payment.transactionId} payment={payment} onView={open} />)}
-              {!rows.length ? <div className="col-span-full">{empty}</div> : null}
-            </div>
-            <div className="border-t border-[var(--admin-border)]"><AdminPagination page={page} pageCount={pageCount} total={total} pageSize={PAYMENT_PAGE_SIZE} onPageChange={state.setPage} /></div>
-          </>
-        )}
+        <AdminDataTable columns={columns} data={data} label="Payments" emptyState={emptyText} pagination={{ page, pageSize: PAYMENT_PAGE_SIZE, total, onPageChange: state.setPage }} manualSorting sorting={sorting} onSortingChange={changeSorting} loading={query.isLoading} onRowNavigate={open} minWidth={900} />
       </ContentSection>
 
       <Drawer.Backdrop isOpen={filterDrawer.isOpen} onOpenChange={filterDrawer.setOpen} className="adminOverlay">

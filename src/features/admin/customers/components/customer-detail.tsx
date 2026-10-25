@@ -61,7 +61,7 @@ function QuickStat({ icon, label, value, tone }: { icon: ReactNode; label: strin
 }
 
 function ViewAll({ label, onPress }: { label: string; onPress: () => void }) {
-  return <Button size="sm" variant="ghost" className="min-h-11 text-[var(--admin-info)] md:min-h-9" onPress={onPress}>{label}<ArrowRightIcon size={14} /></Button>;
+  return <Button size="sm" variant="ghost" className="min-h-11 text-[var(--admin-accent-strong)] md:min-h-9" onPress={onPress}>{label}<ArrowRightIcon size={14} /></Button>;
 }
 
 const LoanStatus = ({ status }: { status: string }) => { const badge = toLoanBadge(status); return <AdminStatusBadge status={badge.status} label={badge.label} />; };
@@ -120,7 +120,7 @@ function DocumentsTab({ customerId }: { customerId: string }) {
   if (query.isError && !query.data) return <AdminErrorState title="Couldn’t load documents" description={query.error instanceof ApiError ? query.error.message : "Try again in a moment."} onRetry={() => void query.refetch()} />;
   const actions = (doc: CustomerDocument) => (
     <div className="flex justify-end gap-1.5">
-      <a href={documentFileUrl(doc.fileUrl)} target="_blank" rel="noopener noreferrer" aria-label={`Open ${doc.originalFilename}`} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-bold text-[var(--admin-info)] outline-none hover:bg-[var(--admin-surface-muted)] focus-visible:ring-2 focus-visible:ring-[var(--admin-accent-strong)] md:min-h-8"><DownloadSimpleIcon size={15} />Open</a>
+      <a href={documentFileUrl(doc.fileUrl)} target="_blank" rel="noopener noreferrer" aria-label={`Open ${doc.originalFilename}`} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-bold text-[var(--admin-accent-strong)] outline-none hover:bg-[var(--admin-surface-muted)] focus-visible:ring-2 focus-visible:ring-[var(--admin-accent-strong)] md:min-h-8"><DownloadSimpleIcon size={15} />Open</a>
       <Button size="sm" variant="outline" className="min-h-11 md:min-h-8" onPress={() => router.push(`/admin/documents/${doc.id}`)}><SealCheckIcon size={15} />Review</Button>
     </div>
   );
@@ -200,13 +200,13 @@ function CustomerWorkspace({ customer }: { customer: Customer }) {
           <dl className="space-y-4">
             <InfoRow icon={<MapPinIcon size={18} />} label="Current location">{customer.city ? `${customer.city}, Cambodia` : "—"}</InfoRow>
             <InfoRow icon={<CalendarDotsIcon size={18} />} label="Join date">{formatCambodiaDate(customer.createdAt)}</InfoRow>
-            <InfoRow icon={<ShieldCheckIcon size={18} />} label="Login providers">{customer.providers.length ? <span className="mt-0.5 flex flex-wrap gap-1.5">{customer.providers.map((provider) => <span key={provider} className="rounded-full bg-[var(--admin-info-soft)] px-2 py-0.5 text-[11px] font-bold capitalize text-[var(--admin-info)]">{provider}</span>)}</span> : "None"}</InfoRow>
+            <InfoRow icon={<ShieldCheckIcon size={18} />} label="Login providers">{customer.providers.length ? <span className="mt-0.5 flex flex-wrap gap-1.5">{customer.providers.map((provider) => <span key={provider} className="rounded-full bg-[#efe9ff] px-2 py-0.5 text-[11px] font-bold capitalize text-[#6246c7]">{provider}</span>)}</span> : "None"}</InfoRow>
             <InfoRow icon={<PaperPlaneTiltIcon size={18} />} label="Telegram">{profile.telegramUsername ?? "Not linked"}</InfoRow>
           </dl>
         </Panel>
         <Panel title="Quick Stats">
           <dl className="space-y-4">
-            <QuickStat tone="bg-[var(--admin-info-soft)] text-[var(--admin-info)]" icon={<CalendarCheckIcon size={20} weight="duotone" />} label="Total bookings" value={customer.metrics.totalBookings} />
+            <QuickStat tone="bg-[#efe9ff] text-[#6246c7]" icon={<CalendarCheckIcon size={20} weight="duotone" />} label="Total bookings" value={customer.metrics.totalBookings} />
             <QuickStat tone="bg-[var(--admin-accent-soft)] text-[var(--admin-warning)]" icon={<WalletIcon size={20} weight="duotone" />} label="Total spent (USD, paid)" value={<CurrencyAmount amount={customer.metrics.totalSpentMinor} currency="USD" className="text-lg font-extrabold" />} />
             <QuickStat tone="bg-[var(--admin-success-soft)] text-[var(--admin-success)]" icon={<HandCoinsIcon size={20} weight="duotone" />} label="Loan applications" value={customer.loanCount} />
             <QuickStat tone="bg-[var(--admin-success-soft)] text-[var(--admin-success)]" icon={<CalendarCheckIcon size={20} weight="duotone" />} label="Active rentals" value={customer.metrics.activeRentals} />

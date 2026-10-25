@@ -8,8 +8,8 @@ export function AdminLoadingState({ label = "Loading records…" }: { label?: st
   return <div role="status" className="flex min-h-40 flex-col items-center justify-center gap-3 p-8 text-sm text-[var(--admin-muted)]"><Spinner size="lg" aria-label={label} /><span>{label}</span></div>;
 }
 
-export function AdminEmptyState({ title = "Nothing here yet", description = "Records will appear here when they are available.", action }: { title?: string; description?: string; action?: ReactNode }) {
-  return <div className="flex min-h-48 flex-col items-center justify-center px-6 py-10 text-center"><span className="mb-3 flex size-11 items-center justify-center rounded-full bg-[var(--admin-surface-muted)] text-[var(--admin-muted)]"><FileMagnifyingGlassIcon size={23} /></span><h3 className="text-sm font-extrabold">{title}</h3><p className="mt-1 max-w-sm text-sm text-[var(--admin-muted)]">{description}</p>{action ? <div className="mt-4">{action}</div> : null}</div>;
+export function AdminEmptyState({ description = "Nothing here yet.", action }: { description?: string; action?: ReactNode }) {
+  return <div className="flex min-h-48 flex-col items-center justify-center px-6 py-10 text-center"><span className="mb-3 flex size-11 items-center justify-center rounded-full bg-[var(--admin-surface-muted)] text-[var(--admin-muted)]"><FileMagnifyingGlassIcon size={23} /></span><p className="max-w-sm text-sm text-[var(--admin-muted)]">{description}</p>{action ? <div className="mt-4">{action}</div> : null}</div>;
 }
 
 export function AdminErrorState({ title = "We couldn’t load this section", description = "Try again or contact your administrator.", onRetry }: { title?: string; description?: string; onRetry?: () => void }) {

@@ -150,7 +150,7 @@ export function BannerWorkspace() {
           <div className="hidden items-center gap-2 lg:flex">{filterControls()}{filtersActive ? <Button size="sm" variant="ghost" className="min-h-10" onPress={reset}><ArrowCounterClockwiseIcon size={15} />Reset filters</Button> : null}</div>
           <div className="ml-auto"><ViewToggle label="Banner view" value={view} onChange={changeView} options={[{ value: "table", label: "Table", icon: <ListIcon size={17} /> }, { value: "cards", label: "Cards", icon: <GridFourIcon size={17} /> }]} /></div>
         </div>
-        {filtersActive ? <p className="text-xs font-semibold text-[var(--admin-muted)] lg:hidden" aria-live="polite">{total} banner{total === 1 ? "" : "s"} <button type="button" className="ml-2 font-bold text-[var(--admin-info)] underline" onClick={reset}>Reset filters</button></p> : null}
+        {filtersActive ? <p className="text-xs font-semibold text-[var(--admin-muted)] lg:hidden" aria-live="polite">{total} banner{total === 1 ? "" : "s"} <button type="button" className="ml-2 font-bold text-[var(--admin-accent-strong)] underline" onClick={reset}>Reset filters</button></p> : null}
       </div>
       {view === "table" ? (
         <AdminDataTable columns={columns} data={rows} label="Banners" emptyState={emptyText} pagination={{ page, pageSize: BANNER_PAGE_SIZE, total, onPageChange: state.setPage }} manualSorting sorting={sorting} onSortingChange={changeSorting} loading={query.isLoading} onRowNavigate={handlers.onEdit} rowActions={(banner) => <BannerActions banner={banner} handlers={handlers} />} minWidth={820} />

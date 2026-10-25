@@ -21,7 +21,7 @@ import { loanStatusMetrics, rangeDays, rangeOptions, revenuePoints, toBookingSta
 
 const quickActions: ReadonlyArray<{ href: string; label: string; Icon: Icon; tone: string }> = [
   { href: "/admin/vehicles/new", label: "Add Vehicle", Icon: PlusIcon, tone: "bg-[var(--admin-accent-soft)] text-[var(--admin-warning)]" },
-  { href: "/admin/bookings", label: "New Booking", Icon: CalendarCheckIcon, tone: "bg-[var(--admin-info-soft)] text-[var(--admin-info)]" },
+  { href: "/admin/bookings", label: "New Booking", Icon: CalendarCheckIcon, tone: "bg-[#efe9ff] text-[#6246c7]" },
   { href: "/admin/customers", label: "Add Customer", Icon: UserPlusIcon, tone: "bg-[var(--admin-success-soft)] text-[var(--admin-success)]" },
   { href: "/admin/loans", label: "Review Loans", Icon: HandCoinsIcon, tone: "bg-[var(--admin-warning-soft)] text-[var(--admin-warning)]" },
   { href: "/admin/documents", label: "Review Documents", Icon: FileTextIcon, tone: "bg-[var(--admin-danger-soft)] text-[var(--admin-danger)]" },
@@ -68,9 +68,9 @@ export function DashboardPage() {
         <AdminErrorState title="Couldn’t load the dashboard" description={query.error instanceof ApiError ? query.error.message : "Try again in a moment."} onRetry={() => void query.refetch()} />
       ) : (
         <>
-          <section aria-label="Operational metrics" aria-busy={loading} className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5 [&>*:last-child]:col-span-2 md:[&>*:last-child]:col-span-1">
+          <section aria-label="Operational metrics" aria-busy={loading} className="grid grid-cols-2 items-stretch gap-3 md:grid-cols-3 xl:grid-cols-5 [&>*:last-child]:col-span-2 md:[&>*:last-child]:col-span-1">
             <StatCard loading={loading} tone="accent" label="Total Vehicles" value={data?.vehicles.total ?? 0} icon={<CarProfileIcon size={22} weight="duotone" />} secondary={`${data?.vehicles.byStatus.available ?? 0} available`} />
-            <StatCard loading={loading} tone="info" label="Active Bookings" value={data?.bookings.activeNow ?? 0} icon={<CalendarCheckIcon size={22} weight="duotone" />} secondary={`${data?.bookings.upcomingPickups7d ?? 0} pickups in 7 days`} />
+            <StatCard loading={loading} tone="purple" label="Active Bookings" value={data?.bookings.activeNow ?? 0} icon={<CalendarCheckIcon size={22} weight="duotone" />} secondary={`${data?.bookings.upcomingPickups7d ?? 0} pickups in 7 days`} />
             <StatCard loading={loading} tone="success" label="Customers" value={(data?.customers.total ?? 0).toLocaleString("en-US")} icon={<UsersIcon size={22} weight="duotone" />} secondary={`${data?.customers.newLast30Days ?? 0} new in 30 days`} />
             <StatCard loading={loading} tone="success" label="Revenue (USD)" value={formatCurrency(revenue?.bookedMinor ?? 0, "USD").replace(/\.00$/, "")} icon={<CurrencyDollarIcon size={22} weight="duotone" />} secondary={`${formatCurrency(revenue?.paidMinor ?? 0, "USD").replace(/\.00$/, "")} paid`} />
             <StatCard loading={loading} tone="warning" label="Loan Applications" value={data?.loans.total ?? 0} icon={<HandCoinsIcon size={22} weight="duotone" />} secondary={`${data?.loans.awaitingReview ?? 0} awaiting review`} />
@@ -83,7 +83,7 @@ export function DashboardPage() {
           )}
 
           <section aria-label="Operations" className="grid gap-5 xl:grid-cols-[minmax(0,1.9fr)_minmax(300px,1fr)]">
-            <ContentSection title="Recent Bookings" actions={<Link className="rounded-md px-1 text-xs font-bold text-[var(--admin-info)] outline-none hover:underline focus-visible:ring-2 focus-visible:ring-[var(--admin-accent-strong)]" href="/admin/bookings">View all</Link>}>
+            <ContentSection title="Recent Bookings" actions={<Link className="rounded-md px-1 text-xs font-bold text-[var(--admin-accent-strong)] outline-none hover:underline focus-visible:ring-2 focus-visible:ring-[var(--admin-accent-strong)]" href="/admin/bookings">View all</Link>}>
               <div className="p-5">
                 {loading ? (
                   <ul aria-label="Loading recent bookings" aria-busy="true" className="space-y-3">

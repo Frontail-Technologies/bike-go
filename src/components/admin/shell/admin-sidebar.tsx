@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { AdminNavList } from "@/components/admin/admin-nav";
 import "@/components/admin/admin-theme.module.css";
 import { adminCopy } from "@/components/admin/config";
-import { NotificationsButton, ProfileMenu } from "@/components/admin/shell/admin-header";
+import { ProfileMenu } from "@/components/admin/shell/admin-header";
 import { AdminLogo } from "@/components/admin/shell/admin-logo";
 import { cn } from "@/lib/cn";
 
@@ -28,9 +28,9 @@ export function AdminSidebar({ activeHref, onNavigate, collapsed, onCollapsedCha
     <aside aria-label="Admin" className={cn("adminOverlay flex shrink-0 flex-col gap-5 bg-[var(--admin-sidebar)] p-3 transition-[width] duration-200 ease-out motion-reduce:transition-none", collapsed ? "w-[72px]" : "w-[232px]", inline ? "h-full" : "sticky top-0 hidden h-dvh lg:flex", className)}>
       <div className={cn("flex h-11 items-center", collapsed ? "justify-center" : "justify-between px-1")}>
         <AdminLogo compact={collapsed} />
-        {collapsed ? null : <Button isIconOnly variant="ghost" aria-label="Collapse sidebar" onPress={() => onCollapsedChange(true)} className="text-white/80 hover:text-white"><SidebarSimpleIcon size={19} aria-hidden /></Button>}
+        {collapsed ? null : <Button isIconOnly variant="ghost" aria-label="Collapse sidebar" onPress={() => onCollapsedChange(true)} className="[--button-bg-hover:rgb(255_255_255/0.1)] [--button-bg-pressed:rgb(255_255_255/0.16)] text-white/80 hover:text-white"><SidebarSimpleIcon size={19} aria-hidden /></Button>}
       </div>
-      {collapsed ? <Button isIconOnly variant="ghost" aria-label="Expand sidebar" onPress={() => onCollapsedChange(false)} className="mx-auto text-white/80 hover:text-white"><SidebarSimpleIcon size={19} className="rotate-180" aria-hidden /></Button> : null}
+      {collapsed ? <Button isIconOnly variant="ghost" aria-label="Expand sidebar" onPress={() => onCollapsedChange(false)} className="[--button-bg-hover:rgb(255_255_255/0.1)] [--button-bg-pressed:rgb(255_255_255/0.16)] mx-auto text-white/80 hover:text-white"><SidebarSimpleIcon size={19} className="rotate-180" aria-hidden /></Button> : null}
       <nav aria-label="Admin sections" className="min-h-0 flex-1 overflow-y-auto"><AdminNavList activeHref={activeHref ?? pathname} collapsed={collapsed} onNavigate={onNavigate} /></nav>
       {collapsed ? null : <SidebarPromo />}
     </aside>
@@ -50,7 +50,6 @@ export function AdminMobileBar({ activeHref, onNavigate }: { activeHref?: string
         </span>
         <div className="ml-auto flex items-center">
           <Button isIconOnly variant="ghost" aria-label="Search" className="size-11 min-w-11"><MagnifyingGlassIcon size={21} aria-hidden /></Button>
-          <NotificationsButton />
           <ProfileMenu compact />
         </div>
       </div>

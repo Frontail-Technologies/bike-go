@@ -1,10 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Card } from "@heroui/react";
+import { Button, Card, FieldError, Input, Label, TextField } from "@heroui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { ApiError } from "@/lib/api/error";
 import { adminAuthApi } from "@/features/admin/auth/api/admin-auth-api";
 import { adminAuthQueryKeys } from "@/features/admin/auth/query-keys";
@@ -44,17 +44,13 @@ export default function ChangePasswordPage() {
         </Card.Header>
         <form className="grid gap-4" onSubmit={form.handleSubmit(({ confirmPassword: _confirmPassword, ...input }) => mutation.mutate(input))}>
           {(Object.keys(labels) as Array<keyof Values>).map((field) => (
-            <label key={field} className="grid gap-1.5 text-sm font-semibold">
-              {labels[field]}
-              <input
-                className="h-11 rounded-xl border border-[var(--admin-border)] bg-white px-3 outline-none transition focus-visible:ring-2 focus-visible:ring-[var(--admin-accent-strong)]"
-                type="password"
-                autoComplete={field === "currentPassword" ? "current-password" : "new-password"}
-                aria-invalid={Boolean(form.formState.errors[field])}
-                {...form.register(field)}
-              />
-              {form.formState.errors[field] ? <span role="alert" className="text-sm font-normal text-[var(--admin-danger)]">{form.formState.errors[field]?.message}</span> : null}
-            </label>
+            <Controller key={field} control={form.control} name={field} render={({ field: formField, fieldState }) => (
+              <TextField isRequired isInvalid={Boolean(fieldState.error)} type="password" value={formField.value} onChange={formField.onChange} onBlur={formField.onBlur} autoComplete={field === "currentPassword" ? "current-password" : "new-password"}>
+                <Label>{labels[field]}</Label>
+                <Input />
+                <FieldError>{fieldState.error?.message}</FieldError>
+              </TextField>
+            )} />
           ))}
           {message ? <p role="alert" className="text-sm text-[var(--admin-danger)]">{message}</p> : null}
           <Button type="submit" variant="primary" isPending={mutation.isPending} fullWidth>

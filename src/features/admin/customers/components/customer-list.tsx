@@ -1,11 +1,11 @@
 "use client";
 
 import { Button, Drawer, useOverlayState } from "@heroui/react";
-import { ArrowCounterClockwiseIcon, CalendarCheckIcon, CarProfileIcon, GridFourIcon, ListIcon, SlidersHorizontalIcon, UserPlusIcon, UsersIcon } from "@phosphor-icons/react";
+import { ArrowCounterClockwiseIcon, CalendarCheckIcon, CarProfileIcon, SlidersHorizontalIcon, UserPlusIcon, UsersIcon } from "@phosphor-icons/react";
 import type { ColumnDef, OnChangeFn, SortingState } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
 import { startTransition, useEffect, useState } from "react";
-import { AdminPagination, AdminSearch, AdminSelect, ViewToggle, formatCambodiaDate } from "@/components/admin/controls";
+import { AdminSearch, AdminSelect, formatCambodiaDate } from "@/components/admin/controls";
 import { CustomerAvatar } from "@/components/admin/customers/customer-avatar";
 import { AdminDataTable } from "@/components/admin/data-display/admin-data-table";
 import { StatCard } from "@/components/admin/data-display/stat-card";
@@ -17,11 +17,10 @@ import { ApiError } from "@/lib/api/error";
 import { CUSTOMER_PAGE_SIZE, useCustomerListState } from "../hooks/use-customer-list-state";
 import { useCustomerLoader, useCustomerStatsQuery, useCustomersQuery } from "../hooks/use-customers";
 import type { Customer, CustomerStatus, CustomerSummary, JoinedWindow } from "../types/customer";
-import { AdminCustomerCard, CustomerActions } from "./admin-customer-card";
+import { CustomerActions } from "./admin-customer-card";
 import { CustomerEditDrawer } from "./customer-edit-drawer";
 
 const all = "all";
-type ViewMode = "table" | "cards";
 
 const joinedOptions = [
   { value: all, label: "Joined any time" },
@@ -39,11 +38,9 @@ export function CustomerList() {
   const query = useCustomersQuery(params);
   const stats = useCustomerStatsQuery();
   const loadCustomer = useCustomerLoader();
-  const [view, setView] = useState<ViewMode>("table");
   const [searchText, setSearchText] = useState(params.q ?? "");
   const [editing, setEditing] = useState<Customer | null>(null);
 
-  useEffect(() => { const saved = window.localStorage.getItem("ridego-admin-customer-view"); if (saved === "table" || saved === "cards") startTransition(() => setView(saved)); }, []);
   // The URL is the source of truth; keep the input in step when it changes from outside (reset, back/forward).
   useEffect(() => { startTransition(() => setSearchText(params.q ?? "")); }, [params.q]);
   useEffect(() => {
@@ -51,7 +48,6 @@ export function CustomerList() {
     const timer = window.setTimeout(() => state.setFilters({ q: searchText.trim() || undefined }), 300);
     return () => window.clearTimeout(timer);
   }, [searchText]);
-  function changeView(next: ViewMode) { setView(next); window.localStorage.setItem("ridego-admin-customer-view", next); }
 
   const rows = query.data?.data ?? [];
   const total = query.data?.meta.total ?? 0;
@@ -92,13 +88,12 @@ export function CustomerList() {
     { id: "contact", header: "Contact", enableSorting: false, accessorFn: (row) => row.phone, cell: ({ row }) => <div className="min-w-44"><p className="text-sm font-medium">{row.original.phone ?? "—"}</p><p className="truncate text-xs text-[var(--admin-muted)]">{row.original.email ?? "—"}</p></div> },
     { id: "city", header: "Location", enableSorting: false, accessorFn: (row) => row.city, cell: ({ row }) => row.original.city ?? "—" },
     { id: "joined", header: "Joined", accessorFn: (row) => row.createdAt, cell: ({ row }) => <span className="whitespace-nowrap">{formatCambodiaDate(row.original.createdAt)}</span> },
-    { id: "bookings", header: "Bookings", enableSorting: false, accessorFn: (row) => row.bookingCount, cell: ({ row }) => <div className="flex items-center gap-2 font-semibold tabular-nums">{row.original.bookingCount}{row.original.activeRentals ? <span className="inline-flex items-center gap-1 rounded-full bg-[var(--admin-info-soft)] px-2 py-0.5 text-[11px] font-bold text-[var(--admin-info)]"><span className="size-1.5 rounded-full bg-current" aria-hidden />Active</span> : null}</div> },
+    { id: "bookings", header: "Bookings", enableSorting: false, accessorFn: (row) => row.bookingCount, cell: ({ row }) => <div className="flex items-center gap-2 font-semibold tabular-nums">{row.original.bookingCount}{row.original.activeRentals ? <span className="inline-flex items-center gap-1 rounded-full bg-[#efe9ff] px-2 py-0.5 text-[11px] font-bold text-[#6246c7]"><span className="size-1.5 rounded-full bg-current" aria-hidden />Active</span> : null}</div> },
     { id: "loans", header: "Loans", enableSorting: false, accessorFn: (row) => row.loanCount, cell: ({ row }) => <span className="font-semibold tabular-nums">{row.original.loanCount}</span> },
     { id: "status", header: "Status", enableSorting: false, accessorFn: (row) => row.status, cell: ({ row }) => <AdminStatusBadge status={row.original.status} /> },
   ];
 
   const emptyText = query.isLoading ? "Loading customers…" : filtersActive ? "No customers match these filters." : "No customers yet.";
-  const empty = <p className="py-12 text-center text-sm text-[var(--admin-muted)]">{emptyText}</p>;
   const summary = stats.data;
 
   if (query.isError && !query.data) return <AdminPage><PageHeader title="Customers" description="Manage customers, view their bookings, loan applications and account status." /><AdminErrorState title="Couldn’t load customers" description={query.error instanceof ApiError ? query.error.message : "Try again in a moment."} onRetry={() => void query.refetch()} /></AdminPage>;
@@ -108,7 +103,7 @@ export function CustomerList() {
       <PageHeader title="Customers" description="Manage customers, view their bookings, loan applications and account status." />
 
       <section aria-label="Customer overview" aria-busy={stats.isLoading} className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-        <StatCard loading={stats.isLoading} tone="info" label="Total Customers" value={summary?.total ?? 0} icon={<UsersIcon size={22} weight="duotone" />} />
+        <StatCard loading={stats.isLoading} tone="purple" label="Total Customers" value={summary?.total ?? 0} icon={<UsersIcon size={22} weight="duotone" />} />
         <StatCard loading={stats.isLoading} tone="success" label="Active Customers" value={summary?.active ?? 0} icon={<CarProfileIcon size={22} weight="duotone" />} secondary={`${summary?.inactive ?? 0} inactive`} />
         <StatCard loading={stats.isLoading} tone="accent" label="New (30 days)" value={summary?.newLast30Days ?? 0} icon={<UserPlusIcon size={22} weight="duotone" />} />
         <StatCard loading={stats.isLoading} tone="warning" label="Active Rentals" value={summary?.withActiveRentals ?? 0} icon={<CalendarCheckIcon size={22} weight="duotone" />} secondary="customers on the road" />
@@ -122,7 +117,6 @@ export function CustomerList() {
               <SlidersHorizontalIcon size={18} /><span className="max-sm:sr-only">Filters</span>
               {activeFilters ? <span className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-[var(--admin-accent)] text-[11px] font-extrabold text-[#111820]">{activeFilters}</span> : null}
             </Button>
-            <div className="ml-auto"><ViewToggle label="Customer view" value={view} onChange={changeView} options={[{ value: "table", label: "Table", icon: <ListIcon size={17} /> }, { value: "cards", label: "Cards", icon: <GridFourIcon size={17} /> }]} /></div>
           </div>
           <div className="hidden flex-wrap items-center gap-2 lg:flex">
             {filterControls()}
@@ -131,17 +125,7 @@ export function CustomerList() {
           </div>
         </div>
 
-        {view === "table" ? (
-          <AdminDataTable columns={columns} data={rows} label="Customers" emptyState={emptyText} pagination={{ page, pageSize: CUSTOMER_PAGE_SIZE, total, onPageChange: state.setPage }} manualSorting sorting={sorting} onSortingChange={changeSorting} loading={query.isLoading} onRowNavigate={open} rowActions={(person) => <CustomerActions customer={person} onView={() => open(person)} onEdit={() => void edit(person)} />} minWidth={880} />
-        ) : (
-          <>
-            <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3 2xl:grid-cols-4">
-              {rows.map((person) => <AdminCustomerCard key={person.id} customer={person} onView={() => open(person)} onEdit={() => void edit(person)} />)}
-              {!rows.length ? <div className="col-span-full">{empty}</div> : null}
-            </div>
-            <div className="border-t border-[var(--admin-border)]"><AdminPagination page={page} pageCount={pageCount} total={total} pageSize={CUSTOMER_PAGE_SIZE} onPageChange={state.setPage} /></div>
-          </>
-        )}
+        <AdminDataTable columns={columns} data={rows} label="Customers" emptyState={emptyText} pagination={{ page, pageSize: CUSTOMER_PAGE_SIZE, total, onPageChange: state.setPage }} manualSorting sorting={sorting} onSortingChange={changeSorting} loading={query.isLoading} onRowNavigate={open} rowActions={(person) => <CustomerActions customer={person} onView={() => open(person)} onEdit={() => void edit(person)} />} minWidth={880} />
       </ContentSection>
 
       <Drawer.Backdrop isOpen={filterDrawer.isOpen} onOpenChange={filterDrawer.setOpen} className="adminOverlay">

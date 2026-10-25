@@ -24,7 +24,7 @@ export function VehiclePhoto({ vehicle, index = 0, sizes = "(min-width: 1280px) 
   const image = vehicle.images[index];
   return (
     <div className={cn("relative isolate flex items-center justify-center overflow-hidden bg-[radial-gradient(80%_80%_at_50%_30%,#fff,#f1efe6)]", className)}>
-      {image?.url ? <Image src={image.url} alt={image.altText ?? vehicle.name} fill sizes={sizes} priority={priority} className="object-cover" /> : <Illustration type={vehicle.vehicleType} seed={`${vehicle.id}${index}`} />}
+      {image?.url ? <Image src={image.url} alt={image.altText ?? vehicle.name} fill sizes={sizes} priority={priority} unoptimized className="object-cover" /> : <Illustration type={vehicle.vehicleType} seed={`${vehicle.id}${index}`} />}
     </div>
   );
 }
