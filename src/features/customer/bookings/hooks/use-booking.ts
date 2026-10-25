@@ -1,6 +1,6 @@
 "use client";
 
-import { useBookingQuery } from "./generated";
+import { useBookingQuery } from "./use-bookings";
 import { apiBookingToView } from "../lib/booking-mapper";
 
 export function useBooking(reference: string) {

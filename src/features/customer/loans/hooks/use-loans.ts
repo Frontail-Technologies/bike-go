@@ -3,8 +3,8 @@
 "use client";
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import * as api from "../api/generated";
-import { customerLoanKeys } from "../query-keys.generated";
+import * as api from "../api/loans-api";
+import { customerLoanKeys } from "../query-keys";
 import type { LoanCreateInput, LoanListParams, LoanUpdateInput } from "../types";
 
 export function useLoansQuery(params: LoanListParams) {

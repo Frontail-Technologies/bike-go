@@ -3,8 +3,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import * as api from "../api/generated";
-import { customerBannerKeys } from "../query-keys.generated";
+import * as api from "../api/banners-api";
+import { customerBannerKeys } from "../query-keys";
 import type { BannerListParams } from "../types";
 
 export function useBannersQuery(params: BannerListParams) {

@@ -3,8 +3,8 @@
 "use client";
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import * as api from "../api/generated";
-import { customerVehicleKeys } from "../query-keys.generated";
+import * as api from "../api/vehicles-api";
+import { customerVehicleKeys } from "../query-keys";
 import type { VehicleAvailabilityParams, VehicleListParams } from "../types";
 
 export function useVehiclesQuery(params: VehicleListParams) {

@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { apiFile, hooksFile, keysFile, validateManifest } from "../scripts/scaffold-customer-api.mjs";
+import { apiFile, artifactNames, hooksFile, keysFile, validateManifest } from "../scripts/scaffold-customer-api.mjs";
 
 const feature = {
   domain: "sample",
-  featureDir: "src/features/sample",
+  featureDir: "src/features/customer/sample",
   keyName: "sampleKeys",
   operations: [
     { name: "listItems", hook: "useItemsQuery", kind: "query", method: "GET", path: "/items/:itemId", queryType: "ListParams", responseType: "Item", paginated: true },
@@ -21,6 +21,7 @@ describe("customer API scaffold", () => {
   });
 
   test("creates hierarchical keys and narrow feature invalidation", () => {
+    expect(artifactNames(feature)).toEqual({ api: "sample-api.ts", hooks: "use-sample.ts", keys: "query-keys.ts" });
     expect(keysFile(feature)).toContain('["customer", "sample"]');
     expect(hooksFile(feature)).toContain("placeholderData: keepPreviousData");
     expect(hooksFile(feature)).toContain("invalidateQueries({ queryKey: sampleKeys.root() })");

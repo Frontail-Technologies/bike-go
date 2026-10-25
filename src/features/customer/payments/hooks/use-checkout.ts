@@ -1,8 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { getPayment } from "../api/generated";
-import { customerPaymentKeys } from "../query-keys.generated";
+import { getPayment } from "../api/payments-api";
+import { customerPaymentKeys } from "../query-keys";
 
 const POLL_MS = 4_000;
 

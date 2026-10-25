@@ -3,8 +3,8 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import * as api from "../api/generated";
-import { customerSupportTicketKeys } from "../query-keys.generated";
+import * as api from "../api/support-tickets-api";
+import { customerSupportTicketKeys } from "../query-keys";
 import type { SupportTicketInput } from "../types";
 
 export function useCreateSupportTicketMutation() {

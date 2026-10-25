@@ -3,8 +3,8 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import * as api from "../api/generated";
-import { customerLoanDocumentKeys } from "../query-keys.generated";
+import * as api from "../api/loan-documents-api";
+import { customerLoanDocumentKeys } from "../query-keys";
 import type { LoanDocumentReplace, LoanDocumentUpload } from "../types";
 
 export function useLoanDocumentsQuery(reference: string) {

@@ -1,8 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { quoteBooking } from "../api/generated";
-import { customerBookingKeys } from "../query-keys.generated";
+import { quoteBooking } from "../api/bookings-api";
+import { customerBookingKeys } from "../query-keys";
 import type { BookingRequest } from "../types";
 
 export function useBookingQuoteQuery(input: BookingRequest | null) {

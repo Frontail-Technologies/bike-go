@@ -21,8 +21,8 @@ import { BookingTimeline } from "./booking-timeline";
 import { formatDay } from "../lib/dates";
 import type { CustomerBooking } from "../types";
 import { maskLicence, useBooking } from "../hooks/use-booking";
-import { useCancelBookingMutation } from "../hooks/generated";
-import { useCustomerProfileQuery } from "@/features/customer/profile/hooks/generated";
+import { useCancelBookingMutation } from "../hooks/use-bookings";
+import { useCustomerProfileQuery } from "@/features/customer/profile/hooks/use-profile";
 
 function Card({ title, children, id }: { title: string; children: React.ReactNode; id: string }) {
   return (

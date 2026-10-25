@@ -3,8 +3,8 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import * as api from "../api/generated";
-import { customerProfileKeys } from "../query-keys.generated";
+import * as api from "../api/profile-api";
+import { customerProfileKeys } from "../query-keys";
 import type { CustomerProfileUpdate } from "../types";
 
 export function useCustomerProfileQuery() {

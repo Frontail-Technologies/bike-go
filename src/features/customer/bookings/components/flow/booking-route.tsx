@@ -1,7 +1,7 @@
 "use client";
 
 import { CustomerAuthBoundary } from "@/features/customer/auth/components/customer-auth-boundary";
-import { useVehicleQuery } from "@/features/customer/vehicles/hooks/generated";
+import { useVehicleQuery } from "@/features/customer/vehicles/hooks/use-vehicles";
 import { vehicleToMotorcycle } from "@/features/customer/vehicles/lib/vehicle-mapper";
 import { BikeDetailsSkeleton } from "@/features/customer/vehicles/components/details/bike-details-skeleton";
 import { BookingFlow } from "./booking-flow";

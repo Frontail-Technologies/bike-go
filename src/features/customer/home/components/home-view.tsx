@@ -17,13 +17,13 @@ import { Screen } from "@/components/shared/screen";
 import { IconButton } from "@/components/ui/button";
 import { AppSearchField } from "@/components/ui/search-field";
 import type { BikeCategory } from "@/features/customer/vehicles/lib/view-model";
-import { useVehiclesQuery } from "@/features/customer/vehicles/hooks/generated";
+import { useVehiclesQuery } from "@/features/customer/vehicles/hooks/use-vehicles";
 import { vehicleToMotorcycle } from "@/features/customer/vehicles/lib/vehicle-mapper";
 import { LanguageSwitcher } from "@/components/shared/language-switcher";
 import { useTranslations } from "@/i18n/hooks";
 import { CategoryCircles } from "./category-circles";
 import { HomeBanner } from "./home-banner";
-import { useBannersQuery } from "../hooks/generated";
+import { useBannersQuery } from "../hooks/use-banners";
 
 const benefits = [
   { Icon: SealCheckIcon, key: "verified" },

@@ -3,8 +3,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import * as api from "../api/generated";
-import { customerMasterDataKeys } from "../query-keys.generated";
+import * as api from "../api/master-data-api";
+import { customerMasterDataKeys } from "../query-keys";
 
 export function useMasterItemsQuery(kind: string) {
   return useQuery({

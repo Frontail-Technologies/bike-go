@@ -8,7 +8,7 @@ import { ButtonLink } from "@/components/ui/button-link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useTranslations } from "@/i18n/hooks";
 import { ApplicationCard } from "./application-card";
-import { useLoansQuery } from "../hooks/generated";
+import { useLoansQuery } from "../hooks/use-loans";
 import { apiLoanToApplication } from "../lib/loan-mapper";
 
 export function ApplicationsView() {

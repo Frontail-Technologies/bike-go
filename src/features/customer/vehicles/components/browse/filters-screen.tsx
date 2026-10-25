@@ -5,7 +5,7 @@ import { useEffect, useMemo } from "react";
 import { AppBar } from "@/components/shared/app-bar";
 import { Screen, ScreenFooter } from "@/components/shared/screen";
 import { Button } from "@/components/ui/button";
-import { useVehiclesQuery } from "@/features/customer/vehicles/hooks/generated";
+import { useVehiclesQuery } from "@/features/customer/vehicles/hooks/use-vehicles";
 import { useBack } from "@/hooks/use-back";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useTranslations } from "@/i18n/hooks";

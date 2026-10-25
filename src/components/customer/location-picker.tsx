@@ -6,7 +6,7 @@ import { RadioGroup } from "@/components/ui/selection-controls";
 import { cityStore } from "@/features/customer/profile/stores/preferences-store";
 import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";
-import { useLocationsQuery } from "@/features/customer/locations/hooks/generated";
+import { useLocationsQuery } from "@/features/customer/locations/hooks/use-locations";
 
 type LocationPickerProps = {
   variant?: "header" | "row";

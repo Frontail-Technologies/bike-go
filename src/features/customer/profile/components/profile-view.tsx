@@ -38,10 +38,10 @@ import { LanguageOptions } from "@/components/shared/language-switcher";
 import { useTranslations } from "@/i18n/hooks";
 import { intlLocale } from "@/i18n/hooks";
 import { ApplicationCard } from "@/features/customer/loans/components/application-card";
-import { useLoansQuery } from "@/features/customer/loans/hooks/generated";
+import { useLoansQuery } from "@/features/customer/loans/hooks/use-loans";
 import { apiLoanToApplication } from "@/features/customer/loans/lib/loan-mapper";
 import { favoritesStore, initials, profileStore } from "../stores/preferences-store";
-import { useCustomerProfileQuery, useUpdateCustomerProfileMutation } from "../hooks/generated";
+import { useCustomerProfileQuery, useUpdateCustomerProfileMutation } from "../hooks/use-profile";
 
 type ModalKey = "edit" | "licence" | "logout" | null;
 

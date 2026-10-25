@@ -3,8 +3,8 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import * as api from "../api/generated";
-import { customerPaymentKeys } from "../query-keys.generated";
+import * as api from "../api/payments-api";
+import { customerPaymentKeys } from "../query-keys";
 
 export function useStartPaymentMutation() {
   const queryClient = useQueryClient();

@@ -15,8 +15,8 @@ import { draftStore, justBookedStore } from "@/features/customer/bookings/stores
 import type { BookingDraft } from "@/features/customer/bookings/types";
 import type { Motorcycle } from "@/features/customer/vehicles/lib/view-model";
 import type { Vehicle } from "@/features/customer/vehicles/types";
-import { useCustomerProfileQuery } from "@/features/customer/profile/hooks/generated";
-import { useBookingAddonsQuery, useCreateBookingMutation } from "@/features/customer/bookings/hooks/generated";
+import { useCustomerProfileQuery } from "@/features/customer/profile/hooks/use-profile";
+import { useBookingAddonsQuery, useCreateBookingMutation } from "@/features/customer/bookings/hooks/use-bookings";
 import { useBookingQuoteQuery } from "@/features/customer/bookings/hooks/use-booking-quote";
 import { bookingQuoteToView } from "@/features/customer/bookings/lib/booking-mapper";
 import { cambodiaRentalDateTime } from "@/lib/cambodia-time";

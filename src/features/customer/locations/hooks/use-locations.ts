@@ -3,8 +3,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import * as api from "../api/generated";
-import { customerLocationKeys } from "../query-keys.generated";
+import * as api from "../api/locations-api";
+import { customerLocationKeys } from "../query-keys";
 import type { LocationListParams } from "../types";
 
 export function useLocationsQuery(params: LocationListParams) {

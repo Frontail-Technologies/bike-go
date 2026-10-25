@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { StartedPayment } from "../types";
 import { useBookingPayment } from "../hooks/use-checkout";
-import { useStartPaymentMutation } from "../hooks/generated";
+import { useStartPaymentMutation } from "../hooks/use-payments";
 
 declare global {
   interface Window {

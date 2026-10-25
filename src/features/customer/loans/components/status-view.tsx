@@ -22,11 +22,11 @@ import {
 import { DocumentUpload } from "./document-upload";
 import { LoanTimeline } from "./loan-timeline";
 import { justAppliedStore } from "../stores/loan-draft-store";
-import { useLoanQuery } from "../hooks/generated";
+import { useLoanQuery } from "../hooks/use-loans";
 import { apiLoanToApplication } from "../lib/loan-mapper";
-import { useDeleteLoanDocumentMutation, useLoanDocumentsQuery, useReplaceLoanDocumentMutation, useUploadLoanDocumentMutation } from "../documents/hooks/generated";
+import { useDeleteLoanDocumentMutation, useLoanDocumentsQuery, useReplaceLoanDocumentMutation, useUploadLoanDocumentMutation } from "../documents/hooks/use-loan-documents";
 import { customerDocumentId, loanDocumentType } from "../lib/document-types";
-import { useResubmitLoanMutation } from "../hooks/generated";
+import { useResubmitLoanMutation } from "../hooks/use-loans";
 import type { LoanDocument } from "../types";
 
 const headIcon: Record<LoanStatus, React.ReactNode> = {

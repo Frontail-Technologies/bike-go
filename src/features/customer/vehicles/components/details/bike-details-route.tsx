@@ -3,7 +3,7 @@
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { BikeDetailsSkeleton } from "./bike-details-skeleton";
-import { useVehicleQuery } from "@/features/customer/vehicles/hooks/generated";
+import { useVehicleQuery } from "@/features/customer/vehicles/hooks/use-vehicles";
 import { vehicleToMotorcycle } from "@/features/customer/vehicles/lib/vehicle-mapper";
 import { BikeDetailsView } from "./bike-details-view";
 import { MotorcycleIcon } from "@phosphor-icons/react";

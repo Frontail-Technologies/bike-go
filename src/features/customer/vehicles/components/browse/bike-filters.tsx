@@ -4,7 +4,7 @@ import { ChipGroup } from "@/components/ui/chip-group";
 import { RangeSlider } from "@/components/ui/range-slider";
 import { Switch } from "@/components/ui/selection-controls";
 import { useTranslations } from "@/i18n/hooks";
-import { useMasterItemsQuery } from "@/features/customer/master-data/hooks/generated";
+import { useMasterItemsQuery } from "@/features/customer/master-data/hooks/use-master-data";
 import { DEFAULT_FILTERS, type EngineBand, type Filters, PRICE_MAX, PRICE_MIN, engineBands } from "../../lib/filters";
 
 type BikeFiltersProps = {

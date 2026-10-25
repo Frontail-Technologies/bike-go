@@ -3,8 +3,8 @@
 "use client";
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import * as api from "../api/generated";
-import { customerBookingKeys } from "../query-keys.generated";
+import * as api from "../api/bookings-api";
+import { customerBookingKeys } from "../query-keys";
 import type { BookingCancelInput, BookingListParams, BookingRequest } from "../types";
 
 export function useBookingAddonsQuery() {

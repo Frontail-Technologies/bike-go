@@ -12,7 +12,7 @@ import { Pagination } from "@/components/ui/pagination";
 import { useTranslations } from "@/i18n/hooks";
 import { BookingCard } from "./booking-card";
 import type { CustomerBooking } from "../types";
-import { useBookingsQuery } from "../hooks/generated";
+import { useBookingsQuery } from "../hooks/use-bookings";
 import { apiBookingToView } from "../lib/booking-mapper";
 
 const tabs = [
