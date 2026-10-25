@@ -4,7 +4,7 @@ import { Alert } from "@heroui/react";
 import Script from "next/script";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import type { StartedPayment } from "../api/checkout-api";
+import type { StartedPayment } from "../types";
 import { useBookingPayment, useStartPayment } from "../hooks/use-checkout";
 
 declare global {
@@ -67,7 +67,7 @@ export function PaywayCheckout({ reference, onPaid }: { reference: string; onPai
         <div className="aba-modal-content">
           {payment ? (
             <form ref={formRef} method="POST" target="aba_webservice" action={payment.checkout.action} id="aba_merchant_request">
-              {Object.entries(payment.checkout.fields).map(([name, value]) => <input key={name} type="hidden" name={name} value={value} />)}
+              {Object.entries(payment.checkout.fields).map(([name, value]) => <input key={name} type="hidden" name={name} value={String(value)} />)}
             </form>
           ) : null}
         </div>

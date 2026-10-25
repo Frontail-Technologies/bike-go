@@ -38,7 +38,8 @@ import { LanguageOptions } from "@/components/shared/language-switcher";
 import { useTranslations } from "@/i18n/hooks";
 import { intlLocale } from "@/i18n/hooks";
 import { ApplicationCard } from "@/features/loans/application-card";
-import { loansStore } from "@/features/loans/store";
+import { useLoansQuery } from "@/features/loans/hooks/generated";
+import { apiLoanToApplication } from "@/features/loans/loan-mapper";
 import { favoritesStore, initials, profileStore } from "./store";
 import { useCustomerProfileQuery, useUpdateCustomerProfileMutation } from "./hooks/generated";
 
@@ -75,7 +76,8 @@ export function ProfileView() {
     licence: localProfile.licence,
     notifications: localProfile.notifications,
   };
-  const applications = loansStore.useValue();
+  const loans = useLoansQuery({ page: 1, pageSize: 3 });
+  const applications = (loans.data?.data ?? []).map(apiLoanToApplication);
   const savedCount = favoritesStore.useValue().length;
   const [modal, setModal] = useState<ModalKey>(null);
   const close = () => setModal(null);

@@ -80,8 +80,8 @@ export function BookingDetailsView({ reference }: { reference: string }) {
     );
   }
 
-  const { booking, bike } = found;
-  booking.rider = { name: profile.data?.fullName ?? "", phone: profile.data?.phone ?? "", email: profile.data?.email ?? "" };
+  const { bike } = found;
+  const booking = { ...found.booking, rider: { name: profile.data?.fullName ?? "", phone: profile.data?.phone ?? "", email: profile.data?.email ?? "" } };
   const hub = { name: found.booking.city, address: "RideGo pickup location" };
 
   return (
