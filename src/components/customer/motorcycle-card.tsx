@@ -54,11 +54,11 @@ export function MotorcycleCard({ bike, href, className }: MotorcycleCardProps) {
           title
         )}
         <PriceDisplay amount={bike.pricePerDay} size="sm" accent />
-        <span className="tabular flex items-center gap-1 text-xs font-medium text-subtle">
+        {bike.reviews > 0 ? <span className="tabular flex items-center gap-1 text-xs font-medium text-subtle">
           <StarIcon size={14} weight="fill" className="text-brand" />
           {bike.rating.toFixed(1)}
           <span className="font-normal">({bike.reviews})</span>
-        </span>
+        </span> : null}
       </div>
     </InteractiveCard>
   );

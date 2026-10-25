@@ -3,8 +3,8 @@
 import { ChipGroup } from "@/components/ui/chip-group";
 import { RangeSlider } from "@/components/ui/range-slider";
 import { Switch } from "@/components/ui/selection-controls";
-import { brands, categories } from "@/features/mock/data";
 import { useTranslations } from "@/i18n/hooks";
+import { useMasterItemsQuery } from "@/features/master-data/hooks/generated";
 import { DEFAULT_FILTERS, type EngineBand, type Filters, PRICE_MAX, PRICE_MIN, engineBands } from "./filters";
 
 type BikeFiltersProps = {
@@ -24,13 +24,16 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
 export function BikeFilters({ value, onChange }: BikeFiltersProps) {
   const t = useTranslations("browse");
   const set = <K extends keyof Filters>(key: K, next: Filters[K]) => onChange({ ...value, [key]: next });
+  const categories = useMasterItemsQuery("vehicle_category");
+  const brands = useMasterItemsQuery("brand");
+  const transmissions = useMasterItemsQuery("transmission");
 
   return (
     <div className="flex flex-col gap-6">
       <Group title={t("bikeType")}>
         <ChipGroup
           label={t("bikeType")}
-          options={categories.filter((c) => c.id !== "all").map((c) => ({ id: c.id, label: t(`cat_${c.id}` as "cat_all") }))}
+          options={(categories.data ?? []).map((item) => ({ id: item.code, label: item.name }))}
           value={value.category === "all" ? [] : [value.category]}
           onChange={(ids) => set("category", ids[0] ?? "all")}
         />
@@ -49,7 +52,7 @@ export function BikeFilters({ value, onChange }: BikeFiltersProps) {
         <ChipGroup
           label={t("brand")}
           multiple
-          options={brands.map((b) => ({ id: b, label: b }))}
+          options={(brands.data ?? []).map((item) => ({ id: item.name, label: item.name }))}
           value={value.brands}
           onChange={(next) => set("brands", next)}
         />
@@ -59,10 +62,7 @@ export function BikeFilters({ value, onChange }: BikeFiltersProps) {
         <ChipGroup
           label={t("transmission")}
           multiple
-          options={[
-            { id: "manual", label: t("manual") },
-            { id: "automatic", label: t("automatic") },
-          ]}
+          options={(transmissions.data ?? []).map((item) => ({ id: item.name, label: item.name }))}
           value={value.transmission}
           onChange={(next) => set("transmission", next)}
         />

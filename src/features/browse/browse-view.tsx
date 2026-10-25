@@ -2,7 +2,7 @@
 
 import { FunnelIcon, MagnifyingGlassIcon, XIcon } from "@phosphor-icons/react";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { MotorcycleCard } from "@/components/customer/motorcycle-card";
 import { RentalDatesButton } from "@/components/customer/rental-dates-button";
 import { AnimatedGrid } from "@/components/motion/animated-grid";
@@ -14,13 +14,15 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { AppSearchField } from "@/components/ui/search-field";
 import { MotorcycleCardSkeleton } from "@/components/ui/skeleton";
 import { Tabs } from "@/components/ui/tabs";
-import { useMockLoad } from "@/hooks/use-mock-load";
 import { useTranslations } from "@/i18n/hooks";
-import { categories, motorcycles } from "@/features/mock/data";
 import { favoritesStore } from "@/features/profile/store";
+import { useVehiclesQuery } from "@/features/vehicles/hooks/generated";
+import { vehicleToMotorcycle } from "@/features/vehicles/vehicle-mapper";
+import { useMasterItemsQuery } from "@/features/master-data/hooks/generated";
+import { cambodiaRentalRange } from "@/lib/cambodia-time";
 import { BikeFilters } from "./bike-filters";
 import { DEFAULT_BROWSE, browseStore } from "./browse-store";
-import { DEFAULT_FILTERS, activeFilterCount, queryBikes } from "./filters";
+import { DEFAULT_FILTERS, activeFilterCount } from "./filters";
 import { SearchDialog } from "./search-dialog";
 import { SortControl } from "./sort-control";
 
@@ -30,11 +32,29 @@ export function BrowseView() {
   const params = useSearchParams();
   const saved = params.get("saved") === "1";
   const { filters, query, sort, dates } = browseStore.useValue();
-  const loading = useMockLoad(450);
   const favorites = favoritesStore.useValue();
   const [searchOpen, setSearchOpen] = useState(false);
   const t = useTranslations("browse");
   const common = useTranslations("common");
+  const deferredQuery = useDeferredValue(query.trim());
+  const categoryOptions = useMasterItemsQuery("vehicle_category");
+  const engine = filters.engine[0];
+  const range = dates ? cambodiaRentalRange(dates.start, dates.end) : {};
+  const vehicles = useVehiclesQuery({
+    page: 1,
+    pageSize: 100,
+    q: deferredQuery || undefined,
+    category: filters.category === "all" ? undefined : filters.category,
+    brand: filters.brands.length ? filters.brands : undefined,
+    transmission: filters.transmission.length ? filters.transmission : undefined,
+    minPrice: filters.price[0] * 100,
+    maxPrice: filters.price[1] * 100,
+    minEngineCc: engine === "200-400" ? 200 : engine === "over-400" ? 401 : undefined,
+    maxEngineCc: engine === "under-200" ? 199 : engine === "200-400" ? 400 : undefined,
+    availableOnly: filters.availableOnly || undefined,
+    ...range,
+    sort: sort === "price-asc" ? "price_asc" : sort === "price-desc" ? "price_desc" : sort === "popular" ? "newest" : "name",
+  });
 
   useEffect(() => {
     const category = params.get("category");
@@ -45,15 +65,16 @@ export function BrowseView() {
     browseStore.update((s) => ({
       ...s,
       query: q ?? s.query,
-      filters: { ...s.filters, category: categories.some((c) => c.id === category) ? (category as string) : s.filters.category },
+      filters: { ...s.filters, category: category ?? s.filters.category },
       dates: start && end ? { start, end } : s.dates,
     }));
   }, []);
 
-  const results = useMemo(
-    () => queryBikes(motorcycles, { filters, query, sort, start: dates?.start, end: dates?.end, onlyIds: saved ? favorites : undefined }),
-    [filters, query, sort, dates, saved, favorites],
-  );
+  const results = useMemo(() => {
+    const mapped = (vehicles.data?.data ?? []).map(vehicleToMotorcycle);
+    return saved ? mapped.filter((vehicle) => favorites.includes(vehicle.id)) : mapped;
+  }, [favorites, saved, vehicles.data]);
+  const loading = vehicles.isPending;
   const phoneCount = activeFilterCount(filters, true);
   const sidebarCount = activeFilterCount(filters);
   const set = (patch: Partial<typeof DEFAULT_BROWSE>) => browseStore.update((s) => ({ ...s, ...patch }));
@@ -142,7 +163,7 @@ export function BrowseView() {
             aria-label={t("categoryAria")}
             selectedKey={filters.category}
             onSelectionChange={(category) => set({ filters: { ...filters, category } })}
-            items={categories.map((c) => ({ id: c.id, label: t(`cat_${c.id}` as "cat_all") }))}
+            items={[{ id: "all", label: t("cat_all") }, ...(categoryOptions.data ?? []).map((item) => ({ id: item.code, label: item.name }))]}
           />
         </div>
 
@@ -183,7 +204,7 @@ export function BrowseView() {
                 title={t("noMatchTitle")}
                 description={t("noMatchText")}
                 action={
-                  <Button size="sm" onPress={() => browseStore.set(DEFAULT_BROWSE)}>
+                  <Button size="sm" onPress={() => vehicles.isError ? vehicles.refetch() : browseStore.set(DEFAULT_BROWSE)}>
                     {t("resetFilters")}
                   </Button>
                 }

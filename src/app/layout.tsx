@@ -4,6 +4,7 @@ import { I18nProvider } from "@/i18n/provider";
 import { pendingLocaleScript } from "@/i18n/pending";
 import { MotionProvider } from "@/components/motion/motion-provider";
 import { AppToaster } from "@/components/ui/toast";
+import { CustomerQueryProvider } from "@/components/customer/customer-query-provider";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -37,7 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="flex min-h-dvh flex-col">
         <I18nProvider>
-          <MotionProvider>{children}</MotionProvider>
+          <CustomerQueryProvider><MotionProvider>{children}</MotionProvider></CustomerQueryProvider>
         </I18nProvider>
         <AppToaster />
       </body>

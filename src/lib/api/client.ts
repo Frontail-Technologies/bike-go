@@ -8,6 +8,7 @@ export const apiClient = axios.create({
   baseURL: apiBaseUrl,
   withCredentials: true,
   timeout: 15_000,
+  paramsSerializer: { indexes: null },
   headers: { Accept: "application/json" },
 });
 

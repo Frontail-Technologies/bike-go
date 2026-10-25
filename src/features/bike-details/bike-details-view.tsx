@@ -27,6 +27,7 @@ import { useBikeText } from "@/features/mock/use-bike-text";
 import { formatMoney } from "@/lib/format";
 import { PickupCard } from "./pickup-card";
 import { RentalTerms } from "./rental-terms";
+import type { VehicleLocation } from "@/features/vehicles/types";
 
 function DetailSection({ id, title, className, children }: { id: string; title: string; className?: string; children: React.ReactNode }) {
   return (
@@ -39,7 +40,7 @@ function DetailSection({ id, title, className, children }: { id: string; title: 
   );
 }
 
-export function BikeDetailsView({ bike }: { bike: Motorcycle }) {
+export function BikeDetailsView({ bike, location }: { bike: Motorcycle; location?: VehicleLocation }) {
   const router = useRouter();
   const params = useSearchParams();
   const favorite = favoritesStore.useValue().includes(bike.id);
@@ -166,11 +167,11 @@ export function BikeDetailsView({ bike }: { bike: Motorcycle }) {
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-3 text-sm">
-                      <span className="tabular flex items-center gap-1 font-semibold">
+                      {bike.reviews > 0 ? <span className="tabular flex items-center gap-1 font-semibold">
                         <StarIcon size={16} weight="fill" className="text-brand" />
                         {bike.rating.toFixed(1)}
                         <span className="font-normal text-subtle">{t("reviews", { count: bike.reviews })}</span>
-                      </span>
+                      </span> : null}
                       {bike.available ? (
                         <StatusBadge tone="success">{t("available")}</StatusBadge>
                       ) : (
@@ -219,7 +220,7 @@ export function BikeDetailsView({ bike }: { bike: Motorcycle }) {
               </DetailSection>
 
               <DetailSection id="pickup-title" title={t("pickupLocation")}>
-                <PickupCard />
+                <PickupCard location={location} />
               </DetailSection>
 
               <DetailSection id="terms-title" title={t("rentalTerms")}>

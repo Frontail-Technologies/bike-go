@@ -19,7 +19,7 @@ export function BikeImage({ bike, index = 0, className, sizes = "(min-width: 102
   if (photo) {
     return (
       <div className={cn("relative size-full", className)}>
-        <Image src={photo} alt={alt} fill sizes={sizes} priority={priority} className="object-cover" />
+        <Image src={photo} alt={alt} fill sizes={sizes} priority={priority} unoptimized className="object-cover" />
       </div>
     );
   }

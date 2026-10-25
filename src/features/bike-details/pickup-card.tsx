@@ -2,11 +2,9 @@
 
 import { ClockIcon, MapPinIcon } from "@phosphor-icons/react";
 import { useTranslations } from "@/i18n/hooks";
-import { cityStore } from "@/features/profile/store";
+import type { VehicleLocation } from "@/features/vehicles/types";
 
-export function PickupCard() {
-  const city = cityStore.useValue();
-  const t = useTranslations("places");
+export function PickupCard({ location }: { location?: VehicleLocation }) {
   const bike = useTranslations("bike");
 
   return (
@@ -16,13 +14,13 @@ export function PickupCard() {
           <MapPinIcon size={20} weight="fill" />
         </span>
         <div className="min-w-0">
-          <p className="text-[15px] leading-6 font-bold">{t(`hubs.${city}.name`)}</p>
-          <p className="text-sm leading-6 text-ink/75">{t(`hubs.${city}.address`)}</p>
+          <p className="text-[15px] leading-6 font-bold">{location?.name ?? "RideGo pickup location"}</p>
+          <p className="text-sm leading-6 text-ink/75">{location ? `${location.address}, ${location.city}` : "Location confirmed during booking"}</p>
         </div>
       </div>
       <p className="flex items-start gap-2 border-t border-line pt-3 text-sm leading-6 text-ink/75">
         <ClockIcon size={20} className="mt-0.5 shrink-0 text-ink" />
-        {bike("pickupOpen", { hours: t("hours") })}
+        {bike("pickupOpen", { hours: "07:00–21:00 ICT" })}
       </p>
     </div>
   );

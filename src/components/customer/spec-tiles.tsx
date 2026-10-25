@@ -8,10 +8,10 @@ import { cn } from "@/lib/cn";
 export function SpecTiles({ bike, className }: { bike: Motorcycle; className?: string }) {
   const t = useTranslations("bike");
   const specs = [
-    { Icon: GaugeIcon, value: `${bike.engineCc}cc`, label: t("engine") },
-    { Icon: GasPumpIcon, value: `${bike.mileageKmpl} km/l`, label: t("mileage") },
-    { Icon: GearSixIcon, value: bike.gears ? t("speed", { count: bike.gears }) : t("auto"), label: t("gearbox") },
-    { Icon: ScalesIcon, value: `${bike.weightKg} kg`, label: t("weight") },
+    { Icon: GaugeIcon, value: bike.engineCc ? `${bike.engineCc}cc` : "—", label: t("engine") },
+    { Icon: GasPumpIcon, value: bike.mileageKmpl ? `${bike.mileageKmpl} km/l` : "—", label: t("mileage") },
+    { Icon: GearSixIcon, value: bike.transmission === "automatic" ? t("auto") : bike.gears ? t("speed", { count: bike.gears }) : "Manual", label: t("gearbox") },
+    { Icon: ScalesIcon, value: bike.weightKg ? `${bike.weightKg} kg` : "—", label: t("weight") },
   ];
 
   return (

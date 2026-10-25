@@ -3,10 +3,10 @@
 import { CaretDownIcon, MapPinIcon } from "@phosphor-icons/react";
 import { ResponsiveOverlay } from "@/components/shared/responsive-overlay";
 import { RadioGroup } from "@/components/ui/selection-controls";
-import { type City, cities } from "@/features/mock/data";
 import { cityStore } from "@/features/profile/store";
 import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";
+import { useLocationsQuery } from "@/features/locations/hooks/generated";
 
 type LocationPickerProps = {
   variant?: "header" | "row";
@@ -16,7 +16,9 @@ type LocationPickerProps = {
 export function LocationPicker({ variant = "header", className }: LocationPickerProps) {
   const city = cityStore.useValue();
   const t = useTranslations("places");
-  const label = t("cityLabel", { city: t(`cities.${city}`) });
+  const locations = useLocationsQuery({});
+  const selected = locations.data?.find((location) => location.city === city) ?? locations.data?.[0];
+  const label = selected?.city ?? city;
   const row = variant === "row";
 
   return (
@@ -43,8 +45,8 @@ export function LocationPicker({ variant = "header", className }: LocationPicker
       <RadioGroup
         label={t("chooseHub")}
         value={city}
-        onChange={(value) => cityStore.set(value as City)}
-        options={cities.map((c) => ({ value: c, label: t("hubOption", { city: t(`cities.${c}`), hub: t(`hubs.${c}.name`) }) }))}
+        onChange={(value) => cityStore.set(value)}
+        options={(locations.data ?? []).map((location) => ({ value: location.city, label: `${location.city} — ${location.name}` }))}
       />
     </ResponsiveOverlay>
   );

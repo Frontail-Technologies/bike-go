@@ -58,8 +58,8 @@ function apiFile(feature) {
       operation.idempotency ? 'headers: options?.idempotencyKey ? { "Idempotency-Key": options.idempotencyKey } : undefined' : null,
     ].filter(Boolean).join(", ");
     if (operation.idempotency) args.push("options?: { idempotencyKey?: string }");
-    const returnType = operation.paginated ? `ApiPage<${operation.responseType}>` : operation.responseType;
-    const envelopeType = operation.paginated ? `${operation.responseType}[]` : operation.responseType;
+    const returnType = operation.paginated ? `ApiPage<${operation.responseType}>` : operation.array ? `${operation.responseType}[]` : operation.responseType;
+    const envelopeType = operation.paginated || operation.array ? `${operation.responseType}[]` : operation.responseType;
     const unwrap = operation.paginated ? "unwrapPage" : "unwrapData";
     return `export async function ${operation.name}(${args.join(", ")}): Promise<${returnType}> {\n  const response = await apiClient.request<ApiEnvelope<${envelopeType}>>({ ${config} });\n  return ${unwrap}(response.data);\n}`;
   }).join("\n\n");
@@ -79,6 +79,9 @@ function keysFile(feature) {
 function hooksFile(feature) {
   const types = [...new Set(feature.operations.flatMap((operation) => [operation.queryType, operation.bodyType]).filter(Boolean))].sort();
   const hasPage = feature.operations.some((operation) => operation.paginated);
+  const hasQuery = feature.operations.some((operation) => operation.kind === "query");
+  const hasMutation = feature.operations.some((operation) => operation.kind === "mutation");
+  const reactQueryImports = [hasPage ? "keepPreviousData" : null, hasMutation ? "useMutation" : null, hasQuery ? "useQuery" : null, hasMutation ? "useQueryClient" : null].filter(Boolean).join(", ");
   const hooks = feature.operations.map((operation) => {
     const params = pathParams(operation.path);
     if (operation.kind === "query") {
@@ -99,7 +102,7 @@ function hooksFile(feature) {
     const variableAccess = [...params.map((name) => `variables.${name}`), ...(operation.bodyType ? ["variables.input"] : []), ...(operation.idempotency ? ["{ idempotencyKey: variables.idempotencyKey }"] : [])];
     return `export function ${operation.hook}() {\n  const queryClient = useQueryClient();\n  return useMutation({\n    mutationFn: (variables: ${signature}) => api.${operation.name}(${variableAccess.join(", ")}),\n    onSuccess: () => queryClient.invalidateQueries({ queryKey: ${feature.keyName}.root() }),\n  });\n}`;
   }).join("\n\n");
-  return `${GENERATED}\n"use client";\n\nimport { ${hasPage ? "keepPreviousData, " : ""}useMutation, useQuery, useQueryClient } from "@tanstack/react-query";\nimport * as api from "../api/generated";\nimport { ${feature.keyName} } from "../query-keys.generated";${types.length ? `\nimport type { ${types.join(", ")} } from "../types";` : ""}\n\n${hooks}\n`;
+  return `${GENERATED}\n"use client";\n\nimport { ${reactQueryImports} } from "@tanstack/react-query";\nimport * as api from "../api/generated";\nimport { ${feature.keyName} } from "../query-keys.generated";${types.length ? `\nimport type { ${types.join(", ")} } from "../types";` : ""}\n\n${hooks}\n`;
 }
 
 async function syncFile(file, content, stale) {

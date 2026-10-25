@@ -16,13 +16,14 @@ import { AppBar } from "@/components/shared/app-bar";
 import { Screen } from "@/components/shared/screen";
 import { IconButton } from "@/components/ui/button";
 import { AppSearchField } from "@/components/ui/search-field";
-import { type BikeCategory, motorcycles } from "@/features/mock/data";
+import type { BikeCategory } from "@/features/mock/data";
+import { useVehiclesQuery } from "@/features/vehicles/hooks/generated";
+import { vehicleToMotorcycle } from "@/features/vehicles/vehicle-mapper";
 import { LanguageSwitcher } from "@/components/shared/language-switcher";
 import { useTranslations } from "@/i18n/hooks";
 import { CategoryCircles } from "./category-circles";
 import { HomeBanner } from "./home-banner";
-
-const featured = [...motorcycles].sort((a, b) => b.rating - a.rating).slice(0, 6);
+import { useBannersQuery } from "./hooks/generated";
 
 const benefits = [
   { Icon: SealCheckIcon, key: "verified" },
@@ -37,11 +38,10 @@ export function HomeView() {
   const [category, setCategory] = useState<BikeCategory | null>(null);
   const t = useTranslations("home");
   const common = useTranslations("common");
-
-  const popular = motorcycles
-    .filter((bike) => !category || bike.category === category)
-    .sort((a, b) => b.reviews - a.reviews)
-    .slice(0, 8);
+  const vehicles = useVehiclesQuery({ page: 1, pageSize: 8, category: category ?? undefined, sort: "newest" });
+  const banners = useBannersQuery({ placement: "home_hero" });
+  const popular = (vehicles.data?.data ?? []).map(vehicleToMotorcycle);
+  const featured = popular.slice(0, 6);
 
   function search(params: Record<string, string>) {
     const qs = new URLSearchParams(params).toString();
@@ -62,7 +62,7 @@ export function HomeView() {
           <LocationPicker variant="row" />
         </div>
         <Reveal y={8} blur={0}>
-          <HomeBanner />
+          <HomeBanner banner={banners.data?.[0]} />
         </Reveal>
         <div className="flex gap-2">
           <AppSearchField

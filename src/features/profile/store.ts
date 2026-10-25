@@ -1,6 +1,5 @@
 "use client";
 
-import type { City } from "@/features/mock/data";
 import { createPersistedStore } from "@/lib/persisted-store";
 
 export type Profile = {
@@ -23,7 +22,7 @@ export const profileStore = createPersistedStore<Profile>("rgo.profile.v1", {
 
 export const favoritesStore = createPersistedStore<string[]>("rgo.favorites.v1", ["yamaha-mt-15"]);
 
-export const cityStore = createPersistedStore<City>("rgo.city.v1", "Jaipur");
+export const cityStore = createPersistedStore<string>("rgo.city.v2", "Phnom Penh");
 
 export function toggleFavorite(id: string) {
   favoritesStore.update((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
