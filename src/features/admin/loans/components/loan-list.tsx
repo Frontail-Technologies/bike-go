@@ -122,11 +122,11 @@ export function LoanList() {
       </ContentSection>
 
       <Drawer.Backdrop isOpen={filterDrawer.isOpen} onOpenChange={filterDrawer.setOpen} className="adminOverlay">
-        <Drawer.Content placement="right" className="w-full max-w-md">
+        <Drawer.Content placement="bottom">
           <Drawer.Dialog aria-label="Filter loan applications">
-            <Drawer.CloseTrigger />
+            <Drawer.Handle />
             <Drawer.Header><Drawer.Heading>Filter applications</Drawer.Heading></Drawer.Header>
-            <Drawer.Body className="grid gap-3">{filterControls("w-full")}</Drawer.Body>
+            <Drawer.Body className="grid gap-3 overflow-y-auto">{filterControls("w-full")}</Drawer.Body>
             <Drawer.Footer className="grid grid-cols-2 gap-2">
               <Button variant="tertiary" className="min-h-11" isDisabled={!filtersActive} onPress={reset}>Reset</Button>
               <Button variant="primary" className="min-h-11" onPress={filterDrawer.close}>Show {total} application{total === 1 ? "" : "s"}</Button>
