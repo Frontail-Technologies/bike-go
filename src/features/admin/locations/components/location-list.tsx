@@ -81,7 +81,7 @@ export function LocationList() {
     <AdminPage>
       <PageHeader title="Locations" description="Manage Cambodia pickup and return locations." actions={<Button onPress={() => router.push("/admin/locations/new")} variant="primary" className="min-h-11"><PlusIcon />Add Location</Button>} />
       <ContentSection className="overflow-visible">
-        <div className="flex items-center gap-3 border-b border-[var(--admin-border)] p-4">
+        <div className="flex items-center gap-3 p-4">
           <AdminSearch value={search} onChange={(value) => { setSearch(value); setPage(1); }} placeholder="Search locations…" className="max-w-none sm:max-w-sm" />
           <p className="ml-auto hidden text-xs font-semibold text-[var(--admin-muted)] sm:block" aria-live="polite">{filtered.length} location{filtered.length === 1 ? "" : "s"}</p>
         </div>

@@ -140,7 +140,7 @@ export function BannerWorkspace() {
     <AdminErrorState title="Couldn’t load banners" description={failure(query.error)} onRetry={() => void query.refetch()} />
   ) : (
     <ContentSection className="overflow-visible">
-      <div className="space-y-3 border-b border-[var(--admin-border)] p-4">
+      <div className="space-y-3 p-4">
         <div className="flex items-center gap-2">
           <AdminSearch className="w-auto min-w-0 max-w-none flex-1 basis-0 sm:max-w-md" value={searchText} onChange={setSearchText} placeholder="Search banners…" />
           <Button variant="outline" className="relative min-h-11 shrink-0 lg:hidden" onPress={filterDrawer.open} aria-label={`Filters${activeFilters ? `, ${activeFilters} active` : ""}`}>

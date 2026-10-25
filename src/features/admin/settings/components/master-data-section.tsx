@@ -169,7 +169,7 @@ export function MasterDataSection({
         </Button>
       </header>
 
-      <div className="flex flex-wrap items-center gap-2 border-b border-[var(--admin-border)] p-3 sm:px-5">
+      <div className="flex flex-wrap items-center gap-2 p-3 sm:px-5">
         <AdminSearch
           value={search}
           onChange={(value) => {

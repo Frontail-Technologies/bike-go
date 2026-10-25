@@ -126,7 +126,7 @@ export function AddonsSection() {
         </Button>
       </header>
       {(query.data?.length ?? 0) > 6 ? (
-        <div className="border-b border-[var(--admin-border)] p-3 sm:px-5"><AdminSearch value={search} onChange={setSearch} placeholder="Search add-ons…" className="sm:max-w-xs" /></div>
+        <div className="p-3 sm:px-5"><AdminSearch value={search} onChange={setSearch} placeholder="Search add-ons…" className="sm:max-w-xs" /></div>
       ) : null}
 
       {query.isError ? (

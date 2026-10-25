@@ -120,7 +120,7 @@ export function BookingList() {
     <AdminPage>
       <PageHeader title="Bookings" description="Manage vehicle bookings, rental status, and customer activity." />
       <ContentSection className="overflow-visible">
-        <div className="space-y-3 border-b border-[var(--admin-border)] p-4">
+        <div className="space-y-3 p-4">
           <div className="flex items-center gap-2">
             <AdminSearch className="w-auto min-w-0 max-w-none flex-1 basis-0 sm:max-w-xl" value={searchText} onChange={setSearchText} placeholder="Search booking, customer, vehicle…" />
             <Button variant="outline" className="relative min-h-11 shrink-0 lg:hidden" onPress={filterDrawer.open} aria-label={`Filters${activeFilters ? `, ${activeFilters} active` : ""}`}>

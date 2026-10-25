@@ -54,7 +54,7 @@ export function FeedbackList() {
     <AdminPage>
       <PageHeader title="Feedback" description="Issues customers reported through the app." />
       <ContentSection className="overflow-visible">
-        <div className="flex flex-wrap items-center gap-2 border-b border-[var(--admin-border)] p-4">
+        <div className="flex flex-wrap items-center gap-2 p-4">
           <AdminSearch className="w-full flex-1 sm:max-w-xs" value={searchText} onChange={setSearchText} placeholder="Search reference, customer, message…" />
           <AdminSelect label="All statuses" value={params.status ?? all} onChange={(value) => state.setFilters({ status: value === all ? undefined : (value as SupportTicketStatus) })} options={[{ value: all, label: "All statuses" }, ...supportTicketStatuses.map((value) => ({ value, label: value === "open" ? "Open" : "Resolved" }))]} className="w-full sm:w-40" />
           <AdminSelect label="All categories" value={params.category ?? all} onChange={(value) => state.setFilters({ category: value === all ? undefined : (value as SupportTicketCategory) })} options={[{ value: all, label: "All categories" }, ...supportTicketCategories.map((value) => ({ value, label: categoryLabels[value] }))]} className="w-full sm:w-44" />

@@ -12,7 +12,7 @@ export function AdminSearch({ value, onChange, placeholder = "Search…", classN
 }
 
 export function FilterBar({ children, search, actions, className }: { children?: ReactNode; search?: ReactNode; actions?: ReactNode; className?: string }) {
-  return <div className={cn("flex flex-col gap-3 border-b border-[var(--admin-border)] bg-[var(--admin-surface)] p-4 xl:flex-row xl:items-center", className)}>{search}<div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">{children}</div>{actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}</div>;
+  return <div className={cn("flex flex-col gap-3 bg-[var(--admin-surface)] p-4 xl:flex-row xl:items-center", className)}>{search}<div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">{children}</div>{actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}</div>;
 }
 
 export function AdminSelect({ label, value, onChange, options, className, icon }: { label: string; value: string; onChange: (value: string) => void; options: ReadonlyArray<{ value: string; label: string }>; className?: string; icon?: ReactNode | null }) {
