@@ -325,7 +325,7 @@ function AdminForm({
   });
   if (!dialog) return null;
   const submit = form.handleSubmit((v) => {
-    if (dialog === "create") create.mutate(v, { onSuccess: close });
+    if (dialog === "create") create.mutate({ name: v.name, email: v.email, role: v.role, password: v.password }, { onSuccess: close });
     if (dialog === "edit" && selected)
       update.mutate(
         { id: selected.id, name: v.name, role: v.role },

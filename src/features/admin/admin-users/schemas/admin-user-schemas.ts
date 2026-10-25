@@ -4,7 +4,7 @@ const adminUserFields = z.object({
   name: z.string().trim().min(2, "Enter a full name."),
   email: z.email("Enter a valid email."),
   role: z.enum(["admin", "super_admin"]),
-  password: z.string().min(10, "Use at least 10 characters."),
+  password: z.string().min(8, "Use at least 8 characters."),
   confirmPassword: z.string(),
 });
 
