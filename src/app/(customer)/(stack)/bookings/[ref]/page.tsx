@@ -2,8 +2,8 @@ import { LoadingRegion } from "@/components/ui/loading-region";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { BlockSkeleton } from "@/components/ui/skeleton";
-import { BookingDetailsView } from "@/features/bookings/booking-details-view";
-import { CustomerAuthBoundary } from "@/features/auth/customer-auth-boundary";
+import { BookingDetailsView } from "@/features/customer/bookings/components/booking-details-view";
+import { CustomerAuthBoundary } from "@/features/customer/auth/components/customer-auth-boundary";
 
 export const metadata: Metadata = { title: "Booking details" };
 

@@ -1,6 +1,6 @@
 import { WIDTHS, overflowReport, scrollThrough, trackLayoutShift, watch } from "../lib.mjs";
 
-// Mirrors src/features/bookings/pricing.ts so the UI is checked against independent arithmetic.
+// Mirrors src/features/customer/bookings/lib/pricing.ts so the UI is checked against independent arithmetic.
 const TAX = 0.18;
 const FEE = 1;
 const expectedPayable = ({ price, deposit, days, helmet = false, jacket = false }) => {

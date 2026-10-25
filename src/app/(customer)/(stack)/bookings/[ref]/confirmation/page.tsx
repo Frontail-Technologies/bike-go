@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { BlockSkeleton } from "@/components/ui/skeleton";
-import { ConfirmationView } from "@/features/bookings/confirmation-view";
-import { CustomerAuthBoundary } from "@/features/auth/customer-auth-boundary";
+import { ConfirmationView } from "@/features/customer/bookings/components/confirmation-view";
+import { CustomerAuthBoundary } from "@/features/customer/auth/components/customer-auth-boundary";
 
 export const metadata: Metadata = { title: "Booking confirmed" };
 

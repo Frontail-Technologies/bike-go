@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getLegalDoc, legalDocs } from "@/features/legal/content";
-import { LegalDocument } from "@/features/legal/legal-views";
+import { getLegalDoc, legalDocs } from "@/features/customer/legal/lib/content";
+import { LegalDocument } from "@/features/customer/legal/components/legal-views";
 import legal from "@/i18n/messages/legal";
 
 export function generateStaticParams() {

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { ReportIssueView } from "@/features/help/report-issue-view";
-import { CustomerAuthBoundary } from "@/features/auth/customer-auth-boundary";
+import { ReportIssueView } from "@/features/customer/help/components/report-issue-view";
+import { CustomerAuthBoundary } from "@/features/customer/auth/components/customer-auth-boundary";
 
 export const metadata: Metadata = { title: "Report an issue" };
 

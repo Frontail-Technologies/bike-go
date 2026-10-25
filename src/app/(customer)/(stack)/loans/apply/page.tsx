@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { ApplyFlow } from "@/features/loans/apply-flow";
-import { CustomerAuthBoundary } from "@/features/auth/customer-auth-boundary";
+import { ApplyFlow } from "@/features/customer/loans/components/apply-flow";
+import { CustomerAuthBoundary } from "@/features/customer/auth/components/customer-auth-boundary";
 
 export const metadata: Metadata = { title: "Loan application" };
 

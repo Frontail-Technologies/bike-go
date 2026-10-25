@@ -3,10 +3,10 @@
 import { CaretDownIcon, MapPinIcon } from "@phosphor-icons/react";
 import { ResponsiveOverlay } from "@/components/shared/responsive-overlay";
 import { RadioGroup } from "@/components/ui/selection-controls";
-import { cityStore } from "@/features/profile/store";
+import { cityStore } from "@/features/customer/profile/stores/preferences-store";
 import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";
-import { useLocationsQuery } from "@/features/locations/hooks/generated";
+import { useLocationsQuery } from "@/features/customer/locations/hooks/generated";
 
 type LocationPickerProps = {
   variant?: "header" | "row";

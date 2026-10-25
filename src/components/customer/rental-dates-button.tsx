@@ -6,7 +6,7 @@ import { useState } from "react";
 import { ResponsiveOverlay } from "@/components/shared/responsive-overlay";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { type DateRange, DateRangeCalendar } from "@/components/ui/date-range-calendar";
-import { formatRange, toISO, toRange } from "@/features/bookings/dates";
+import { formatRange, toISO, toRange } from "@/features/customer/bookings/lib/dates";
 import { useToday } from "@/hooks/use-today";
 import { useTranslations } from "@/i18n/hooks";
 

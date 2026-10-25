@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { BikeDetailsSkeleton } from "@/features/bike-details/bike-details-skeleton";
-import { BookingRoute } from "@/features/booking-flow/booking-route";
+import { BikeDetailsSkeleton } from "@/features/customer/vehicles/components/details/bike-details-skeleton";
+import { BookingRoute } from "@/features/customer/bookings/components/flow/booking-route";
 
 export const metadata: Metadata = { title: "Book" };
 

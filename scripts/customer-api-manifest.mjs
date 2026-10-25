@@ -1,7 +1,7 @@
 export const customerApiManifest = [
   {
     domain: "profile",
-    featureDir: "src/features/profile",
+    featureDir: "src/features/customer/profile",
     keyName: "customerProfileKeys",
     operations: [
       { name: "getProfile", hook: "useCustomerProfileQuery", kind: "query", method: "GET", path: "/me", responseType: "CustomerProfile" },
@@ -10,7 +10,7 @@ export const customerApiManifest = [
   },
   {
     domain: "banners",
-    featureDir: "src/features/home",
+    featureDir: "src/features/customer/home",
     keyName: "customerBannerKeys",
     operations: [
       { name: "listBanners", hook: "useBannersQuery", kind: "query", method: "GET", path: "/banners", queryType: "BannerListParams", responseType: "PublicBanner", array: true },
@@ -18,7 +18,7 @@ export const customerApiManifest = [
   },
   {
     domain: "locations",
-    featureDir: "src/features/locations",
+    featureDir: "src/features/customer/locations",
     keyName: "customerLocationKeys",
     operations: [
       { name: "listLocations", hook: "useLocationsQuery", kind: "query", method: "GET", path: "/locations", queryType: "LocationListParams", responseType: "CustomerLocation", array: true },
@@ -26,7 +26,7 @@ export const customerApiManifest = [
   },
   {
     domain: "master-data",
-    featureDir: "src/features/master-data",
+    featureDir: "src/features/customer/master-data",
     keyName: "customerMasterDataKeys",
     operations: [
       { name: "listMasterItems", hook: "useMasterItemsQuery", kind: "query", method: "GET", path: "/master-data/:kind", responseType: "MasterItem", array: true },
@@ -34,7 +34,7 @@ export const customerApiManifest = [
   },
   {
     domain: "vehicles",
-    featureDir: "src/features/vehicles",
+    featureDir: "src/features/customer/vehicles",
     keyName: "customerVehicleKeys",
     operations: [
       { name: "listVehicles", hook: "useVehiclesQuery", kind: "query", method: "GET", path: "/vehicles", queryType: "VehicleListParams", responseType: "Vehicle", paginated: true },
@@ -44,7 +44,7 @@ export const customerApiManifest = [
   },
   {
     domain: "bookings",
-    featureDir: "src/features/bookings",
+    featureDir: "src/features/customer/bookings",
     keyName: "customerBookingKeys",
     operations: [
       { name: "listAddons", hook: "useBookingAddonsQuery", kind: "query", method: "GET", path: "/addons", responseType: "BookingAddon", array: true },
@@ -57,7 +57,7 @@ export const customerApiManifest = [
   },
   {
     domain: "payments",
-    featureDir: "src/features/payments",
+    featureDir: "src/features/customer/payments",
     keyName: "customerPaymentKeys",
     operations: [
       { name: "startPayment", hook: "useStartPaymentMutation", kind: "mutation", method: "POST", path: "/bookings/:reference/payments", responseType: "StartedPayment", invalidate: true },
@@ -66,7 +66,7 @@ export const customerApiManifest = [
   },
   {
     domain: "loans",
-    featureDir: "src/features/loans",
+    featureDir: "src/features/customer/loans",
     keyName: "customerLoanKeys",
     operations: [
       { name: "listLoans", hook: "useLoansQuery", kind: "query", method: "GET", path: "/loans", queryType: "LoanListParams", responseType: "ApiLoan", paginated: true },
@@ -79,7 +79,7 @@ export const customerApiManifest = [
   },
   {
     domain: "loan-documents",
-    featureDir: "src/features/loans/documents",
+    featureDir: "src/features/customer/loans/documents",
     keyName: "customerLoanDocumentKeys",
     operations: [
       { name: "listLoanDocuments", hook: "useLoanDocumentsQuery", kind: "query", method: "GET", path: "/loans/:reference/documents", responseType: "LoanDocument", array: true },
@@ -90,7 +90,7 @@ export const customerApiManifest = [
   },
   {
     domain: "support-tickets",
-    featureDir: "src/features/help",
+    featureDir: "src/features/customer/help",
     keyName: "customerSupportTicketKeys",
     operations: [
       { name: "createSupportTicket", hook: "useCreateSupportTicketMutation", kind: "mutation", method: "POST", path: "/support-tickets", bodyType: "SupportTicketInput", responseType: "ReportedIssue", invalidate: true },

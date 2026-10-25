@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { ProfileView } from "@/features/profile/profile-view";
-import { CustomerAuthBoundary } from "@/features/auth/customer-auth-boundary";
+import { ProfileView } from "@/features/customer/profile/components/profile-view";
+import { CustomerAuthBoundary } from "@/features/customer/auth/components/customer-auth-boundary";
 
 export const metadata: Metadata = { title: "Profile" };
 

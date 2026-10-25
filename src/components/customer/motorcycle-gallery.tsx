@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { BikeImage } from "@/components/shared/bike-image";
 import { ImageCarousel } from "@/components/ui/image-carousel";
-import type { Motorcycle } from "@/features/vehicles/view-model";
+import type { Motorcycle } from "@/features/customer/vehicles/lib/view-model";
 import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";
 

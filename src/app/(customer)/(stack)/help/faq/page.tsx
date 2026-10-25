@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { FaqView } from "@/features/help/faq-view";
+import { FaqView } from "@/features/customer/help/components/faq-view";
 
 export const metadata: Metadata = { title: "Questions" };
 

@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
-import { WelcomeScreen } from "@/features/auth/welcome-screen";
+import { WelcomeScreen } from "@/features/customer/auth/components/welcome-screen";
 
 export const metadata: Metadata = { title: "Sign in" };
 

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { BikeDetailsRoute } from "@/features/bike-details/bike-details-route";
-import { BikeDetailsSkeleton } from "@/features/bike-details/bike-details-skeleton";
+import { BikeDetailsRoute } from "@/features/customer/vehicles/components/details/bike-details-route";
+import { BikeDetailsSkeleton } from "@/features/customer/vehicles/components/details/bike-details-skeleton";
 
 export const metadata: Metadata = { title: "Vehicle details" };
 export const instant = false;

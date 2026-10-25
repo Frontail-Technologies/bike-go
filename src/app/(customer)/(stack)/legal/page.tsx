@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { LegalHub } from "@/features/legal/legal-views";
+import { LegalHub } from "@/features/customer/legal/components/legal-views";
 
 export const metadata: Metadata = { title: "Legal" };
 

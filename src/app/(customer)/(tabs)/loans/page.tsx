@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { LoansLanding } from "@/features/loans/loans-landing";
+import { LoansLanding } from "@/features/customer/loans/components/loans-landing";
 
 export const metadata: Metadata = { title: "Expat loans" };
 

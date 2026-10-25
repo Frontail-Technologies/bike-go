@@ -2,8 +2,8 @@ import { LoadingRegion } from "@/components/ui/loading-region";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { BlockSkeleton } from "@/components/ui/skeleton";
-import { LoanStatusView } from "@/features/loans/status-view";
-import { CustomerAuthBoundary } from "@/features/auth/customer-auth-boundary";
+import { LoanStatusView } from "@/features/customer/loans/components/status-view";
+import { CustomerAuthBoundary } from "@/features/customer/auth/components/customer-auth-boundary";
 
 export const metadata: Metadata = { title: "Application status" };
 

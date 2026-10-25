@@ -14,7 +14,7 @@ import { Logo } from "@/components/shared/logo";
 import { IconButton } from "@/components/ui/button";
 import { useOptimisticNav } from "@/hooks/use-optimistic-nav";
 import { useTranslations } from "@/i18n/hooks";
-import { initials, profileStore } from "@/features/profile/store";
+import { initials, profileStore } from "@/features/customer/profile/stores/preferences-store";
 import { cn } from "@/lib/cn";
 
 const RADIUS = 12;

@@ -1,4 +1,4 @@
-import { HomeSkeleton } from "@/features/home/home-skeleton";
+import { HomeSkeleton } from "@/features/customer/home/components/home-skeleton";
 
 export default function Loading() {
   return <HomeSkeleton />;
