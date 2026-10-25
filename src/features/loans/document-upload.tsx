@@ -44,7 +44,7 @@ export function DocumentUpload({ label, hint, file, onChange, doc, requested }: 
       return;
     }
     setError(null);
-    onChange({ name: picked.name, size: picked.size });
+    onChange({ name: picked.name, size: picked.size, raw: picked });
   }
 
   return (

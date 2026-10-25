@@ -24,6 +24,7 @@ import { LoanTimeline } from "./loan-timeline";
 import { justAppliedStore } from "./store";
 import { useLoanQuery } from "./hooks/generated";
 import { apiLoanToApplication } from "./loan-mapper";
+import { useLoanDocumentsQuery, useUploadLoanDocumentMutation } from "./documents/hooks/generated";
 
 const headIcon: Record<LoanStatus, React.ReactNode> = {
   submitted: <CheckCircleIcon size={26} weight="fill" className="text-[#22c55e]" />,
@@ -61,6 +62,8 @@ export function LoanStatusView({ reference }: { reference: string }) {
   const justApplied = justAppliedStore.useValue();
   const [files, setFiles] = useState<Partial<Record<DocumentId, StoredFile>>>({});
   const [extraOpen, setExtraOpen] = useState(false);
+  const documents = useLoanDocumentsQuery(reference);
+  const upload = useUploadLoanDocumentMutation();
 
   const back = justApplied === reference ? () => router.replace("/loans") : undefined;
 
@@ -169,8 +172,17 @@ export function LoanStatusView({ reference }: { reference: string }) {
               size="lg"
               isDisabled={!ready}
               onPress={() => {
-                setFiles({});
-                toast.info("Document upload is being connected to the secure service.");
+                void Promise.all(needed.map((type) => {
+                  const file = files[type]?.raw;
+                  if (!file) return Promise.resolve();
+                  const input = new FormData();
+                  input.set("file", file);
+                  input.set("type", type === "residence" ? "visa_or_residence_permit" : type === "employment" ? "employment_proof" : type === "income" ? "salary_or_income_proof" : type === "address" ? "address_proof" : type === "bank" ? "bank_statement" : "passport");
+                  return upload.mutateAsync({ reference, input });
+                })).then(() => {
+                  setFiles({});
+                  toast.success(t("stDocsSent"), { description: t("stDocsSentDesc") });
+                }).catch((error) => toast.danger(error instanceof Error ? error.message : "Documents could not be uploaded."));
               }}
             >
               {t("stSendDocs")}
@@ -203,7 +215,7 @@ export function LoanStatusView({ reference }: { reference: string }) {
         <Card title={t("stDocuments")} id="documents">
           <dl className="flex flex-col gap-2 text-sm">
             {documentTypes.map((doc) => (
-              <Row key={doc.id} label={docLabel(doc.id)} value={application.documents[doc.id]?.name ?? (needed.includes(doc.id) ? t("stRequested") : t("stNotProvided"))} />
+              <Row key={doc.id} label={docLabel(doc.id)} value={documents.data?.find((item) => item.type === doc.id)?.originalFilename ?? application.documents[doc.id]?.name ?? (needed.includes(doc.id) ? t("stRequested") : t("stNotProvided"))} />
             ))}
           </dl>
         </Card>

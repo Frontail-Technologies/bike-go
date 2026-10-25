@@ -50,7 +50,7 @@ export const documentTypes: { id: DocumentId }[] = [{ id: "passport" }, { id: "r
 export const MAX_FILE_BYTES = 5 * 1024 * 1024;
 export const ACCEPTED_FILES = ".pdf,.jpg,.jpeg,.png";
 
-export type StoredFile = { name: string; size: number };
+export type StoredFile = { name: string; size: number; raw?: File };
 
 export type LoanStatus = "submitted" | "in-review" | "documents-required" | "approved" | "rejected";
 
