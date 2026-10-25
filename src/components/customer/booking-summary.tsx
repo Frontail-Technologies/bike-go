@@ -6,7 +6,7 @@ import { useTranslations } from "@/i18n/hooks";
 import { formatMoney } from "@/lib/format";
 import { cn } from "@/lib/cn";
 
-export type SummaryLine = { id: "rental" | "helmet" | "jacket" | "tax" | "fee" | "deposit"; days?: number; rate?: number; amount: number; refundable?: boolean };
+export type SummaryLine = { id: string; label?: string; days?: number; rate?: number; amount: number; refundable?: boolean };
 
 type BookingSummaryProps = {
   lines: SummaryLine[];
@@ -18,6 +18,7 @@ export function BookingSummary({ lines, totalLabel = "totalAmount", className }:
   const t = useTranslations("booking");
   const common = useTranslations("common");
   const labelOf = (line: SummaryLine) => {
+    if (line.label) return line.label;
     if (line.id === "rental") return t("lineRental", { days: common("days", { count: line.days ?? 1 }) });
     if (line.id === "tax") return t("lineTax", { rate: line.rate ?? 0 });
     if (line.id === "helmet") return t("lineHelmet");
@@ -30,8 +31,8 @@ export function BookingSummary({ lines, totalLabel = "totalAmount", className }:
   return (
     <section aria-label={t("summaryAria")} className={cn("rounded-card border border-line bg-surface p-4 shadow-card", className)}>
       <dl className="flex flex-col gap-3 text-sm">
-        {lines.map((line) => (
-          <div key={line.id} className="flex items-center justify-between gap-4">
+        {lines.map((line, index) => (
+          <div key={`${line.id}-${index}`} className="flex items-center justify-between gap-4">
             <dt className="text-subtle">
               {labelOf(line)}
               {line.refundable ? <span className="ml-2 rounded-full bg-success-soft px-2 py-0.5 text-[11px] font-semibold text-[#15803d]">{t("refundable")}</span> : null}

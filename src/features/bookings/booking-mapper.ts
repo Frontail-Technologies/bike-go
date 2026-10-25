@@ -1,4 +1,4 @@
-import type { Motorcycle } from "@/features/mock/data";
+import type { Motorcycle } from "@/features/vehicles/view-model";
 import type { ApiBooking, ApiBookingStatus, BookingQuote, CustomerBooking } from "./types";
 import type { Quote } from "./pricing";
 
@@ -19,6 +19,7 @@ export function bookingQuoteToView(quote: BookingQuote): Quote {
     rental: quote.pricing.rentalSubtotalMinor / 100,
     helmet: helmet / 100,
     jacket: jacket / 100,
+    addons: quote.addons.flatMap((item) => item.code ? [{ code: item.code, name: item.name, amount: item.totalMinor / 100 }] : []),
     tax: quote.pricing.taxesMinor / 100,
     fee: quote.pricing.platformFeeMinor / 100,
     deposit: quote.pricing.securityDepositMinor / 100,
@@ -39,7 +40,7 @@ export function apiBookingToView(value: ApiBooking): { booking: CustomerBooking;
     pickupTime: new Date(value.pickupAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "Asia/Phnom_Penh" }),
     dropTime: new Date(value.returnAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "Asia/Phnom_Penh" }),
     city: value.pickupLocation.city,
-    addOns: { helmet: value.addons.some((item) => item.code === "helmet"), jacket: value.addons.some((item) => item.code === "riding-jacket") },
+    addOns: Object.fromEntries(value.addons.flatMap((item) => item.code ? [[item.code, true]] : [])),
     quote,
     rider: { name: "", phone: "", email: "" },
     licenceNumber: null,

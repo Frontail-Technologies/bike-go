@@ -1,6 +1,6 @@
 import { CalendarDate, type DateValue, parseDate } from "@internationalized/date";
 import type { DateRange } from "@/components/ui/date-range-calendar";
-import type { Motorcycle } from "@/features/mock/data";
+import type { Motorcycle } from "@/features/vehicles/view-model";
 import { intlLocale } from "@/i18n/hooks";
 
 export function toISO(date: DateValue): string {

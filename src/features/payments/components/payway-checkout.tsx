@@ -5,7 +5,8 @@ import Script from "next/script";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { StartedPayment } from "../types";
-import { useBookingPayment, useStartPayment } from "../hooks/use-checkout";
+import { useBookingPayment } from "../hooks/use-checkout";
+import { useStartPaymentMutation } from "../hooks/generated";
 
 declare global {
   interface Window {
@@ -24,7 +25,7 @@ const money = (minor: number, currency: string) => new Intl.NumberFormat("en-US"
  */
 export function PaywayCheckout({ reference, onPaid }: { reference: string; onPaid?: () => void }) {
   const paymentsEnabled = process.env.NEXT_PUBLIC_PAYMENTS_ENABLED === "true";
-  const start = useStartPayment(reference);
+  const start = useStartPaymentMutation();
   const formRef = useRef<HTMLFormElement>(null);
   const [payment, setPayment] = useState<StartedPayment | null>(null);
   const opened = useRef(false);
@@ -55,14 +56,14 @@ export function PaywayCheckout({ reference, onPaid }: { reference: string; onPai
   async function pay() {
     if (!paymentsEnabled) return;
     opened.current = false;
-    setPayment(await start.mutateAsync());
+    setPayment(await start.mutateAsync({ reference }));
   }
 
   return (
     <section aria-label="Payment" className="flex flex-col gap-3">
       {!paymentsEnabled ? <Alert status="warning"><Alert.Indicator /><Alert.Content><Alert.Title>Online payments are not available yet</Alert.Title><Alert.Description>Your booking can be created, but checkout remains disabled until RideGo enables payments.</Alert.Description></Alert.Content></Alert> : null}
       {/* The plugin looks for this modal shell when it loads, so it is always present; the signed form is filled in when a payment starts. */}
-      <Script id="aba-payway-checkout" src={PLUGIN_URL} strategy="afterInteractive" />
+      {paymentsEnabled ? <Script id="aba-payway-checkout" src={PLUGIN_URL} strategy="afterInteractive" /> : null}
       <div id="aba_main_modal" className="aba-modal">
         <div className="aba-modal-content">
           {payment ? (

@@ -1,5 +1,5 @@
 import { rangeOverlapsBooking } from "@/features/bookings/dates";
-import type { Motorcycle } from "@/features/mock/data";
+import type { Motorcycle } from "@/features/vehicles/view-model";
 
 export const PRICE_MIN = 5;
 export const PRICE_MAX = 30;

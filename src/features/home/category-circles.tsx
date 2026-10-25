@@ -2,7 +2,7 @@
 
 import { LightningIcon, MotorcycleIcon, MountainsIcon, RoadHorizonIcon } from "@phosphor-icons/react";
 import { AnimatedSelection, SelectionIndicator } from "@/components/motion/animated-selection";
-import type { BikeCategory } from "@/features/mock/data";
+import type { BikeCategory } from "@/features/vehicles/view-model";
 import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";
 

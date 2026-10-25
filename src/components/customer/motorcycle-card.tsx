@@ -6,7 +6,7 @@ import { PriceDisplay } from "@/components/customer/price-display";
 import { InteractiveCard } from "@/components/motion/interactive-card";
 import { BikeImage } from "@/components/shared/bike-image";
 import { IconButton } from "@/components/ui/button";
-import type { Motorcycle } from "@/features/mock/data";
+import type { Motorcycle } from "@/features/vehicles/view-model";
 import { favoritesStore, toggleFavorite } from "@/features/profile/store";
 import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";

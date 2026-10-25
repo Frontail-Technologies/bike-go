@@ -5,7 +5,7 @@ import { apiBookingToView } from "./booking-mapper";
 
 export function useBooking(reference: string) {
   const query = useBookingQuery(reference);
-  return query.data ? apiBookingToView(query.data) : undefined;
+  return query.data ? { ...apiBookingToView(query.data), paymentStatus: query.data.paymentStatus } : undefined;
 }
 
 export function maskLicence(number: string | null, fallback = "") {

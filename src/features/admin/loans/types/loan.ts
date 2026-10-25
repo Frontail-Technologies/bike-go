@@ -43,6 +43,7 @@ export type Loan = {
   applicant: { fullName: string | null; mobile: string | null; email: string | null; dateOfBirth: string | null; nationality: string | null; currentCity: string | null; residenceStatus: string | null };
   employment: { employmentType: string | null; employerName: string | null; jobTitle: string | null; monthlyIncomeMinor: number | null; workExperienceMonths: number | null; hasActiveBankAccount: boolean | null };
   submittedAt: string | null;
+  requestedDocumentTypes: DocumentType[];
   documents: LoanDocument[];
   history: LoanHistoryItem[];
   createdAt: string;
@@ -70,4 +71,4 @@ export type LoanListMeta = { page: number; pageSize: number; total: number; tota
 
 export type LoanStats = { total: number; underReview: number; approved: number; rejected: number };
 
-export type LoanStatusInput = { status: Exclude<LoanStatus, "draft">; note?: string };
+export type LoanStatusInput = { status: Exclude<LoanStatus, "draft">; note?: string; requestedDocumentTypes?: DocumentType[] };

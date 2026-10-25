@@ -8,7 +8,7 @@ import { BikeImage } from "@/components/shared/bike-image";
 import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { toast } from "@/components/ui/toast";
-import type { Motorcycle } from "@/features/mock/data";
+import type { Motorcycle } from "@/features/vehicles/view-model";
 import { useTranslations } from "@/i18n/hooks";
 import { formatMoney } from "@/lib/format";
 import { formatRange } from "./dates";

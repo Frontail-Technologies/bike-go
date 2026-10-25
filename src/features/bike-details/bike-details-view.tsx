@@ -20,10 +20,9 @@ import { toast } from "@/components/ui/toast";
 import { formatDay, formatRange, isBooked, toISO, toRange } from "@/features/bookings/dates";
 import { getQuote, quoteLines } from "@/features/bookings/pricing";
 import { draftStore } from "@/features/bookings/store";
-import type { Motorcycle } from "@/features/mock/data";
+import type { Motorcycle } from "@/features/vehicles/view-model";
 import { favoritesStore, toggleFavorite } from "@/features/profile/store";
 import { useTranslations } from "@/i18n/hooks";
-import { useBikeText } from "@/features/mock/use-bike-text";
 import { formatMoney } from "@/lib/format";
 import { PickupCard } from "./pickup-card";
 import { RentalTerms } from "./rental-terms";
@@ -46,7 +45,6 @@ export function BikeDetailsView({ bike, location }: { bike: Motorcycle; location
   const favorite = favoritesStore.useValue().includes(bike.id);
   const t = useTranslations("bike");
   const common = useTranslations("common");
-  const text = useBikeText(bike);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [solidBar, setSolidBar] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
@@ -205,9 +203,9 @@ export function BikeDetailsView({ bike, location }: { bike: Motorcycle; location
 
               <DetailSection id="about-title" title={t("about")}>
                 <div className="flex flex-col gap-4 rounded-card border border-line bg-surface p-4">
-                  <p className="text-[15px] leading-7 text-ink/80">{text.description}</p>
+                  <p className="text-[15px] leading-7 text-ink/80">{bike.description}</p>
                   <ul className="flex flex-col gap-3 border-t border-line pt-4">
-                    {text.highlights.map((highlight) => (
+                    {bike.highlights.map((highlight) => (
                       <li key={highlight} className="flex items-start gap-3 text-sm leading-6 font-medium">
                         <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-brand text-ink">
                           <CheckIcon size={12} weight="bold" />

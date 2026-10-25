@@ -1,7 +1,7 @@
 "use client";
 
 import { FunnelIcon, MagnifyingGlassIcon, XIcon } from "@phosphor-icons/react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { MotorcycleCard } from "@/components/customer/motorcycle-card";
 import { RentalDatesButton } from "@/components/customer/rental-dates-button";
@@ -14,6 +14,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { AppSearchField } from "@/components/ui/search-field";
 import { MotorcycleCardSkeleton } from "@/components/ui/skeleton";
 import { Tabs } from "@/components/ui/tabs";
+import { Pagination } from "@/components/ui/pagination";
 import { useTranslations } from "@/i18n/hooks";
 import { favoritesStore } from "@/features/profile/store";
 import { useVehiclesQuery } from "@/features/vehicles/hooks/generated";
@@ -29,7 +30,10 @@ import { SortControl } from "./sort-control";
 const gridClass = "grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4";
 
 export function BrowseView() {
+  const router = useRouter();
+  const pathname = usePathname();
   const params = useSearchParams();
+  const page = Math.max(1, Number(params.get("page")) || 1);
   const saved = params.get("saved") === "1";
   const { filters, query, sort, dates } = browseStore.useValue();
   const favorites = favoritesStore.useValue();
@@ -41,8 +45,8 @@ export function BrowseView() {
   const engine = filters.engine[0];
   const range = dates ? cambodiaRentalRange(dates.start, dates.end) : {};
   const vehicles = useVehiclesQuery({
-    page: 1,
-    pageSize: 100,
+    page,
+    pageSize: saved ? 100 : 24,
     q: deferredQuery || undefined,
     category: filters.category === "all" ? undefined : filters.category,
     brand: filters.brands.length ? filters.brands : undefined,
@@ -78,8 +82,17 @@ export function BrowseView() {
   const phoneCount = activeFilterCount(filters, true);
   const sidebarCount = activeFilterCount(filters);
   const set = (patch: Partial<typeof DEFAULT_BROWSE>) => browseStore.update((s) => ({ ...s, ...patch }));
+  const setPage = (next: number) => {
+    const query = new URLSearchParams(params.toString());
+    if (next <= 1) query.delete("page"); else query.set("page", String(next));
+    router.replace(`${pathname}${query.size ? `?${query}` : ""}`, { scroll: false });
+  };
+  const update = (patch: Partial<typeof DEFAULT_BROWSE>) => {
+    set(patch);
+    if (page !== 1) setPage(1);
+  };
   const title = saved ? t("saved") : t("title");
-  const subtitle = loading ? t("loading") : common("bikesCount", { count: results.length });
+  const subtitle = loading ? t("loading") : common("bikesCount", { count: saved ? results.length : vehicles.data?.meta.total ?? 0 });
 
   return (
     <>
@@ -101,7 +114,7 @@ export function BrowseView() {
                 </span>
               ) : null}
             </span>
-            <SortControl value={sort} onChange={(next) => set({ sort: next })} iconOnly />
+            <SortControl value={sort} onChange={(next) => update({ sort: next })} iconOnly />
           </>
         }
       />
@@ -111,7 +124,7 @@ export function BrowseView() {
         onOpenChange={setSearchOpen}
         value={query}
         onSubmit={(q) => {
-          set({ query: q });
+          update({ query: q });
           setSearchOpen(false);
         }}
       />
@@ -126,13 +139,13 @@ export function BrowseView() {
           <RentalDatesButton
             start={dates?.start}
             end={dates?.end}
-            onChange={(start, end) => set({ dates: { start, end } })}
+            onChange={(start, end) => update({ dates: { start, end } })}
             triggerProps={{ fullWidth: true, className: "justify-start border border-line bg-surface px-3 font-medium" }}
           />
           {query ? (
             <button
               type="button"
-              onClick={() => set({ query: "" })}
+              onClick={() => update({ query: "" })}
               className="flex min-h-11 w-fit items-center gap-2 rounded-full border border-line bg-surface px-4 text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ink"
             >
               <MagnifyingGlassIcon size={16} />
@@ -144,7 +157,7 @@ export function BrowseView() {
         </div>
 
         <div className="hidden gap-2 md:flex">
-          <AppSearchField value={query} onChange={(q) => set({ query: q })} className="flex-1" />
+          <AppSearchField value={query} onChange={(q) => update({ query: q })} className="flex-1" />
           <ButtonLink
             href="/bikes/filters"
             variant="secondary"
@@ -162,7 +175,7 @@ export function BrowseView() {
           <Tabs
             aria-label={t("categoryAria")}
             selectedKey={filters.category}
-            onSelectionChange={(category) => set({ filters: { ...filters, category } })}
+            onSelectionChange={(category) => update({ filters: { ...filters, category } })}
             items={[{ id: "all", label: t("cat_all") }, ...(categoryOptions.data ?? []).map((item) => ({ id: item.code, label: item.name }))]}
           />
         </div>
@@ -171,11 +184,11 @@ export function BrowseView() {
           <aside aria-label={t("filters")} className="sticky top-24 hidden w-72 shrink-0 rounded-card border border-line bg-surface p-5 shadow-card lg:block">
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-base font-bold">{t("filters")}</h2>
-              <Button variant="ghost" size="sm" onPress={() => set({ filters: { ...DEFAULT_FILTERS, category: filters.category } })} isDisabled={!sidebarCount}>
+              <Button variant="ghost" size="sm" onPress={() => update({ filters: { ...DEFAULT_FILTERS, category: filters.category } })} isDisabled={!sidebarCount}>
                 {common("reset")}
               </Button>
             </div>
-            <BikeFilters value={filters} onChange={(next) => set({ filters: next })} />
+            <BikeFilters value={filters} onChange={(next) => update({ filters: next })} />
           </aside>
 
           <section aria-label={t("resultsAria")} className="flex min-w-0 flex-1 flex-col gap-4">
@@ -185,10 +198,10 @@ export function BrowseView() {
                 <RentalDatesButton
                   start={dates?.start}
                   end={dates?.end}
-                  onChange={(start, end) => set({ dates: { start, end } })}
+                  onChange={(start, end) => update({ dates: { start, end } })}
                   triggerProps={{ size: "sm" }}
                 />
-                <SortControl value={sort} onChange={(next) => set({ sort: next })} />
+                <SortControl value={sort} onChange={(next) => update({ sort: next })} />
               </div>
             </div>
 
@@ -204,7 +217,7 @@ export function BrowseView() {
                 title={t("noMatchTitle")}
                 description={t("noMatchText")}
                 action={
-                  <Button size="sm" onPress={() => vehicles.isError ? vehicles.refetch() : browseStore.set(DEFAULT_BROWSE)}>
+                  <Button size="sm" onPress={() => vehicles.isError ? vehicles.refetch() : update(DEFAULT_BROWSE)}>
                     {t("resetFilters")}
                   </Button>
                 }
@@ -216,6 +229,14 @@ export function BrowseView() {
                 ))}
               </AnimatedGrid>
             )}
+            {!saved && (vehicles.data?.meta.total ?? 0) > 24 ? (
+              <Pagination
+                page={page}
+                pageCount={Math.max(1, Math.ceil((vehicles.data?.meta.total ?? 0) / 24))}
+                onPageChange={setPage}
+                summary={`${vehicles.data?.meta.total ?? 0} vehicles`}
+              />
+            ) : null}
           </section>
         </div>
       </Screen>

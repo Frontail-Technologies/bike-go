@@ -2,7 +2,7 @@
 
 import { CheckCircleIcon, ClockIcon, MotorcycleIcon, XCircleIcon } from "@phosphor-icons/react";
 import { StatusBadge, type BadgeTone } from "@/components/ui/status-badge";
-import type { BookingStatus } from "@/features/mock/data";
+import type { BookingStatus } from "@/features/bookings/types";
 import { useTranslations } from "@/i18n/hooks";
 
 const config: Record<BookingStatus, { key: "statusUpcoming" | "statusOngoing" | "statusCompleted" | "statusCancelled"; tone: BadgeTone; icon: React.ReactNode }> = {

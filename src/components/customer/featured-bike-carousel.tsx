@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { PriceDisplay } from "@/components/customer/price-display";
 import { BikeImage } from "@/components/shared/bike-image";
-import type { Motorcycle } from "@/features/mock/data";
+import type { Motorcycle } from "@/features/vehicles/view-model";
 import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";
 

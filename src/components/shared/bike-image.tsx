@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { BikeArt } from "@/components/shared/bike-art";
-import type { Motorcycle } from "@/features/mock/data";
+import type { Motorcycle } from "@/features/vehicles/view-model";
 import { cn } from "@/lib/cn";
 
 type BikeImageProps = {

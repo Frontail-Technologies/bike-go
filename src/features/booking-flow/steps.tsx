@@ -14,12 +14,14 @@ import { formatDay, isBooked, toISO, toRange } from "@/features/bookings/dates";
 import type { Quote } from "@/features/bookings/pricing";
 import { quoteLines } from "@/features/bookings/pricing";
 import type { BookingDraft } from "@/features/bookings/types";
-import type { Motorcycle } from "@/features/mock/data";
+import type { Motorcycle } from "@/features/vehicles/view-model";
 import { useTranslations } from "@/i18n/hooks";
+import { formatMoney } from "@/lib/format";
+import type { BookingAddon } from "@/features/bookings/types";
 
 type PatchProps = { draft: BookingDraft; patch: (partial: Partial<BookingDraft>) => void };
 
-export function DatesStep({ bike, draft, patch }: PatchProps & { bike: Motorcycle }) {
+export function DatesStep({ bike, draft, patch, addons, addonsPending }: PatchProps & { bike: Motorcycle; addons: BookingAddon[]; addonsPending: boolean }) {
   const t = useTranslations("booking");
   const value: RentalSelection = { range: toRange(draft.start ?? undefined, draft.end ?? undefined), pickupTime: draft.pickupTime, dropTime: draft.dropTime };
 
@@ -39,12 +41,13 @@ export function DatesStep({ bike, draft, patch }: PatchProps & { bike: Motorcycl
       />
       <fieldset className="flex flex-col">
         <legend className="mb-1 text-sm font-semibold">{t("addOns")}</legend>
-        <Checkbox isSelected={draft.addOns.helmet} onChange={(helmet) => patch({ addOns: { ...draft.addOns, helmet } })}>
-          {t("addonHelmet")}
-        </Checkbox>
-        <Checkbox isSelected={draft.addOns.jacket} onChange={(jacket) => patch({ addOns: { ...draft.addOns, jacket } })}>
-          {t("addonJacket")}
-        </Checkbox>
+        {addonsPending ? <p className="py-2 text-sm text-subtle" role="status">Loading add-ons…</p> : null}
+        {addons.map((addon) => (
+          <Checkbox key={addon.code} isSelected={Boolean(draft.addOns[addon.code])} onChange={(selected) => patch({ addOns: { ...draft.addOns, [addon.code]: selected } })}>
+            {addon.name} · {formatMoney(addon.pricePerDayMinor / 100)} / day
+          </Checkbox>
+        ))}
+        {!addonsPending && addons.length === 0 ? <p className="py-2 text-sm text-subtle">No add-ons are currently available.</p> : null}
       </fieldset>
     </div>
   );

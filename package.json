@@ -11,7 +11,8 @@
     "icons": "node scripts/make-icons.mjs",
     "art": "node scripts/make-art.mjs",
     "scaffold:customer-api": "node scripts/scaffold-customer-api.mjs",
-    "scaffold:customer-api:check": "node scripts/scaffold-customer-api.mjs --check"
+    "scaffold:customer-api:check": "node scripts/scaffold-customer-api.mjs --check",
+    "test:customer-api": "bun test tests/customer-api-scaffold.test.mjs"
   },
   "dependencies": {
     "@heroui/react": "^3.2.6",

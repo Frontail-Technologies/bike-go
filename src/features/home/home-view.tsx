@@ -16,7 +16,7 @@ import { AppBar } from "@/components/shared/app-bar";
 import { Screen } from "@/components/shared/screen";
 import { IconButton } from "@/components/ui/button";
 import { AppSearchField } from "@/components/ui/search-field";
-import type { BikeCategory } from "@/features/mock/data";
+import type { BikeCategory } from "@/features/vehicles/view-model";
 import { useVehiclesQuery } from "@/features/vehicles/hooks/generated";
 import { vehicleToMotorcycle } from "@/features/vehicles/vehicle-mapper";
 import { LanguageSwitcher } from "@/components/shared/language-switcher";

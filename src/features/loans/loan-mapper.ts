@@ -29,7 +29,10 @@ export function apiLoanToApplication(loan: ApiLoan): LoanApplication {
       const type = customerDocumentId(document.type);
       return type ? [[type, { name: document.originalFilename, size: document.sizeBytes }] as const] : [];
     })) as LoanApplication["documents"],
-    requestedDocuments: loan.documents.flatMap((document) => document.verificationStatus === "rejected" ? [customerDocumentId(document.type)].filter((type): type is NonNullable<typeof type> => Boolean(type)) : []),
+    requestedDocuments: loan.requestedDocumentTypes.flatMap((type) => {
+      const customerType = customerDocumentId(type);
+      return customerType ? [customerType] : [];
+    }),
     history: loan.history.map((event) => ({ status: status[event.newStatus], at: event.createdAt, note: event.note ?? undefined })),
     createdAt: loan.createdAt,
   };

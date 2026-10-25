@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { quoteLines } from "@/features/bookings/pricing";
 import { duration, ease } from "@/design-system/motion";
 import { useTranslations } from "@/i18n/hooks";
+import { PaywayCheckout } from "@/features/payments/components/payway-checkout";
 import { formatDay } from "./dates";
 import { useBooking } from "./use-booking";
 
@@ -96,6 +97,7 @@ export function ConfirmationView({ reference }: { reference: string }) {
       </section>
 
       <BookingSummary lines={quoteLines(booking.quote)} totalLabel="totalPaid" />
+      {found.paymentStatus !== "paid" ? <PaywayCheckout reference={booking.reference} /> : null}
 
       <div className="grid grid-cols-2 gap-3">
         <ButtonLink href="/" variant="outline" size="lg">

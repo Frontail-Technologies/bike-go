@@ -13,10 +13,10 @@ import { quoteLines, type Quote } from "@/features/bookings/pricing";
 import { formatMoney } from "@/lib/format";
 import { draftStore, justBookedStore } from "@/features/bookings/store";
 import type { BookingDraft } from "@/features/bookings/types";
-import type { Motorcycle } from "@/features/mock/data";
+import type { Motorcycle } from "@/features/vehicles/view-model";
 import type { Vehicle } from "@/features/vehicles/types";
 import { useCustomerProfileQuery } from "@/features/profile/hooks/generated";
-import { useCreateBookingMutation } from "@/features/bookings/hooks/generated";
+import { useBookingAddonsQuery, useCreateBookingMutation } from "@/features/bookings/hooks/generated";
 import { useBookingQuoteQuery } from "@/features/bookings/hooks/use-booking-quote";
 import { bookingQuoteToView } from "@/features/bookings/booking-mapper";
 import { cambodiaRentalDateTime } from "@/lib/cambodia-time";
@@ -40,6 +40,7 @@ export function BookingFlow({ bike, vehicle }: { bike: Motorcycle; vehicle: Vehi
   const common = useTranslations("common");
   const profile = useCustomerProfileQuery();
   const createBooking = useCreateBookingMutation();
+  const addonsQuery = useBookingAddonsQuery();
   const stored = draftStore.useValue();
   const justBooked = justBookedStore.useValue();
   const [agreed, setAgreed] = useState(false);
@@ -55,7 +56,7 @@ export function BookingFlow({ bike, vehicle }: { bike: Motorcycle; vehicle: Vehi
         end: params.get("end"),
         pickupTime: params.get("pt") ?? "10:00 AM",
         dropTime: params.get("dt") ?? "10:00 AM",
-        addOns: { helmet: false, jacket: false },
+        addOns: {},
         rider: { name: profile.data?.fullName ?? "", phone: profile.data?.phone ?? "", email: profile.data?.email ?? "" },
         licenceNumber: "",
         licenceLater: false,
@@ -71,8 +72,8 @@ export function BookingFlow({ bike, vehicle }: { bike: Motorcycle; vehicle: Vehi
     returnLocationId: vehicle.location.id,
     pickupAt: cambodiaRentalDateTime(draft.start!, draft.pickupTime),
     returnAt: cambodiaRentalDateTime(draft.end!, draft.dropTime),
-    addons: [draft.addOns.helmet ? { code: "helmet", quantity: 1 } : null, draft.addOns.jacket ? { code: "riding-jacket", quantity: 1 } : null].filter((item): item is { code: string; quantity: number } => item !== null),
-  }), [draft.addOns.helmet, draft.addOns.jacket, draft.dropTime, draft.end, draft.pickupTime, draft.start, hasDates, vehicle.location.id, vehicle.slug]);
+    addons: Object.entries(draft.addOns).filter(([, selected]) => selected).map(([code]) => ({ code, quantity: 1 })),
+  }), [draft.addOns, draft.dropTime, draft.end, draft.pickupTime, draft.start, hasDates, vehicle.location.id, vehicle.slug]);
   const quoteQuery = useBookingQuoteQuery(bookingRequest);
   const quote = quoteQuery.data ? bookingQuoteToView(quoteQuery.data) : { ...EMPTY_QUOTE, days };
   const overlaps = quoteQuery.isError;
@@ -167,7 +168,7 @@ export function BookingFlow({ bike, vehicle }: { bike: Motorcycle; vehicle: Vehi
             <div key={step} className="rgo-page-in flex flex-col gap-5">
               {step === 1 ? (
                 <>
-                  <DatesStep bike={bike} draft={draft} patch={patch} />
+                  <DatesStep bike={bike} draft={draft} patch={patch} addons={addonsQuery.data ?? []} addonsPending={addonsQuery.isPending} />
                   {overlaps ? (
                     <p className="text-sm text-danger" role="alert">
                       {t("conflict")}

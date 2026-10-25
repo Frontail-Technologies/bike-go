@@ -121,10 +121,10 @@ function RequestForm({ loan, onClose, onConfirm }: { loan: Loan; onClose: () => 
   const selected = form.watch("types");
   const toggle = (type: string) => form.setValue("types", selected.includes(type) ? selected.filter((item) => item !== type) : [...selected, type], { shouldValidate: true });
   const submit = form.handleSubmit((values) => {
-    // The backend keeps one note, which the applicant sees, so the requested documents are named in it.
-    const list = requiredDocumentTypes.filter((type) => values.types.includes(type)).map((type) => documentTypeLabel(type)).join(", ");
+    const requestedTypes = requiredDocumentTypes.filter((type) => values.types.includes(type));
+    const list = requestedTypes.map((type) => documentTypeLabel(type)).join(", ");
     const message = values.message.trim();
-    return run(() => onConfirm(loan, { status: "additional_documents_required", note: `Please upload: ${list}.${message ? ` ${message}` : ""}` }));
+    return run(() => onConfirm(loan, { status: "additional_documents_required", requestedDocumentTypes: [...requestedTypes], note: `Please upload: ${list}.${message ? ` ${message}` : ""}` }));
   });
 
   return (

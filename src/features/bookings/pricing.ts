@@ -1,5 +1,5 @@
 import type { SummaryLine } from "@/components/customer/booking-summary";
-import type { Motorcycle } from "@/features/mock/data";
+import type { Motorcycle } from "@/features/vehicles/view-model";
 
 export const HELMET_PER_DAY = 2;
 export const JACKET_PER_DAY = 2;
@@ -8,13 +8,14 @@ export const PLATFORM_FEE = 1;
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-export type AddOns = { helmet: boolean; jacket: boolean };
+export type AddOns = Record<string, boolean>;
 
 export type Quote = {
   days: number;
   rental: number;
   helmet: number;
   jacket: number;
+  addons?: { code: string; name: string; amount: number }[];
   tax: number;
   fee: number;
   deposit: number;
@@ -36,8 +37,11 @@ export type QuoteLine = SummaryLine;
 
 export function quoteLines(quote: Quote): QuoteLine[] {
   const lines: QuoteLine[] = [{ id: "rental", days: quote.days, amount: quote.rental }];
-  if (quote.helmet) lines.push({ id: "helmet", amount: quote.helmet });
-  if (quote.jacket) lines.push({ id: "jacket", amount: quote.jacket });
+  if (quote.addons) lines.push(...quote.addons.map((addon) => ({ id: `addon-${addon.code}`, label: addon.name, amount: addon.amount })));
+  else {
+    if (quote.helmet) lines.push({ id: "helmet", amount: quote.helmet });
+    if (quote.jacket) lines.push({ id: "jacket", amount: quote.jacket });
+  }
   lines.push(
     { id: "tax", rate: Math.round(quote.taxRate ?? TAX_RATE * 100), amount: quote.tax },
     { id: "fee", amount: quote.fee },

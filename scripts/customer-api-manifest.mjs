@@ -88,4 +88,12 @@ export const customerApiManifest = [
       { name: "deleteLoanDocument", hook: "useDeleteLoanDocumentMutation", kind: "mutation", method: "DELETE", path: "/loans/:reference/documents/:documentId", responseType: "DeletedLoanDocument", invalidate: true },
     ],
   },
+  {
+    domain: "support-tickets",
+    featureDir: "src/features/help",
+    keyName: "customerSupportTicketKeys",
+    operations: [
+      { name: "createSupportTicket", hook: "useCreateSupportTicketMutation", kind: "mutation", method: "POST", path: "/support-tickets", bodyType: "SupportTicketInput", responseType: "ReportedIssue", invalidate: true },
+    ],
+  },
 ];

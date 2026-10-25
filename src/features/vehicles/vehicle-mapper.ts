@@ -1,4 +1,4 @@
-import type { Motorcycle, BikeCategory } from "@/features/mock/data";
+import type { Motorcycle, BikeCategory } from "./view-model";
 import type { Vehicle } from "./types";
 
 const categories = new Set<BikeCategory>(["cruiser", "sports", "adventure", "touring", "scooter"]);

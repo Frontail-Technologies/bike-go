@@ -1,5 +1,6 @@
-import type { BookingStatus } from "@/features/mock/data";
 import type { AddOns, Quote } from "./pricing";
+
+export type BookingStatus = "upcoming" | "ongoing" | "completed" | "cancelled";
 
 export type ApiBookingStatus = "pending" | "confirmed" | "ready_for_pickup" | "active" | "returned" | "completed" | "cancelled" | "expired" | "no_show";
 export type ApiPaymentStatus = "unpaid" | "pending" | "paid" | "failed" | "refunded" | "partially_refunded";
@@ -27,7 +28,7 @@ export type ApiBooking = {
 };
 export type BookingQuote = { currency: "USD"; rentalDays: number; pricing: BookingPricing; addons: BookingAddonLine[] };
 export type BookingRequest = { vehicle: string; pickupLocationId?: string; returnLocationId?: string; pickupAt: string; returnAt: string; addons?: { code: string; quantity?: number }[] };
-export type BookingListParams = { page?: number; pageSize?: number; status?: ApiBookingStatus };
+export type BookingListParams = { page?: number; pageSize?: number; status?: ApiBookingStatus; group?: "upcoming" | "active" | "completed" | "cancelled" };
 export type BookingCancelInput = { reason?: string };
 
 export type RiderDetails = { name: string; phone: string; email: string };

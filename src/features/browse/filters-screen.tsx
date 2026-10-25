@@ -9,6 +9,7 @@ import { useVehiclesQuery } from "@/features/vehicles/hooks/generated";
 import { useBack } from "@/hooks/use-back";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useTranslations } from "@/i18n/hooks";
+import { cambodiaRentalRange } from "@/lib/cambodia-time";
 import { BikeFilters } from "./bike-filters";
 import { browseStore } from "./browse-store";
 import { DEFAULT_FILTERS } from "./filters";
@@ -37,8 +38,7 @@ export function FiltersScreen() {
     minEngineCc: filters.engine[0] === "200-400" ? 200 : filters.engine[0] === "over-400" ? 401 : undefined,
     maxEngineCc: filters.engine[0] === "under-200" ? 199 : filters.engine[0] === "200-400" ? 400 : undefined,
     availableOnly: filters.availableOnly || Boolean(dates),
-    pickupAt: dates?.start,
-    returnAt: dates?.end,
+    ...(dates ? cambodiaRentalRange(dates.start, dates.end) : {}),
     sort: sort === "price-asc" ? "price_asc" as const : sort === "price-desc" ? "price_desc" as const : sort === "popular" ? "newest" as const : "name" as const,
   }), [dates, filters, query, sort]);
   const vehicles = useVehiclesQuery(vehicleParams);

@@ -93,6 +93,7 @@ export function LoanStatusView({ reference }: { reference: string }) {
   const [extraOpen, setExtraOpen] = useState(false);
   const documents = useLoanDocumentsQuery(reference);
   const upload = useUploadLoanDocumentMutation();
+  const replaceRequested = useReplaceLoanDocumentMutation();
   const remove = useDeleteLoanDocumentMutation();
   const resubmit = useResubmitLoanMutation();
 
@@ -209,13 +210,17 @@ export function LoanStatusView({ reference }: { reference: string }) {
                   const input = new FormData();
                   input.set("file", file);
                   input.set("type", loanDocumentType(type));
-                  return upload.mutateAsync({ reference, input });
+                  const existing = documents.data?.find((document) => customerDocumentId(document.type) === type);
+                  return existing
+                    ? replaceRequested.mutateAsync({ reference, documentId: existing.id, input })
+                    : upload.mutateAsync({ reference, input });
                 })).then(async () => {
                   await resubmit.mutateAsync({ reference });
                   setFiles({});
                   toast.success(t("stDocsSent"), { description: t("stDocsSentDesc") });
                 }).catch((error) => toast.danger(error instanceof Error ? error.message : "Documents could not be uploaded."));
               }}
+              isPending={upload.isPending || replaceRequested.isPending || resubmit.isPending}
             >
               {t("stSendDocs")}
             </Button>
@@ -258,7 +263,7 @@ export function LoanStatusView({ reference }: { reference: string }) {
                       {item.verificationStatus !== "verified" ? (
                         <>
                           <ReplaceDocumentButton reference={reference} document={item} />
-                          <button type="button" className="text-xs text-danger underline" onClick={() => void remove.mutateAsync({ reference, documentId: item.id })}>Remove</button>
+                          <button type="button" className="text-xs text-danger underline" onClick={() => void remove.mutateAsync({ reference, documentId: item.id }).catch((error) => toast.danger(error instanceof Error ? error.message : "Document could not be removed."))}>Remove</button>
                         </>
                       ) : null}
                     </span>

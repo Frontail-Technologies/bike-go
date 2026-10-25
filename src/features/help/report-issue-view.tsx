@@ -14,7 +14,8 @@ import { TextAreaInput } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { formatRange } from "@/features/bookings/dates";
 import { useBookingsQuery } from "@/features/bookings/hooks/generated";
-import { supportTicketsApi, type SupportTicketCategory } from "@/features/help/api/support-tickets-api";
+import { useCreateSupportTicketMutation } from "@/features/help/hooks/generated";
+import type { SupportTicketCategory } from "@/features/help/types";
 import { useTranslations } from "@/i18n/hooks";
 import { ApiError } from "@/lib/api/error";
 
@@ -46,6 +47,7 @@ export function ReportIssueView() {
   const getBike = (id: string) => bookings.find((booking) => booking.bikeId === id) ? { name: bookings.find((booking) => booking.bikeId === id)!.vehicleName } : undefined;
   const t = useTranslations("help");
   const [ticket, setTicket] = useState<string | null>(null);
+  const createTicket = useCreateSupportTicketMutation();
   const { control, handleSubmit, formState } = useForm({
     resolver: zodResolver(schema(t("reportErrMessage"))),
     mode: "onBlur",
@@ -59,11 +61,7 @@ export function ReportIssueView() {
 
   const send = handleSubmit(async (values) => {
     try {
-      const created = await supportTicketsApi.create({
-        category: values.category as SupportTicketCategory,
-        bookingReference: values.booking === "none" ? null : values.booking,
-        message: values.message,
-      });
+      const created = await createTicket.mutateAsync({ input: { category: values.category as SupportTicketCategory, bookingReference: values.booking === "none" ? null : values.booking, message: values.message } });
       setTicket(created.reference);
     } catch (error) {
       toast.danger(error instanceof ApiError ? error.message : "The issue could not be sent. Try again.");

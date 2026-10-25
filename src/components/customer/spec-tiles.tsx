@@ -1,7 +1,7 @@
 "use client";
 
 import { GasPumpIcon, GaugeIcon, GearSixIcon, ScalesIcon } from "@phosphor-icons/react/ssr";
-import type { Motorcycle } from "@/features/mock/data";
+import type { Motorcycle } from "@/features/vehicles/view-model";
 import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";
 
