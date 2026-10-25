@@ -86,7 +86,7 @@ function StatusForm({ booking, initial, onConfirm, onClose }: { booking: Booking
               <Select.Trigger className="min-h-11"><Select.Value /><Select.Indicator /></Select.Trigger>
               <Select.Popover className="adminOverlay"><ListBox>{options.map((value) => <ListBox.Item key={value} id={value} textValue={bookingLabels[value]}>{bookingLabels[value]}<ListBox.ItemIndicator /></ListBox.Item>)}</ListBox></Select.Popover>
             </Select>
-            <div className="flex items-start gap-2 rounded-xl bg-[var(--admin-info-soft)] p-3 text-xs font-medium text-[var(--admin-info)]"><BellIcon size={16} className="mt-0.5 shrink-0" aria-hidden />The customer may be notified when this status changes.</div>
+            <div className="flex items-start gap-2 rounded-xl bg-[#efe9ff] p-3 text-xs font-medium text-[#6246c7]"><BellIcon size={16} className="mt-0.5 shrink-0" aria-hidden />The customer may be notified when this status changes.</div>
             <NoteField label="Add a note (optional)" placeholder="e.g. Vehicle is ready for pickup. Please bring your ID." value={note} onChange={(value) => { setNote(value); setNoteError(""); }} error={noteError} />
           </>
         ) : <p className="text-sm text-[var(--admin-muted)]">This booking is {bookingLabels[booking.bookingStatus].toLowerCase()}, so its status can’t be changed here.</p>}

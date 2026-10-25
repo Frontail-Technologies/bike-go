@@ -3,7 +3,7 @@ const initialsOf = (name: string) => name.split(/\s+/).slice(0, 2).map((part) =>
 
 const palettes = [
   "bg-[var(--admin-accent-soft)] text-[var(--admin-warning)]",
-  "bg-[var(--admin-info-soft)] text-[var(--admin-info)]",
+  "bg-[#e8f5f2] text-[#147d68]",
   "bg-[var(--admin-success-soft)] text-[var(--admin-success)]",
   "bg-[var(--admin-danger-soft)] text-[var(--admin-danger)]",
   "bg-[#efe9ff] text-[#6246c7]",

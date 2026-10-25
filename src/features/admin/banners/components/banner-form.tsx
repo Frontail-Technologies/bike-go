@@ -23,7 +23,7 @@ import { BannerImage } from "./banner-image";
 type StatusChoice = BannerFormValues["status"];
 const statusOptions: ReadonlyArray<{ value: StatusChoice; label: string; hint: string; dot: string }> = [
   { value: "active", label: "Active", hint: "Shows now, within its dates.", dot: "bg-[var(--admin-success)]" },
-  { value: "scheduled", label: "Scheduled", hint: "Starts at a future date.", dot: "bg-[var(--admin-info)]" },
+  { value: "scheduled", label: "Scheduled", hint: "Starts at a future date.", dot: "bg-[#6246c7]" },
   { value: "inactive", label: "Inactive", hint: "Hidden, content is kept.", dot: "bg-[var(--admin-muted)]" },
 ];
 
@@ -133,7 +133,7 @@ export function BannerForm({ banner }: { banner?: Banner }) {
                 <TextInput control={form.control} name="subtitle" label="Subtitle" />
                 <div className="grid gap-4 sm:grid-cols-2">
                   <TextInput control={form.control} name="ctaLabel" label="CTA label" required description="Button text, e.g. Book Now" />
-                  <TextInput control={form.control} name="ctaUrl" label="CTA URL" required description="Internal path (/bikes) or https:// URL" extra={link ? <span className="rounded-full bg-[var(--admin-info-soft)] px-2 py-0.5 text-[10px] font-bold text-[var(--admin-info)]">{link}</span> : null} />
+                  <TextInput control={form.control} name="ctaUrl" label="CTA URL" required description="Internal path (/bikes) or https:// URL" extra={link ? <span className="rounded-full bg-[#efe9ff] px-2 py-0.5 text-[10px] font-bold text-[#6246c7]">{link}</span> : null} />
                 </div>
                 <div className="grid items-start gap-4 sm:grid-cols-[minmax(0,1fr)_9rem]">
                   <Controller control={form.control} name="placement" render={({ field }) => (
