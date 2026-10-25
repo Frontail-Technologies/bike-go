@@ -1,10 +1,10 @@
 "use client";
 
-import { GoogleLogoIcon, TelegramLogoIcon } from "@phosphor-icons/react";
+import { GoogleLogoIcon } from "@phosphor-icons/react";
 import useEmblaCarousel from "embla-carousel-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { BikeArt } from "@/components/shared/bike-art";
 import { Logo } from "@/components/shared/logo";
@@ -13,9 +13,9 @@ import { toast } from "@/components/ui/toast";
 import { LanguageSwitcher } from "@/components/shared/language-switcher";
 import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";
-import { authStore } from "./store";
-
-type Provider = "google" | "telegram";
+import { useCustomerAuthMutations, useCustomerSessionQuery } from "./hooks/use-customer-session-query";
+import { safeCustomerReturnTo } from "./safe-return-to";
+import { TelegramLoginWidget } from "./telegram-login-widget";
 
 const HERO_IMAGE: string | null = "/hero/welcome.jpg";
 
@@ -25,17 +25,24 @@ export function WelcomeScreen() {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false });
   const [selected, setSelected] = useState(0);
   const router = useRouter();
-  const [pending, setPending] = useState<Provider | null>(null);
+  const searchParams = useSearchParams();
+  const session = useCustomerSessionQuery();
+  const auth = useCustomerAuthMutations();
   const t = useTranslations("auth");
   const common = useTranslations("common");
 
-  function continueWith(provider: Provider) {
-    setPending(provider);
-    window.setTimeout(() => {
-      authStore.set({ signedIn: true });
-      toast.success(t("welcomeToast"));
-      router.replace("/");
-    }, 600);
+  const returnTo = safeCustomerReturnTo(searchParams.get("returnTo"));
+
+  useEffect(() => {
+    if (session.data) router.replace(returnTo);
+  }, [returnTo, router, session.data]);
+
+  async function continueWithGoogle() {
+    try {
+      await auth.google.mutateAsync(`${window.location.origin}${returnTo}`);
+    } catch (error) {
+      toast.danger(error instanceof Error ? error.message : "Google sign-in could not be started.");
+    }
   }
 
   useEffect(() => {
@@ -131,25 +138,24 @@ export function WelcomeScreen() {
             fullWidth
             variant="secondary"
             className="bg-white text-ink hover:bg-white/90"
-            isPending={pending === "google"}
-            isDisabled={pending !== null}
-            onPress={() => continueWith("google")}
+            isPending={auth.google.isPending}
+            isDisabled={auth.google.isPending || auth.telegram.isPending}
+            onPress={continueWithGoogle}
           >
             <GoogleLogoIcon size={20} weight="bold" />
             {t("continueGoogle")}
           </Button>
-          <Button
-            size="lg"
-            fullWidth
-            variant="outline"
-            className="border-white/70 bg-transparent text-white hover:bg-white/10"
-            isPending={pending === "telegram"}
-            isDisabled={pending !== null}
-            onPress={() => continueWith("telegram")}
-          >
-            <TelegramLogoIcon size={20} weight="fill" />
-            {t("continueTelegram")}
-          </Button>
+          <TelegramLoginWidget
+            onAuth={async (payload) => {
+              try {
+                await auth.telegram.mutateAsync(payload);
+                toast.success(t("welcomeToast"));
+                router.replace(returnTo);
+              } catch (error) {
+                toast.danger(error instanceof Error ? error.message : "Telegram sign-in could not be completed.");
+              }
+            }}
+          />
           <p className="text-center text-xs text-white/60">
             {t.rich("consent", {
               terms: (chunks) => (

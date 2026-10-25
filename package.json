@@ -9,7 +9,9 @@
     "lint": "eslint",
     "qa": "node qa/run.mjs",
     "icons": "node scripts/make-icons.mjs",
-    "art": "node scripts/make-art.mjs"
+    "art": "node scripts/make-art.mjs",
+    "scaffold:customer-api": "node scripts/scaffold-customer-api.mjs",
+    "scaffold:customer-api:check": "node scripts/scaffold-customer-api.mjs --check"
   },
   "dependencies": {
     "@heroui/react": "^3.2.6",
@@ -20,6 +22,7 @@
     "@tanstack/react-query": "^5.104.5",
     "@tanstack/react-table": "^8",
     "axios": "^1.20.0",
+    "better-auth": "1.7.12",
     "clsx": "^2.1.1",
     "embla-carousel-react": "^8.6.0",
     "motion": "^14.6.0",

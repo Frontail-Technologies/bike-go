@@ -32,7 +32,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { TextInput } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { Reveal } from "@/components/motion/reveal";
-import { authStore } from "@/features/auth/store";
+import { useCustomerAuthMutations } from "@/features/auth/hooks/use-customer-session-query";
 import { maskLicence } from "@/features/bookings/use-booking";
 import { LanguageOptions } from "@/components/shared/language-switcher";
 import { useTranslations } from "@/i18n/hooks";
@@ -40,6 +40,7 @@ import { intlLocale } from "@/i18n/hooks";
 import { ApplicationCard } from "@/features/loans/application-card";
 import { loansStore } from "@/features/loans/store";
 import { favoritesStore, initials, profileStore } from "./store";
+import { useCustomerProfileQuery, useUpdateCustomerProfileMutation } from "./hooks/generated";
 
 type ModalKey = "edit" | "licence" | "logout" | null;
 
@@ -48,9 +49,9 @@ type Say = (key: "errName" | "errPhone" | "errEmail" | "errAddress" | "errLicenc
 const detailsSchema = (say: Say) =>
   z.object({
     name: z.string().trim().min(2, say("errName")),
-    phone: z.string().regex(/^[6-9]\d{9}$/, say("errPhone")),
+    phone: z.string().regex(/^\+?[\d\s-]{7,20}$/, say("errPhone")),
     email: z.email(say("errEmail")),
-    address: z.string().trim().min(5, say("errAddress")),
+    address: z.string().trim().min(3, say("errAddress")),
   });
 
 const licenceSchema = (say: Say) =>
@@ -61,7 +62,19 @@ const licenceSchema = (say: Say) =>
 export function ProfileView() {
   const router = useRouter();
   const t = useTranslations("profile");
-  const profile = profileStore.useValue();
+  const localProfile = profileStore.useValue();
+  const profileQuery = useCustomerProfileQuery();
+  const updateProfile = useUpdateCustomerProfileMutation();
+  const auth = useCustomerAuthMutations();
+  const remoteProfile = profileQuery.data;
+  const profile = {
+    name: remoteProfile?.fullName || remoteProfile?.email || "RideGo rider",
+    email: remoteProfile?.email ?? "",
+    phone: remoteProfile?.phone ?? "",
+    address: remoteProfile?.address ?? "",
+    licence: localProfile.licence,
+    notifications: localProfile.notifications,
+  };
   const applications = loansStore.useValue();
   const savedCount = favoritesStore.useValue().length;
   const [modal, setModal] = useState<ModalKey>(null);
@@ -213,10 +226,14 @@ export function ProfileView() {
           id="details-form"
           noValidate
           className="flex flex-col gap-4"
-          onSubmit={details.handleSubmit((values) => {
-            profileStore.update((p) => ({ ...p, ...values }));
-            toast.success(t("detailsSaved"));
-            close();
+          onSubmit={details.handleSubmit(async (values) => {
+            try {
+              await updateProfile.mutateAsync({ input: { fullName: values.name, phone: values.phone, address: values.address } });
+              toast.success(t("detailsSaved"));
+              close();
+            } catch (error) {
+              toast.danger(error instanceof Error ? error.message : "Your details could not be saved.");
+            }
           })}
         >
           {(["name", "phone", "email", "address"] as const).map((field) => (
@@ -234,6 +251,7 @@ export function ProfileView() {
                   onBlur={f.onBlur}
                   isInvalid={fieldState.invalid}
                   error={fieldState.error?.message}
+                  isReadOnly={field === "email"}
                 />
               )}
             />
@@ -290,9 +308,10 @@ export function ProfileView() {
             <Button
               slot="close"
               onPress={() => {
-                authStore.set({ signedIn: false });
-                toast.success(t("loggedOut"));
-                router.push("/signin");
+                void auth.logout.mutateAsync().then(() => {
+                  toast.success(t("loggedOut"));
+                  router.replace("/signin");
+                }).catch((error) => toast.danger(error instanceof Error ? error.message : "Sign out could not be completed."));
               }}
             >
               {t("logout")}
