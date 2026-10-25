@@ -52,11 +52,12 @@ export const ACCEPTED_FILES = ".pdf,.jpg,.jpeg,.png";
 
 export type StoredFile = { name: string; size: number; raw?: File };
 
-export type LoanStatus = "submitted" | "in-review" | "documents-required" | "approved" | "rejected";
+export type LoanStatus = "submitted" | "in-review" | "eligibility-review" | "documents-required" | "approved" | "rejected";
 
 export const statusMeta: Record<LoanStatus, { tone: "info" | "brand" | "success" | "danger" }> = {
   submitted: { tone: "info" },
   "in-review": { tone: "brand" },
+  "eligibility-review": { tone: "info" },
   "documents-required": { tone: "brand" },
   approved: { tone: "success" },
   rejected: { tone: "danger" },
@@ -108,81 +109,3 @@ export type LoanDraft = {
   employment: Omit<Employment, "monthlyIncome"> & { monthlyIncome: string };
   documents: Partial<Record<DocumentId, StoredFile>>;
 };
-
-export function newLoanReference() {
-  return `LN${Math.floor(410500 + Math.random() * 99000)}`;
-}
-
-const file = (name: string, size: number): StoredFile => ({ name, size });
-const allDocuments: LoanApplication["documents"] = {
-  passport: file("passport.pdf", 812_000),
-  residence: file("residence-permit.pdf", 640_000),
-  employment: file("employment-letter.pdf", 410_000),
-  income: file("payslips-q3.pdf", 1_240_000),
-  address: file("tenancy-agreement.pdf", 980_000),
-  bank: file("bank-statement.pdf", 2_100_000),
-};
-
-function seed(
-  reference: string,
-  loanType: LoanTypeId,
-  amount: number,
-  tenure: number,
-  history: StatusEvent[],
-  extra: Partial<LoanApplication> = {},
-): LoanApplication {
-  const type = getLoanType(loanType)!;
-  return {
-    reference,
-    loanType,
-    amount,
-    tenure,
-    purpose: "home",
-    emi: calculateEmi(amount, type.apr, tenure).monthly,
-    status: history[history.length - 1].status,
-    applicant: {
-      fullName: "Rahul Sharma",
-      mobile: "+971 50 123 4567",
-      email: "rahul.sharma@gmail.com",
-      dob: "1992-04-18",
-      nationality: "Indian",
-      city: "Dubai",
-      residence: "employment-visa",
-    },
-    employment: { type: "salaried", employer: "Northwind Logistics", jobTitle: "Operations Manager", monthlyIncome: 3200, experience: "3-5", bankAccount: "yes" },
-    documents: allDocuments,
-    requestedDocuments: [],
-    history,
-    createdAt: history[0].at,
-    ...extra,
-  };
-}
-
-export const seedApplications: LoanApplication[] = [
-  seed("LN410231", "vehicle", 6000, 36, [
-    { status: "submitted", at: "2026-10-15T09:12:00" },
-    { status: "in-review", at: "2026-10-16T11:30:00" },
-  ]),
-  seed(
-    "LN410774",
-    "personal",
-    4500,
-    24,
-    [
-      { status: "submitted", at: "2026-10-12T14:05:00" },
-      { status: "in-review", at: "2026-10-13T10:00:00" },
-      { status: "documents-required", at: "2026-10-14T16:40:00", note: "The address proof is older than 3 months." },
-    ],
-    { requestedDocuments: ["address"], documents: { ...allDocuments, address: undefined } },
-  ),
-  seed("LN409118", "emergency", 2000, 12, [
-    { status: "submitted", at: "2026-09-20T08:45:00" },
-    { status: "in-review", at: "2026-09-21T09:30:00" },
-    { status: "approved", at: "2026-09-23T15:10:00", note: "Approved at the requested amount." },
-  ]),
-  seed("LN408502", "personal", 12000, 48, [
-    { status: "submitted", at: "2026-09-02T12:20:00" },
-    { status: "in-review", at: "2026-09-03T10:15:00" },
-    { status: "rejected", at: "2026-09-06T17:00:00", note: "Monthly repayments would be above 50% of the stated income." },
-  ]),
-];

@@ -13,9 +13,12 @@ import { AppSelect, type SelectOption } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/selection-controls";
 import { TextInput } from "@/components/ui/text-field";
 import { FlowFooter } from "@/features/booking-flow/flow-footer";
+import { toast } from "@/components/ui/toast";
 import { formatDay } from "@/features/bookings/dates";
 import { useCustomerProfileQuery } from "@/features/profile/hooks/generated";
-import { useCreateLoanMutation } from "./hooks/generated";
+import { useCreateLoanMutation, useSubmitLoanMutation } from "./hooks/generated";
+import { useUploadLoanDocumentMutation } from "./documents/hooks/generated";
+import { loanDocumentType } from "./document-types";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { cn } from "@/lib/cn";
 import { useTranslations } from "@/i18n/hooks";
@@ -51,6 +54,10 @@ import { justAppliedStore, loanDraftStore } from "./store";
 const STEPS = ["applyStep1", "applyStep2", "applyStep3", "applyStep4", "applyStep5"] as const;
 const LAST_STEP = STEPS.length;
 const clampStep = (n: number) => Math.max(1, Math.min(LAST_STEP, Number.isFinite(n) ? n : 1));
+const experienceMonths: Record<string, number> = { "under-1": 6, "1-3": 24, "3-5": 48, "5-plus": 72 };
+
+const apiResidenceStatus = (value: string) => value.replaceAll("-", "_");
+const apiEmploymentType = (value: string) => value.replaceAll("-", "_");
 
 type PatchProps = { draft: LoanDraft; patch: (partial: Partial<LoanDraft>) => void };
 
@@ -433,10 +440,14 @@ export function ApplyFlow() {
   const intl = useTranslations("loans");
   const profile = useCustomerProfileQuery();
   const createLoan = useCreateLoanMutation();
+  const submitLoan = useSubmitLoanMutation();
+  const uploadDocument = useUploadLoanDocumentMutation();
   const stored = loanDraftStore.useValue();
   const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
   const submitted = useRef(false);
+  const remoteDraftReference = useRef<string | null>(null);
 
   const hasStored = stored !== null;
   const queryType = getLoanType(params.get("type") ?? "") ?? loanTypes[0];
@@ -476,9 +487,11 @@ export function ApplyFlow() {
 
   async function submit() {
     setSubmitting(true);
+    setSubmissionError(null);
     try {
-      const application = await createLoan.mutateAsync({ input: {
+      const reference = remoteDraftReference.current ?? (await createLoan.mutateAsync({ input: {
         loanType: draft.loanType,
+        currency: "USD",
         requestedAmountMinor: Math.round(draft.amount * 100),
         tenureMonths: draft.tenure,
         purpose: draft.purpose || undefined,
@@ -488,18 +501,32 @@ export function ApplyFlow() {
         dateOfBirth: draft.applicant.dob || undefined,
         nationality: draft.applicant.nationality || undefined,
         currentCity: draft.applicant.city || undefined,
-        residenceStatus: draft.applicant.residence || undefined,
-        employmentType: draft.employment.type || undefined,
+        residenceStatus: apiResidenceStatus(draft.applicant.residence),
+        employmentType: apiEmploymentType(draft.employment.type),
         employerName: draft.employment.employer || undefined,
         jobTitle: draft.employment.jobTitle || undefined,
         monthlyIncomeMinor: draft.employment.monthlyIncome ? Math.round(Number(draft.employment.monthlyIncome) * 100) : undefined,
-        workExperienceMonths: 0,
+        workExperienceMonths: experienceMonths[draft.employment.experience] ?? 0,
         hasActiveBankAccount: draft.employment.bankAccount === "yes",
-      } });
+      } })).reference;
+      remoteDraftReference.current = reference;
+      await Promise.all(documentTypes.map(async ({ id }) => {
+        const file = draft.documents[id]?.raw;
+        if (!(file instanceof File)) throw new Error("Please select each required document again before submitting.");
+        const input = new FormData();
+        input.set("file", file);
+        input.set("type", loanDocumentType(id));
+        await uploadDocument.mutateAsync({ reference, input });
+      }));
+      await submitLoan.mutateAsync({ reference, idempotencyKey: crypto.randomUUID() });
       submitted.current = true;
       loanDraftStore.set(null);
-      justAppliedStore.set(application.reference);
-      router.replace(`/loans/${application.reference}`);
+      justAppliedStore.set(reference);
+      router.replace(`/loans/${reference}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Your application could not be submitted. Please try again.";
+      setSubmissionError(message);
+      toast.danger(message);
     } finally {
       setSubmitting(false);
     }
@@ -544,6 +571,7 @@ export function ApplyFlow() {
               {step === 3 ? <EmploymentStep formId="employment-form" draft={draft} patch={patch} onValid={() => go(4)} /> : null}
               {step === 4 ? <DocumentsStep draft={draft} patch={patch} /> : null}
               {step === 5 ? <ReviewStep draft={draft} patch={patch} agreed={agreed} onAgree={setAgreed} onEdit={(s) => router.push(withStep(s), { scroll: false })} /> : null}
+              {submissionError ? <p className="rounded-control bg-danger-soft px-4 py-3 text-sm text-danger" role="alert">{submissionError}</p> : null}
             </div>
             <div className="mt-6 hidden lg:block">{footer}</div>
           </section>

@@ -3,7 +3,7 @@
 import { CheckCircleIcon, FileMagnifyingGlassIcon, WarningCircleIcon, WarningIcon, XCircleIcon } from "@phosphor-icons/react";
 import { InfoIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { AppBar } from "@/components/shared/app-bar";
 import { DesktopTitle, Screen } from "@/components/shared/screen";
 import { Button } from "@/components/ui/button";
@@ -24,11 +24,15 @@ import { LoanTimeline } from "./loan-timeline";
 import { justAppliedStore } from "./store";
 import { useLoanQuery } from "./hooks/generated";
 import { apiLoanToApplication } from "./loan-mapper";
-import { useLoanDocumentsQuery, useUploadLoanDocumentMutation } from "./documents/hooks/generated";
+import { useDeleteLoanDocumentMutation, useLoanDocumentsQuery, useReplaceLoanDocumentMutation, useUploadLoanDocumentMutation } from "./documents/hooks/generated";
+import { customerDocumentId, loanDocumentType } from "./document-types";
+import { useResubmitLoanMutation } from "./hooks/generated";
+import type { LoanDocument } from "./types";
 
 const headIcon: Record<LoanStatus, React.ReactNode> = {
   submitted: <CheckCircleIcon size={26} weight="fill" className="text-[#22c55e]" />,
   "in-review": <CheckCircleIcon size={26} weight="fill" className="text-[#22c55e]" />,
+  "eligibility-review": <CheckCircleIcon size={26} weight="fill" className="text-[#22c55e]" />,
   "documents-required": <WarningCircleIcon size={26} weight="fill" className="text-brand" />,
   approved: <CheckCircleIcon size={26} weight="fill" className="text-[#22c55e]" />,
   rejected: <XCircleIcon size={26} weight="fill" className="text-[#f87171]" />,
@@ -54,6 +58,31 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
+function ReplaceDocumentButton({ reference, document }: { reference: string; document: LoanDocument }) {
+  const inputId = useId();
+  const replace = useReplaceLoanDocumentMutation();
+
+  return (
+    <label htmlFor={inputId} className="cursor-pointer text-xs text-brand underline">
+      Replace
+      <input
+        id={inputId}
+        type="file"
+        accept=".pdf,.jpg,.jpeg,.png"
+        className="sr-only"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (!file) return;
+          const input = new FormData();
+          input.set("file", file);
+          input.set("type", document.type);
+          void replace.mutateAsync({ reference, documentId: document.id, input }).catch((error) => toast.danger(error instanceof Error ? error.message : "Document could not be replaced."));
+        }}
+      />
+    </label>
+  );
+}
+
 export function LoanStatusView({ reference }: { reference: string }) {
   const router = useRouter();
   const { t, typeName, status, choice, docLabel, docHint } = useLoanText();
@@ -64,6 +93,8 @@ export function LoanStatusView({ reference }: { reference: string }) {
   const [extraOpen, setExtraOpen] = useState(false);
   const documents = useLoanDocumentsQuery(reference);
   const upload = useUploadLoanDocumentMutation();
+  const remove = useDeleteLoanDocumentMutation();
+  const resubmit = useResubmitLoanMutation();
 
   const back = justApplied === reference ? () => router.replace("/loans") : undefined;
 
@@ -177,9 +208,10 @@ export function LoanStatusView({ reference }: { reference: string }) {
                   if (!file) return Promise.resolve();
                   const input = new FormData();
                   input.set("file", file);
-                  input.set("type", type === "residence" ? "visa_or_residence_permit" : type === "employment" ? "employment_proof" : type === "income" ? "salary_or_income_proof" : type === "address" ? "address_proof" : type === "bank" ? "bank_statement" : "passport");
+                  input.set("type", loanDocumentType(type));
                   return upload.mutateAsync({ reference, input });
-                })).then(() => {
+                })).then(async () => {
+                  await resubmit.mutateAsync({ reference });
                   setFiles({});
                   toast.success(t("stDocsSent"), { description: t("stDocsSentDesc") });
                 }).catch((error) => toast.danger(error instanceof Error ? error.message : "Documents could not be uploaded."));
@@ -214,9 +246,26 @@ export function LoanStatusView({ reference }: { reference: string }) {
 
         <Card title={t("stDocuments")} id="documents">
           <dl className="flex flex-col gap-2 text-sm">
-            {documentTypes.map((doc) => (
-              <Row key={doc.id} label={docLabel(doc.id)} value={documents.data?.find((item) => item.type === doc.id)?.originalFilename ?? application.documents[doc.id]?.name ?? (needed.includes(doc.id) ? t("stRequested") : t("stNotProvided"))} />
-            ))}
+            {documentTypes.map((doc) => {
+              const item = documents.data?.find((document) => customerDocumentId(document.type) === doc.id);
+              return (
+                <Row
+                  key={doc.id}
+                  label={docLabel(doc.id)}
+                  value={item ? (
+                    <span className="inline-flex items-center gap-2">
+                      <span>{item.originalFilename}</span>
+                      {item.verificationStatus !== "verified" ? (
+                        <>
+                          <ReplaceDocumentButton reference={reference} document={item} />
+                          <button type="button" className="text-xs text-danger underline" onClick={() => void remove.mutateAsync({ reference, documentId: item.id })}>Remove</button>
+                        </>
+                      ) : null}
+                    </span>
+                  ) : application.documents[doc.id]?.name ?? (needed.includes(doc.id) ? t("stRequested") : t("stNotProvided"))}
+                />
+              );
+            })}
           </dl>
         </Card>
 
@@ -228,9 +277,14 @@ export function LoanStatusView({ reference }: { reference: string }) {
                 hint={t("upAdditionalHint")}
                 file={undefined}
                 onChange={(file) => {
-                  if (!file) return;
-                  setExtraOpen(false);
-                  toast.info(`Document ready to upload: ${file.name}`);
+                  if (!(file?.raw instanceof File)) return;
+                  const input = new FormData();
+                  input.set("file", file.raw);
+                  input.set("type", "other");
+                  void upload.mutateAsync({ reference, input }).then(() => {
+                    setExtraOpen(false);
+                    toast.success("Additional document uploaded.");
+                  }).catch((error) => toast.danger(error instanceof Error ? error.message : "Document could not be uploaded."));
                 }}
               />
             ) : (

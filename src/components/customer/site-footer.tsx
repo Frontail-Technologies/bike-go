@@ -3,7 +3,6 @@
 import { MapPinIcon, PhoneIcon } from "@phosphor-icons/react/ssr";
 import Link from "next/link";
 import { Logo } from "@/components/shared/logo";
-import { cities } from "@/features/mock/data";
 import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";
 
@@ -36,12 +35,13 @@ const columns = [
   },
 ] as const;
 
+const pickupCities = ["Phnom Penh", "Siem Reap", "Sihanoukville"] as const;
+
 const linkClass =
   "inline-flex min-h-8 items-center rounded-control text-sm leading-6 text-ink/75 outline-none transition-colors duration-150 hover:text-ink focus-visible:ring-2 focus-visible:ring-ink";
 
 export function SiteFooter({ className }: { className?: string }) {
   const t = useTranslations("nav");
-  const places = useTranslations("places");
 
   return (
     <footer data-site-footer className={cn("hidden border-t border-line bg-surface md:block", className)}>
@@ -49,9 +49,9 @@ export function SiteFooter({ className }: { className?: string }) {
         <div className="flex flex-col gap-3">
           <Logo className="-ml-1 self-start" />
           <p className="max-w-xs text-sm leading-6 text-ink/75">{t("tagline")}</p>
-          <a href="tel:+911800000000" className={cn(linkClass, "gap-2 self-start font-semibold text-ink")}>
+          <a href="tel:+85512234567" className={cn(linkClass, "gap-2 self-start font-semibold text-ink")}>
             <PhoneIcon size={18} />
-            1800 000 000
+            +855 12 234 567
           </a>
         </div>
 
@@ -73,10 +73,10 @@ export function SiteFooter({ className }: { className?: string }) {
         <div>
           <h2 className="mb-2 text-sm leading-6 font-bold">{t("pickupCities")}</h2>
           <ul className="flex flex-col">
-            {cities.map((city) => (
+            {pickupCities.map((city) => (
               <li key={city} className="flex min-h-8 items-center gap-2 text-sm leading-6 text-ink/75">
                 <MapPinIcon size={16} weight="fill" className="shrink-0" />
-                {places(`cities.${city}`)}
+                {city}
               </li>
             ))}
           </ul>

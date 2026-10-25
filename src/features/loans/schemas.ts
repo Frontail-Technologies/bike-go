@@ -88,4 +88,4 @@ export const loanDetailsOf = (d: LoanDraft) => ({ loanType: d.loanType, amount: 
 export const loanStepValid = (d: LoanDraft) => loanDetailsSchema(keyOnly).safeParse(loanDetailsOf(d)).success;
 export const personalStepValid = (d: LoanDraft) => personalSchema(keyOnly).safeParse(d.applicant).success;
 export const employmentStepValid = (d: LoanDraft) => employmentSchema(keyOnly).safeParse(d.employment).success;
-export const documentsStepValid = (d: LoanDraft) => documentTypes.every((doc) => Boolean(d.documents[doc.id]));
+export const documentsStepValid = (d: LoanDraft) => documentTypes.every((doc) => d.documents[doc.id]?.raw instanceof File);

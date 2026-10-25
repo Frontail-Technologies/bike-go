@@ -4,10 +4,11 @@ import { CalendarBlankIcon, ClockIcon } from "@phosphor-icons/react";
 import type { DateValue } from "@internationalized/date";
 import { DateRangeCalendar, type DateRange } from "@/components/ui/date-range-calendar";
 import { AppSelect } from "@/components/ui/select";
-import { timeSlots } from "@/features/mock/data";
 import { useToday } from "@/hooks/use-today";
 import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";
+
+const timeSlots = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"].map((time) => ({ id: time, label: time }));
 
 export type RentalSelection = {
   range: DateRange | null;

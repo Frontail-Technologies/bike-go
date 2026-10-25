@@ -11,11 +11,12 @@ type Step = { title: string; detail: string; notes: string[]; state: StepState }
 
 const formatWhen = (iso: string) => formatDay(iso.slice(0, 10));
 
-const stageOf: Record<LoanStatus, number> = { submitted: 0, "documents-required": 1, "in-review": 1, approved: 3, rejected: 3 };
+const stageOf: Record<LoanStatus, number> = { submitted: 0, "documents-required": 1, "in-review": 1, "eligibility-review": 2, approved: 3, rejected: 3 };
 
 const position: Record<LoanStatus, { stage: number; state: StepState }> = {
   submitted: { stage: 1, state: "current" },
   "in-review": { stage: 2, state: "current" },
+  "eligibility-review": { stage: 2, state: "current" },
   "documents-required": { stage: 1, state: "attention" },
   approved: { stage: 3, state: "done" },
   rejected: { stage: 3, state: "rejected" },

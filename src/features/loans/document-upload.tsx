@@ -31,6 +31,9 @@ export function DocumentUpload({ label, hint, file, onChange, doc, requested }: 
   const t = useTranslations("loans");
   const [error, setError] = useState<string | null>(null);
   const Icon = doc ? icons[doc] : IdentificationCardIcon;
+  // Browser File objects cannot survive sessionStorage serialization. Keep the
+  // draft metadata, but require a fresh file selection after a page reload.
+  const selected = file?.raw instanceof File ? file : undefined;
 
   function pick(files: FileList | null) {
     const picked = files?.[0];
@@ -55,19 +58,19 @@ export function DocumentUpload({ label, hint, file, onChange, doc, requested }: 
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-sm leading-5 font-semibold">{label}</p>
-          {file ? (
+          {selected ? (
             <p className="flex items-center gap-1.5 truncate text-xs text-subtle">
               <CheckCircleIcon aria-label={t("upAdded")} size={14} weight="fill" className="shrink-0 text-[#15803d]" />
               <span className="truncate" data-testid="file-name">
-                {file.name}
+                {selected.name}
               </span>
-              <span className="tabular shrink-0">· {formatSize(file.size)}</span>
+              <span className="tabular shrink-0">· {formatSize(selected.size)}</span>
             </p>
           ) : (
             <p className="text-xs leading-4 text-subtle">{hint}</p>
           )}
         </div>
-        {file ? (
+        {selected ? (
           <button
             type="button"
             aria-label={t("upRemove", { label })}

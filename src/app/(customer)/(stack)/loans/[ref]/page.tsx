@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { BlockSkeleton } from "@/components/ui/skeleton";
 import { LoanStatusView } from "@/features/loans/status-view";
+import { CustomerAuthBoundary } from "@/features/auth/customer-auth-boundary";
 
 export const metadata: Metadata = { title: "Application status" };
 
@@ -22,7 +23,7 @@ export default function LoanStatusPage({ params }: { params: Promise<{ ref: stri
   return (
     <Suspense fallback={<StatusSkeleton />}>
       {params.then(({ ref }) => (
-        <LoanStatusView reference={ref} />
+        <CustomerAuthBoundary><LoanStatusView reference={ref} /></CustomerAuthBoundary>
       ))}
     </Suspense>
   );

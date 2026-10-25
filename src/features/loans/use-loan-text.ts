@@ -33,7 +33,7 @@ export function useLoanText() {
     yesNoLabel: (id: string) => (id === "yes" ? common("yes") : id === "no" ? common("no") : id),
     docLabel: (id: DocumentId) => t(`doc_${id}_label`),
     docHint: (id: DocumentId) => t(`doc_${id}_hint`),
-    status: (status: LoanStatus, part: "label" | "summary" | "headline") => t(`status_${camel(status)}_${part}`),
+    status: (status: LoanStatus, part: "label" | "summary" | "headline") => t(`status_${camel(status === "eligibility-review" ? "in-review" : status)}_${part}`),
     note: (note: string) => {
       const key = NOTES[note];
       if (key) return t(key);
