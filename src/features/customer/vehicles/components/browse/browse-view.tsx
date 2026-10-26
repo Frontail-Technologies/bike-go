@@ -215,9 +215,8 @@ export function BrowseView() {
               <EmptyState
                 icon={<MagnifyingGlassIcon size={24} />}
                 title={t("noMatchTitle")}
-                description={t("noMatchText")}
                 action={
-                  <Button size="sm" onPress={() => vehicles.isError ? vehicles.refetch() : update(DEFAULT_BROWSE)}>
+                  <Button variant="outline" size="sm" onPress={() => vehicles.isError ? vehicles.refetch() : update(DEFAULT_BROWSE)}>
                     {t("resetFilters")}
                   </Button>
                 }

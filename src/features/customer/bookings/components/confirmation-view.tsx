@@ -31,8 +31,7 @@ export function ConfirmationView({ reference }: { reference: string }) {
       <EmptyState
         icon={<MapPinIcon size={24} />}
         title={t("notFound")}
-        description={t("notFoundConfirmation")}
-        action={<ButtonLink href="/bookings" size="sm">{t("myBookings")}</ButtonLink>}
+        action={<ButtonLink href="/bookings" variant="outline" size="sm">{t("myBookings")}</ButtonLink>}
       />
         </Screen>
       </>

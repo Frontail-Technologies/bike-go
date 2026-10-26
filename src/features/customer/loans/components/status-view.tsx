@@ -107,9 +107,8 @@ export function LoanStatusView({ reference }: { reference: string }) {
           <EmptyState
             icon={<FileMagnifyingGlassIcon size={24} />}
             title={t("stNotFound")}
-            description={t("stNotFoundText")}
             action={
-              <ButtonLink href="/loans" size="sm">
+              <ButtonLink href="/loans" variant="outline" size="sm">
                 {t("stBack")}
               </ButtonLink>
             }

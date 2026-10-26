@@ -14,6 +14,7 @@ import { BookingCard } from "./booking-card";
 import type { CustomerBooking } from "../types";
 import { useBookingsQuery } from "../hooks/use-bookings";
 import { apiBookingToView } from "../lib/booking-mapper";
+import { BrandLoader } from "@/components/customer/brand-loader";
 
 const tabs = [
   { id: "upcoming", label: "tabUpcoming", empty: "emptyUpcoming" },
@@ -45,9 +46,9 @@ export function BookingsView() {
   const list = sortByStart(all.map((item) => item.booking), selected !== "upcoming");
   const total = bookings.data?.meta.total ?? 0;
   const content = bookings.isPending ? (
-    <p className="py-12 text-center text-sm text-subtle" role="status">Loading bookings…</p>
+    <BrandLoader className="min-h-64" />
   ) : list.length === 0 ? (
-    <EmptyState icon={<CalendarXIcon size={24} />} title={t(tabs.find((tab) => tab.id === selected)!.empty)} description={t("emptyText")} action={<ButtonLink href="/bikes" size="sm">{t("browseBikes")}</ButtonLink>} />
+    <EmptyState icon={<CalendarXIcon size={24} />} title={t(tabs.find((tab) => tab.id === selected)!.empty)} action={<ButtonLink href="/bikes" variant="outline" size="sm">{t("browseBikes")}</ButtonLink>} />
   ) : (
     <div className="flex flex-col gap-5">
       <AnimatedGrid className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">

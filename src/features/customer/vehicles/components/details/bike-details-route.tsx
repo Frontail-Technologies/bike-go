@@ -12,7 +12,7 @@ export function BikeDetailsRoute({ id }: { id: string }) {
   const vehicle = useVehicleQuery(id);
   if (vehicle.isPending) return <BikeDetailsSkeleton />;
   if (vehicle.isError || !vehicle.data) {
-    return <main className="mx-auto flex min-h-[60dvh] max-w-lg items-center px-page"><EmptyState icon={<MotorcycleIcon size={24} />} title="Vehicle unavailable" description={vehicle.error instanceof Error ? vehicle.error.message : "This vehicle could not be found."} action={<Button onPress={() => vehicle.refetch()}>Try again</Button>} /></main>;
+    return <main className="mx-auto flex min-h-[60dvh] max-w-lg items-center px-page"><EmptyState icon={<MotorcycleIcon size={24} />} title="Vehicle unavailable" action={<Button variant="outline" onPress={() => vehicle.refetch()}>Try again</Button>} /></main>;
   }
   return <BikeDetailsView bike={vehicleToMotorcycle(vehicle.data)} location={vehicle.data.location} />;
 }

@@ -29,9 +29,8 @@ export function ApplicationsView() {
           <EmptyState
             icon={<BankIcon size={28} />}
             title={t("applicationsEmptyTitle")}
-            description={t("applicationsEmptyText")}
             action={
-              <ButtonLink href="/loans/apply" size="lg">
+              <ButtonLink href="/loans/apply" variant="outline" size="lg">
                 {t("applyForLoan")}
               </ButtonLink>
             }

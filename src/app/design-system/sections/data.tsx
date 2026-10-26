@@ -70,8 +70,7 @@ export function DataSection() {
           <EmptyState
             icon={<MotorcycleIcon size={24} weight="fill" />}
             title="No bookings yet"
-            description="Pick a bike and your upcoming rides will show up here."
-            action={<Button size="sm">Browse bikes</Button>}
+            action={<Button variant="outline" size="sm">Browse bikes</Button>}
           />
         </Demo>
       </div>
