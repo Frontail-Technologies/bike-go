@@ -28,7 +28,7 @@ export function MotorcycleGallery({ bike, className, bleed = false }: Motorcycle
         className={bleed ? "max-md:rounded-none" : undefined}
         aspectClassName={bleed ? "max-md:aspect-[5/4] md:aspect-4/3" : undefined}
         slides={slides.map((i) => (
-          <div key={i} className="flex size-full items-center justify-center bg-canvas p-4">
+          <div key={i} className="relative size-full overflow-hidden bg-canvas">
             <BikeImage bike={bike} index={i} sizes="(min-width: 1024px) 50vw, 100vw" priority={i === 0} />
           </div>
         ))}
