@@ -1,6 +1,6 @@
 "use client";
 
-import { HeartIcon, StarIcon } from "@phosphor-icons/react";
+import { GasPumpIcon, GaugeIcon, HeartIcon, StarIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { PriceDisplay } from "@/components/customer/price-display";
 import { InteractiveCard } from "@/components/motion/interactive-card";
@@ -53,6 +53,16 @@ export function MotorcycleCard({ bike, href, className }: MotorcycleCardProps) {
         ) : (
           title
         )}
+        <ul className="flex flex-wrap gap-1.5 text-[11px] text-ink">
+          <li className="flex items-center gap-1 rounded-full bg-surface-secondary px-2 py-0.5">
+            <GaugeIcon size={12} />
+            {bike.engineCc}cc
+          </li>
+          <li className="flex items-center gap-1 rounded-full bg-surface-secondary px-2 py-0.5">
+            <GasPumpIcon size={12} />
+            {bike.mileageKmpl} km/l
+          </li>
+        </ul>
         <PriceDisplay amount={bike.pricePerDay} size="sm" accent />
         {bike.reviews > 0 ? <span className="tabular flex items-center gap-1 text-xs font-medium text-subtle">
           <StarIcon size={14} weight="fill" className="text-brand" />
