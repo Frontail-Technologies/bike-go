@@ -24,8 +24,8 @@ export function MotorcycleCard({ bike, href, className }: MotorcycleCardProps) {
   const title = <h3 className="line-clamp-2 min-h-10 text-sm leading-5 font-bold">{bike.name}</h3>;
 
   return (
-    <InteractiveCard as="article" glare className={cn("flex h-full flex-col gap-3 p-3", className)}>
-      <div className="relative aspect-4/3 overflow-hidden rounded-control bg-canvas">
+    <InteractiveCard as="article" glare className={cn("flex h-full flex-col gap-0 overflow-hidden p-0", className)}>
+      <div className="relative aspect-4/3 overflow-hidden bg-canvas">
         <BikeImage bike={bike} sizes="(min-width: 1024px) 25vw, 50vw" />
         {!bike.available ? (
           <span className="absolute bottom-2 left-2 rounded-full bg-ink/85 px-2.5 py-1 text-[11px] font-semibold text-white">
@@ -42,7 +42,7 @@ export function MotorcycleCard({ bike, href, className }: MotorcycleCardProps) {
           className="absolute top-1 right-1 z-10 bg-surface/80 backdrop-blur-sm"
         />
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1 p-3">
         {target ? (
           <Link
             href={target}

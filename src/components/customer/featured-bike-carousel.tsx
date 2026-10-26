@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { PriceDisplay } from "@/components/customer/price-display";
 import { BikeImage } from "@/components/shared/bike-image";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { Motorcycle } from "@/features/customer/vehicles/lib/view-model";
 import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";
@@ -16,6 +17,37 @@ type FeaturedBikeCarouselProps = {
   className?: string;
   bleed?: boolean;
 };
+
+export function FeaturedBikeCarouselSkeleton({ className, bleed = false }: Pick<FeaturedBikeCarouselProps, "className" | "bleed">) {
+  return (
+    <div aria-hidden className={cn("flex flex-col gap-4", bleed && "-mx-(--page-padding)", className)}>
+      <div className="overflow-hidden">
+        <div className={cn("flex touch-pan-y", bleed ? "ml-[calc(var(--page-padding)-0.75rem)] pr-(--page-padding)" : "-ml-3")}>
+          {Array.from({ length: 3 }, (_, index) => (
+            <div key={index} className="min-w-0 flex-[0_0_82%] pl-3 sm:flex-[0_0_46%] lg:flex-[0_0_32%]">
+              <article className="flex h-full flex-col overflow-hidden rounded-card border border-line bg-surface p-4 shadow-card">
+                <Skeleton className="aspect-4/3 w-full rounded-control" />
+                <div className="mt-4 flex flex-col gap-3">
+                  <Skeleton className="h-5 w-3/4 rounded-full" />
+                  <Skeleton className="h-7 w-2/3 rounded-full" />
+                  <div className="flex items-center justify-between gap-3 pt-1">
+                    <Skeleton className="h-6 w-20 rounded-full" />
+                    <Skeleton className="h-11 w-16 rounded-control" />
+                  </div>
+                </div>
+              </article>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="flex h-6 items-center justify-center gap-1.5">
+        <Skeleton className="h-1.5 w-5 rounded-full" />
+        <Skeleton className="size-1.5 rounded-full" />
+        <Skeleton className="size-1.5 rounded-full" />
+      </div>
+    </div>
+  );
+}
 
 export function FeaturedBikeCarousel({ bikes, hrefFor = (bike) => `/bikes/${bike.id}`, className, bleed = false }: FeaturedBikeCarouselProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({ align: "start", containScroll: "trimSnaps" });
@@ -67,7 +99,7 @@ export function FeaturedBikeCarousel({ bikes, hrefFor = (bike) => `/bikes/${bike
               >
                 <article className="flex h-full flex-col overflow-hidden rounded-card border border-line bg-surface shadow-card">
                   <div
-                    className="aspect-4/3 bg-canvas p-4"
+                    className="relative aspect-4/3 overflow-hidden bg-canvas"
                     style={{ background: `radial-gradient(70% 70% at 50% 60%, ${bike.color}2e, var(--color-canvas) 78%)` }}
                   >
                     <BikeImage bike={bike} sizes="(min-width: 1024px) 33vw, 82vw" />
