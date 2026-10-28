@@ -1,7 +1,10 @@
 "use client";
 
-import { CalendarXIcon } from "@phosphor-icons/react";
+import { BellIcon, CalendarXIcon } from "@phosphor-icons/react";
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { AnimatedGrid } from "@/components/motion/animated-grid";
 import { AppBar } from "@/components/shared/app-bar";
 import { DesktopTitle, Screen } from "@/components/shared/screen";
@@ -15,6 +18,8 @@ import type { CustomerBooking } from "../types";
 import { useBookingsQuery } from "../hooks/use-bookings";
 import { apiBookingToView } from "../lib/booking-mapper";
 import { BrandLoader } from "@/components/customer/brand-loader";
+import { ApiError } from "@/lib/api/error";
+import { customerAuthKeys } from "@/features/customer/auth/query-keys";
 
 const tabs = [
   { id: "upcoming", label: "tabUpcoming", empty: "emptyUpcoming" },
@@ -29,12 +34,19 @@ function sortByStart(list: CustomerBooking[], desc: boolean) {
 
 export function BookingsView() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const pathname = usePathname();
   const params = useSearchParams();
   const selected = tabs.some((tab) => tab.id === params.get("tab")) ? params.get("tab") as typeof tabs[number]["id"] : "upcoming";
   const page = Math.max(1, Number(params.get("page")) || 1);
   const pageSize = 12;
   const bookings = useBookingsQuery({ page, pageSize, group: selected });
+
+  useEffect(() => {
+    if (bookings.error instanceof ApiError && bookings.error.status === 401) {
+      queryClient.setQueryData(customerAuthKeys.session(), null);
+    }
+  }, [bookings.error, queryClient]);
   const all = (bookings.data?.data ?? []).map((item) => apiBookingToView(item));
   const t = useTranslations("booking");
   const navigate = (tab: typeof selected, nextPage = 1) => {
@@ -63,7 +75,7 @@ export function BookingsView() {
 
   return (
     <>
-      <AppBar title={t("myBookings")} />
+      <AppBar title={t("myBookings")} actions={<Link href="/notifications" aria-label="Notifications" className="flex size-11 items-center justify-center rounded-control outline-none transition-colors hover:bg-surface-secondary focus-visible:ring-2 focus-visible:ring-ink"><BellIcon size={22} /></Link>} />
       <Screen bottom="nav" className="flex flex-col gap-4 md:gap-6">
         <DesktopTitle title={t("myBookings")} />
       <Tabs

@@ -1,11 +1,10 @@
 "use client";
 
 import { ArrowCounterClockwiseIcon, ArrowRightIcon, BankIcon, BellIcon, HeadsetIcon, SealCheckIcon, TimerIcon } from "@phosphor-icons/react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { FeaturedBikeCarousel } from "@/components/customer/featured-bike-carousel";
+import { FeaturedBikeCarousel, FeaturedBikeCarouselSkeleton } from "@/components/customer/featured-bike-carousel";
 import { LocationPicker } from "@/components/customer/location-picker";
 import { MotorcycleCard } from "@/components/customer/motorcycle-card";
 import { RentalDatesButton } from "@/components/customer/rental-dates-button";
@@ -16,14 +15,15 @@ import { AppBar } from "@/components/shared/app-bar";
 import { Screen } from "@/components/shared/screen";
 import { IconButton } from "@/components/ui/button";
 import { AppSearchField } from "@/components/ui/search-field";
-import type { BikeCategory } from "@/features/customer/vehicles/lib/view-model";
-import { useVehiclesQuery } from "@/features/customer/vehicles/hooks/use-vehicles";
+import { BlockSkeleton, MotorcycleCardSkeleton } from "@/components/ui/skeleton";
 import { vehicleToMotorcycle } from "@/features/customer/vehicles/lib/vehicle-mapper";
+import { useCustomerSessionQuery } from "@/features/customer/auth/hooks/use-customer-session-query";
 import { LanguageSwitcher } from "@/components/shared/language-switcher";
 import { useTranslations } from "@/i18n/hooks";
 import { CategoryCircles } from "./category-circles";
-import { HomeBanner } from "./home-banner";
-import { useBannersQuery } from "../hooks/use-banners";
+import { HomeBanner, HomePromoBanner } from "./home-banner";
+import { useHomeQuery } from "../hooks/use-home-query";
+import type { HomeData } from "../types";
 
 const benefits = [
   { Icon: SealCheckIcon, key: "verified" },
@@ -32,16 +32,23 @@ const benefits = [
   { Icon: HeadsetIcon, key: "support" },
 ] as const;
 
-export function HomeView() {
+type HomeViewProps = {
+  initialData: HomeData;
+};
+
+export function HomeView({ initialData }: HomeViewProps) {
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<BikeCategory | null>(null);
   const t = useTranslations("home");
   const common = useTranslations("common");
-  const vehicles = useVehiclesQuery({ page: 1, pageSize: 8, category: category ?? undefined, sort: "newest" });
-  const banners = useBannersQuery({ placement: "home_hero" });
-  const popular = (vehicles.data?.data ?? []).map(vehicleToMotorcycle);
+  const auth = useTranslations("auth");
+  const session = useCustomerSessionQuery();
+  const home = useHomeQuery(initialData);
+  const homeData = home.data;
+  const popular = homeData.popularVehicles.map(vehicleToMotorcycle);
   const featured = popular.slice(0, 6);
+  const isVehicleLoading = home.isLoading && !home.data;
+  const popularGridColumns = popular.length === 6 ? "md:grid-cols-3 lg:grid-cols-3" : "md:grid-cols-4 lg:grid-cols-4";
 
   function search(params: Record<string, string>) {
     const qs = new URLSearchParams(params).toString();
@@ -52,6 +59,7 @@ export function HomeView() {
     <>
       <AppBar leading="logo" actions={
           <>
+            {!session.isPending && !session.data ? <Link href="/signin" className="flex h-10 items-center rounded-control bg-brand px-3 text-sm font-bold text-ink outline-none focus-visible:ring-2 focus-visible:ring-ink">{auth("signIn")}</Link> : null}
             <LanguageSwitcher />
             <IconButton label={common("notifications")} icon={<BellIcon size={24} />} />
           </>
@@ -61,9 +69,8 @@ export function HomeView() {
         <div className="lg:hidden">
           <LocationPicker variant="row" />
         </div>
-        <Reveal y={8} blur={0}>
-          <HomeBanner banner={banners.data?.[0]} />
-        </Reveal>
+        {home.isLoading ? <BlockSkeleton className="h-52 md:h-80 md:rounded-overlay" /> : null}
+        {homeData.heroBanners[0] ? <Reveal y={8} blur={0}><HomeBanner banner={homeData.heroBanners[0]} /></Reveal> : null}
         <div className="flex gap-2">
           <AppSearchField
             value={query}
@@ -77,19 +84,25 @@ export function HomeView() {
         </div>
       </div>
 
-      <CategoryCircles value={category} onChange={setCategory} />
+      <CategoryCircles onSelect={(category) => router.push(`/bikes?category=${encodeURIComponent(category === "sports" ? "sport" : category)}`)} />
 
       <section aria-labelledby="popular" className="flex flex-col gap-3">
-        <SectionHeading id="popular" title={t("popular")} href={category ? `/bikes?category=${category}` : "/bikes"} />
-        <AnimatedGrid
-          key={category ?? "all"}
-          className="-mx-4 flex snap-x snap-mandatory scroll-pl-4 gap-3 overflow-x-auto px-4 pb-1 scrollbar-none md:mx-0 md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:px-0 lg:grid-cols-4"
-          itemClassName="w-[46%] shrink-0 snap-start sm:w-[36%] md:w-auto"
-        >
-          {popular.map((bike) => (
-            <MotorcycleCard key={bike.id} bike={bike} />
-          ))}
-        </AnimatedGrid>
+        <SectionHeading id="popular" title={t("popular")} href="/bikes?sort=popular" />
+        {isVehicleLoading ? (
+          <div aria-busy="true" aria-label="Loading vehicles" className={`-mx-4 flex snap-x snap-mandatory scroll-pl-4 gap-3 overflow-x-auto px-4 pb-1 scrollbar-none md:mx-0 md:grid md:gap-4 md:overflow-visible md:px-0 ${popularGridColumns}`}>
+            {Array.from({ length: 4 }, (_, index) => <MotorcycleCardSkeleton key={index} className="w-[46%] shrink-0 snap-start sm:w-[36%] md:w-auto" />)}
+          </div>
+        ) : (
+          <AnimatedGrid
+            key="popular-vehicles"
+            className={`-mx-4 flex snap-x snap-mandatory scroll-pl-4 gap-3 overflow-x-auto px-4 pb-1 scrollbar-none md:mx-0 md:grid md:gap-4 md:overflow-visible md:px-0 ${popularGridColumns}`}
+            itemClassName="w-[46%] shrink-0 snap-start sm:w-[36%] md:w-auto"
+          >
+            {popular.map((bike) => (
+              <MotorcycleCard key={bike.id} bike={bike} />
+            ))}
+          </AnimatedGrid>
+        )}
       </section>
 
       <Reveal>
@@ -112,26 +125,12 @@ export function HomeView() {
 
       <Reveal>
         <section aria-labelledby="featured" className="flex flex-col gap-4">
-          <SectionHeading id="featured" title={t("featured")} href="/bikes" />
-          <FeaturedBikeCarousel bikes={featured} bleed />
+          <SectionHeading id="featured" title={t("featured")} href="/bikes?sort=popular" />
+          {isVehicleLoading ? <FeaturedBikeCarouselSkeleton bleed /> : <FeaturedBikeCarousel bikes={featured} bleed />}
         </section>
       </Reveal>
 
-      <Reveal>
-        <section aria-label={t("offerAria")} className="relative isolate flex items-center justify-start gap-4 overflow-hidden min-h-36 rounded-overlay bg-brand p-5 text-ink md:min-h-52 md:p-10">
-          <Image src="/hero/offer-banner.jpg" alt="" fill sizes="(min-width: 1280px) 1216px, 100vw" className="-z-10 object-cover object-left md:object-right" />
-          <div>
-            <p className="text-lg font-extrabold md:text-3xl">{t("offerTitle")}</p>
-            <p className="text-sm text-ink/75 md:mt-1 md:text-base">{t("offerText")}</p>
-          </div>
-          <Link
-            href="/bikes"
-            className="flex h-11 shrink-0 items-center rounded-control bg-ink px-4 text-sm md:h-12 md:px-6 md:text-base font-semibold text-white outline-none transition-transform duration-150 focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 active:scale-[0.97] motion-reduce:transition-none"
-          >
-            {common("browse")}
-          </Link>
-        </section>
-      </Reveal>
+      {homeData.promoBanners[0] ? <Reveal><HomePromoBanner banner={homeData.promoBanners[0]} /></Reveal> : null}
 
       <Reveal>
         <section aria-label={t("whyAria")}>

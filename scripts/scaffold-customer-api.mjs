@@ -94,6 +94,7 @@ export function hooksFile(feature) {
     const params = pathParams(operation.path);
     if (operation.kind === "query") {
       const signature = [...params.map((name) => `${name}: string`), ...(operation.queryType ? [`params: ${operation.queryType}`] : [])];
+      if (operation.enabledOption) signature.push("options: { enabled?: boolean } = {}");
       const callArgs = [...params, ...(operation.queryType ? ["params"] : []), "signal"];
       const keyArgs = [...params, ...(operation.queryType ? ["params"] : [])];
       const options = [
@@ -101,6 +102,7 @@ export function hooksFile(feature) {
         `queryFn: ({ signal }) => api.${operation.name}(${callArgs.join(", ")})`,
         operation.paginated ? "placeholderData: keepPreviousData" : null,
         params.length ? `enabled: ${params.map((name) => `Boolean(${name})`).join(" && ")}` : null,
+        operation.enabledOption ? "enabled: options.enabled" : null,
       ].filter(Boolean).join(",\n    ");
       return `export function ${operation.hook}(${signature.join(", ")}) {\n  return useQuery({\n    ${options},\n  });\n}`;
     }

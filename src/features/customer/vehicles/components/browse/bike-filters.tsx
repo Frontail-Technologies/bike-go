@@ -4,12 +4,14 @@ import { ChipGroup } from "@/components/ui/chip-group";
 import { RangeSlider } from "@/components/ui/range-slider";
 import { Switch } from "@/components/ui/selection-controls";
 import { useTranslations } from "@/i18n/hooks";
-import { useMasterItemsQuery } from "@/features/customer/master-data/hooks/use-master-data";
+import type { VehicleFilterMasters } from "../../api/vehicle-filter-server-data";
+import { useVehicleFilterMasters } from "../../hooks/use-vehicle-filter-masters";
 import { DEFAULT_FILTERS, type EngineBand, type Filters, PRICE_MAX, PRICE_MIN, engineBands } from "../../lib/filters";
 
 type BikeFiltersProps = {
   value: Filters;
   onChange: (value: Filters) => void;
+  initialMasters: VehicleFilterMasters;
 };
 
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
@@ -21,12 +23,10 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
   );
 }
 
-export function BikeFilters({ value, onChange }: BikeFiltersProps) {
+export function BikeFilters({ value, onChange, initialMasters }: BikeFiltersProps) {
   const t = useTranslations("browse");
   const set = <K extends keyof Filters>(key: K, next: Filters[K]) => onChange({ ...value, [key]: next });
-  const categories = useMasterItemsQuery("vehicle_category");
-  const brands = useMasterItemsQuery("brand");
-  const transmissions = useMasterItemsQuery("transmission");
+  const { categories, brands, transmissions } = useVehicleFilterMasters(initialMasters);
 
   return (
     <div className="flex flex-col gap-6">

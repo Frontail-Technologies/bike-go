@@ -10,16 +10,17 @@ type BikeImageProps = {
   sizes?: string;
   priority?: boolean;
   decorative?: boolean;
+  imageClassName?: string;
 };
 
-export function BikeImage({ bike, index = 0, className, sizes = "(min-width: 1024px) 33vw, 100vw", priority, decorative }: BikeImageProps) {
+export function BikeImage({ bike, index = 0, className, imageClassName, sizes = "(min-width: 1024px) 33vw, 100vw", priority, decorative }: BikeImageProps) {
   const photo = bike.images[index];
   const alt = decorative ? "" : bike.name;
 
   if (photo) {
     return (
       <div className={cn("relative size-full", className)}>
-        <Image src={photo} alt={alt} fill sizes={sizes} priority={priority} unoptimized className="object-cover" />
+        <Image src={photo} alt={alt} fill sizes={sizes} priority={priority} unoptimized className={cn("object-cover", imageClassName)} />
       </div>
     );
   }

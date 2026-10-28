@@ -13,6 +13,8 @@ export type CustomerProfile = {
   providers: string[];
   profileComplete: boolean;
   missingFields: string[];
+  licence: { number: string; frontImageUrl: string; backImageUrl: string } | null;
 };
 
 export type CustomerProfileUpdate = Partial<Pick<CustomerProfile, "fullName" | "phone" | "dateOfBirth" | "nationality" | "address" | "city">>;
+export type CustomerLicenceInput = { number: string; front?: File; back?: File };

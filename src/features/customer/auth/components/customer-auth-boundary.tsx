@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
+import { BrandLoader } from "@/components/customer/brand-loader";
 import { useCustomerSessionQuery } from "../hooks/use-customer-session-query";
 
 export function CustomerAuthBoundary({ children }: { children: ReactNode }) {
@@ -16,8 +17,10 @@ export function CustomerAuthBoundary({ children }: { children: ReactNode }) {
     }
   }, [pathname, router, session.data, session.isPending]);
 
+  // Keep already-hydrated content visible during a background refresh. Blocking
+  // on `isFetching` here caused a full-page loader on ordinary client navigation.
   if (session.isPending || !session.data) {
-    return <div className="flex min-h-[40dvh] items-center justify-center" role="status" aria-live="polite"><span className="text-sm text-subtle">Checking your session…</span></div>;
+    return <BrandLoader />;
   }
 
   return children;

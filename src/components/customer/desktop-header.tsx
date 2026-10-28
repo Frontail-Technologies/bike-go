@@ -1,6 +1,7 @@
 "use client";
 
 import { BellIcon } from "@phosphor-icons/react";
+import { Avatar } from "@heroui/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LocationPicker } from "@/components/customer/location-picker";
@@ -11,10 +12,11 @@ import {
 } from "@/components/motion/animated-selection";
 import { LanguageSwitcher } from "@/components/shared/language-switcher";
 import { Logo } from "@/components/shared/logo";
-import { IconButton } from "@/components/ui/button";
 import { useOptimisticNav } from "@/hooks/use-optimistic-nav";
 import { useTranslations } from "@/i18n/hooks";
-import { initials, profileStore } from "@/features/customer/profile/stores/preferences-store";
+import { useCustomerSessionQuery } from "@/features/customer/auth/hooks/use-customer-session-query";
+import { useCustomerProfileQuery } from "@/features/customer/profile/hooks/use-profile";
+import { initials } from "@/features/customer/profile/stores/preferences-store";
 import { cn } from "@/lib/cn";
 
 const RADIUS = 12;
@@ -22,9 +24,13 @@ const RADIUS = 12;
 export function CustomerHeader({ className }: { className?: string }) {
   const pathname = usePathname();
   const { current, navigate } = useOptimisticNav(pathname);
-  const profile = profileStore.useValue();
+  const session = useCustomerSessionQuery();
+  const profile = useCustomerProfileQuery({ enabled: Boolean(session.data) });
+  const customerName = profile.data?.fullName?.trim() || session.data?.user.name?.trim() || session.data?.user.email || null;
+  const avatarUrl = profile.data?.avatarUrl || session.data?.user.image || null;
   const t = useTranslations("nav");
   const common = useTranslations("common");
+  const auth = useTranslations("auth");
 
   return (
     <header
@@ -71,16 +77,21 @@ export function CustomerHeader({ className }: { className?: string }) {
         <div className="ml-auto flex items-center gap-1">
           <LocationPicker className="hidden lg:inline-flex" />
           <LanguageSwitcher variant="compact" />
-          <IconButton label={common("notifications")} icon={<BellIcon size={24} />} />
-          <Link
-            href="/profile"
-            aria-label={t("yourProfile")}
-            className="hidden size-11 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ink md:flex"
-          >
-            <span className="flex size-9 items-center justify-center rounded-full bg-ink text-xs font-bold text-white">
-              {initials(profile.name)}
-            </span>
+          <Link href="/notifications" aria-label={common("notifications")} className="flex size-11 items-center justify-center rounded-control outline-none transition-colors hover:bg-surface-secondary focus-visible:ring-2 focus-visible:ring-ink">
+            <BellIcon size={24} />
           </Link>
+          {session.data ? (
+            <Link href="/profile" aria-label={t("yourProfile")} className="hidden size-11 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ink md:flex">
+              <Avatar size="sm">
+                {avatarUrl ? <Avatar.Image src={avatarUrl} alt="" referrerPolicy="no-referrer" /> : null}
+                <Avatar.Fallback className="bg-ink text-xs font-bold text-white">{customerName ? initials(customerName) : "?"}</Avatar.Fallback>
+              </Avatar>
+            </Link>
+          ) : (
+            <Link href="/signin" className="hidden h-10 items-center rounded-control bg-brand px-4 text-sm font-bold text-ink outline-none transition-transform focus-visible:ring-2 focus-visible:ring-ink active:scale-[0.97] md:flex">
+              {auth("signIn")}
+            </Link>
+          )}
         </div>
       </div>
     </header>

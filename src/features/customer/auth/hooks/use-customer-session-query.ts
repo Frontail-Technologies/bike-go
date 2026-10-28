@@ -11,6 +11,10 @@ export function useCustomerSessionQuery() {
     queryFn: customerAuthApi.session,
     staleTime: 60_000,
     retry: false,
+    // Customer route layouts hydrate this query from the request cookie. Let the
+    // normal stale-time policy refresh it instead of requesting the session again
+    // every time a protected page mounts.
+    refetchOnMount: true,
   });
 }
 

@@ -1,4 +1,4 @@
-"use client";
+ "use client";
 
 import { AdminChartCard, MetricBarChart, RevenueTrendChart, StatusDonutChart } from "@/components/admin/charts";
 import type { MetricPoint, RevenueTrendPoint, StatusMetric } from "@/components/admin/data";

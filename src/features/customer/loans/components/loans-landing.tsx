@@ -29,6 +29,7 @@ import { Screen } from "@/components/shared/screen";
 import { IconButton } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { useTranslations } from "@/i18n/hooks";
+import type { PublicBanner } from "@/features/customer/home/types";
 import { type DocumentId, documentTypes } from "../lib/data";
 import { LoanCalculator } from "./loan-calculator";
 import { LoanOptionsCarousel } from "./loan-options-carousel";
@@ -64,7 +65,7 @@ function Heading({ id, title }: { id: string; title: string }) {
   );
 }
 
-export function LoansLanding() {
+export function LoansLanding({ banner }: { banner?: PublicBanner }) {
   const t = useTranslations("loans");
   const common = useTranslations("common");
   const { docLabel } = useLoanText();
@@ -83,14 +84,7 @@ export function LoansLanding() {
           aria-label={t("overviewAria")}
           className="relative isolate overflow-hidden rounded-b-[32px] bg-ink text-white md:rounded-overlay"
         >
-          <Image
-            src="/hero/home-banner.jpg"
-            alt=""
-            fill
-            priority
-            sizes="(min-width: 1280px) 1216px, 100vw"
-            className="-z-20 object-cover object-[78%_top]"
-          />
+          {banner ? <Image src={banner.imageUrl} alt="" fill priority unoptimized sizes="(min-width: 1280px) 1216px, 100vw" className="-z-20 object-cover object-[78%_top]" /> : null}
           <div
             aria-hidden
             className="absolute inset-0 -z-10 bg-linear-to-t from-ink via-ink/85 to-ink/10 md:bg-linear-to-r md:from-ink md:via-ink/80 md:to-transparent"
@@ -98,10 +92,10 @@ export function LoansLanding() {
           <div className="flex min-h-104 flex-col justify-end gap-3 px-6 pt-40 pb-8 md:min-h-96 md:max-w-xl md:justify-center md:p-12">
             <p className="text-sm font-bold text-brand">{t("eyebrow")}</p>
             <h1 className="max-w-md text-[2rem] leading-[1.1] font-extrabold tracking-tight md:text-5xl">
-              {t("heroTitle")}
+              {banner?.title ?? t("heroTitle")}
             </h1>
             <p className="max-w-md text-sm text-white/80 md:text-base">
-              {t("heroText")}
+              {banner?.subtitle ?? t("heroText")}
             </p>
             <div className="mt-2 flex max-w-sm flex-col gap-3 md:flex-row">
               <ButtonLink href="/loans/apply" size="lg" fullWidth>
@@ -286,7 +280,7 @@ export function LoansLanding() {
             className="flex flex-col gap-3"
           >
             <Heading id="faq" title={t("faqTitle")} />
-            <Accordion className="w-full rounded-card border border-line bg-surface px-4 shadow-card">
+            <Accordion aria-label={t("faqTitle")} className="w-full rounded-card border border-line bg-surface px-4 shadow-card">
               {faqs.map((item) => (
                 <Accordion.Item key={item} id={item}>
                   <Accordion.Heading>

@@ -13,23 +13,23 @@ import { ButtonLink } from "@/components/ui/button-link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { AppSearchField } from "@/components/ui/search-field";
 import { MotorcycleCardSkeleton } from "@/components/ui/skeleton";
-import { Tabs } from "@/components/ui/tabs";
 import { Pagination } from "@/components/ui/pagination";
 import { useTranslations } from "@/i18n/hooks";
 import { favoritesStore } from "@/features/customer/profile/stores/preferences-store";
 import { useVehiclesQuery } from "@/features/customer/vehicles/hooks/use-vehicles";
 import { vehicleToMotorcycle } from "@/features/customer/vehicles/lib/vehicle-mapper";
-import { useMasterItemsQuery } from "@/features/customer/master-data/hooks/use-master-data";
 import { cambodiaRentalRange } from "@/lib/cambodia-time";
 import { BikeFilters } from "./bike-filters";
 import { DEFAULT_BROWSE, browseStore } from "../../stores/browse-store";
-import { DEFAULT_FILTERS, activeFilterCount } from "../../lib/filters";
+import { DEFAULT_FILTERS, activeFilterCount, sortOptions, type SortKey } from "../../lib/filters";
 import { SearchDialog } from "./search-dialog";
 import { SortControl } from "./sort-control";
+import type { VehicleFilterMasters } from "../../api/vehicle-filter-server-data";
 
 const gridClass = "grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4";
+const isSortKey = (value: string | null): value is SortKey => sortOptions.some((option) => option.id === value);
 
-export function BrowseView() {
+export function BrowseView({ initialMasters }: { initialMasters: VehicleFilterMasters }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -40,24 +40,34 @@ export function BrowseView() {
   const [searchOpen, setSearchOpen] = useState(false);
   const t = useTranslations("browse");
   const common = useTranslations("common");
-  const deferredQuery = useDeferredValue(query.trim());
-  const categoryOptions = useMasterItemsQuery("vehicle_category");
-  const engine = filters.engine[0];
-  const range = dates ? cambodiaRentalRange(dates.start, dates.end) : {};
+  const requestedCategory = params.get("category");
+  const requestedQuery = params.get("q");
+  const requestedStart = params.get("start");
+  const requestedEnd = params.get("end");
+  const requestedSort = params.get("sort");
+  // Use URL state during the first client render so a deep link never waits
+  // for the persisted filter store to hydrate before requesting its results.
+  const activeFilters = requestedCategory ? { ...filters, category: requestedCategory } : filters;
+  const activeQuery = requestedQuery ?? query;
+  const activeDates = requestedStart && requestedEnd ? { start: requestedStart, end: requestedEnd } : dates;
+  const activeSort = isSortKey(requestedSort) ? requestedSort : sort;
+  const deferredQuery = useDeferredValue(activeQuery.trim());
+  const engine = activeFilters.engine[0];
+  const range = activeDates ? cambodiaRentalRange(activeDates.start, activeDates.end) : {};
   const vehicles = useVehiclesQuery({
     page,
     pageSize: saved ? 100 : 24,
     q: deferredQuery || undefined,
-    category: filters.category === "all" ? undefined : filters.category,
-    brand: filters.brands.length ? filters.brands : undefined,
-    transmission: filters.transmission.length ? filters.transmission : undefined,
-    minPrice: filters.price[0] * 100,
-    maxPrice: filters.price[1] * 100,
+    category: activeFilters.category === "all" ? undefined : activeFilters.category,
+    brand: activeFilters.brands.length ? activeFilters.brands : undefined,
+    transmission: activeFilters.transmission.length ? activeFilters.transmission : undefined,
+    minPrice: activeFilters.price[0] * 100,
+    maxPrice: activeFilters.price[1] * 100,
     minEngineCc: engine === "200-400" ? 200 : engine === "over-400" ? 401 : undefined,
     maxEngineCc: engine === "under-200" ? 199 : engine === "200-400" ? 400 : undefined,
-    availableOnly: filters.availableOnly || undefined,
+    availableOnly: activeFilters.availableOnly || undefined,
     ...range,
-    sort: sort === "price-asc" ? "price_asc" : sort === "price-desc" ? "price_desc" : sort === "popular" ? "newest" : "name",
+    sort: activeSort === "price-asc" ? "price_asc" : activeSort === "price-desc" ? "price_desc" : activeSort === "popular" ? "newest" : "name",
   });
 
   useEffect(() => {
@@ -65,12 +75,14 @@ export function BrowseView() {
     const q = params.get("q");
     const start = params.get("start");
     const end = params.get("end");
-    if (!category && !q && !(start && end)) return;
+    const requestedSortParam = params.get("sort");
+    if (!category && !q && !(start && end) && !isSortKey(requestedSortParam)) return;
     browseStore.update((s) => ({
       ...s,
       query: q ?? s.query,
       filters: { ...s.filters, category: category ?? s.filters.category },
       dates: start && end ? { start, end } : s.dates,
+      sort: isSortKey(requestedSortParam) ? requestedSortParam : s.sort,
     }));
   }, []);
 
@@ -114,7 +126,7 @@ export function BrowseView() {
                 </span>
               ) : null}
             </span>
-            <SortControl value={sort} onChange={(next) => update({ sort: next })} iconOnly />
+            <SortControl value={activeSort} onChange={(next) => update({ sort: next })} iconOnly />
           </>
         }
       />
@@ -171,15 +183,6 @@ export function BrowseView() {
             ) : null}
           </ButtonLink>
         </div>
-        <div className="hidden md:block">
-          <Tabs
-            aria-label={t("categoryAria")}
-            selectedKey={filters.category}
-            onSelectionChange={(category) => update({ filters: { ...filters, category } })}
-            items={[{ id: "all", label: t("cat_all") }, ...(categoryOptions.data ?? []).map((item) => ({ id: item.code, label: item.name }))]}
-          />
-        </div>
-
         <div className="flex items-start gap-8">
           <aside aria-label={t("filters")} className="sticky top-24 hidden w-72 shrink-0 rounded-card border border-line bg-surface p-5 shadow-card lg:block">
             <div className="mb-5 flex items-center justify-between">
@@ -188,7 +191,7 @@ export function BrowseView() {
                 {common("reset")}
               </Button>
             </div>
-            <BikeFilters value={filters} onChange={(next) => update({ filters: next })} />
+            <BikeFilters value={filters} onChange={(next) => update({ filters: next })} initialMasters={initialMasters} />
           </aside>
 
           <section aria-label={t("resultsAria")} className="flex min-w-0 flex-1 flex-col gap-4">
@@ -201,7 +204,7 @@ export function BrowseView() {
                   onChange={(start, end) => update({ dates: { start, end } })}
                   triggerProps={{ size: "sm" }}
                 />
-                <SortControl value={sort} onChange={(next) => update({ sort: next })} />
+                <SortControl value={activeSort} onChange={(next) => update({ sort: next })} />
               </div>
             </div>
 
@@ -222,7 +225,7 @@ export function BrowseView() {
                 }
               />
             ) : (
-              <AnimatedGrid key={`${filters.category}-${sort}-${results.length}`} className={`${gridClass} lg:grid-cols-3`}>
+              <AnimatedGrid key={`${activeFilters.category}-${activeSort}-${results.length}`} className={`${gridClass} lg:grid-cols-3`}>
                 {results.map((bike) => (
                   <MotorcycleCard key={bike.id} bike={bike} />
                 ))}

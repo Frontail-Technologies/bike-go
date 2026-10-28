@@ -13,16 +13,23 @@ type ModalDialogProps = {
   size?: "xs" | "sm" | "md" | "lg";
   placement?: "auto" | "top" | "center" | "bottom";
   className?: string;
+  /** Keep a remote mutation dialog open until its request settles. */
+  isPending?: boolean;
 };
 
-export function ModalDialog({ isOpen, onOpenChange, title, children, footer, size = "sm", placement, className }: ModalDialogProps) {
-  useBackToClose(isOpen, () => onOpenChange(false));
+export function ModalDialog({ isOpen, onOpenChange, title, children, footer, size = "sm", placement, className, isPending = false }: ModalDialogProps) {
+  useBackToClose(isOpen && !isPending, () => onOpenChange(false));
 
   return (
-    <Modal.Backdrop isOpen={isOpen} onOpenChange={onOpenChange}>
+    <Modal.Backdrop
+      isOpen={isOpen}
+      onOpenChange={onOpenChange}
+      isDismissable={!isPending}
+      isKeyboardDismissDisabled={isPending}
+    >
       <Modal.Container size={size} placement={placement}>
         <Modal.Dialog className={cn("gap-4", className)}>
-          <Modal.CloseTrigger />
+          <Modal.CloseTrigger isDisabled={isPending} />
           <Modal.Header>
             <Modal.Heading className="text-lg font-bold">{title}</Modal.Heading>
           </Modal.Header>

@@ -2,9 +2,9 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Spinner } from "@heroui/react";
 import { BookingSummary } from "@/components/customer/booking-summary";
 import { LoadingRegion } from "@/components/ui/loading-region";
+import { BrandLoader } from "@/components/customer/brand-loader";
 import { AppBar } from "@/components/shared/app-bar";
 import { BikeImage } from "@/components/shared/bike-image";
 import { DesktopTitle, Screen } from "@/components/shared/screen";
@@ -18,11 +18,13 @@ import type { Vehicle } from "@/features/customer/vehicles/types";
 import { useCustomerProfileQuery } from "@/features/customer/profile/hooks/use-profile";
 import { useBookingAddonsQuery, useCreateBookingMutation } from "@/features/customer/bookings/hooks/use-bookings";
 import { useBookingQuoteQuery } from "@/features/customer/bookings/hooks/use-booking-quote";
-import { bookingQuoteToView } from "@/features/customer/bookings/lib/booking-mapper";
+import { bookingQuoteToView, estimateBookingQuote } from "@/features/customer/bookings/lib/booking-mapper";
 import { cambodiaRentalDateTime } from "@/lib/cambodia-time";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { useTranslations } from "@/i18n/hooks";
 import { BookingProgress, flowSteps } from "./booking-progress";
+import { profileStore } from "@/features/customer/profile/stores/preferences-store";
+import { showBrowserNotification } from "@/features/customer/notifications/lib/browser-notifications";
 import { FlowFooter } from "./flow-footer";
 import { DatesStep, LicenceStep, PaymentStep, RiderStep, ReviewStep, licenceStepValid, riderStepValid } from "./steps";
 
@@ -75,7 +77,10 @@ export function BookingFlow({ bike, vehicle }: { bike: Motorcycle; vehicle: Vehi
     addons: Object.entries(draft.addOns).filter(([, selected]) => selected).map(([code]) => ({ code, quantity: 1 })),
   }), [draft.addOns, draft.dropTime, draft.end, draft.pickupTime, draft.start, hasDates, vehicle.location.id, vehicle.slug]);
   const quoteQuery = useBookingQuoteQuery(bookingRequest);
-  const quote = quoteQuery.data ? bookingQuoteToView(quoteQuery.data) : { ...EMPTY_QUOTE, days };
+  const optimisticQuote = hasDates
+    ? estimateBookingQuote({ bike, days, selected: draft.addOns, addons: addonsQuery.data ?? [], previous: quoteQuery.data })
+    : { ...EMPTY_QUOTE, days };
+  const quote = quoteQuery.data && !quoteQuery.isFetching ? bookingQuoteToView(quoteQuery.data) : optimisticQuote;
   const overlaps = quoteQuery.isError;
 
   const maxStep = !hasDates || overlaps || !hasStored ? 1 : !riderStepValid(draft) ? 2 : !licenceStepValid(draft) ? 3 : agreed ? LAST_STEP : 4;
@@ -113,6 +118,9 @@ export function BookingFlow({ bike, vehicle }: { bike: Motorcycle; vehicle: Vehi
     if (!draft.idempotencyKey) patch({ idempotencyKey });
     try {
       const booking = await createBooking.mutateAsync({ input: bookingRequest, idempotencyKey });
+      if (profileStore.get().notifications.reminders) {
+        void showBrowserNotification("Booking created", { body: `${bike.name} · ${booking.reference}`, tag: `booking-${booking.reference}`, data: { url: `/bookings/${booking.reference}` } });
+      }
       paid.current = true;
       setCompleting(true);
       draftStore.set(null);
@@ -126,7 +134,7 @@ export function BookingFlow({ bike, vehicle }: { bike: Motorcycle; vehicle: Vehi
   if (completing) {
     return (
       <LoadingRegion className="flex min-h-[60dvh] items-center justify-center">
-        <Spinner size="lg" />
+        <BrandLoader className="min-h-0" />
       </LoadingRegion>
     );
   }

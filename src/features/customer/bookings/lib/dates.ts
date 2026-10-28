@@ -33,13 +33,20 @@ export function rangeOverlapsBooking(bike: Motorcycle, start: string, end: strin
 
 export function formatRange(start: string, end: string): string {
   const fmt = new Intl.DateTimeFormat(intlLocale(), { day: "numeric", month: "short" });
-  const s = new Date(`${start}T12:00:00`);
-  const e = new Date(`${end}T12:00:00`);
+  const s = parseDisplayDate(start);
+  const e = parseDisplayDate(end);
+  if (!s || !e) return "";
   return `${fmt.format(s)} – ${fmt.format(e)}`;
 }
 
 export function formatDay(iso: string, withYear = true): string {
-  return new Intl.DateTimeFormat(intlLocale(), { day: "numeric", month: "short", year: withYear ? "numeric" : undefined }).format(
-    new Date(`${iso}T12:00:00`),
-  );
+  const date = parseDisplayDate(iso);
+  return date ? new Intl.DateTimeFormat(intlLocale(), { day: "numeric", month: "short", year: withYear ? "numeric" : undefined }).format(date) : "";
+}
+
+function parseDisplayDate(value: string): Date | null {
+  const direct = new Date(value);
+  if (!Number.isNaN(direct.getTime())) return direct;
+  const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(`${value}T12:00:00`) : null;
+  return dateOnly && !Number.isNaN(dateOnly.getTime()) ? dateOnly : null;
 }

@@ -7,10 +7,11 @@ import * as api from "../api/profile-api";
 import { customerProfileKeys } from "../query-keys";
 import type { CustomerProfileUpdate } from "../types";
 
-export function useCustomerProfileQuery() {
+export function useCustomerProfileQuery(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: customerProfileKeys.getProfile(),
     queryFn: ({ signal }) => api.getProfile(signal),
+    enabled: options.enabled,
   });
 }
 

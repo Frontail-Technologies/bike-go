@@ -54,8 +54,8 @@ export function AdminMobileBar({ activeHref, onNavigate }: { activeHref?: string
         </div>
       </div>
       <Drawer.Backdrop isOpen={drawer.isOpen} onOpenChange={drawer.setOpen} className="adminOverlay">
-        <Drawer.Content placement="left" className="max-w-[288px] bg-[var(--admin-sidebar)] text-white">
-          <Drawer.Dialog aria-label="Admin navigation">
+        <Drawer.Content placement="left" className="h-dvh w-[min(18rem,calc(100vw-3rem))] max-w-none bg-[var(--admin-sidebar)] text-white">
+          <Drawer.Dialog aria-label="Admin navigation" className="h-full rounded-none border-0 bg-[var(--admin-sidebar)] text-white shadow-none">
             <Drawer.CloseTrigger className="text-white" />
             <Drawer.Header><AdminLogo /></Drawer.Header>
             <Drawer.Body className="flex flex-col gap-5"><AdminNavList activeHref={activeHref ?? pathname} onNavigate={(href) => { onNavigate?.(href); drawer.close(); }} /><SidebarPromo /></Drawer.Body>

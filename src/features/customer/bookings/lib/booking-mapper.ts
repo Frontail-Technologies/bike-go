@@ -1,5 +1,5 @@
 import type { Motorcycle } from "@/features/customer/vehicles/lib/view-model";
-import type { ApiBooking, ApiBookingStatus, BookingQuote, CustomerBooking } from "../types";
+import type { ApiBooking, ApiBookingStatus, BookingAddon, BookingQuote, CustomerBooking } from "../types";
 import type { Quote } from "./pricing";
 
 const status = (value: ApiBookingStatus): CustomerBooking["status"] => {
@@ -25,6 +25,49 @@ export function bookingQuoteToView(quote: BookingQuote): Quote {
     deposit: quote.pricing.securityDepositMinor / 100,
     payable: quote.pricing.totalPayableMinor / 100,
     taxRate: taxable ? (quote.pricing.taxesMinor / taxable) * 100 : 0,
+  };
+}
+
+/**
+ * Keeps the checkout total responsive while the authoritative quote is being
+ * refreshed after an add-on toggle. All arithmetic remains in USD cents.
+ */
+export function estimateBookingQuote({
+  bike,
+  days,
+  selected,
+  addons,
+  previous,
+}: {
+  bike: Motorcycle;
+  days: number;
+  selected: Record<string, boolean>;
+  addons: BookingAddon[];
+  previous?: BookingQuote;
+}): Quote {
+  const rentalMinor = (previous?.pricing.dailyRateMinor ?? Math.round(bike.pricePerDay * 100)) * days;
+  const addonLines = addons
+    .filter((addon) => selected[addon.code])
+    .map((addon) => ({ code: addon.code, name: addon.name, amountMinor: addon.pricePerDayMinor * days }));
+  const addonsMinor = addonLines.reduce((sum, addon) => sum + addon.amountMinor, 0);
+  const previousTaxBase = previous ? previous.pricing.rentalSubtotalMinor + previous.pricing.addonsTotalMinor : 0;
+  const taxRateBps = previousTaxBase > 0 ? Math.round((previous!.pricing.taxesMinor * 10_000) / previousTaxBase) : 1_800;
+  const taxesMinor = Math.round(((rentalMinor + addonsMinor) * taxRateBps) / 10_000);
+  const platformFeeMinor = previous?.pricing.platformFeeMinor ?? 100;
+  const depositMinor = previous?.pricing.securityDepositMinor ?? Math.round(bike.deposit * 100);
+  const totalMinor = rentalMinor + addonsMinor + taxesMinor + platformFeeMinor + depositMinor;
+
+  return {
+    days,
+    rental: rentalMinor / 100,
+    addons: addonLines.map((addon) => ({ code: addon.code, name: addon.name, amount: addon.amountMinor / 100 })),
+    helmet: 0,
+    jacket: 0,
+    tax: taxesMinor / 100,
+    fee: platformFeeMinor / 100,
+    deposit: depositMinor / 100,
+    payable: totalMinor / 100,
+    taxRate: taxRateBps / 100,
   };
 }
 

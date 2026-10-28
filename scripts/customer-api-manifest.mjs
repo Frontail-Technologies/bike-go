@@ -4,7 +4,7 @@ export const customerApiManifest = [
     featureDir: "src/features/customer/profile",
     keyName: "customerProfileKeys",
     operations: [
-      { name: "getProfile", hook: "useCustomerProfileQuery", kind: "query", method: "GET", path: "/me", responseType: "CustomerProfile" },
+      { name: "getProfile", hook: "useCustomerProfileQuery", kind: "query", method: "GET", path: "/me", responseType: "CustomerProfile", enabledOption: true },
       { name: "updateProfile", hook: "useUpdateCustomerProfileMutation", kind: "mutation", method: "PATCH", path: "/me", bodyType: "CustomerProfileUpdate", responseType: "CustomerProfile", invalidate: true },
     ],
   },

@@ -23,6 +23,7 @@ type TabsProps = {
 export function Tabs({ items, selectedKey, defaultSelectedKey, onSelectionChange, className, ...props }: TabsProps) {
   return (
     <HeroTabs
+      aria-label={props["aria-label"]}
       selectedKey={selectedKey}
       defaultSelectedKey={defaultSelectedKey ?? items[0]?.id}
       onSelectionChange={(key) => onSelectionChange?.(String(key))}

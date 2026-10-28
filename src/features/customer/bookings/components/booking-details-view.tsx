@@ -198,17 +198,20 @@ export function BookingDetailsView({ reference }: { reference: string }) {
         isOpen={confirmOpen}
         onOpenChange={setConfirmOpen}
         title={t("cancelTitle")}
+        isPending={cancel.isPending}
         footer={
           <>
-            <Button variant="secondary" slot="close">
+            <Button variant="secondary" slot="close" isDisabled={cancel.isPending}>
               {t("keepBooking")}
             </Button>
             <Button
               variant="danger"
-              slot="close"
+              isPending={cancel.isPending}
+              isDisabled={cancel.isPending}
               onPress={() => {
                 void cancel.mutateAsync({ reference: booking.reference, input: {} }).then(() => {
                   toast.danger(t("cancelledToast"), { description: t("cancelledToastDesc") });
+                  setConfirmOpen(false);
                 }).catch((error) => toast.danger(error instanceof Error ? error.message : "The booking could not be cancelled."));
               }}
             >

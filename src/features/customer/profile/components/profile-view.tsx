@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Avatar, Spinner } from "@heroui/react";
 import {
   FileTextIcon,
   HeartIcon,
@@ -10,38 +11,40 @@ import {
   LifebuoyIcon,
   QuestionIcon,
   ReceiptIcon,
-  SealCheckIcon,
   ShieldCheckIcon,
   SignOutIcon,
+  UploadSimpleIcon,
   WarningIcon,
   BankIcon,
   FilesIcon,
 } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import Image from "next/image";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { AppBar } from "@/components/shared/app-bar";
 import { ListRow, SectionCard } from "@/components/shared/list-row";
 import { ResponsiveDialog } from "@/components/shared/responsive-dialog";
 import { DesktopTitle, Screen } from "@/components/shared/screen";
-import { Button } from "@/components/ui/button";
+import { Button, IconButton } from "@/components/ui/button";
 import { ModalDialog } from "@/components/ui/modal-dialog";
 import { Switch } from "@/components/ui/selection-controls";
-import { StatusBadge } from "@/components/ui/status-badge";
 import { TextInput } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { Reveal } from "@/components/motion/reveal";
-import { useCustomerAuthMutations } from "@/features/customer/auth/hooks/use-customer-session-query";
+import { useCustomerAuthMutations, useCustomerSessionQuery } from "@/features/customer/auth/hooks/use-customer-session-query";
 import { maskLicence } from "@/features/customer/bookings/hooks/use-booking";
 import { LanguageOptions } from "@/components/shared/language-switcher";
 import { useTranslations } from "@/i18n/hooks";
-import { intlLocale } from "@/i18n/hooks";
 import { ApplicationCard } from "@/features/customer/loans/components/application-card";
 import { useLoansQuery } from "@/features/customer/loans/hooks/use-loans";
 import { apiLoanToApplication } from "@/features/customer/loans/lib/loan-mapper";
 import { favoritesStore, initials, profileStore } from "../stores/preferences-store";
 import { useCustomerProfileQuery, useUpdateCustomerProfileMutation } from "../hooks/use-profile";
+import { useSaveCustomerLicenceMutation } from "../hooks/use-licence";
+import { enableBrowserNotifications } from "@/features/customer/notifications/lib/browser-notifications";
+import { apiClient } from "@/lib/api/client";
 
 type ModalKey = "edit" | "licence" | "logout" | null;
 
@@ -60,34 +63,85 @@ const licenceSchema = (say: Say) =>
     number: z.string().regex(/^[A-Za-z]{2}\d{2}[\s-]?\d{4}[\s-]?\d{7}$/, say("errLicence")),
   });
 
+function LicencePhotoInput({ label, file, existingUrl, onChange }: { label: string; file: File | null; existingUrl?: string; onChange: (file: File | null) => void }) {
+  const preview = useMemo(() => file ? URL.createObjectURL(file) : null, [file]);
+  useEffect(() => {
+    return () => { if (preview) URL.revokeObjectURL(preview); };
+  }, [preview]);
+
+  return (
+    <label className="flex min-h-32 cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-control border border-dashed border-line bg-canvas p-3 text-center outline-none focus-within:ring-2 focus-within:ring-ink">
+      {preview ? <Image src={preview} alt="" width={320} height={160} unoptimized className="h-20 w-full rounded-lg object-cover" /> : existingUrl ? <PrivateLicenceImage src={existingUrl} alt={`${label} currently saved`} /> : <UploadSimpleIcon size={24} className="text-subtle" />}
+      <span className="text-sm font-semibold">{existingUrl && !file ? `Replace ${label.toLowerCase()}` : label}</span>
+      <span className="max-w-full truncate text-xs text-subtle">{file?.name ?? (existingUrl ? "Saved image — tap to replace" : "JPG, PNG or WebP")}</span>
+      <input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => onChange(event.target.files?.[0] ?? null)} />
+    </label>
+  );
+}
+
+function PrivateLicenceImage({ src, alt }: { src: string; alt: string }) {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    let objectUrl: string | null = null;
+
+    void apiClient.get<Blob>(src, { responseType: "blob" })
+      .then((response) => {
+        objectUrl = URL.createObjectURL(response.data);
+        if (active) setImageUrl(objectUrl);
+      })
+      .catch(() => {
+        if (active) setFailed(true);
+      });
+
+    return () => {
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [src]);
+
+  if (failed) return <div className="flex aspect-[4/3] items-center justify-center rounded-lg bg-canvas px-2 text-center text-xs text-subtle">Image unavailable</div>;
+  if (!imageUrl) return <div className="aspect-[4/3] animate-pulse rounded-lg bg-canvas" aria-label={`Loading ${alt}`} role="status" />;
+
+  return <Image src={imageUrl} alt={alt} width={320} height={240} unoptimized className="aspect-[4/3] w-full rounded-lg border border-line object-cover" />;
+}
+
 export function ProfileView() {
   const router = useRouter();
   const t = useTranslations("profile");
   const localProfile = profileStore.useValue();
+  const session = useCustomerSessionQuery();
   const profileQuery = useCustomerProfileQuery();
   const updateProfile = useUpdateCustomerProfileMutation();
+  const saveLicence = useSaveCustomerLicenceMutation();
   const auth = useCustomerAuthMutations();
   const remoteProfile = profileQuery.data;
   const profile = {
-    name: remoteProfile?.fullName || remoteProfile?.email || "RideGo rider",
-    email: remoteProfile?.email ?? "",
+    name: remoteProfile?.fullName?.trim() || session.data?.user.name?.trim() || remoteProfile?.email || session.data?.user.email || "",
+    email: remoteProfile?.email ?? session.data?.user.email ?? "",
     phone: remoteProfile?.phone ?? "",
     address: remoteProfile?.address ?? "",
-    licence: localProfile.licence,
+    licence: remoteProfile?.licence ?? null,
     notifications: localProfile.notifications,
   };
   const loans = useLoansQuery({ page: 1, pageSize: 3 });
   const applications = (loans.data?.data ?? []).map(apiLoanToApplication);
   const savedCount = favoritesStore.useValue().length;
   const [modal, setModal] = useState<ModalKey>(null);
+  const [licenceFront, setLicenceFront] = useState<File | null>(null);
+  const [licenceBack, setLicenceBack] = useState<File | null>(null);
+  const [licencePhotoError, setLicencePhotoError] = useState<string | null>(null);
   const close = () => setModal(null);
+  const avatarUrl = remoteProfile?.avatarUrl || session.data?.user.image || null;
 
   const details = useForm({ resolver: zodResolver(detailsSchema(t)), mode: "onBlur", values: { name: profile.name, phone: profile.phone, email: profile.email, address: profile.address } });
   const licence = useForm({ resolver: zodResolver(licenceSchema(t)), mode: "onBlur", values: { number: profile.licence?.number ?? "" } });
 
   return (
     <>
-      <AppBar title={t("title")} />
+      <AppBar title={t("title")} actions={<IconButton label={t("logout")} icon={<SignOutIcon size={22} />} onPress={() => setModal("logout")} />} />
       <Screen bottom="nav" className="flex flex-col gap-4 md:gap-6">
         <DesktopTitle title={t("title")} />
 
@@ -95,17 +149,13 @@ export function ProfileView() {
         <div className="flex flex-col gap-4">
           <Reveal y={8} blur={0}>
             <section aria-label={t("yourDetails")} className="flex items-center gap-4 rounded-card border border-line bg-surface p-4 shadow-card">
-              <span className="flex size-14 shrink-0 items-center justify-center rounded-full bg-ink text-lg font-bold text-white">{initials(profile.name)}</span>
+              <Avatar size="lg" className="size-14 shrink-0">
+                {avatarUrl ? <Avatar.Image src={avatarUrl} alt="" referrerPolicy="no-referrer" /> : null}
+                <Avatar.Fallback className="bg-ink text-lg font-bold text-white">{profile.name ? initials(profile.name) : "?"}</Avatar.Fallback>
+              </Avatar>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-base font-bold">{profile.name}</p>
-                <p className="truncate text-sm text-subtle">{profile.email}</p>
-                <div className="mt-1.5">
-                  {profile.licence?.verified ? (
-                    <StatusBadge tone="success" icon={<SealCheckIcon size={14} weight="fill" />}>{t("verifiedRider")}</StatusBadge>
-                  ) : (
-                    <StatusBadge tone="brand" icon={<WarningIcon size={14} weight="fill" />}>{t("notVerified")}</StatusBadge>
-                  )}
-                </div>
+                <p className="truncate text-base font-bold">{profile.name || "—"}</p>
+                {profile.email ? <p className="truncate text-sm text-subtle">{profile.email}</p> : null}
               </div>
               <Button variant="secondary" size="sm" onPress={() => setModal("edit")} aria-label={t("editDetails")}>
                 <PencilSimpleIcon size={20} />
@@ -123,9 +173,12 @@ export function ProfileView() {
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="tabular text-sm font-bold">{maskLicence(profile.licence.number)}</p>
-                    <p className="text-xs text-subtle">{t("validUntil", { date: new Intl.DateTimeFormat(intlLocale(), { month: "short", year: "numeric" }).format(new Date(profile.licence.expiry)) })}</p>
+                    <p className="text-xs text-subtle">Driving licence uploaded</p>
                   </div>
-                  {profile.licence.verified ? <StatusBadge tone="success">{t("verified")}</StatusBadge> : <StatusBadge tone="brand">{t("inReview")}</StatusBadge>}
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <PrivateLicenceImage key={profile.licence.frontImageUrl} src={profile.licence.frontImageUrl} alt="Driving licence front" />
+                  <PrivateLicenceImage key={profile.licence.backImageUrl} src={profile.licence.backImageUrl} alt="Driving licence back" />
                 </div>
                 <Button variant="secondary" fullWidth onPress={() => setModal("licence")}>
                   {t("updateLicence")}
@@ -145,15 +198,15 @@ export function ProfileView() {
             <dl className="flex flex-col gap-3 py-1 text-sm">
               <div className="flex justify-between gap-4">
                 <dt className="text-subtle">{t("phone")}</dt>
-                <dd className="tabular font-semibold">{profile.phone}</dd>
+                <dd className="tabular font-semibold">{profile.phone || "—"}</dd>
               </div>
               <div className="flex justify-between gap-4">
                 <dt className="shrink-0 text-subtle">{t("address")}</dt>
-                <dd className="text-right font-semibold">{profile.address}</dd>
+                <dd className="text-right font-semibold">{profile.address || "—"}</dd>
               </div>
             </dl>
             <div className="mt-2 border-t border-line pt-2">
-              <ListRow icon={<HeartIcon size={20} />} label={t("savedBikes")} href="/bikes?saved=1" trailing={<span className="tabular text-sm text-subtle">{savedCount}</span>} />
+              <ListRow icon={<HeartIcon size={20} />} label={t("savedBikes")} href="/saved-bikes" trailing={<span className="tabular text-sm text-subtle">{savedCount}</span>} />
             </div>
           </SectionCard>
         </div>
@@ -165,14 +218,17 @@ export function ProfileView() {
 
           <SectionCard id="notifications-title" title={t("notifications")}>
             <div className="flex flex-col">
-              <Switch isSelected={profile.notifications.reminders} onChange={(reminders) => profileStore.update((p) => ({ ...p, notifications: { ...p.notifications, reminders } }))}>
+              <Switch isSelected={profile.notifications.reminders} onChange={async (reminders) => {
+                const allowed = !reminders || await enableBrowserNotifications();
+                profileStore.update((p) => ({ ...p, notifications: { ...p.notifications, reminders: reminders && allowed } }));
+              }}>
                 {t("reminders")}
               </Switch>
-              <Switch isSelected={profile.notifications.updates} onChange={(updates) => profileStore.update((p) => ({ ...p, notifications: { ...p.notifications, updates } }))}>
+              <Switch isSelected={profile.notifications.updates} onChange={async (updates) => {
+                const allowed = !updates || await enableBrowserNotifications();
+                profileStore.update((p) => ({ ...p, notifications: { ...p.notifications, updates: updates && allowed } }));
+              }}>
                 {t("updates")}
-              </Switch>
-              <Switch isSelected={profile.notifications.offers} onChange={(offers) => profileStore.update((p) => ({ ...p, notifications: { ...p.notifications, offers } }))}>
-                {t("offers")}
               </Switch>
             </div>
           </SectionCard>
@@ -206,10 +262,6 @@ export function ProfileView() {
             <ListRow icon={<ReceiptIcon size={20} />} label={t("rentalPolicy")} href="/legal/rental-policy" />
           </SectionCard>
 
-          <Button variant="outline" fullWidth size="lg" onPress={() => setModal("logout")}>
-            <SignOutIcon size={20} />
-            {t("logout")}
-          </Button>
         </div>
       </div>
 
@@ -220,7 +272,14 @@ export function ProfileView() {
         footer={
           <>
             <Button variant="secondary" slot="close" fullWidth>{t("cancel")}</Button>
-            <Button type="submit" form="details-form" fullWidth>{t("save")}</Button>
+            <Button type="submit" form="details-form" fullWidth isPending={updateProfile.isPending} isDisabled={updateProfile.isPending}>
+              {({ isPending }) => (
+                <>
+                  {isPending ? <Spinner color="current" size="sm" /> : null}
+                  {t("save")}
+                </>
+              )}
+            </Button>
           </>
         }
       >
@@ -268,7 +327,7 @@ export function ProfileView() {
         footer={
           <>
             <Button variant="secondary" slot="close" fullWidth>{t("cancel")}</Button>
-            <Button type="submit" form="licence-form" fullWidth>{t("submit")}</Button>
+            <Button type="submit" form="licence-form" fullWidth isPending={saveLicence.isPending} isDisabled={saveLicence.isPending}>{t("submit")}</Button>
           </>
         }
       >
@@ -276,10 +335,21 @@ export function ProfileView() {
           id="licence-form"
           noValidate
           className="flex flex-col gap-4"
-          onSubmit={licence.handleSubmit(({ number }) => {
-            profileStore.update((p) => ({ ...p, licence: { number, expiry: p.licence?.expiry ?? "2041-06-30", verified: false } }));
-            toast.success(t("licenceSubmitted"), { description: t("licenceSubmittedDesc") });
-            close();
+          onSubmit={licence.handleSubmit(async ({ number }) => {
+            if (!profile.licence && (!licenceFront || !licenceBack)) {
+              setLicencePhotoError("Add clear photos of both sides of your licence.");
+              return;
+            }
+            setLicencePhotoError(null);
+            try {
+              await saveLicence.mutateAsync({ number, front: licenceFront ?? undefined, back: licenceBack ?? undefined });
+              toast.success("Driving licence saved");
+              setLicenceFront(null);
+              setLicenceBack(null);
+              close();
+            } catch (error) {
+              toast.danger(error instanceof Error ? error.message : "Your licence could not be saved.");
+            }
           })}
         >
           <Controller
@@ -288,7 +358,6 @@ export function ProfileView() {
             render={({ field, fieldState }) => (
               <TextInput
                 label={t("licenceNumber")}
-                description={t("photoSoon")}
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
@@ -297,6 +366,11 @@ export function ProfileView() {
               />
             )}
           />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <LicencePhotoInput label="Licence front" file={licenceFront} existingUrl={profile.licence?.frontImageUrl} onChange={setLicenceFront} />
+            <LicencePhotoInput label="Licence back" file={licenceBack} existingUrl={profile.licence?.backImageUrl} onChange={setLicenceBack} />
+          </div>
+          {licencePhotoError ? <p className="text-sm text-danger" role="alert">{licencePhotoError}</p> : null}
         </form>
       </ResponsiveDialog>
 
@@ -309,6 +383,8 @@ export function ProfileView() {
             <Button variant="secondary" slot="close">{t("stay")}</Button>
             <Button
               slot="close"
+              isPending={auth.logout.isPending}
+              isDisabled={auth.logout.isPending}
               onPress={() => {
                 void auth.logout.mutateAsync().then(() => {
                   toast.success(t("loggedOut"));

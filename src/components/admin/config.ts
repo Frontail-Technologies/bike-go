@@ -18,8 +18,6 @@ export const adminCopy = {
   productName: "RideGo",
   portalName: "Admin Portal",
   searchPlaceholder: "Search anything…",
-  adminName: "Sophea Admin",
-  adminRole: "Super Admin",
 } as const;
 
 export type AdminNavItem = { href: string; label: string; Icon: Icon; superAdminOnly?: boolean };

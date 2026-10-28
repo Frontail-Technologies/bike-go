@@ -86,7 +86,11 @@ export default async function run({ browser, base, t }) {
     const page = await context.newPage();
     await page.goto(`${base}/admin/ui`, { waitUntil: "networkidle" });
     await page.getByRole("button", { name: "Open menu" }).click();
-    check("mobile navigation drawer opens", await page.getByRole("dialog", { name: "Admin navigation" }).isVisible());
+    const mobileDrawer = page.getByRole("dialog", { name: "Admin navigation" });
+    check("mobile navigation drawer opens", await mobileDrawer.isVisible());
+    check("mobile navigation uses the dark admin surface", await mobileDrawer.evaluate((element) => getComputedStyle(element).backgroundColor) === "rgb(8, 19, 27)");
+    const drawerBounds = await mobileDrawer.boundingBox();
+    check("mobile navigation is fixed to the viewport", drawerBounds?.y === 0 && drawerBounds.height === 900, JSON.stringify(drawerBounds));
     const duration = await page.locator("[data-admin-ui]").evaluate((root) => getComputedStyle(root.querySelector("button")).transitionDuration);
     check("admin respects reduced motion", duration === "0.01ms" || duration === "1e-05s" || duration === "0s", duration);
     await page.goto(`${base}/admin/bikes`, { waitUntil: "networkidle" });
@@ -222,6 +226,13 @@ export default async function run({ browser, base, t }) {
     check("customer detail renders", await page.getByRole("heading", { name: "Sok Chantha" }).isVisible());
     await page.goto(`${base}/admin/loans/LA-2026-0032`, { waitUntil: "networkidle" });
     check("loan detail renders", await page.getByRole("heading", { name: /LA-2026-0032/ }).isVisible());
+    await page.goto(`${base}/admin/loans/LA-2026-0036`, { waitUntil: "networkidle" });
+    await page.getByRole("button", { name: "Update Status" }).first().click();
+    const statusDialog = page.getByRole("dialog", { name: "Update application status" });
+    check("application status dialog opens", await statusDialog.isVisible());
+    await statusDialog.getByRole("button", { name: "Update Status" }).click();
+    check("application status updates locally", await page.getByText("Documents under review", { exact: true }).first().isVisible());
+    check("application status update confirms success", await page.getByText("Application status updated", { exact: true }).isVisible());
     await page.goto(`${base}/admin/settings`, { waitUntil: "networkidle" });
     check("settings workspace renders", await page.getByRole("tab", { name: "Vehicle Masters" }).isVisible());
     check("remaining workspaces have no console errors", logs.length === 0, logs.join(" | "));

@@ -13,8 +13,9 @@ import { cambodiaRentalRange } from "@/lib/cambodia-time";
 import { BikeFilters } from "./bike-filters";
 import { browseStore } from "../../stores/browse-store";
 import { DEFAULT_FILTERS } from "../../lib/filters";
+import type { VehicleFilterMasters } from "../../api/vehicle-filter-server-data";
 
-export function FiltersScreen() {
+export function FiltersScreen({ initialMasters }: { initialMasters: VehicleFilterMasters }) {
   const router = useRouter();
   const hasSidebar = useMediaQuery("(min-width: 1024px)");
   const back = useBack("/bikes");
@@ -64,7 +65,7 @@ export function FiltersScreen() {
             {common("reset")}
           </Button>
         </div>
-        <BikeFilters value={filters} onChange={(next) => browseStore.update((s) => ({ ...s, filters: next }))} />
+        <BikeFilters value={filters} onChange={(next) => browseStore.update((s) => ({ ...s, filters: next }))} initialMasters={initialMasters} />
       </Screen>
       <ScreenFooter>
         <Button size="lg" fullWidth isDisabled={count === 0} onPress={back}>

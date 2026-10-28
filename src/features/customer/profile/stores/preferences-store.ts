@@ -2,25 +2,15 @@
 
 import { createPersistedStore } from "@/lib/persisted-store";
 
-export type Profile = {
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  licence: { number: string; expiry: string; verified: boolean } | null;
-  notifications: { reminders: boolean; offers: boolean; updates: boolean };
+export type ProfilePreferences = {
+  notifications: { reminders: boolean; updates: boolean };
 };
 
-export const profileStore = createPersistedStore<Profile>("rgo.profile.v1", {
-  name: "Rahul Sharma",
-  email: "rahul.sharma@gmail.com",
-  phone: "9876543210",
-  address: "B-14, Malviya Nagar, Jaipur",
-  licence: { number: "RJ14 2021 0012345", expiry: "2041-06-30", verified: true },
-  notifications: { reminders: true, offers: false, updates: true },
+export const profileStore = createPersistedStore<ProfilePreferences>("rgo.customer-preferences.v3", {
+  notifications: { reminders: false, updates: false },
 });
 
-export const favoritesStore = createPersistedStore<string[]>("rgo.favorites.v1", ["yamaha-mt-15"]);
+export const favoritesStore = createPersistedStore<string[]>("rgo.customer-favorites.v2", []);
 
 export const cityStore = createPersistedStore<string>("rgo.city.v2", "Phnom Penh");
 

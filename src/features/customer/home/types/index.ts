@@ -14,3 +14,11 @@ export type PublicBanner = {
   startAt: string | null;
   endAt: string | null;
 };
+import type { Vehicle } from "@/features/customer/vehicles/types";
+
+
+export type HomeData = {
+  heroBanners: PublicBanner[];
+  promoBanners: PublicBanner[];
+  popularVehicles: Vehicle[];
+};

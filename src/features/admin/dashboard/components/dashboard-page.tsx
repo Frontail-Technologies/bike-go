@@ -7,7 +7,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { BookingStatusBadge } from "@/components/admin/bookings/booking-parts";
-import { adminCopy } from "@/components/admin/config";
 import { AdminSelect, formatCambodiaDate } from "@/components/admin/controls";
 import { StatCard } from "@/components/admin/data-display/stat-card";
 import { AdminErrorState } from "@/components/admin/feedback";
@@ -15,6 +14,7 @@ import { AdminPage, ContentSection, PageHeader } from "@/components/admin/layout
 import { CurrencyAmount, formatCurrency } from "@/components/admin/money";
 import { ApiError } from "@/lib/api/error";
 import { cn } from "@/lib/cn";
+import { useAdminSessionQuery } from "@/features/admin/auth/hooks/use-admin-session-query";
 import { useDashboardQuery } from "../hooks/use-dashboard";
 import type { DashboardRange } from "../types/dashboard";
 import { loanStatusMetrics, rangeDays, rangeOptions, revenuePoints, toBookingStatus, usdRevenue, vehicleStatusMetrics, volumePoints } from "../lib/view-model";
@@ -44,6 +44,7 @@ const DashboardActivityCharts = dynamic(() => import("./dashboard-charts").then(
 
 export function DashboardPage() {
   const router = useRouter();
+  const session = useAdminSessionQuery();
   const [range, setRange] = useState<DashboardRange>("30d");
   const query = useDashboardQuery(range);
   const data = query.data;
@@ -55,7 +56,9 @@ export function DashboardPage() {
     <AdminPage className="gap-5 lg:gap-6">
       <PageHeader
         title="Dashboard"
-        description={`Welcome back, ${adminCopy.adminName.split(" ")[0]}! Here’s what’s happening with RideGo today.`}
+        description={session.data?.name
+          ? `Welcome back, ${session.data.name.trim().split(/\s+/)[0]}! Here’s what’s happening with RideGo today.`
+          : "Here’s what’s happening with RideGo today."}
         actions={
           <>
             <AdminSelect label="Date range" value={range} onChange={(value) => setRange(value as DashboardRange)} options={rangeOptions.map((option) => ({ ...option }))} icon={<CalendarBlankIcon size={16} className="shrink-0 text-[var(--admin-muted)]" aria-hidden />} className="min-w-44" />

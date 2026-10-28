@@ -1,4 +1,4 @@
-import { cn } from "@/lib/cn";
+ import { cn } from "@/lib/cn";
 
 export type AdminStatus =
   | "available" | "rented" | "maintenance" | "inactive" | "active" | "scheduled" | "ready-for-pickup" | "unpaid" | "partially-refunded" | "draft" | "submitted" | "action-required" | "eligibility"

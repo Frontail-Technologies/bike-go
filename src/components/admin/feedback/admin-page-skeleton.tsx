@@ -1,7 +1,7 @@
 import { Skeleton } from "@heroui/react";
 
 export function AdminPageSkeleton() {
-  return <div aria-busy="true" aria-label="Loading admin page" role="status" className="skeleton--shimmer mx-auto w-full max-w-[1600px] space-y-6 overflow-hidden">
+  return <div aria-busy="true" aria-label="Loading admin page" role="status" className="skeleton--shimmer relative isolate mx-auto w-full max-w-[1600px] space-y-6 overflow-hidden">
     <div className="flex min-h-16 items-start justify-between gap-4">
       <div className="space-y-3"><Skeleton animationType="none" className="h-8 w-48 rounded-lg" /><Skeleton animationType="none" className="h-4 w-80 max-w-[70vw] rounded-lg" /></div>
       <Skeleton animationType="none" className="hidden h-11 w-32 rounded-xl sm:block" />

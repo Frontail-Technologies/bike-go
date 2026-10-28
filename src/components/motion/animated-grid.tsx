@@ -15,16 +15,14 @@ export function AnimatedGrid({ children, className, itemClassName }: AnimatedGri
   const reduced = useReducedMotionPreference();
 
   return (
-    <motion.div
-      className={className}
-      initial="hidden"
-      whileInView="show"
-      viewport={{ once: true, amount: 0.1 }}
-    >
+    <div className={className}>
       {Children.toArray(children).map((child, index) => (
         <motion.div
           key={index}
           className={itemClassName}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.1 }}
           variants={{
             hidden: { opacity: 0, y: reduced ? 0 : 10 },
             show: {
@@ -41,6 +39,6 @@ export function AnimatedGrid({ children, className, itemClassName }: AnimatedGri
           {child}
         </motion.div>
       ))}
-    </motion.div>
+    </div>
   );
 }

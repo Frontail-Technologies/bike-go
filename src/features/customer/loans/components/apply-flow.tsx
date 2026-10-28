@@ -523,11 +523,11 @@ export function ApplyFlow() {
       loanDraftStore.set(null);
       justAppliedStore.set(reference);
       router.replace(`/loans/${reference}`);
+      return;
     } catch (error) {
       const message = error instanceof Error ? error.message : "Your application could not be submitted. Please try again.";
       setSubmissionError(message);
       toast.danger(message);
-    } finally {
       setSubmitting(false);
     }
   }

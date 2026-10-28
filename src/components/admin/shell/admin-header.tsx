@@ -4,18 +4,31 @@ import { Avatar, Dropdown, SearchField } from "@heroui/react";
 import { CaretDownIcon } from "@phosphor-icons/react";
 import { adminCopy } from "@/components/admin/config";
 import { useAdminLogout } from "@/features/admin/auth/hooks/use-admin-logout";
+import { useAdminSessionQuery } from "@/features/admin/auth/hooks/use-admin-session-query";
+
+function adminInitials(name: string, email: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length > 0) return parts.slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+  return email.slice(0, 2).toUpperCase();
+}
 
 export function ProfileMenu({ compact = false }: { compact?: boolean }) {
   const logout = useAdminLogout();
+  const session = useAdminSessionQuery();
+  const admin = session.data;
+
+  if (!admin) return <span className="block size-11 shrink-0" aria-hidden />;
+
+  const role = admin.role === "super_admin" ? "Super Admin" : "Admin";
 
   return (
     <Dropdown>
       <Dropdown.Trigger className="flex h-11 items-center gap-2.5 rounded-xl px-1.5 outline-none transition-colors hover:bg-[var(--admin-surface-muted)] focus-visible:ring-2 focus-visible:ring-[var(--admin-accent-strong)]" aria-label="Open profile menu">
-        <Avatar size="sm"><Avatar.Fallback>SA</Avatar.Fallback></Avatar>
+        <Avatar size="sm"><Avatar.Fallback>{adminInitials(admin.name, admin.email)}</Avatar.Fallback></Avatar>
         {compact ? null : (
           <span className="hidden text-left leading-tight xl:block">
-            <span className="block whitespace-nowrap text-xs font-bold">{adminCopy.adminName}</span>
-            <span className="block whitespace-nowrap text-[11px] text-[var(--admin-muted)]">{adminCopy.adminRole}</span>
+            <span className="block max-w-40 truncate text-xs font-bold">{admin.name}</span>
+            <span className="block whitespace-nowrap text-[11px] text-[var(--admin-muted)]">{role}</span>
           </span>
         )}
         {compact ? null : <CaretDownIcon size={13} className="hidden text-[var(--admin-muted)] xl:block" aria-hidden />}
