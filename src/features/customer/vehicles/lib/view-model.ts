@@ -27,6 +27,8 @@ export type CustomerVehicle = {
   description: string;
   highlights: string[];
   available: boolean;
+  /** Set only on a grouped "model" card; when present, the card shows this count instead of the plain available/on-rent badge. */
+  totalAvailable?: number;
   availableFrom?: string;
   bookedRanges: [string, string][];
 };
@@ -34,3 +36,12 @@ export type CustomerVehicle = {
 // Compatibility aliases while the public routes still use /bikes terminology.
 export type Motorcycle = CustomerVehicle;
 export type BikeCategory = VehicleCategory;
+
+export type MotorcycleGroupLocation = { locationId: string; name: string; city: string; availableCount: number };
+
+/** One brand+model across every location; booking resolves to a specific unit only once a location is picked. */
+export type MotorcycleGroup = CustomerVehicle & {
+  groupSlug: string;
+  totalAvailable: number;
+  locations: MotorcycleGroupLocation[];
+};

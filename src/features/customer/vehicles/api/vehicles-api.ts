@@ -2,7 +2,7 @@
 
 import { apiClient } from "@/lib/api/client";
 import { unwrapData, unwrapPage, type ApiEnvelope, type ApiPage } from "@/lib/api/contracts";
-import type { Vehicle, VehicleAvailability, VehicleAvailabilityParams, VehicleListParams } from "../types";
+import type { Vehicle, VehicleAvailability, VehicleAvailabilityParams, VehicleListParams, VehicleModelGroup, VehicleModelGroupParams, VehicleModelListParams } from "../types";
 
 export async function listVehicles(params: VehicleListParams, signal?: AbortSignal): Promise<ApiPage<Vehicle>> {
   const response = await apiClient.request<ApiEnvelope<Vehicle[]>>({ method: "GET", url: "/vehicles", params, signal });
@@ -16,5 +16,15 @@ export async function getVehicle(idOrSlug: string, signal?: AbortSignal): Promis
 
 export async function getVehicleAvailability(idOrSlug: string, params: VehicleAvailabilityParams, signal?: AbortSignal): Promise<VehicleAvailability> {
   const response = await apiClient.request<ApiEnvelope<VehicleAvailability>>({ method: "GET", url: `/vehicles/${encodeURIComponent(idOrSlug)}/availability`, params, signal });
+  return unwrapData(response.data);
+}
+
+export async function listVehicleModels(params: VehicleModelListParams, signal?: AbortSignal): Promise<ApiPage<VehicleModelGroup>> {
+  const response = await apiClient.request<ApiEnvelope<VehicleModelGroup[]>>({ method: "GET", url: "/vehicles/models", params, signal });
+  return unwrapPage(response.data);
+}
+
+export async function getVehicleModelGroup(groupSlug: string, params: VehicleModelGroupParams, signal?: AbortSignal): Promise<VehicleModelGroup> {
+  const response = await apiClient.request<ApiEnvelope<VehicleModelGroup>>({ method: "GET", url: `/vehicles/models/${encodeURIComponent(groupSlug)}`, params, signal });
   return unwrapData(response.data);
 }

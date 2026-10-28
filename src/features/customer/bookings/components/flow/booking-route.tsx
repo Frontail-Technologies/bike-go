@@ -10,5 +10,15 @@ export function BookingRoute({ id }: { id: string }) {
   const vehicle = useVehicleQuery(id);
   if (vehicle.isPending) return <BikeDetailsSkeleton />;
   if (vehicle.isError || !vehicle.data) return <p className="p-page text-sm text-danger">This vehicle is unavailable.</p>;
-  return <CustomerAuthBoundary><BookingFlow bike={vehicleToMotorcycle(vehicle.data)} vehicle={vehicle.data} /></CustomerAuthBoundary>;
+  const bike = vehicleToMotorcycle(vehicle.data);
+  return (
+    <CustomerAuthBoundary>
+      <BookingFlow
+        bike={bike}
+        target={{ kind: "vehicle", vehicle: vehicle.data }}
+        detailsHref={`/bikes/${bike.id}`}
+        bookHref={`/bikes/${bike.id}/book`}
+      />
+    </CustomerAuthBoundary>
+  );
 }

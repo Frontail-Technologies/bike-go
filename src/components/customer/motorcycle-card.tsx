@@ -27,7 +27,17 @@ export function MotorcycleCard({ bike, href, className }: MotorcycleCardProps) {
     <InteractiveCard as="article" glare className={cn("flex h-full flex-col gap-0 overflow-hidden p-0", className)}>
       <div className="relative aspect-4/3 overflow-hidden bg-canvas">
         <BikeImage bike={bike} sizes="(min-width: 1024px) 25vw, 50vw" />
-        {!bike.available ? (
+        {bike.totalAvailable !== undefined ? (
+          bike.totalAvailable > 0 ? (
+            <span className="absolute bottom-2 left-2 rounded-full bg-ink/85 px-2.5 py-1 text-[11px] font-semibold text-white">
+              {t("unitsAvailable", { count: bike.totalAvailable })}
+            </span>
+          ) : (
+            <span className="absolute bottom-2 left-2 rounded-full bg-ink/85 px-2.5 py-1 text-[11px] font-semibold text-white">
+              {t("soldOut")}
+            </span>
+          )
+        ) : !bike.available ? (
           <span className="absolute bottom-2 left-2 rounded-full bg-ink/85 px-2.5 py-1 text-[11px] font-semibold text-white">
             {t("onRent")}
           </span>

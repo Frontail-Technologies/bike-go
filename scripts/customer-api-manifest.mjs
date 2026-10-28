@@ -40,6 +40,8 @@ export const customerApiManifest = [
       { name: "listVehicles", hook: "useVehiclesQuery", kind: "query", method: "GET", path: "/vehicles", queryType: "VehicleListParams", responseType: "Vehicle", paginated: true },
       { name: "getVehicle", hook: "useVehicleQuery", kind: "query", method: "GET", path: "/vehicles/:idOrSlug", responseType: "Vehicle" },
       { name: "getVehicleAvailability", hook: "useVehicleAvailabilityQuery", kind: "query", method: "GET", path: "/vehicles/:idOrSlug/availability", queryType: "VehicleAvailabilityParams", responseType: "VehicleAvailability" },
+      { name: "listVehicleModels", hook: "useVehicleModelsQuery", kind: "query", method: "GET", path: "/vehicles/models", queryType: "VehicleModelListParams", responseType: "VehicleModelGroup", paginated: true },
+      { name: "getVehicleModelGroup", hook: "useVehicleModelGroupQuery", kind: "query", method: "GET", path: "/vehicles/models/:groupSlug", queryType: "VehicleModelGroupParams", responseType: "VehicleModelGroup" },
     ],
   },
   {

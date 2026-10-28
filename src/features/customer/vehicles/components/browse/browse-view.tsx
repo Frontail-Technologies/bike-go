@@ -16,8 +16,8 @@ import { MotorcycleCardSkeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import { useTranslations } from "@/i18n/hooks";
 import { favoritesStore } from "@/features/customer/profile/stores/preferences-store";
-import { useVehiclesQuery } from "@/features/customer/vehicles/hooks/use-vehicles";
-import { vehicleToMotorcycle } from "@/features/customer/vehicles/lib/vehicle-mapper";
+import { useVehicleModelsQuery } from "@/features/customer/vehicles/hooks/use-vehicles";
+import { vehicleGroupToMotorcycleGroup } from "@/features/customer/vehicles/lib/vehicle-group-mapper";
 import { cambodiaRentalRange } from "@/lib/cambodia-time";
 import { BikeFilters } from "./bike-filters";
 import { DEFAULT_BROWSE, browseStore } from "../../stores/browse-store";
@@ -53,8 +53,8 @@ export function BrowseView({ initialMasters }: { initialMasters: VehicleFilterMa
   const activeSort = isSortKey(requestedSort) ? requestedSort : sort;
   const deferredQuery = useDeferredValue(activeQuery.trim());
   const engine = activeFilters.engine[0];
-  const range = activeDates ? cambodiaRentalRange(activeDates.start, activeDates.end) : {};
-  const vehicles = useVehiclesQuery({
+  const range: { pickupAt?: string; returnAt?: string } = activeDates ? cambodiaRentalRange(activeDates.start, activeDates.end) : {};
+  const vehicles = useVehicleModelsQuery({
     page,
     pageSize: saved ? 100 : 24,
     q: deferredQuery || undefined,
@@ -65,8 +65,8 @@ export function BrowseView({ initialMasters }: { initialMasters: VehicleFilterMa
     maxPrice: activeFilters.price[1] * 100,
     minEngineCc: engine === "200-400" ? 200 : engine === "over-400" ? 401 : undefined,
     maxEngineCc: engine === "under-200" ? 199 : engine === "200-400" ? 400 : undefined,
-    availableOnly: activeFilters.availableOnly || undefined,
-    ...range,
+    start: range.pickupAt,
+    end: range.returnAt,
     sort: activeSort === "price-asc" ? "price_asc" : activeSort === "price-desc" ? "price_desc" : activeSort === "popular" ? "newest" : "name",
   });
 
@@ -87,9 +87,10 @@ export function BrowseView({ initialMasters }: { initialMasters: VehicleFilterMa
   }, []);
 
   const results = useMemo(() => {
-    const mapped = (vehicles.data?.data ?? []).map(vehicleToMotorcycle);
+    let mapped = (vehicles.data?.data ?? []).map(vehicleGroupToMotorcycleGroup);
+    if (activeFilters.availableOnly) mapped = mapped.filter((group) => group.totalAvailable > 0);
     return saved ? mapped.filter((vehicle) => favorites.includes(vehicle.id)) : mapped;
-  }, [favorites, saved, vehicles.data]);
+  }, [activeFilters.availableOnly, favorites, saved, vehicles.data]);
   const loading = vehicles.isPending;
   const phoneCount = activeFilterCount(filters, true);
   const sidebarCount = activeFilterCount(filters);
@@ -227,7 +228,7 @@ export function BrowseView({ initialMasters }: { initialMasters: VehicleFilterMa
             ) : (
               <AnimatedGrid key={`${activeFilters.category}-${activeSort}-${results.length}`} className={`${gridClass} lg:grid-cols-3`}>
                 {results.map((bike) => (
-                  <MotorcycleCard key={bike.id} bike={bike} />
+                  <MotorcycleCard key={bike.id} bike={bike} href={`/bikes/models/${bike.id}`} />
                 ))}
               </AnimatedGrid>
             )}

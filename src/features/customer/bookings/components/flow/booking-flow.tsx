@@ -15,6 +15,10 @@ import { draftStore, justBookedStore } from "@/features/customer/bookings/stores
 import type { BookingDraft } from "@/features/customer/bookings/types";
 import type { Motorcycle } from "@/features/customer/vehicles/lib/view-model";
 import type { Vehicle } from "@/features/customer/vehicles/types";
+
+export type BookingTarget =
+  | { kind: "vehicle"; vehicle: Vehicle }
+  | { kind: "group"; group: { brand: string; model: string; locationId: string } };
 import { useCustomerProfileQuery } from "@/features/customer/profile/hooks/use-profile";
 import { useBookingAddonsQuery, useCreateBookingMutation } from "@/features/customer/bookings/hooks/use-bookings";
 import { useBookingQuoteQuery } from "@/features/customer/bookings/hooks/use-booking-quote";
@@ -33,7 +37,7 @@ const EMPTY_QUOTE: Quote = { days: 0, rental: 0, helmet: 0, jacket: 0, tax: 0, f
 
 const clampStep = (n: number) => Math.max(1, Math.min(LAST_STEP, Number.isFinite(n) ? n : 1));
 
-export function BookingFlow({ bike, vehicle }: { bike: Motorcycle; vehicle: Vehicle }) {
+export function BookingFlow({ bike, target, detailsHref, bookHref }: { bike: Motorcycle; target: BookingTarget; detailsHref: string; bookHref: string }) {
   const router = useRouter();
   const params = useSearchParams();
   const pathname = usePathname();
@@ -68,14 +72,15 @@ export function BookingFlow({ bike, vehicle }: { bike: Motorcycle; vehicle: Vehi
   const patch = (partial: Partial<BookingDraft>) => draftStore.set({ ...draft, ...partial });
   const hasDates = Boolean(draft.start && draft.end);
   const days = hasDates ? rentalDaysBetween(draft.start!, draft.end!) : 0;
+  const locationId = target.kind === "vehicle" ? target.vehicle.location.id : target.group.locationId;
   const bookingRequest = useMemo(() => !hasDates ? null : ({
-    vehicle: vehicle.slug,
-    pickupLocationId: vehicle.location.id,
-    returnLocationId: vehicle.location.id,
+    ...(target.kind === "vehicle" ? { vehicle: target.vehicle.slug } : { group: target.group }),
+    pickupLocationId: locationId,
+    returnLocationId: locationId,
     pickupAt: cambodiaRentalDateTime(draft.start!, draft.pickupTime),
     returnAt: cambodiaRentalDateTime(draft.end!, draft.dropTime),
     addons: Object.entries(draft.addOns).filter(([, selected]) => selected).map(([code]) => ({ code, quantity: 1 })),
-  }), [draft.addOns, draft.dropTime, draft.end, draft.pickupTime, draft.start, hasDates, vehicle.location.id, vehicle.slug]);
+  }), [draft.addOns, draft.dropTime, draft.end, draft.pickupTime, draft.start, hasDates, locationId, target]);
   const quoteQuery = useBookingQuoteQuery(bookingRequest);
   const optimisticQuote = hasDates
     ? estimateBookingQuote({ bike, days, selected: draft.addOns, addons: addonsQuery.data ?? [], previous: quoteQuery.data })
@@ -93,7 +98,7 @@ export function BookingFlow({ bike, vehicle }: { bike: Motorcycle; vehicle: Vehi
     return `?${qs}`;
   };
 
-  const flowPath = `/bikes/${bike.id}/book`;
+  const flowPath = bookHref;
   useEffect(() => {
     if (pathname !== flowPath) paid.current = false;
   }, [pathname, flowPath]);
@@ -161,7 +166,7 @@ export function BookingFlow({ bike, vehicle }: { bike: Motorcycle; vehicle: Vehi
     <>
       <AppBar
         leading="back"
-        backFallback={`/bikes/${bike.id}`}
+        backFallback={detailsHref}
         onBack={step > 1 ? () => router.back() : undefined}
         title={t("bookThisBike")}
         subtitle={bike.name}

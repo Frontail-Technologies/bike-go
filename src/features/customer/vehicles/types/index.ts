@@ -54,3 +54,48 @@ export type VehicleAvailability = {
   reason: "vehicle_unavailable" | "period_taken" | null;
   unavailablePeriods: { start: string; end: string; kind: "booking" | "block" }[];
 };
+
+export type VehicleGroupLocation = { locationId: string; name: string; city: string; availableCount: number };
+
+/** One brand+model across every location, with a live available-unit count. */
+export type VehicleModelGroup = {
+  groupSlug: string;
+  vehicleType: VehicleType;
+  brand: string;
+  model: string;
+  name: string;
+  category: string;
+  description: string | null;
+  engineCc: number | null;
+  transmission: string | null;
+  fuelType: string | null;
+  seats: number | null;
+  dailyRentalPriceMinor: number;
+  dailyRentalPriceMaxMinor: number;
+  priceVaries: boolean;
+  securityDepositMinor: number;
+  currency: "USD";
+  specifications: Record<string, unknown>;
+  images: VehicleImage[];
+  totalAvailable: number;
+  locations: VehicleGroupLocation[];
+};
+
+export type VehicleModelListParams = {
+  page?: number;
+  pageSize?: number;
+  q?: string;
+  vehicleType?: VehicleType;
+  category?: string;
+  brand?: string[];
+  transmission?: string[];
+  minPrice?: number;
+  maxPrice?: number;
+  minEngineCc?: number;
+  maxEngineCc?: number;
+  start?: string;
+  end?: string;
+  sort?: "price_asc" | "price_desc" | "name" | "newest";
+};
+
+export type VehicleModelGroupParams = { start?: string; end?: string };
