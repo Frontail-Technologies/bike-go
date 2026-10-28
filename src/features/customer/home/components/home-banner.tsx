@@ -7,7 +7,7 @@ import type { PublicBanner } from "../types";
 export function HomeBanner({ banner }: { banner: PublicBanner }) {
   return (
     <section aria-label={banner.title} className="relative isolate h-52 overflow-hidden rounded-card bg-ink text-white md:h-80 md:rounded-overlay">
-      <Image src={banner.imageUrl} alt="" fill priority unoptimized sizes="(min-width: 1280px) 1216px, 100vw" className="object-cover object-right" />
+      <Image src={banner.imageUrl} alt="" fill priority unoptimized sizes="(min-width: 1280px) 1216px, 100vw" className="object-cover object-center md:object-right" />
       <div aria-hidden className="absolute inset-0 bg-linear-to-r from-ink via-ink/75 to-transparent" />
       <div className="relative z-10 flex h-full max-w-[52%] flex-col justify-center gap-2 p-5 md:max-w-lg md:gap-3 md:p-12">
         <p className="text-3xl leading-[1.05] font-extrabold tracking-tight md:text-6xl">
@@ -22,7 +22,7 @@ export function HomeBanner({ banner }: { banner: PublicBanner }) {
 export function HomePromoBanner({ banner }: { banner: PublicBanner }) {
   return (
     <section aria-label={banner.title} className="relative isolate flex min-h-36 items-center overflow-hidden rounded-overlay bg-ink p-5 text-white md:min-h-52 md:p-10">
-      <Image src={banner.imageUrl} alt="" fill unoptimized sizes="(min-width: 1280px) 1216px, 100vw" className="-z-20 object-cover object-right" />
+      <Image src={banner.imageUrl} alt="" fill unoptimized sizes="(min-width: 1280px) 1216px, 100vw" className="-z-20 object-cover object-center md:object-right" />
       <div aria-hidden className="absolute inset-0 -z-10 bg-linear-to-r from-ink via-ink/80 to-ink/15" />
       <div className="flex max-w-[70%] flex-col gap-1 md:max-w-xl md:gap-2">
         <h2 className="text-lg font-extrabold md:text-3xl">{banner.title}</h2>
