@@ -16,7 +16,7 @@ export function GroupDetailsRoute({ groupSlug }: { groupSlug: string }) {
   const end = params.get("end");
   const range: { pickupAt?: string; returnAt?: string } = start && end ? cambodiaRentalRange(start, end) : {};
   const group = useVehicleModelGroupQuery(groupSlug, { start: range.pickupAt, end: range.returnAt });
-  if (group.isPending) return <BikeDetailsSkeleton />;
+  if (group.isPending) return <BikeDetailsSkeleton variant="group" />;
   if (group.isError || !group.data) {
     return (
       <main className="mx-auto flex min-h-[60dvh] max-w-lg items-center px-page">

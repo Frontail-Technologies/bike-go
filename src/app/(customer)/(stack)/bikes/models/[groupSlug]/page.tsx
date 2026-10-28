@@ -8,5 +8,5 @@ export const instant = false;
 
 export default async function BikeGroupPage({ params }: { params: Promise<{ groupSlug: string }> }) {
   const { groupSlug } = await params;
-  return <Suspense fallback={<BikeDetailsSkeleton />}><GroupDetailsRoute groupSlug={groupSlug} /></Suspense>;
+  return <Suspense fallback={<BikeDetailsSkeleton variant="group" />}><GroupDetailsRoute groupSlug={groupSlug} /></Suspense>;
 }
