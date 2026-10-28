@@ -145,6 +145,9 @@ export function ProfileView() {
   const [licencePhotoError, setLicencePhotoError] = useState<string | null>(null);
   const close = () => setModal(null);
   const avatarUrl = remoteProfile?.avatarUrl || session.data?.user.image || null;
+  // Long legal names overflow the card on phones; show the Telegram handle when there is one.
+  const displayName = remoteProfile?.telegramUsername ? `@${remoteProfile.telegramUsername}` : profile.name;
+  const secondaryLine = remoteProfile?.telegramUsername ? profile.name : profile.email;
 
   const details = useForm({ resolver: zodResolver(detailsSchema(t)), mode: "onBlur", values: { name: profile.name, phone: profile.phone, email: profile.email, address: profile.address } });
   const licence = useForm({ resolver: zodResolver(licenceSchema(t)), mode: "onBlur", values: { number: profile.licence?.number ?? "" } });
@@ -167,8 +170,8 @@ export function ProfileView() {
                 <Avatar.Fallback className="bg-ink text-lg font-bold text-white">{profile.name ? initials(profile.name) : "?"}</Avatar.Fallback>
               </Avatar>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-base font-bold">{profile.name || "—"}</p>
-                {profile.email ? <p className="truncate text-sm text-subtle">{profile.email}</p> : null}
+                <p className="truncate text-base font-bold">{displayName || "—"}</p>
+                {secondaryLine ? <p className="truncate text-sm text-subtle">{secondaryLine}</p> : null}
               </div>
               <Button variant="secondary" size="sm" onPress={() => setModal("edit")} aria-label={t("editDetails")}>
                 <PencilSimpleIcon size={20} />

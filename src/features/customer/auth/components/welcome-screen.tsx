@@ -16,7 +16,7 @@ import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";
 import { useCustomerAuthMutations, useCustomerSessionQuery } from "../hooks/use-customer-session-query";
 import { safeCustomerReturnTo } from "../lib/safe-return-to";
-import { TelegramLoginWidget } from "./telegram-login-widget";
+import { TelegramLoginButton } from "./telegram-login-button";
 
 const HERO_IMAGE: string | null = "/hero/welcome.jpg";
 
@@ -146,16 +146,16 @@ export function WelcomeScreen() {
             {auth.google.isPending ? <Spinner color="current" size="sm" /> : <GoogleLogoIcon size={20} weight="bold" />}
             {t("continueGoogle")}
           </Button>
-          <TelegramLoginWidget
+          <TelegramLoginButton
+            label={t("continueTelegram")}
+            isPending={auth.telegram.isPending}
+            isDisabled={auth.google.isPending}
             onAuth={async (payload) => {
-              try {
-                await auth.telegram.mutateAsync(payload);
-                toast.success(t("welcomeToast"));
-                router.replace(returnTo);
-              } catch (error) {
-                toast.danger(error instanceof Error ? error.message : "Telegram sign-in could not be completed.");
-              }
+              await auth.telegram.mutateAsync(payload);
+              toast.success(t("welcomeToast"));
+              router.replace(returnTo);
             }}
+            onError={(error) => toast.danger(error instanceof Error ? error.message : "Telegram sign-in could not be completed.")}
           />
           <p className="text-center text-xs text-white/60">
             {t.rich("consent", {
