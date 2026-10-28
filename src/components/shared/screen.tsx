@@ -45,7 +45,7 @@ export function ScreenFooter({ children, hideFrom, className }: ScreenFooterProp
     <div
       data-testid="screen-footer"
       className={cn(
-        "fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 px-page pt-3 pb-[calc(0.75rem+var(--safe-bottom))] shadow-nav backdrop-blur-md",
+        "fixed inset-x-0 bottom-[var(--keyboard-inset,0px)] z-30 border-t border-line bg-surface/95 px-page pt-3 pb-[calc(0.75rem+var(--safe-bottom))] shadow-nav backdrop-blur-md",
         hideFrom === "md" && "md:hidden",
         hideFrom === "lg" && "lg:hidden",
         className,

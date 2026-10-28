@@ -88,8 +88,11 @@ export function BookingFlow({ bike, target, detailsHref, bookHref }: { bike: Mot
   const quote = quoteQuery.data && !quoteQuery.isFetching ? bookingQuoteToView(quoteQuery.data) : optimisticQuote;
   const overlaps = quoteQuery.isError;
 
-  const maxStep = !hasDates || overlaps || !hasStored ? 1 : !riderStepValid(draft) ? 2 : !licenceStepValid(draft) ? 3 : agreed ? LAST_STEP : 4;
-  const requested = clampStep(Number(params.get("step") ?? 1));
+  const maxStep = !hasDates || overlaps ? 1 : !riderStepValid(draft) ? 2 : !licenceStepValid(draft) ? 3 : agreed ? LAST_STEP : 4;
+  // Dates are already chosen on the details page before "Book now" links here; only
+  // ask again (step 1) if we land without a date range and no step is named in the URL.
+  const arrivingWithDates = !params.get("step") && hasDates;
+  const requested = clampStep(Number(params.get("step") ?? (arrivingWithDates ? 2 : 1)));
   const step = Math.min(requested, maxStep);
 
   const withStep = (n: number) => {
@@ -178,7 +181,7 @@ export function BookingFlow({ bike, target, detailsHref, bookHref }: { bike: Mot
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-10">
           <section aria-label={t(flowSteps[step - 1]!)} className="min-w-0">
-            <div key={step} className="rgo-page-in flex flex-col gap-5">
+            <div key={step} className="rgo-stack-in flex flex-col gap-5">
               {step === 1 ? (
                 <>
                   <DatesStep bike={bike} draft={draft} patch={patch} addons={addonsQuery.data ?? []} addonsPending={addonsQuery.isPending} />

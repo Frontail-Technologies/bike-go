@@ -19,7 +19,7 @@ export function FlowFooter({ label, amount, formId, onPress, isDisabled, isPendi
   return (
     <div
       data-testid="flow-footer"
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 px-page pt-3 pb-[calc(0.75rem+var(--safe-bottom))] shadow-nav backdrop-blur-md lg:static lg:border-0 lg:bg-transparent lg:px-0 lg:pb-0 lg:shadow-none"
+      className="fixed inset-x-0 bottom-[var(--keyboard-inset,0px)] z-30 border-t border-line bg-surface/95 px-page pt-3 pb-[calc(0.75rem+var(--safe-bottom))] shadow-nav backdrop-blur-md lg:static lg:border-0 lg:bg-transparent lg:px-0 lg:pb-0 lg:shadow-none"
     >
       <div className="mx-auto flex max-w-md items-center justify-between gap-4 lg:max-w-none">
         <div className="lg:hidden">

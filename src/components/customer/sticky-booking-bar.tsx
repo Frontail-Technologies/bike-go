@@ -31,7 +31,7 @@ export function StickyBookingBar({
         "z-30 border-t border-line bg-surface/95 px-page py-3 shadow-nav backdrop-blur-md",
         inline
           ? "sticky bottom-0"
-          : "fixed inset-x-0 bottom-0 pb-[calc(0.75rem+var(--safe-bottom))]",
+          : "fixed inset-x-0 bottom-[var(--keyboard-inset,0px)] pb-[calc(0.75rem+var(--safe-bottom))]",
         className,
       )}
     >

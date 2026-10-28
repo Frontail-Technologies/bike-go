@@ -4,6 +4,7 @@ import { I18nProvider } from "@/i18n/provider";
 import { pendingLocaleScript } from "@/i18n/pending";
 import { MotionProvider } from "@/components/motion/motion-provider";
 import { AppToaster } from "@/components/ui/toast";
+import { KeyboardInsetWatcher } from "@/components/shared/keyboard-inset-watcher";
 import { CustomerQueryProvider } from "@/components/customer/customer-query-provider";
 import "./globals.css";
 
@@ -14,12 +15,15 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: { default: "RideGo", template: "%s · RideGo" },
   description: "Premium motorcycle rentals with flexible bookings.",
   applicationName: "RideGo",
   appleWebApp: { capable: true, title: "RideGo", statusBarStyle: "default" },
   icons: { icon: [{ url: "/icon.svg", type: "image/svg+xml" }], apple: "/icons/apple-touch-icon.png" },
   formatDetection: { telephone: false },
+  openGraph: { siteName: "RideGo", type: "website" },
+  twitter: { card: "summary_large_image" },
 };
 
 export const viewport: Viewport = {
@@ -41,6 +45,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <CustomerQueryProvider><MotionProvider>{children}</MotionProvider></CustomerQueryProvider>
         </I18nProvider>
         <AppToaster />
+        <KeyboardInsetWatcher />
       </body>
     </html>
   );
