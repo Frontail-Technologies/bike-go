@@ -14,7 +14,7 @@ export function DateRangeCalendar({ className, ...props }: DateRangeCalendarProp
   const t = useTranslations("common");
 
   return (
-    <RangeCalendar firstDayOfWeek="mon" className={cn("w-full max-w-none", className)} {...props}>
+    <RangeCalendar firstDayOfWeek="mon" className={cn("mx-auto", className)} {...props}>
       <RangeCalendar.Header>
         <RangeCalendar.Heading className="font-bold" />
         <RangeCalendar.NavButton slot="previous" aria-label={t("previousMonth")}>
