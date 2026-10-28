@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ModalDialog } from "@/components/ui/modal-dialog";
+import { BlockSkeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { toast } from "@/components/ui/toast";
 import { Reveal } from "@/components/motion/reveal";
@@ -59,11 +60,22 @@ const depositNote = {
 } as const;
 
 export function BookingDetailsView({ reference }: { reference: string }) {
-  const found = useBooking(reference);
+  const { data: found, isPending } = useBooking(reference);
   const t = useTranslations("booking");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const cancel = useCancelBookingMutation();
   const profile = useCustomerProfileQuery();
+
+  if (isPending) {
+    return (
+      <>
+        <AppBar leading="back" backFallback="/bookings" title={t("details")} />
+        <Screen enter="slide">
+          <BlockSkeleton className="h-96 w-full" />
+        </Screen>
+      </>
+    );
+  }
 
   if (!found) {
     return (

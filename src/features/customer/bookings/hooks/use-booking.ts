@@ -5,7 +5,10 @@ import { apiBookingToView } from "../lib/booking-mapper";
 
 export function useBooking(reference: string) {
   const query = useBookingQuery(reference);
-  return query.data ? { ...apiBookingToView(query.data), paymentStatus: query.data.paymentStatus } : undefined;
+  const data = query.data ? { ...apiBookingToView(query.data), paymentStatus: query.data.paymentStatus } : undefined;
+  // isPending alone doesn't exclude a background refetch; the caller only
+  // needs to know whether the *first* load has resolved one way or the other.
+  return { data, isPending: query.isLoading };
 }
 
 export function maskLicence(number: string | null, fallback = "") {

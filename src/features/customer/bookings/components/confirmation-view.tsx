@@ -9,6 +9,7 @@ import { BikeImage } from "@/components/shared/bike-image";
 import { Screen } from "@/components/shared/screen";
 import { ButtonLink } from "@/components/ui/button-link";
 import { EmptyState } from "@/components/ui/empty-state";
+import { BlockSkeleton } from "@/components/ui/skeleton";
 import { quoteLines } from "@/features/customer/bookings/lib/pricing";
 import { duration, ease } from "@/design-system/motion";
 import { useTranslations } from "@/i18n/hooks";
@@ -18,10 +19,21 @@ import { useBooking } from "../hooks/use-booking";
 
 export function ConfirmationView({ reference }: { reference: string }) {
   const router = useRouter();
-  const found = useBooking(reference);
+  const { data: found, isPending } = useBooking(reference);
   const t = useTranslations("booking");
   const common = useTranslations("common");
   const goHome = () => router.replace("/");
+
+  if (isPending) {
+    return (
+      <>
+        <AppBar leading="back" onBack={goHome} />
+        <Screen enter="slide" className="max-w-xl">
+          <BlockSkeleton className="h-96 w-full" />
+        </Screen>
+      </>
+    );
+  }
 
   if (!found) {
     return (
