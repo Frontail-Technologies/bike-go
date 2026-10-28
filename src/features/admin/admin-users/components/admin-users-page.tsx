@@ -1,6 +1,18 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Description, Dropdown, FieldError, Input, Label, ListBox, Modal, Select, Spinner, TextField } from "@heroui/react";
+import {
+  Button,
+  Description,
+  Dropdown,
+  FieldError,
+  Input,
+  Label,
+  ListBox,
+  Modal,
+  Select,
+  Spinner,
+  TextField,
+} from "@heroui/react";
 import { DotsThreeVerticalIcon, PlusIcon } from "@phosphor-icons/react";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import { useEffect, useState } from "react";
@@ -288,7 +300,11 @@ export function AdminUsersPage() {
         description="Deactivation immediately revokes every active administrator session."
         confirmLabel={confirm?.status === "active" ? "Deactivate" : "Activate"}
         danger={confirm?.status === "active"}
-        isPending={confirm?.status === "active" ? actions.deactivate.isPending : actions.activate.isPending}
+        isPending={
+          confirm?.status === "active"
+            ? actions.deactivate.isPending
+            : actions.activate.isPending
+        }
         onConfirm={() => {
           if (!confirm) return;
           (confirm.status === "active"
@@ -316,16 +332,38 @@ function AdminForm({
   reset: ReturnType<typeof useAdminUserMutations>["reset"];
 }) {
   // Each dialog validates only the fields it shows; the schemas are subsets of the same field set, so this cast is safe.
-  const schema = (dialog === "edit" ? editAdminUserSchema : dialog === "reset" ? resetAdminPasswordSchema : adminUserSchema) as typeof adminUserSchema;
+  const schema = (
+    dialog === "edit"
+      ? editAdminUserSchema
+      : dialog === "reset"
+        ? resetAdminPasswordSchema
+        : adminUserSchema
+  ) as typeof adminUserSchema;
   const form = useForm<CreateValues>({
     resolver: zodResolver(schema),
     defaultValues: selected
-      ? { name: selected.name, email: selected.email, role: selected.role, password: "", confirmPassword: "" }
-      : { name: "", email: "", role: "admin", password: "", confirmPassword: "" },
+      ? {
+          name: selected.name,
+          email: selected.email,
+          role: selected.role,
+          password: "",
+          confirmPassword: "",
+        }
+      : {
+          name: "",
+          email: "",
+          role: "admin",
+          password: "",
+          confirmPassword: "",
+        },
   });
   if (!dialog) return null;
   const submit = form.handleSubmit((v) => {
-    if (dialog === "create") create.mutate({ name: v.name, email: v.email, role: v.role, password: v.password }, { onSuccess: close });
+    if (dialog === "create")
+      create.mutate(
+        { name: v.name, email: v.email, role: v.role, password: v.password },
+        { onSuccess: close },
+      );
     if (dialog === "edit" && selected)
       update.mutate(
         { id: selected.id, name: v.name, role: v.role },
@@ -357,63 +395,134 @@ function AdminForm({
         <Modal.Body className="grid gap-4">
           {dialog !== "reset" ? (
             <>
-              <Controller control={control} name="name" render={({ field, fieldState }) => (
-                <TextField isRequired isInvalid={Boolean(fieldState.error)} value={field.value} onChange={field.onChange} onBlur={field.onBlur} autoFocus>
-                  <Label>Full name</Label>
-                  <Input />
-                  <FieldError>{fieldState.error?.message}</FieldError>
-                </TextField>
-              )} />
-              {dialog === "create" ? (
-                <Controller control={control} name="email" render={({ field, fieldState }) => (
-                  <TextField isRequired isInvalid={Boolean(fieldState.error)} type="email" value={field.value} onChange={field.onChange} onBlur={field.onBlur}>
-                    <Label>Email</Label>
+              <Controller
+                control={control}
+                name="name"
+                render={({ field, fieldState }) => (
+                  <TextField
+                    isRequired
+                    isInvalid={Boolean(fieldState.error)}
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    autoFocus
+                  >
+                    <Label>Full name</Label>
                     <Input />
                     <FieldError>{fieldState.error?.message}</FieldError>
                   </TextField>
-                )} />
+                )}
+              />
+              {dialog === "create" ? (
+                <Controller
+                  control={control}
+                  name="email"
+                  render={({ field, fieldState }) => (
+                    <TextField
+                      isRequired
+                      isInvalid={Boolean(fieldState.error)}
+                      type="email"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                    >
+                      <Label>Email</Label>
+                      <Input />
+                      <FieldError>{fieldState.error?.message}</FieldError>
+                    </TextField>
+                  )}
+                />
               ) : (
                 <TextField isDisabled value={selected?.email ?? ""}>
                   <Label>Email</Label>
                   <Input />
-                  <Description>The sign-in email can’t be changed here.</Description>
+                  <Description>
+                    The sign-in email can’t be changed here.
+                  </Description>
                 </TextField>
               )}
-              <Controller control={control} name="role" render={({ field, fieldState }) => (
-                <Select placeholder="Select role" value={field.value ?? null} onChange={(key) => key !== null && field.onChange(String(key))} isInvalid={Boolean(fieldState.error)}>
-                  <Label>Role</Label>
-                  <Select.Trigger><Select.Value /><Select.Indicator /></Select.Trigger>
-                  <Select.Popover className="adminOverlay">
-                    <ListBox>
-                      <ListBox.Item id="admin" textValue="Admin">Admin<ListBox.ItemIndicator /></ListBox.Item>
-                      <ListBox.Item id="super_admin" textValue="Super admin">Super admin<ListBox.ItemIndicator /></ListBox.Item>
-                    </ListBox>
-                  </Select.Popover>
-                  <FieldError>{fieldState.error?.message}</FieldError>
-                </Select>
-              )} />
+              <Controller
+                control={control}
+                name="role"
+                render={({ field, fieldState }) => (
+                  <Select
+                    placeholder="Select role"
+                    value={field.value ?? null}
+                    onChange={(key) =>
+                      key !== null && field.onChange(String(key))
+                    }
+                    isInvalid={Boolean(fieldState.error)}
+                  >
+                    <Label>Role</Label>
+                    <Select.Trigger>
+                      <Select.Value />
+                      <Select.Indicator />
+                    </Select.Trigger>
+                    <Select.Popover className="adminOverlay">
+                      <ListBox>
+                        <ListBox.Item id="admin" textValue="Admin">
+                          Admin
+                          <ListBox.ItemIndicator />
+                        </ListBox.Item>
+                        <ListBox.Item id="super_admin" textValue="Super admin">
+                          Super admin
+                          <ListBox.ItemIndicator />
+                        </ListBox.Item>
+                      </ListBox>
+                    </Select.Popover>
+                    <FieldError>{fieldState.error?.message}</FieldError>
+                  </Select>
+                )}
+              />
             </>
           ) : null}
           {dialog !== "edit" ? (
             <>
-              <Controller control={control} name="password" render={({ field, fieldState }) => (
-                <TextField isRequired isInvalid={Boolean(fieldState.error)} type="password" value={field.value} onChange={field.onChange} onBlur={field.onBlur} autoFocus={dialog === "reset"}>
-                  <Label>{dialog === "reset" ? "Temporary password" : "Initial password"}</Label>
-                  <Input />
-                  <FieldError>{fieldState.error?.message}</FieldError>
-                </TextField>
-              )} />
-              <Controller control={control} name="confirmPassword" render={({ field, fieldState }) => (
-                <TextField isRequired isInvalid={Boolean(fieldState.error)} type="password" value={field.value} onChange={field.onChange} onBlur={field.onBlur}>
-                  <Label>Confirm password</Label>
-                  <Input />
-                  <FieldError>{fieldState.error?.message}</FieldError>
-                </TextField>
-              )} />
+              <Controller
+                control={control}
+                name="password"
+                render={({ field, fieldState }) => (
+                  <TextField
+                    isRequired
+                    isInvalid={Boolean(fieldState.error)}
+                    type="password"
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    autoFocus={dialog === "reset"}
+                  >
+                    <Label>
+                      {dialog === "reset"
+                        ? "Temporary password"
+                        : "Initial password"}
+                    </Label>
+                    <Input />
+                    <FieldError>{fieldState.error?.message}</FieldError>
+                  </TextField>
+                )}
+              />
+              <Controller
+                control={control}
+                name="confirmPassword"
+                render={({ field, fieldState }) => (
+                  <TextField
+                    isRequired
+                    isInvalid={Boolean(fieldState.error)}
+                    type="password"
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                  >
+                    <Label>Confirm password</Label>
+                    <Input />
+                    <FieldError>{fieldState.error?.message}</FieldError>
+                  </TextField>
+                )}
+              />
             </>
           ) : null}
           {error ? (
-            <p role="alert" className="text-sm text-[var(--admin-danger)]">
+            <p role="alert" className="text-sm text-(--admin-danger)">
               {error.message}
             </p>
           ) : null}
@@ -427,7 +536,9 @@ function AdminForm({
             variant="primary"
             isPending={create.isPending || update.isPending || reset.isPending}
           >
-            {(create.isPending || update.isPending || reset.isPending) ? <Spinner color="current" size="sm" /> : null}
+            {create.isPending || update.isPending || reset.isPending ? (
+              <Spinner color="current" size="sm" />
+            ) : null}
             {dialog === "create"
               ? "Add Admin"
               : dialog === "edit"
