@@ -5,6 +5,7 @@ import { ArrowLeftIcon, ArrowRightIcon, ImageIcon, PlusIcon, StarIcon, TrashIcon
 import Image from "next/image";
 import { useEffect, useId, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
+import { compressImage } from "@/lib/image-compression";
 
 type LocalImage = { id: string; file: File; url: string };
 
@@ -23,12 +24,13 @@ export function ImageUploader({ limit = 5, maxSizeMb = 5, aspectClass = "aspect-
   const selected = images.find((item) => item.id === selectedId) ?? images.find((item) => item.id === primaryId) ?? images[0];
 
   function commit(next: LocalImage[]) { setImages(next); onChange?.(next.map((item) => item.file)); }
-  function add(files: FileList | File[] | null) {
+  async function add(files: FileList | File[] | null) {
     if (!files) return;
     const list = Array.from(files);
     const valid = list.filter((file) => file.type.startsWith("image/") && file.size <= maxSizeMb * 1024 * 1024).slice(0, Math.max(0, limit - images.length));
     setError(valid.length !== list.length ? `Use image files up to ${maxSizeMb} MB. Maximum ${limit} images.` : "");
-    const added = valid.map((file) => { const url = URL.createObjectURL(file); urls.current.push(url); return { id: crypto.randomUUID(), file, url }; });
+    const compressed = await Promise.all(valid.map((file) => compressImage(file)));
+    const added = compressed.map((file) => { const url = URL.createObjectURL(file); urls.current.push(url); return { id: crypto.randomUUID(), file, url }; });
     const next = [...images, ...added];
     commit(next);
     if (!primaryId && next[0]) { setPrimaryId(next[0].id); onPrimaryChange?.(next[0].file); }
