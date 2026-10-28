@@ -3,6 +3,7 @@ import { pack } from "../pack";
 export default pack(
   {
     rentalDates: "Rental dates",
+    changeDates: "Change",
     pickupTime: "Pickup time",
     dropTime: "Drop time",
     totalDuration: "Total duration",
@@ -140,6 +141,7 @@ export default pack(
   {
     km: {
       rentalDates: "កាលបរិច្ឆេទជួល",
+      changeDates: "ប្តូរ",
       pickupTime: "ម៉ោងទទួល",
       dropTime: "ម៉ោងសង",
       totalDuration: "រយៈពេលសរុប",
@@ -276,6 +278,7 @@ export default pack(
     },
     zh: {
       rentalDates: "租赁日期",
+      changeDates: "更改",
       pickupTime: "取车时间",
       dropTime: "还车时间",
       totalDuration: "总时长",
@@ -412,6 +415,7 @@ export default pack(
     },
     ko: {
       rentalDates: "대여 날짜",
+      changeDates: "변경",
       pickupTime: "픽업 시간",
       dropTime: "반납 시간",
       totalDuration: "총 기간",

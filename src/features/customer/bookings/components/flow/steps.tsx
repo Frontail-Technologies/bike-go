@@ -1,16 +1,18 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { EnvelopeSimpleIcon, IdentificationCardIcon, PhoneIcon, UploadSimpleIcon, UserIcon } from "@phosphor-icons/react";
+import { CalendarBlankIcon, EnvelopeSimpleIcon, IdentificationCardIcon, PhoneIcon, UploadSimpleIcon, UserIcon } from "@phosphor-icons/react";
+import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { BookingSummary } from "@/components/customer/booking-summary";
-import { RentalDateSelector, type RentalSelection } from "@/components/customer/rental-date-selector";
+import { RentalDateSelector, rentalDays, type RentalSelection } from "@/components/customer/rental-date-selector";
 import { BikeImage } from "@/components/shared/bike-image";
+import { Button } from "@/components/ui/button";
 import { Checkbox, RadioGroup } from "@/components/ui/selection-controls";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { TextInput } from "@/components/ui/text-field";
-import { formatDay, isBooked, toISO, toRange } from "@/features/customer/bookings/lib/dates";
+import { formatDay, formatRange, isBooked, toISO, toRange } from "@/features/customer/bookings/lib/dates";
 import type { Quote } from "@/features/customer/bookings/lib/pricing";
 import { quoteLines } from "@/features/customer/bookings/lib/pricing";
 import type { BookingDraft } from "@/features/customer/bookings/types";
@@ -23,22 +25,42 @@ type PatchProps = { draft: BookingDraft; patch: (partial: Partial<BookingDraft>)
 
 export function DatesStep({ bike, draft, patch, addons, addonsPending }: PatchProps & { bike: Motorcycle; addons: BookingAddon[]; addonsPending: boolean }) {
   const t = useTranslations("booking");
+  const common = useTranslations("common");
   const value: RentalSelection = { range: toRange(draft.start ?? undefined, draft.end ?? undefined), pickupTime: draft.pickupTime, dropTime: draft.dropTime };
+  // Dates usually arrive already chosen from the bike page; collapse the picker into a
+  // summary so it isn't shown a second time, but let the customer reopen it to change them.
+  const [editingDates, setEditingDates] = useState(!value.range);
 
   return (
     <div className="flex flex-col gap-5">
-      <RentalDateSelector
-        value={value}
-        isDateUnavailable={(date) => isBooked(bike, date)}
-        onChange={(next) =>
-          patch({
-            start: next.range ? toISO(next.range.start) : null,
-            end: next.range ? toISO(next.range.end) : null,
-            pickupTime: next.pickupTime,
-            dropTime: next.dropTime,
-          })
-        }
-      />
+      {editingDates ? (
+        <RentalDateSelector
+          value={value}
+          isDateUnavailable={(date) => isBooked(bike, date)}
+          onChange={(next) => {
+            patch({
+              start: next.range ? toISO(next.range.start) : null,
+              end: next.range ? toISO(next.range.end) : null,
+              pickupTime: next.pickupTime,
+              dropTime: next.dropTime,
+            });
+            if (next.range) setEditingDates(false);
+          }}
+        />
+      ) : value.range ? (
+        <div className="flex items-center gap-3 rounded-card border border-line bg-surface p-4">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-control bg-brand-soft">
+            <CalendarBlankIcon size={20} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-bold">{formatRange(toISO(value.range.start), toISO(value.range.end))}</p>
+            <p className="text-xs text-subtle">{common("days", { count: rentalDays(value.range) })} · {value.pickupTime} – {value.dropTime}</p>
+          </div>
+          <Button variant="ghost" size="sm" onPress={() => setEditingDates(true)}>
+            {t("changeDates")}
+          </Button>
+        </div>
+      ) : null}
       <fieldset className="flex flex-col">
         <legend className="mb-1 text-sm font-semibold">{t("addOns")}</legend>
         {addonsPending ? <p className="py-2 text-sm text-subtle" role="status">Loading add-ons…</p> : null}
@@ -58,7 +80,7 @@ type Say = (key: "errName" | "errPhone" | "errEmail" | "errLicence") => string;
 const riderSchema = (say: Say) =>
   z.object({
     name: z.string().trim().min(2, say("errName")),
-    phone: z.string().regex(/^[6-9]\d{9}$/, say("errPhone")),
+    phone: z.string().regex(/^\+?[\d\s-]{7,20}$/, say("errPhone")),
     email: z.email(say("errEmail")),
   });
 
