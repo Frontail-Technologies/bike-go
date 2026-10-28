@@ -27,7 +27,15 @@ export type ApiBooking = {
   createdAt: string;
 };
 export type BookingQuote = { currency: "USD"; rentalDays: number; pricing: BookingPricing; addons: BookingAddonLine[] };
-export type BookingRequest = { vehicle: string; pickupLocationId?: string; returnLocationId?: string; pickupAt: string; returnAt: string; addons?: { code: string; quantity?: number }[] };
+export type BookingRequest = {
+  vehicle?: string;
+  group?: { brand: string; model: string; locationId: string };
+  pickupLocationId?: string;
+  returnLocationId?: string;
+  pickupAt: string;
+  returnAt: string;
+  addons?: { code: string; quantity?: number }[];
+};
 export type BookingListParams = { page?: number; pageSize?: number; status?: ApiBookingStatus; group?: "upcoming" | "active" | "completed" | "cancelled" };
 export type BookingCancelInput = { reason?: string };
 

@@ -45,6 +45,7 @@ import { useCustomerProfileQuery, useUpdateCustomerProfileMutation } from "../ho
 import { useSaveCustomerLicenceMutation } from "../hooks/use-licence";
 import { enableBrowserNotifications } from "@/features/customer/notifications/lib/browser-notifications";
 import { apiClient } from "@/lib/api/client";
+import { compressImage } from "@/lib/image-compression";
 
 type ModalKey = "edit" | "licence" | "logout" | null;
 
@@ -74,7 +75,16 @@ function LicencePhotoInput({ label, file, existingUrl, onChange }: { label: stri
       {preview ? <Image src={preview} alt="" width={320} height={160} unoptimized className="h-20 w-full rounded-lg object-cover" /> : existingUrl ? <PrivateLicenceImage src={existingUrl} alt={`${label} currently saved`} /> : <UploadSimpleIcon size={24} className="text-subtle" />}
       <span className="text-sm font-semibold">{existingUrl && !file ? `Replace ${label.toLowerCase()}` : label}</span>
       <span className="max-w-full truncate text-xs text-subtle">{file?.name ?? (existingUrl ? "Saved image — tap to replace" : "JPG, PNG or WebP")}</span>
-      <input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => onChange(event.target.files?.[0] ?? null)} />
+      <input
+        className="sr-only"
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        onChange={(event) => {
+          const picked = event.target.files?.[0];
+          if (!picked) { onChange(null); return; }
+          void compressImage(picked).then(onChange);
+        }}
+      />
     </label>
   );
 }
@@ -143,7 +153,10 @@ export function ProfileView() {
     <>
       <AppBar title={t("title")} actions={<IconButton label={t("logout")} icon={<SignOutIcon size={22} />} onPress={() => setModal("logout")} />} />
       <Screen bottom="nav" className="flex flex-col gap-4 md:gap-6">
-        <DesktopTitle title={t("title")} />
+        <div className="hidden items-center justify-between md:flex">
+          <DesktopTitle title={t("title")} />
+          <IconButton label={t("logout")} icon={<SignOutIcon size={22} />} onPress={() => setModal("logout")} className="border border-line" />
+        </div>
 
       <div className="grid gap-4 md:grid-cols-2 md:gap-6">
         <div className="flex flex-col gap-4">

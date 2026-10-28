@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Alert, Button, Description, FieldError, Input, Label, Modal, TextArea, TextField } from "@heroui/react";
+import { Alert, Button, Description, FieldError, Input, Label, Modal, Spinner, TextArea, TextField } from "@heroui/react";
 import { PlusIcon } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -92,7 +92,7 @@ function AddonForm({ addon, onClose }: { addon: Addon | null; onClose: () => voi
       </Modal.Body>
       <Modal.Footer className="flex justify-end gap-2">
         <Button type="button" variant="tertiary" className="min-h-11" onPress={onClose}>Cancel</Button>
-        <Button type="submit" variant="primary" className="min-h-11" isPending={form.formState.isSubmitting}>Save</Button>
+        <Button type="submit" variant="primary" className="min-h-11" isPending={form.formState.isSubmitting}>{form.formState.isSubmitting ? <Spinner color="current" size="sm" /> : null}Save</Button>
       </Modal.Footer>
     </form>
   );

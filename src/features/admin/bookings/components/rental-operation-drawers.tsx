@@ -1,9 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Alert, AlertDialog, Button, Description, Drawer, FieldError, Form, Input, Label, ListBox, Select, TextArea, TextField } from "@heroui/react";
+import { Alert, AlertDialog, Description, Drawer, FieldError, Form, Input, Label, ListBox, Select, TextArea, TextField } from "@heroui/react";
 import { useState } from "react";
 import { Controller, useForm, type Control, type FieldPath } from "react-hook-form";
+import { AdminButton as Button } from "@/components/admin/controls";
 import { Checkbox } from "@/components/ui/selection-controls";
 import { actionErrorMessage } from "../hooks/use-booking-actions";
 import { conditionLabels, distanceTravelled, durationLabel, fmtDateTime, fuelLabels, ictLocalToIso, isoToIctLocal } from "../lib/booking-model";

@@ -5,7 +5,7 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import * as api from "../api/vehicles-api";
 import { customerVehicleKeys } from "../query-keys";
-import type { VehicleAvailabilityParams, VehicleListParams } from "../types";
+import type { VehicleAvailabilityParams, VehicleListParams, VehicleModelGroupParams, VehicleModelListParams } from "../types";
 
 export function useVehiclesQuery(params: VehicleListParams) {
   return useQuery({
@@ -28,5 +28,21 @@ export function useVehicleAvailabilityQuery(idOrSlug: string, params: VehicleAva
     queryKey: customerVehicleKeys.getVehicleAvailability(idOrSlug, params),
     queryFn: ({ signal }) => api.getVehicleAvailability(idOrSlug, params, signal),
     enabled: Boolean(idOrSlug),
+  });
+}
+
+export function useVehicleModelsQuery(params: VehicleModelListParams) {
+  return useQuery({
+    queryKey: customerVehicleKeys.listVehicleModels(params),
+    queryFn: ({ signal }) => api.listVehicleModels(params, signal),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useVehicleModelGroupQuery(groupSlug: string, params: VehicleModelGroupParams) {
+  return useQuery({
+    queryKey: customerVehicleKeys.getVehicleModelGroup(groupSlug, params),
+    queryFn: ({ signal }) => api.getVehicleModelGroup(groupSlug, params, signal),
+    enabled: Boolean(groupSlug),
   });
 }

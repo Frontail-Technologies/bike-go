@@ -1,11 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Alert, Button, Description, FieldError, Form, Input, Label, ListBox, Select, TextField } from "@heroui/react";
+import { Alert, Description, FieldError, Form, Input, Label, ListBox, Select, TextField } from "@heroui/react";
 import { ArrowsClockwiseIcon, CalendarBlankIcon, CheckIcon, ImageIcon, InfoIcon, TrashIcon } from "@phosphor-icons/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Controller, useForm, type Control, type FieldPath } from "react-hook-form";
+import { AdminButton as Button } from "@/components/admin/controls";
 import { AdminErrorState, AdminLoadingState } from "@/components/admin/feedback";
 import { FormCard } from "@/components/admin/forms/form-layout";
 import { ImageUploader } from "@/components/admin/forms/image-uploader";

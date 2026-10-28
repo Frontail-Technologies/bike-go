@@ -4,6 +4,7 @@ import { BankIcon, BriefcaseIcon, CheckCircleIcon, GlobeIcon, HouseLineIcon, Ide
 import { useId, useState } from "react";
 import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";
+import { compressImage } from "@/lib/image-compression";
 import { ACCEPTED_FILES, type DocumentId, MAX_FILE_BYTES, type StoredFile } from "../lib/data";
 
 const icons: Record<DocumentId, typeof BankIcon> = {
@@ -35,7 +36,7 @@ export function DocumentUpload({ label, hint, file, onChange, doc, requested }: 
   // draft metadata, but require a fresh file selection after a page reload.
   const selected = file?.raw instanceof File ? file : undefined;
 
-  function pick(files: FileList | null) {
+  async function pick(files: FileList | null) {
     const picked = files?.[0];
     if (!picked) return;
     if (!/\.(pdf|jpe?g|png)$/i.test(picked.name)) {
@@ -47,7 +48,8 @@ export function DocumentUpload({ label, hint, file, onChange, doc, requested }: 
       return;
     }
     setError(null);
-    onChange({ name: picked.name, size: picked.size, raw: picked });
+    const file = await compressImage(picked);
+    onChange({ name: file.name, size: file.size, raw: file });
   }
 
   return (

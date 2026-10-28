@@ -10,7 +10,7 @@ export const profileStore = createPersistedStore<ProfilePreferences>("rgo.custom
   notifications: { reminders: false, updates: false },
 });
 
-export const favoritesStore = createPersistedStore<string[]>("rgo.customer-favorites.v2", []);
+export const favoritesStore = createPersistedStore<string[]>("rgo.customer-favorites.v3", []);
 
 export const cityStore = createPersistedStore<string>("rgo.city.v2", "Phnom Penh");
 

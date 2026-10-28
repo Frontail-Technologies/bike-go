@@ -1,11 +1,24 @@
 "use client";
 
-import { DateField, DateRangePicker, Label, ListBox, Pagination, RangeCalendar, SearchField, Select } from "@heroui/react";
+import { Button, DateField, DateRangePicker, Label, ListBox, Pagination, RangeCalendar, SearchField, Select, Spinner, type ButtonProps } from "@heroui/react";
 import { parseDate } from "@internationalized/date";
 import { FunnelIcon } from "@phosphor-icons/react";
 import { motion, useReducedMotion } from "motion/react";
 import { Fragment, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
+
+/**
+ * The admin equivalent of the customer Button wrapper. HeroUI's `isPending`
+ * manages interaction state only; this makes the pending state visible for
+ * standard-label buttons while retaining render-prop children when needed.
+ */
+export function AdminButton({ children, isPending, ...props }: ButtonProps) {
+  return (
+    <Button {...props} isPending={isPending}>
+      {typeof children === "function" ? children : <>{isPending ? <Spinner aria-hidden="true" color="current" size="sm" /> : null}{children}</>}
+    </Button>
+  );
+}
 
 export function AdminSearch({ value, onChange, placeholder = "Search…", className }: { value: string; onChange: (value: string) => void; placeholder?: string; className?: string }) {
   return <SearchField value={value} onChange={onChange} aria-label={placeholder} className={cn("w-full sm:max-w-xs", className)}><SearchField.Group><SearchField.SearchIcon /><SearchField.Input placeholder={placeholder} /><SearchField.ClearButton /></SearchField.Group></SearchField>;

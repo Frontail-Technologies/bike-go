@@ -10,8 +10,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { MotorcycleCardSkeleton } from "@/components/ui/skeleton";
 import { useTranslations } from "@/i18n/hooks";
 import { favoritesStore } from "@/features/customer/profile/stores/preferences-store";
-import { useVehiclesQuery } from "../../hooks/use-vehicles";
-import { vehicleToMotorcycle } from "../../lib/vehicle-mapper";
+import { useVehicleModelsQuery } from "../../hooks/use-vehicles";
+import { vehicleGroupToMotorcycleGroup } from "../../lib/vehicle-group-mapper";
 
 /**
  * Saved vehicles are a local preference until the customer API exposes a
@@ -20,9 +20,9 @@ import { vehicleToMotorcycle } from "../../lib/vehicle-mapper";
 export function SavedBikesView() {
   const t = useTranslations("browse");
   const favoriteIds = favoritesStore.useValue();
-  const vehicles = useVehiclesQuery({ page: 1, pageSize: 100, sort: "newest" });
+  const vehicles = useVehicleModelsQuery({ page: 1, pageSize: 100, sort: "newest" });
   const savedBikes = (vehicles.data?.data ?? [])
-    .map(vehicleToMotorcycle)
+    .map(vehicleGroupToMotorcycleGroup)
     .filter((vehicle) => favoriteIds.includes(vehicle.id));
 
   return (
@@ -37,7 +37,7 @@ export function SavedBikesView() {
           </div>
         ) : savedBikes.length ? (
           <AnimatedGrid className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
-            {savedBikes.map((bike) => <MotorcycleCard key={bike.id} bike={bike} />)}
+            {savedBikes.map((bike) => <MotorcycleCard key={bike.id} bike={bike} href={`/bikes/models/${bike.id}`} />)}
           </AnimatedGrid>
         ) : (
           <EmptyState

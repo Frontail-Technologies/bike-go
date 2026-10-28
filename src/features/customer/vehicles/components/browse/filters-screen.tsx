@@ -5,7 +5,7 @@ import { useEffect, useMemo } from "react";
 import { AppBar } from "@/components/shared/app-bar";
 import { Screen, ScreenFooter } from "@/components/shared/screen";
 import { Button } from "@/components/ui/button";
-import { useVehiclesQuery } from "@/features/customer/vehicles/hooks/use-vehicles";
+import { useVehicleModelsQuery } from "@/features/customer/vehicles/hooks/use-vehicles";
 import { useBack } from "@/hooks/use-back";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useTranslations } from "@/i18n/hooks";
@@ -27,22 +27,26 @@ export function FiltersScreen({ initialMasters }: { initialMasters: VehicleFilte
     if (hasSidebar) router.replace("/bikes");
   }, [hasSidebar, router]);
 
-  const vehicleParams = useMemo(() => ({
-    page: 1,
-    pageSize: 1,
-    q: query.trim() || undefined,
-    category: filters.category === "all" ? undefined : filters.category,
-    brand: filters.brands.length ? filters.brands : undefined,
-    transmission: filters.transmission.length ? filters.transmission : undefined,
-    minPrice: filters.price[0] * 100,
-    maxPrice: filters.price[1] * 100,
-    minEngineCc: filters.engine[0] === "200-400" ? 200 : filters.engine[0] === "over-400" ? 401 : undefined,
-    maxEngineCc: filters.engine[0] === "under-200" ? 199 : filters.engine[0] === "200-400" ? 400 : undefined,
-    availableOnly: filters.availableOnly || Boolean(dates),
-    ...(dates ? cambodiaRentalRange(dates.start, dates.end) : {}),
-    sort: sort === "price-asc" ? "price_asc" as const : sort === "price-desc" ? "price_desc" as const : sort === "popular" ? "newest" as const : "name" as const,
-  }), [dates, filters, query, sort]);
-  const vehicles = useVehiclesQuery(vehicleParams);
+  const vehicleParams = useMemo(() => {
+    const range = dates ? cambodiaRentalRange(dates.start, dates.end) : null;
+    return {
+      page: 1,
+      pageSize: 1,
+      q: query.trim() || undefined,
+      category: filters.category === "all" ? undefined : filters.category,
+      brand: filters.brands.length ? filters.brands : undefined,
+      transmission: filters.transmission.length ? filters.transmission : undefined,
+      minPrice: filters.price[0] * 100,
+      maxPrice: filters.price[1] * 100,
+      minEngineCc: filters.engine[0] === "200-400" ? 200 : filters.engine[0] === "over-400" ? 401 : undefined,
+      maxEngineCc: filters.engine[0] === "under-200" ? 199 : filters.engine[0] === "200-400" ? 400 : undefined,
+      availableOnly: filters.availableOnly || Boolean(dates),
+      start: range?.pickupAt,
+      end: range?.returnAt,
+      sort: sort === "price-asc" ? "price_asc" as const : sort === "price-desc" ? "price_desc" as const : sort === "popular" ? "newest" as const : "name" as const,
+    };
+  }, [dates, filters, query, sort]);
+  const vehicles = useVehicleModelsQuery(vehicleParams);
   const count = vehicles.data?.meta.total ?? 0;
   const reset = () => browseStore.update((s) => ({ ...s, filters: { ...DEFAULT_FILTERS, category: "all" } }));
 

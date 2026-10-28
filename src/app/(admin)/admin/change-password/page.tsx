@@ -1,7 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Card, FieldError, Input, Label, TextField } from "@heroui/react";
+import { Card, FieldError, Input, Label, TextField } from "@heroui/react";
+import { AdminButton as Button } from "@/components/admin/controls";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
