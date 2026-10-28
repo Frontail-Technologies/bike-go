@@ -9,7 +9,10 @@ export const instant = false;
 
 export default async function StackLayout({ children }: { children: React.ReactNode }) {
   const queryClient = new QueryClient();
-  queryClient.setQueryData(customerAuthKeys.session(), await getCustomerSessionServer());
+  const session = await getCustomerSessionServer();
+  // Preserve the browser-side credentialed session check when the API cookie is
+  // host-only on a sibling API subdomain and therefore unavailable to SSR.
+  if (session) queryClient.setQueryData(customerAuthKeys.session(), session);
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
