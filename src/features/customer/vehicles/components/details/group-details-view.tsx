@@ -20,6 +20,7 @@ import { toast } from "@/components/ui/toast";
 import { formatRange, toISO, toRange } from "@/features/customer/bookings/lib/dates";
 import { getQuote, quoteLines } from "@/features/customer/bookings/lib/pricing";
 import { draftStore } from "@/features/customer/bookings/stores/booking-draft-store";
+import { useRequireSignIn } from "@/features/customer/auth/components/sign-in-prompt";
 import type { MotorcycleGroup } from "@/features/customer/vehicles/lib/view-model";
 import { favoritesStore, toggleFavorite } from "@/features/customer/profile/stores/preferences-store";
 import { useTranslations } from "@/i18n/hooks";
@@ -40,6 +41,7 @@ function DetailSection({ id, title, className, children }: { id: string; title: 
 
 export function GroupDetailsView({ group }: { group: MotorcycleGroup }) {
   const router = useRouter();
+  const requireSignIn = useRequireSignIn();
   const params = useSearchParams();
   const favorite = favoritesStore.useValue().includes(group.id);
   const t = useTranslations("bike");
@@ -82,7 +84,9 @@ export function GroupDetailsView({ group }: { group: MotorcycleGroup }) {
       dt: selection.dropTime,
       locationId: selectedLocation.locationId,
     });
-    router.push(`/bikes/models/${group.id}/book?${qs}`);
+    const target = `/bikes/models/${group.id}/book?${qs}`;
+    if (!requireSignIn(target)) return;
+    router.push(target);
   }
 
   async function share() {
