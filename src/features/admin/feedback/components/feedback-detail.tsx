@@ -51,7 +51,7 @@ function Workspace({ ticket }: { ticket: SupportTicket }) {
             <h1 className="truncate text-xl font-extrabold tracking-tight sm:text-2xl">{ticket.reference}</h1>
             <AdminStatusBadge status={badge.status} label={badge.label} />
           </div>
-          <p className="text-sm text-[var(--admin-muted)]">{categoryLabels[ticket.category]} · Submitted {dateTime(ticket.createdAt)}</p>
+          <p className="text-sm text-(--admin-muted)">{categoryLabels[ticket.category]} · Submitted {dateTime(ticket.createdAt)}</p>
         </div>
         <Button variant={ticket.status === "open" ? "primary" : "outline"} className="min-h-11" isPending={mutations.update.isPending} onPress={toggleStatus}>
           <CheckCircleIcon size={16} />
@@ -64,8 +64,8 @@ function Workspace({ ticket }: { ticket: SupportTicket }) {
           <h2 className="text-sm font-extrabold">Message</h2>
           <p className="whitespace-pre-wrap text-sm leading-6">{ticket.message}</p>
           {ticket.bookingReference ? (
-            <p className="text-sm text-[var(--admin-muted)]">
-              Referenced booking: <button type="button" className="font-bold text-[var(--admin-accent-strong)] underline-offset-2 hover:underline" onClick={() => router.push(`/admin/bookings/${ticket.bookingReference}`)}>{ticket.bookingReference}</button>
+            <p className="text-sm text-(--admin-muted)">
+              Referenced booking: <button type="button" className="font-bold text-(--admin-accent-strong) underline-offset-2 hover:underline" onClick={() => router.push(`/admin/bookings/${ticket.bookingReference}`)}>{ticket.bookingReference}</button>
             </p>
           ) : null}
         </section>
@@ -73,14 +73,14 @@ function Workspace({ ticket }: { ticket: SupportTicket }) {
         <section aria-label="Customer" className="adminSurface space-y-4 rounded-2xl p-4 sm:p-5">
           <h2 className="text-sm font-extrabold">Customer</h2>
           <div className="flex items-start gap-3">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[var(--admin-surface-muted)] text-[var(--admin-muted)]"><UserCircleIcon size={18} /></span>
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-(--admin-surface-muted) text-(--admin-muted)"><UserCircleIcon size={18} /></span>
             <div className="min-w-0 flex-1">
-              <button type="button" className="truncate text-sm font-semibold text-[var(--admin-accent-strong)] hover:underline" onClick={() => router.push(`/admin/customers/${ticket.customer.id}`)}>{ticket.customer.name}</button>
+              <button type="button" className="truncate text-sm font-semibold text-(--admin-accent-strong) hover:underline" onClick={() => router.push(`/admin/customers/${ticket.customer.id}`)}>{ticket.customer.name}</button>
             </div>
           </div>
           <div className="flex items-start gap-3">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[var(--admin-surface-muted)] text-[var(--admin-muted)]"><EnvelopeSimpleIcon size={18} /></span>
-            <p className="min-w-0 flex-1 break-words text-sm font-semibold">{ticket.customer.email}</p>
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-(--admin-surface-muted) text-(--admin-muted)"><EnvelopeSimpleIcon size={18} /></span>
+            <p className="min-w-0 flex-1 wrap-break-word text-sm font-semibold">{ticket.customer.email}</p>
           </div>
         </section>
       </div>
