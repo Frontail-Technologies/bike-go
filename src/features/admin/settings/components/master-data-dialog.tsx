@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Alert, Button, Description, FieldError, Input, Label, Modal, TextField } from "@heroui/react";
+import { Alert, Button, Description, FieldError, Input, Label, Modal, Spinner, TextField } from "@heroui/react";
 import { ArrowsClockwiseIcon, TrashIcon } from "@phosphor-icons/react";
 import Image from "next/image";
 import { useState } from "react";
@@ -115,6 +115,7 @@ function DialogForm({ noun, item, withImage, onClose, onSubmit }: MasterDataDial
           Cancel
         </Button>
         <Button type="submit" variant="primary" className="min-h-11" isPending={form.formState.isSubmitting}>
+          {form.formState.isSubmitting ? <Spinner aria-hidden="true" color="current" size="sm" /> : null}
           Save
         </Button>
       </Modal.Footer>

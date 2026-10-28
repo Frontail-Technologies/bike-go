@@ -1,6 +1,6 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Description, Dropdown, FieldError, Input, Label, ListBox, Modal, Select, TextField } from "@heroui/react";
+import { Button, Description, Dropdown, FieldError, Input, Label, ListBox, Modal, Select, Spinner, TextField } from "@heroui/react";
 import { DotsThreeVerticalIcon, PlusIcon } from "@phosphor-icons/react";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import { useEffect, useState } from "react";
@@ -427,6 +427,7 @@ function AdminForm({
             variant="primary"
             isPending={create.isPending || update.isPending || reset.isPending}
           >
+            {(create.isPending || update.isPending || reset.isPending) ? <Spinner color="current" size="sm" /> : null}
             {dialog === "create"
               ? "Add Admin"
               : dialog === "edit"

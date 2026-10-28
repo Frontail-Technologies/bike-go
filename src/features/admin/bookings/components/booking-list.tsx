@@ -1,12 +1,12 @@
 "use client";
 
-import { Button, Drawer, useOverlayState } from "@heroui/react";
+import { Drawer, useOverlayState } from "@heroui/react";
 import { ArrowCounterClockwiseIcon, SlidersHorizontalIcon } from "@phosphor-icons/react";
 import type { ColumnDef, OnChangeFn, SortingState } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
 import { startTransition, useEffect, useState } from "react";
 import { PaymentStatusBadge } from "@/components/admin/bookings/booking-parts";
-import { AdminSearch, AdminSelect } from "@/components/admin/controls";
+import { AdminButton as Button, AdminSearch, AdminSelect } from "@/components/admin/controls";
 import { CustomerAvatar } from "@/components/admin/customers/customer-avatar";
 import { AdminDataTable } from "@/components/admin/data-display/admin-data-table";
 import { AdminErrorState } from "@/components/admin/feedback";

@@ -1,7 +1,8 @@
 "use client";
 
-import { Button, Dropdown, Label } from "@heroui/react";
+import { Dropdown, Label } from "@heroui/react";
 import { DotsThreeVerticalIcon, EyeIcon, NotePencilIcon, PowerIcon } from "@phosphor-icons/react";
+import { AdminButton as Button } from "@/components/admin/controls";
 import type { Vehicle } from "../types/vehicle";
 
 type VehicleActionsProps = {

@@ -29,7 +29,7 @@ export function ConfirmationDialog({ isOpen, onOpenChange, title, description, c
           <AlertDialog.Header><AlertDialog.Icon status={danger ? "danger" : "accent"} /><AlertDialog.Heading>{title}</AlertDialog.Heading></AlertDialog.Header>
           <AlertDialog.Body><p className="text-sm text-[var(--admin-muted)]">{description}</p></AlertDialog.Body>
           {/* The confirm button no longer auto-closes (no slot="close"): the caller keeps the dialog open until its mutation settles, then closes it itself. */}
-          <AlertDialog.Footer><Button variant="tertiary" slot="close" isDisabled={isPending}>{cancelLabel}</Button><Button variant={danger ? "danger" : "primary"} isPending={isPending} isDisabled={isPending} onPress={onConfirm}>{confirmLabel}</Button></AlertDialog.Footer>
+          <AlertDialog.Footer><Button variant="tertiary" slot="close" isDisabled={isPending}>{cancelLabel}</Button><Button variant={danger ? "danger" : "primary"} isPending={isPending} isDisabled={isPending} onPress={onConfirm}>{isPending ? <Spinner color="current" size="sm" /> : null}{confirmLabel}</Button></AlertDialog.Footer>
         </AlertDialog.Dialog>
       </AlertDialog.Container>
     </AlertDialog.Backdrop>

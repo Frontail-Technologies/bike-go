@@ -1,11 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Alert, Button, FieldError, Form, Input, Label, Switch, TextField } from "@heroui/react";
+import { Alert, FieldError, Form, Input, Label, Switch, TextField } from "@heroui/react";
 import { ArrowLeftIcon, CheckIcon, LinkIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Controller, useForm, type FieldPath } from "react-hook-form";
+import { AdminButton as Button } from "@/components/admin/controls";
 import { AdminErrorState, AdminLoadingState } from "@/components/admin/feedback";
 import { FormGrid, FormSection } from "@/components/admin/forms/form-layout";
 import { AdminPage, ContentSection, PageHeader } from "@/components/admin/layout";

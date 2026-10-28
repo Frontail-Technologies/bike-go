@@ -1,9 +1,10 @@
 "use client";
 
-import { Alert, Button, Drawer, FieldError, Form, Input, Label, TextArea, TextField, useOverlayState } from "@heroui/react";
+import { Alert, Drawer, FieldError, Form, Input, Label, TextArea, TextField, useOverlayState } from "@heroui/react";
 import { CalendarXIcon, PlusIcon, ShieldCheckIcon, TrashIcon, WrenchIcon, type Icon } from "@phosphor-icons/react";
 import type { FormEvent } from "react";
 import { useState } from "react";
+import { AdminButton as Button } from "@/components/admin/controls";
 import { AdminErrorState, ConfirmationDialog } from "@/components/admin/feedback";
 import { ContentSection } from "@/components/admin/layout";
 import { toast } from "@/components/ui/toast";

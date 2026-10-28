@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Alert, AlertDialog, Button, Description, Drawer, FieldError, Label, ListBox, Modal, Select, TextArea, TextField } from "@heroui/react";
+import { Alert, AlertDialog, Button, Description, Drawer, FieldError, Label, ListBox, Modal, Select, Spinner, TextArea, TextField } from "@heroui/react";
 import { useState } from "react";
 import { Controller, useForm, type Control, type FieldPath } from "react-hook-form";
 import { CustomerAvatar } from "@/components/admin/customers/customer-avatar";
@@ -90,7 +90,7 @@ function StatusForm({ loan, onClose, onConfirm }: { loan: Loan; onClose: () => v
       </Modal.Body>
       <Modal.Footer className="flex justify-end gap-2">
         <Button type="button" variant="tertiary" className="min-h-11" onPress={onClose}>Cancel</Button>
-        <Button type="submit" variant="primary" className="min-h-11" isDisabled={!options.length} isPending={form.formState.isSubmitting}>Update Status</Button>
+        <Button type="submit" variant="primary" className="min-h-11" isDisabled={!options.length} isPending={form.formState.isSubmitting}>{form.formState.isSubmitting ? <Spinner aria-hidden="true" color="current" size="sm" /> : null}Update Status</Button>
       </Modal.Footer>
     </form>
   );
@@ -152,7 +152,7 @@ function RequestForm({ loan, onClose, onConfirm }: { loan: Loan; onClose: () => 
       </Drawer.Body>
       <Drawer.Footer className="grid grid-cols-2 gap-2">
         <Button type="button" variant="tertiary" className="min-h-11" onPress={onClose}>Cancel</Button>
-        <Button type="submit" variant="primary" className="min-h-11" isPending={form.formState.isSubmitting}>Request Documents</Button>
+        <Button type="submit" variant="primary" className="min-h-11" isPending={form.formState.isSubmitting}>{form.formState.isSubmitting ? <Spinner aria-hidden="true" color="current" size="sm" /> : null}Request Documents</Button>
       </Drawer.Footer>
     </form>
   );
@@ -186,7 +186,7 @@ function ApproveBody({ loan, onClose, onConfirm }: { loan: Loan; onClose: () => 
       </AlertDialog.Body>
       <AlertDialog.Footer>
         <Button type="button" variant="tertiary" className="min-h-11" onPress={onClose}>Cancel</Button>
-        <Button type="submit" variant="primary" className="min-h-11" isPending={form.formState.isSubmitting}>Approve Application</Button>
+        <Button type="submit" variant="primary" className="min-h-11" isPending={form.formState.isSubmitting}>{form.formState.isSubmitting ? <Spinner aria-hidden="true" color="current" size="sm" /> : null}Approve Application</Button>
       </AlertDialog.Footer>
     </form>
   );
@@ -230,7 +230,7 @@ function RejectBody({ loan, onClose, onConfirm }: { loan: Loan; onClose: () => v
       </AlertDialog.Body>
       <AlertDialog.Footer>
         <Button type="button" variant="tertiary" className="min-h-11" onPress={onClose}>Keep Application</Button>
-        <Button type="submit" variant="danger" className="min-h-11" isPending={form.formState.isSubmitting}>Reject Application</Button>
+        <Button type="submit" variant="danger" className="min-h-11" isPending={form.formState.isSubmitting}>{form.formState.isSubmitting ? <Spinner aria-hidden="true" color="current" size="sm" /> : null}Reject Application</Button>
       </AlertDialog.Footer>
     </form>
   );

@@ -1,8 +1,9 @@
 "use client";
 
-import { Alert, AlertDialog, Button, Description, FieldError, Label, ListBox, Modal, Select, TextArea, TextField } from "@heroui/react";
+import { Alert, AlertDialog, Description, FieldError, Label, ListBox, Modal, Select, TextArea, TextField } from "@heroui/react";
 import { BellIcon, CalendarBlankIcon } from "@phosphor-icons/react";
 import { useState } from "react";
+import { AdminButton as Button } from "@/components/admin/controls";
 import { BookingStatusBadge } from "@/components/admin/bookings/booking-parts";
 import { VehiclePhoto } from "@/components/admin/vehicles/vehicle-photo";
 import { actionErrorMessage } from "../hooks/use-booking-actions";

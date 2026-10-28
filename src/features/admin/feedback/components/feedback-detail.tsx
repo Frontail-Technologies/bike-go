@@ -1,10 +1,10 @@
 "use client";
 
-import { Button, TextArea } from "@heroui/react";
+import { TextArea } from "@heroui/react";
 import { CheckCircleIcon, EnvelopeSimpleIcon, UserCircleIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { formatCambodiaDate } from "@/components/admin/controls";
+import { AdminButton as Button, formatCambodiaDate } from "@/components/admin/controls";
 import { AdminStatusBadge } from "@/components/admin/data-display/status-badge";
 import { AdminErrorState, AdminLoadingState } from "@/components/admin/feedback";
 import { AdminPage, PageHeader } from "@/components/admin/layout";

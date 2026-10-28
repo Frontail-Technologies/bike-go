@@ -1,9 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Alert, Button, Description, FieldError, Input, Label, Modal, TextArea, TextField } from "@heroui/react";
+import { Alert, Description, FieldError, Input, Label, Modal, TextArea, TextField } from "@heroui/react";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { AdminButton as Button } from "@/components/admin/controls";
 import { CurrencyAmount } from "@/components/admin/money";
 import { toast } from "@/components/ui/toast";
 import { ApiError } from "@/lib/api/error";

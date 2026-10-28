@@ -1,9 +1,10 @@
 "use client";
 
-import { Button, useOverlayState } from "@heroui/react";
+import { useOverlayState } from "@heroui/react";
 import { ArrowCounterClockwiseIcon, ArrowRightIcon, ArrowsClockwiseIcon, BankIcon, CalendarCheckIcon, CheckCircleIcon, ClockIcon, CreditCardIcon, EnvelopeSimpleIcon, MapPinIcon, PhoneIcon, ReceiptIcon, XCircleIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
+import { AdminButton as Button } from "@/components/admin/controls";
 import { PaymentStatusBadge } from "@/components/admin/bookings/booking-parts";
 import { CustomerAvatar } from "@/components/admin/customers/customer-avatar";
 import { ActivityTimeline, type ActivityItem } from "@/components/admin/data-display/misc";
