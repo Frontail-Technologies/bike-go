@@ -3,5 +3,6 @@ export type StartedPayment = { transactionId: string; amountMinor: number; curre
 export type BookingPayment = {
   bookingStatus: string;
   paymentStatus: string;
+  paymentsEnabled: boolean;
   attempt: { transactionId: string; status: "pending" | "paid" | "failed"; amountMinor: number; currency: "USD"; method: string | null; paidAt: string | null; failedAt: string | null } | null;
 };

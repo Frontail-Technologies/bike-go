@@ -24,12 +24,15 @@ const money = (minor: number, currency: string) => new Intl.NumberFormat("en-US"
  * The signed form comes from the backend; the browser never holds the signing key and success is only ever read back from the server.
  */
 export function PaywayCheckout({ reference, onPaid }: { reference: string; onPaid?: () => void }) {
-  const paymentsEnabled = process.env.NEXT_PUBLIC_PAYMENTS_ENABLED === "true";
   const start = useStartPaymentMutation();
   const formRef = useRef<HTMLFormElement>(null);
   const [payment, setPayment] = useState<StartedPayment | null>(null);
   const opened = useRef(false);
-  const status = useBookingPayment(reference, payment !== null);
+  // Fetched from the start (not just once a payment attempt is open) so we learn
+  // paymentsEnabled from the server before deciding whether to offer checkout at all —
+  // a client-side flag here could drift from the backend's actual payment driver.
+  const status = useBookingPayment(reference, true);
+  const paymentsEnabled = status.data?.paymentsEnabled ?? false;
   const attempt = status.data?.attempt;
   const state = attempt?.status ?? (payment ? "pending" : "idle");
   const expired = status.data?.bookingStatus === "expired";
@@ -58,6 +61,9 @@ export function PaywayCheckout({ reference, onPaid }: { reference: string; onPai
     opened.current = false;
     setPayment(await start.mutateAsync({ reference }));
   }
+
+  // Avoid flashing the "not available" warning while the first fetch is still settling.
+  if (status.isPending) return null;
 
   return (
     <section aria-label="Payment" className="flex flex-col gap-3">

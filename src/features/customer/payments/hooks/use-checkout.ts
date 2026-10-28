@@ -11,10 +11,9 @@ export function useBookingPayment(reference: string, enabled: boolean) {
   return useQuery({
     queryKey: customerPaymentKeys.getPayment(reference),
     queryFn: ({ signal }) => getPayment(reference, signal),
-    enabled: enabled && process.env.NEXT_PUBLIC_PAYMENTS_ENABLED === "true",
-    refetchInterval: (query) => {
-      const attempt = query.state.data?.attempt;
-      return attempt && attempt.status !== "pending" ? false : POLL_MS;
-    },
+    enabled,
+    // Only poll while a payment attempt is actually open; a single fetch otherwise
+    // (e.g. to learn paymentsEnabled before any attempt has started) is enough.
+    refetchInterval: (query) => query.state.data?.attempt?.status === "pending" ? POLL_MS : false,
   });
 }
