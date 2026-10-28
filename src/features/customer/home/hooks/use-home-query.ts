@@ -11,6 +11,7 @@ export function useHomeQuery(initialData: HomeData) {
     queryKey: homeKey,
     queryFn: ({ signal }) => api.getHome(signal),
     initialData,
-    staleTime: 60_000,
+    // Server-rendered data may come from Next's fetch cache; paint it, then refetch at once.
+    initialDataUpdatedAt: 0,
   });
 }

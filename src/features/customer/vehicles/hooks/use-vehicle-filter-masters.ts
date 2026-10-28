@@ -11,7 +11,8 @@ function useFilterMasterItems(kind: "vehicle_category" | "brand" | "transmission
     queryKey: customerMasterDataKeys.listMasterItems(kind),
     queryFn: ({ signal }) => api.listMasterItems(kind, signal),
     initialData,
-    staleTime: 300_000,
+    // Server-rendered data may come from Next's fetch cache; paint it, then refetch at once.
+    initialDataUpdatedAt: 0,
   });
 }
 
