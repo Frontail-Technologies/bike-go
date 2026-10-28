@@ -21,13 +21,15 @@ export function useCustomerSessionQuery() {
 export function useCustomerAuthMutations() {
   const queryClient = useQueryClient();
   const refresh = () => queryClient.invalidateQueries({ queryKey: customerAuthKeys.session() });
+  // Called explicitly, synchronously, before navigating away on logout — so the
+  // destination route never has to wait on (or briefly see stale data from) the
+  // sign-out request actually reaching the server.
+  const clearSession = () => queryClient.setQueryData(customerAuthKeys.session(), null);
 
   return {
     google: useMutation({ mutationFn: (callbackURL: string) => customerAuthApi.signInWithGoogle(callbackURL) }),
     telegram: useMutation({ mutationFn: (payload: TelegramLoginPayload) => customerAuthApi.signInWithTelegram(payload), onSuccess: refresh }),
-    logout: useMutation({
-      mutationFn: customerAuthApi.signOut,
-      onSuccess: () => queryClient.setQueryData(customerAuthKeys.session(), null),
-    }),
+    logout: useMutation({ mutationFn: customerAuthApi.signOut }),
+    clearSession,
   };
 }

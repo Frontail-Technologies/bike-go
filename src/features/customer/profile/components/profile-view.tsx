@@ -399,10 +399,10 @@ export function ProfileView() {
               isPending={auth.logout.isPending}
               isDisabled={auth.logout.isPending}
               onPress={() => {
-                void auth.logout.mutateAsync().then(() => {
-                  toast.success(t("loggedOut"));
-                  router.replace("/signin");
-                }).catch((error) => toast.danger(error instanceof Error ? error.message : "Sign out could not be completed."));
+                auth.clearSession();
+                router.replace("/signin");
+                toast.success(t("loggedOut"));
+                void auth.logout.mutateAsync().catch((error) => toast.danger(error instanceof Error ? error.message : "Sign out could not be completed."));
               }}
             >
               {t("logout")}
