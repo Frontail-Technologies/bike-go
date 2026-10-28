@@ -93,6 +93,7 @@ export type VehicleModelListParams = {
   maxPrice?: number;
   minEngineCc?: number;
   maxEngineCc?: number;
+  availableOnly?: boolean;
   start?: string;
   end?: string;
   sort?: "price_asc" | "price_desc" | "name" | "newest";

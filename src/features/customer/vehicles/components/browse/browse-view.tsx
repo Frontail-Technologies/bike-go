@@ -65,6 +65,7 @@ export function BrowseView({ initialMasters }: { initialMasters: VehicleFilterMa
     maxPrice: activeFilters.price[1] * 100,
     minEngineCc: engine === "200-400" ? 200 : engine === "over-400" ? 401 : undefined,
     maxEngineCc: engine === "under-200" ? 199 : engine === "200-400" ? 400 : undefined,
+    availableOnly: activeFilters.availableOnly || undefined,
     start: range.pickupAt,
     end: range.returnAt,
     sort: activeSort === "price-asc" ? "price_asc" : activeSort === "price-desc" ? "price_desc" : activeSort === "popular" ? "newest" : "name",
@@ -87,10 +88,9 @@ export function BrowseView({ initialMasters }: { initialMasters: VehicleFilterMa
   }, []);
 
   const results = useMemo(() => {
-    let mapped = (vehicles.data?.data ?? []).map(vehicleGroupToMotorcycleGroup);
-    if (activeFilters.availableOnly) mapped = mapped.filter((group) => group.totalAvailable > 0);
+    const mapped = (vehicles.data?.data ?? []).map(vehicleGroupToMotorcycleGroup);
     return saved ? mapped.filter((vehicle) => favorites.includes(vehicle.id)) : mapped;
-  }, [activeFilters.availableOnly, favorites, saved, vehicles.data]);
+  }, [favorites, saved, vehicles.data]);
   const loading = vehicles.isPending;
   const phoneCount = activeFilterCount(filters, true);
   const sidebarCount = activeFilterCount(filters);
