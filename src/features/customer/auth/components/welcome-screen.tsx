@@ -1,6 +1,7 @@
 "use client";
 
 import { GoogleLogoIcon } from "@phosphor-icons/react";
+import { Spinner } from "@heroui/react";
 import useEmblaCarousel from "embla-carousel-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -142,7 +143,7 @@ export function WelcomeScreen() {
             isDisabled={auth.google.isPending || auth.telegram.isPending}
             onPress={continueWithGoogle}
           >
-            <GoogleLogoIcon size={20} weight="bold" />
+            {auth.google.isPending ? <Spinner color="current" size="sm" /> : <GoogleLogoIcon size={20} weight="bold" />}
             {t("continueGoogle")}
           </Button>
           <TelegramLoginWidget

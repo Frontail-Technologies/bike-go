@@ -5,6 +5,7 @@ import { EnvelopeSimpleIcon, PhoneIcon, UserIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
+import { Spinner } from "@heroui/react";
 import { Button } from "@/components/ui/button";
 import { AppSearchField } from "@/components/ui/search-field";
 import { AppSelect } from "@/components/ui/select";
@@ -112,6 +113,7 @@ export function FormsSection() {
               )}
             />
             <Button type="submit" fullWidth isPending={formState.isSubmitting}>
+              {formState.isSubmitting ? <Spinner color="current" size="sm" /> : null}
               Save details
             </Button>
           </form>

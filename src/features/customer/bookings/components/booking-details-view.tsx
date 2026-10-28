@@ -8,6 +8,7 @@ import { BookingSummary } from "@/components/customer/booking-summary";
 import { BikeImage } from "@/components/shared/bike-image";
 import { AppBar } from "@/components/shared/app-bar";
 import { DesktopTitle, Screen } from "@/components/shared/screen";
+import { Spinner } from "@heroui/react";
 import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -215,6 +216,7 @@ export function BookingDetailsView({ reference }: { reference: string }) {
                 }).catch((error) => toast.danger(error instanceof Error ? error.message : "The booking could not be cancelled."));
               }}
             >
+              {cancel.isPending ? <Spinner color="current" size="sm" /> : null}
               {t("cancelBooking")}
             </Button>
           </>

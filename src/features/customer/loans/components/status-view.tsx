@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 import { AppBar } from "@/components/shared/app-bar";
 import { DesktopTitle, Screen } from "@/components/shared/screen";
+import { Spinner } from "@heroui/react";
 import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -221,6 +222,7 @@ export function LoanStatusView({ reference }: { reference: string }) {
               }}
               isPending={upload.isPending || replaceRequested.isPending || resubmit.isPending}
             >
+              {(upload.isPending || replaceRequested.isPending || resubmit.isPending) ? <Spinner color="current" size="sm" /> : null}
               {t("stSendDocs")}
             </Button>
           </section>

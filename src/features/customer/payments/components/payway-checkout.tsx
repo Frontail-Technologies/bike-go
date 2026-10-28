@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert } from "@heroui/react";
+import { Alert, Spinner } from "@heroui/react";
 import Script from "next/script";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -95,6 +95,7 @@ export function PaywayCheckout({ reference, onPaid }: { reference: string; onPai
 
       {paymentsEnabled && state !== "paid" && !expired && (state === "idle" || state === "failed") ? (
         <Button variant="primary" className="min-h-12 w-full" isPending={start.isPending} onPress={() => void pay().catch(() => undefined)}>
+          {start.isPending ? <Spinner color="current" size="sm" /> : null}
           {state === "failed" ? "Try payment again" : "Pay with ABA PayWay"}
         </Button>
       ) : null}

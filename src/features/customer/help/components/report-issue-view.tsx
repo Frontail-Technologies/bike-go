@@ -7,6 +7,7 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { AppBar } from "@/components/shared/app-bar";
 import { DesktopTitle, Screen, ScreenFooter } from "@/components/shared/screen";
+import { Spinner } from "@heroui/react";
 import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { AppSelect } from "@/components/ui/select";
@@ -130,6 +131,7 @@ export function ReportIssueView() {
           />
           <div className="hidden md:block">
             <Button type="submit" size="lg" isPending={formState.isSubmitting}>
+              {formState.isSubmitting ? <Spinner color="current" size="sm" /> : null}
               {t("reportSend")}
             </Button>
           </div>
@@ -137,6 +139,7 @@ export function ReportIssueView() {
       </Screen>
       <ScreenFooter hideFrom="md">
         <Button size="lg" fullWidth isPending={formState.isSubmitting} onPress={() => (document.getElementById("report-form") as HTMLFormElement | null)?.requestSubmit()}>
+          {formState.isSubmitting ? <Spinner color="current" size="sm" /> : null}
           {t("reportSend")}
         </Button>
       </ScreenFooter>
