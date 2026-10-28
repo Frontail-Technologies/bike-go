@@ -153,7 +153,10 @@ export function ProfileView() {
     <>
       <AppBar title={t("title")} actions={<IconButton label={t("logout")} icon={<SignOutIcon size={22} />} onPress={() => setModal("logout")} />} />
       <Screen bottom="nav" className="flex flex-col gap-4 md:gap-6">
-        <DesktopTitle title={t("title")} />
+        <div className="hidden items-center justify-between md:flex">
+          <DesktopTitle title={t("title")} />
+          <IconButton label={t("logout")} icon={<SignOutIcon size={22} />} onPress={() => setModal("logout")} className="border border-line" />
+        </div>
 
       <div className="grid gap-4 md:grid-cols-2 md:gap-6">
         <div className="flex flex-col gap-4">
