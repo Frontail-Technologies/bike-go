@@ -2,6 +2,7 @@ import type { MetricPoint, RevenueTrendPoint, StatusMetric } from "@/components/
 import { bookingStatuses, type BookingStatus } from "@/features/admin/bookings/types/booking";
 import type { DashboardOverview, DashboardRange } from "../types/dashboard";
 import { titleCase } from "@/lib/text";
+import { adminT } from "@/features/admin/i18n/translate";
 
 export const rangeOptions: ReadonlyArray<{ value: DashboardRange; label: string }> = [
   { value: "7d", label: "Last 7 days" },
@@ -22,13 +23,13 @@ const loanColors: Record<string, string> = {
   draft: "var(--admin-muted)",
 };
 
-const toMetrics = (counts: Record<string, number>, colors: Record<string, string>): StatusMetric[] =>
+const toMetrics = (counts: Record<string, number>, colors: Record<string, string>, prefix: string): StatusMetric[] =>
   Object.entries(counts)
     .filter(([, value]) => value > 0)
-    .map(([status, value]) => ({ label: titleCase(status), value, color: colors[status] ?? "var(--admin-muted)" }));
+    .map(([status, value]) => { const key = `${prefix}.${status}`; const label = adminT(key); return { label: label === key ? titleCase(status) : label, value, color: colors[status] ?? "var(--admin-muted)" }; });
 
-export const vehicleStatusMetrics = (data: DashboardOverview) => toMetrics(data.vehicles.byStatus, vehicleColors);
-export const loanStatusMetrics = (data: DashboardOverview) => toMetrics(data.loans.byStatus, loanColors);
+export const vehicleStatusMetrics = (data: DashboardOverview) => toMetrics(data.vehicles.byStatus, vehicleColors, "status");
+export const loanStatusMetrics = (data: DashboardOverview) => toMetrics(data.loans.byStatus, loanColors, "loans.status");
 
 const dayLabel = (date: string) => new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", day: "numeric", month: "short" }).format(new Date(`${date}T00:00:00Z`));
 

@@ -1,5 +1,8 @@
+"use client";
+
 import { LockSimpleIcon } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
+import { useAdminTranslations } from "@/features/admin/i18n/hooks";
 
 export function ReadOnlyList({ title, description, items }: { title: string; description: string; items: readonly string[] }) {
   return (
@@ -23,14 +26,15 @@ export function ReadOnlyList({ title, description, items }: { title: string; des
   );
 }
 
-export function InfoTile({ label, value, hint, badge = "System configured", loading = false, children }: { label: string; value?: ReactNode; hint?: string; badge?: string; loading?: boolean; children?: ReactNode }) {
+export function InfoTile({ label, value, hint, badge, loading = false, children }: { label: string; value?: ReactNode; hint?: string; badge?: string; loading?: boolean; children?: ReactNode }) {
+  const t = useAdminTranslations();
   return (
     <div className="adminSurface flex flex-col gap-2 rounded-2xl p-4 sm:p-5">
       <div className="flex items-start justify-between gap-3">
         <p className="text-sm font-bold text-[var(--admin-muted)]">{label}</p>
-        <span className="whitespace-nowrap rounded-full bg-[var(--admin-surface-muted)] px-2 py-0.5 text-[10px] font-bold text-[var(--admin-muted)]">{badge}</span>
+        <span className="whitespace-nowrap rounded-full bg-[var(--admin-surface-muted)] px-2 py-0.5 text-[10px] font-bold text-[var(--admin-muted)]">{badge ?? t("settings.systemConfigured")}</span>
       </div>
-      {loading ? <span className="h-8 w-24 animate-pulse rounded bg-[var(--admin-surface-muted)]" aria-label="Loading" /> : value !== undefined ? <p className="text-2xl font-extrabold tracking-tight">{value}</p> : null}
+      {loading ? <span className="h-8 w-24 animate-pulse rounded bg-[var(--admin-surface-muted)]" aria-label={t("settings.loading")} /> : value !== undefined ? <p className="text-2xl font-extrabold tracking-tight">{value}</p> : null}
       {children}
       {hint ? <p className="text-xs text-[var(--admin-muted)]">{hint}</p> : null}
     </div>

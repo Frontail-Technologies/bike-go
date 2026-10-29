@@ -10,6 +10,7 @@ import { ImageUploader } from "@/components/admin/forms/image-uploader";
 import { ApiError } from "@/lib/api/error";
 import { masterDataSchema, type MasterDataValues } from "../schemas/master-data-schema";
 import type { MasterItem } from "../types/master-data";
+import { useAdminTranslations } from "@/features/admin/i18n/hooks";
 
 export type MasterDataSubmit = { values: MasterDataValues; image: File | null; removeImage: boolean };
 
@@ -22,6 +23,7 @@ type MasterDataDialogProps = {
 };
 
 function DialogForm({ noun, item, withImage, onClose, onSubmit }: MasterDataDialogProps) {
+  const t = useAdminTranslations();
   const [image, setImage] = useState<File | null>(null);
   const [replacing, setReplacing] = useState(false);
   const [removeImage, setRemoveImage] = useState(false);
@@ -35,7 +37,7 @@ function DialogForm({ noun, item, withImage, onClose, onSubmit }: MasterDataDial
       await onSubmit({ values, image, removeImage });
       onClose();
     } catch (failure) {
-      setError(failure instanceof ApiError ? failure.message : "Couldn’t save. Try again.");
+      setError(failure instanceof ApiError ? failure.message : t("settings.dialog.saveError"));
     }
   });
 
@@ -46,7 +48,7 @@ function DialogForm({ noun, item, withImage, onClose, onSubmit }: MasterDataDial
           <Alert status="danger">
             <Alert.Indicator />
             <Alert.Content>
-              <Alert.Title>Not saved</Alert.Title>
+              <Alert.Title>{t("settings.dialog.notSaved")}</Alert.Title>
               <Alert.Description>{error}</Alert.Description>
             </Alert.Content>
           </Alert>
@@ -56,7 +58,7 @@ function DialogForm({ noun, item, withImage, onClose, onSubmit }: MasterDataDial
           name="name"
           render={({ field, fieldState }) => (
             <TextField isRequired isInvalid={Boolean(fieldState.error)} value={field.value} onChange={field.onChange} autoFocus>
-              <Label>Name</Label>
+              <Label>{t("settings.dialog.name")}</Label>
               <Input />
               <FieldError>{fieldState.error?.message}</FieldError>
             </TextField>
@@ -67,34 +69,34 @@ function DialogForm({ noun, item, withImage, onClose, onSubmit }: MasterDataDial
           name="code"
           render={({ field, fieldState }) => (
             <TextField isInvalid={Boolean(fieldState.error)} value={field.value} onChange={field.onChange}>
-              <Label>Code</Label>
-              <Input placeholder="generated from the name" />
-              <Description>Used internally. Leave empty to generate it.</Description>
+              <Label>{t("settings.dialog.code")}</Label>
+              <Input placeholder={t("settings.dialog.codePlaceholder")} />
+              <Description>{t("settings.dialog.codeHint")}</Description>
               <FieldError>{fieldState.error?.message}</FieldError>
             </TextField>
           )}
         />
         {withImage ? (
           <div className="space-y-2">
-            <p className="text-sm font-medium">Image</p>
+            <p className="text-sm font-medium">{t("settings.dialog.image")}</p>
             {existingImage ? (
               <div className="space-y-2">
                 <div className="relative aspect-[16/9] overflow-hidden rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface-muted)]">
-                  <Image src={existingImage} alt={item?.name ?? "Category image"} fill unoptimized className="object-cover" />
+                  <Image src={existingImage} alt={item?.name ?? t("settings.dialog.categoryImage")} fill unoptimized className="object-cover" />
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Button type="button" variant="outline" size="sm" className="min-h-11 md:min-h-9" onPress={() => setReplacing(true)}>
                     <ArrowsClockwiseIcon size={15} />
-                    Replace image
+                    {t("settings.dialog.replaceImage")}
                   </Button>
                   <Button type="button" variant="ghost" size="sm" className="min-h-11 text-[var(--admin-danger)] md:min-h-9" onPress={() => setRemoveImage(true)}>
                     <TrashIcon size={15} />
-                    Remove
+                    {t("settings.dialog.remove")}
                   </Button>
                 </div>
               </div>
             ) : (
-              <ImageUploader limit={1} maxSizeMb={5} aspectClass="aspect-[16/9]" emptyTitle={`Upload ${noun} image`} emptyHint="JPG, PNG or WebP · up to 5 MB" onChange={(files) => setImage(files[0] ?? null)} />
+              <ImageUploader limit={1} maxSizeMb={5} aspectClass="aspect-[16/9]" emptyTitle={t("settings.dialog.upload", { noun })} emptyHint={t("settings.dialog.uploadHint")} onChange={(files) => setImage(files[0] ?? null)} />
             )}
           </div>
         ) : null}
@@ -104,19 +106,19 @@ function DialogForm({ noun, item, withImage, onClose, onSubmit }: MasterDataDial
           render={({ field }) => (
             <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-[var(--admin-border)] p-3 text-sm font-semibold focus-within:ring-2 focus-within:ring-[var(--admin-accent-strong)]">
               <input type="checkbox" checked={field.value} onChange={(event) => field.onChange(event.target.checked)} className="size-4 accent-[#dcae00]" />
-              Active
-              <span className="text-xs font-normal text-[var(--admin-muted)]">Inactive items stay on existing records but can’t be picked for new ones.</span>
+              {t("settings.dialog.active")}
+              <span className="text-xs font-normal text-[var(--admin-muted)]">{t("settings.dialog.activeHint")}</span>
             </label>
           )}
         />
       </Modal.Body>
       <Modal.Footer className="flex justify-end gap-2">
         <Button type="button" variant="tertiary" className="min-h-11" onPress={onClose}>
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button type="submit" variant="primary" className="min-h-11" isPending={form.formState.isSubmitting}>
           {form.formState.isSubmitting ? <Spinner aria-hidden="true" color="current" size="sm" /> : null}
-          Save
+          {t("settings.dialog.save")}
         </Button>
       </Modal.Footer>
     </form>
@@ -124,15 +126,16 @@ function DialogForm({ noun, item, withImage, onClose, onSubmit }: MasterDataDial
 }
 
 export function MasterDataDialog(props: MasterDataDialogProps & { open: boolean }) {
+  const t = useAdminTranslations();
   const { open, ...rest } = props;
   return (
     <Modal.Backdrop isOpen={open} onOpenChange={(next) => !next && rest.onClose()} className="adminOverlay">
       <Modal.Container size="md">
-        <Modal.Dialog aria-label={`${rest.item ? "Edit" : "Add"} ${rest.noun}`}>
+        <Modal.Dialog aria-label={t(rest.item ? "settings.dialog.edit" : "settings.dialog.add", { noun: rest.noun })}>
           <Modal.CloseTrigger />
           <Modal.Header>
             <Modal.Heading>
-              {rest.item ? "Edit" : "Add"} {rest.noun}
+              {t(rest.item ? "settings.dialog.edit" : "settings.dialog.add", { noun: rest.noun })}
             </Modal.Heading>
           </Modal.Header>
           <DialogForm key={rest.item?.id ?? "new"} {...rest} />

@@ -2,6 +2,8 @@
 
 import { Button, Dropdown, Label } from "@heroui/react";
 import { ArrowDownIcon, ArrowUpIcon, DotsThreeVerticalIcon, NotePencilIcon, PowerIcon, TrashIcon } from "@phosphor-icons/react";
+import { useAdminTranslations } from "@/features/admin/i18n/hooks";
+import { adminT } from "@/features/admin/i18n/translate";
 
 type ItemRowActionsProps = {
   name: string;
@@ -14,37 +16,38 @@ type ItemRowActionsProps = {
 };
 
 export function ItemRowActions({ name, active, onEdit, onToggle, onMoveUp, onMoveDown, onDelete }: ItemRowActionsProps) {
+  const t = useAdminTranslations();
   return (
     <Dropdown>
-      <Button isIconOnly size="sm" variant="ghost" aria-label={`Actions for ${name}`} className="size-11 min-w-11 md:size-9 md:min-w-9">
+      <Button isIconOnly size="sm" variant="ghost" aria-label={t("settings.actions.actionsFor", { name })} className="size-11 min-w-11 md:size-9 md:min-w-9">
         <DotsThreeVerticalIcon size={20} weight="bold" />
       </Button>
       <Dropdown.Popover className="adminOverlay">
-        <Dropdown.Menu aria-label={`Actions for ${name}`}>
-          <Dropdown.Item id="edit" textValue="Edit" onAction={onEdit}>
+        <Dropdown.Menu aria-label={t("settings.actions.actionsFor", { name })}>
+          <Dropdown.Item id="edit" textValue={t("settings.actions.edit")} onAction={onEdit}>
             <NotePencilIcon size={16} />
-            <Label>Edit</Label>
+            <Label>{t("settings.actions.edit")}</Label>
           </Dropdown.Item>
-          <Dropdown.Item id="toggle" textValue={active ? "Deactivate" : "Activate"} variant={active ? "danger" : "default"} onAction={onToggle}>
+          <Dropdown.Item id="toggle" textValue={active ? t("actions.deactivate") : t("actions.activate")} variant={active ? "danger" : "default"} onAction={onToggle}>
             <PowerIcon size={16} />
-            <Label>{active ? "Deactivate" : "Activate"}</Label>
+            <Label>{active ? t("actions.deactivate") : t("actions.activate")}</Label>
           </Dropdown.Item>
           {onMoveUp ? (
-            <Dropdown.Item id="up" textValue="Move up" onAction={onMoveUp}>
+            <Dropdown.Item id="up" textValue={t("settings.actions.moveUp")} onAction={onMoveUp}>
               <ArrowUpIcon size={16} />
-              <Label>Move up</Label>
+              <Label>{t("settings.actions.moveUp")}</Label>
             </Dropdown.Item>
           ) : null}
           {onMoveDown ? (
-            <Dropdown.Item id="down" textValue="Move down" onAction={onMoveDown}>
+            <Dropdown.Item id="down" textValue={t("settings.actions.moveDown")} onAction={onMoveDown}>
               <ArrowDownIcon size={16} />
-              <Label>Move down</Label>
+              <Label>{t("settings.actions.moveDown")}</Label>
             </Dropdown.Item>
           ) : null}
           {onDelete ? (
-            <Dropdown.Item id="delete" textValue="Delete" variant="danger" onAction={onDelete}>
+            <Dropdown.Item id="delete" textValue={t("settings.actions.delete")} variant="danger" onAction={onDelete}>
               <TrashIcon size={16} />
-              <Label>Delete</Label>
+              <Label>{t("settings.actions.delete")}</Label>
             </Dropdown.Item>
           ) : null}
         </Dropdown.Menu>
@@ -53,4 +56,4 @@ export function ItemRowActions({ name, active, onEdit, onToggle, onMoveUp, onMov
   );
 }
 
-export const deactivateCopy = (name: string) => `${name} will stay on existing records, but it can’t be picked for new ones. You can activate it again later.`;
+export const deactivateCopy = (name: string) => adminT("settings.deactivateCopy", { name });

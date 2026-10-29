@@ -53,6 +53,7 @@ import {
 } from "../schemas/banner-schemas";
 import { placements, type Banner } from "../types/banner";
 import { BannerImage } from "./banner-image";
+import { useAdminTranslations } from "@/features/admin/i18n/hooks";
 
 type StatusChoice = BannerFormValues["status"];
 const statusOptions: ReadonlyArray<{
@@ -63,20 +64,20 @@ const statusOptions: ReadonlyArray<{
 }> = [
   {
     value: "active",
-    label: "Active",
-    hint: "Shows now, within its dates.",
+    label: "banners.status.active",
+    hint: "banners.form.statusHints.active",
     dot: "bg-[var(--admin-success)]",
   },
   {
     value: "scheduled",
-    label: "Scheduled",
-    hint: "Starts at a future date.",
+    label: "banners.status.scheduled",
+    hint: "banners.form.statusHints.scheduled",
     dot: "bg-[#6246c7]",
   },
   {
     value: "inactive",
-    label: "Inactive",
-    hint: "Hidden, content is kept.",
+    label: "banners.status.inactive",
+    hint: "banners.form.statusHints.inactive",
     dot: "bg-[var(--admin-muted)]",
   },
 ];
@@ -124,6 +125,7 @@ function TextInput({
 }
 
 export function BannerForm({ banner }: { banner?: Banner }) {
+  const t = useAdminTranslations();
   const router = useRouter();
   const params = useSearchParams();
   const mutations = useBannerMutations();
@@ -154,9 +156,9 @@ export function BannerForm({ banner }: { banner?: Banner }) {
   );
 
   const link = values.ctaUrl.startsWith("http")
-    ? "External link"
+    ? t("banners.form.external")
     : values.ctaUrl.startsWith("/")
-      ? "Internal link"
+      ? t("banners.form.internal")
       : null;
   const cancel = () => router.push("/admin/banners");
   const stored = banner?.effectiveStatus === "expired";
@@ -170,7 +172,7 @@ export function BannerForm({ banner }: { banner?: Banner }) {
   const submit = form.handleSubmit(async (formValues) => {
     setSubmitError("");
     if (!keepImage && !files.length) {
-      setImageError("Add a banner image.");
+      setImageError(t("banners.form.imageRequired"));
       return;
     }
     const fields = formValuesToFields(formValues);
@@ -187,7 +189,7 @@ export function BannerForm({ banner }: { banner?: Banner }) {
             image: image as File,
           });
       toast.success(
-        banner ? `${saved.title} updated` : `${saved.title} created`,
+        t(banner ? "banners.form.updated" : "banners.form.created", { name: saved.title }),
       );
       router.push("/admin/banners");
     } catch (error) {
@@ -205,9 +207,9 @@ export function BannerForm({ banner }: { banner?: Banner }) {
           }
         }
         setSubmitError(
-          matched ? "Check the highlighted fields." : error.message,
+          matched ? t("common.checkFields") : error.message,
         );
-      } else setSubmitError("Something went wrong. Try again.");
+      } else setSubmitError(t("common.genericError"));
     }
   });
 
@@ -218,7 +220,7 @@ export function BannerForm({ banner }: { banner?: Banner }) {
         onPress={cancel}
         variant="tertiary"
       >
-        Cancel
+        {t("common.cancel")}
       </Button>
       <Button
         className="min-h-11 flex-2 lg:flex-none"
@@ -228,7 +230,7 @@ export function BannerForm({ banner }: { banner?: Banner }) {
         isPending={saving}
       >
         <CheckIcon />
-        Save Banner
+        {t("banners.form.save")}
       </Button>
     </>
   );
@@ -237,22 +239,22 @@ export function BannerForm({ banner }: { banner?: Banner }) {
     <AdminPage className="gap-5">
       <AdminBreadcrumbs
         items={[
-          { label: "Banners", href: "/admin/banners" },
-          { label: banner ? "Edit" : "Add New Banner" },
+          { label: t("pages.banners.title"), href: "/admin/banners" },
+          { label: banner ? t("banners.form.edit") : t("banners.form.addNew") },
         ]}
       />
       <PageHeader
-        title={banner ? "Edit Banner" : "Add New Banner"}
+        title={banner ? t("banners.form.editTitle") : t("banners.form.addNew")}
         description={
           banner
-            ? "Update the banner copy, image, placement and schedule."
-            : "Create a promotional banner to engage your users."
+            ? t("banners.form.editDescription")
+            : t("banners.form.addDescription")
         }
         actions={<div className="hidden gap-2 lg:flex">{actions}</div>}
       />
       <Form
         id="banner-form"
-        aria-label={banner ? "Edit banner" : "Add banner"}
+        aria-label={banner ? t("banners.form.editAria") : t("banners.form.addAria")}
         onSubmit={submit}
         className="block pb-24 lg:pb-0"
       >
@@ -260,7 +262,7 @@ export function BannerForm({ banner }: { banner?: Banner }) {
           <Alert status="danger" className="mb-5">
             <Alert.Indicator />
             <Alert.Content>
-              <Alert.Title>Banner was not saved</Alert.Title>
+              <Alert.Title>{t("banners.form.notSaved")}</Alert.Title>
               <Alert.Description>{submitError}</Alert.Description>
             </Alert.Content>
           </Alert>
@@ -269,8 +271,8 @@ export function BannerForm({ banner }: { banner?: Banner }) {
           <div className="contents xl:block xl:space-y-5">
             <FormCard
               className="order-1 xl:order-0"
-              title="Banner Image"
-              description="Recommended 1920 × 600 (16:5). JPG, PNG or WebP, up to 5 MB."
+              title={t("banners.form.image")}
+              description={t("banners.form.imageDescription")}
               icon={<ImageIcon size={19} weight="duotone" />}
             >
               {keepImage && !files.length && banner ? (
@@ -287,7 +289,7 @@ export function BannerForm({ banner }: { banner?: Banner }) {
                       onPress={() => setKeepImage(false)}
                     >
                       <ArrowsClockwiseIcon size={16} />
-                      Replace image
+                      {t("banners.form.replace")}
                     </Button>
                     <Button
                       variant="ghost"
@@ -295,7 +297,7 @@ export function BannerForm({ banner }: { banner?: Banner }) {
                       onPress={() => setKeepImage(false)}
                     >
                       <TrashIcon size={16} />
-                      Remove
+                      {t("banners.form.remove")}
                     </Button>
                   </div>
                 </div>
@@ -305,8 +307,8 @@ export function BannerForm({ banner }: { banner?: Banner }) {
                     limit={1}
                     maxSizeMb={5}
                     aspectClass="aspect-[16/5]"
-                    emptyTitle="Click to upload banner image"
-                    emptyHint="or drag and drop · PNG, JPG or WebP (1920 × 600 recommended)"
+                    emptyTitle={t("banners.form.uploadTitle")}
+                    emptyHint={t("banners.form.uploadHint")}
                     onChange={onFiles}
                   />
                   {banner && !files.length ? (
@@ -315,7 +317,7 @@ export function BannerForm({ banner }: { banner?: Banner }) {
                       className="min-h-11"
                       onPress={() => setKeepImage(true)}
                     >
-                      Keep the current image
+                      {t("banners.form.keep")}
                     </Button>
                   ) : null}
                 </div>
@@ -331,24 +333,24 @@ export function BannerForm({ banner }: { banner?: Banner }) {
             </FormCard>
             <FormCard
               className="order-3 xl:order-0"
-              title="Schedule"
-              description="Cambodia Time — ICT / Asia/Phnom_Penh"
+              title={t("banners.form.schedule")}
+              description={t("banners.form.scheduleDescription")}
               icon={<CalendarBlankIcon size={19} weight="duotone" />}
             >
               <div className="grid gap-4 sm:grid-cols-2">
                 <TextInput
                   control={form.control}
                   name="startAt"
-                  label="Start date and time"
+                  label={t("banners.form.start")}
                   type="datetime-local"
-                  description="Optional. Empty means it can show immediately."
+                  description={t("banners.form.startHint")}
                 />
                 <TextInput
                   control={form.control}
                   name="endAt"
-                  label="End date and time"
+                  label={t("banners.form.end")}
                   type="datetime-local"
-                  description="Optional. Empty means no end."
+                  description={t("banners.form.endHint")}
                 />
               </div>
             </FormCard>
@@ -356,35 +358,35 @@ export function BannerForm({ banner }: { banner?: Banner }) {
           <div className="contents xl:block xl:space-y-5">
             <FormCard
               className="order-2 xl:order-0"
-              title="Banner Information"
+              title={t("banners.form.information")}
               icon={<InfoIcon size={19} weight="duotone" />}
             >
               <div className="space-y-4">
                 <TextInput
                   control={form.control}
                   name="title"
-                  label="Title"
+                  label={t("banners.form.title")}
                   required
                 />
                 <TextInput
                   control={form.control}
                   name="subtitle"
-                  label="Subtitle"
+                  label={t("banners.form.subtitle")}
                 />
                 <div className="grid gap-4 sm:grid-cols-2">
                   <TextInput
                     control={form.control}
                     name="ctaLabel"
-                    label="CTA label"
+                    label={t("banners.form.ctaLabel")}
                     required
-                    description="Button text, e.g. Book Now"
+                    description={t("banners.form.ctaLabelHint")}
                   />
                   <TextInput
                     control={form.control}
                     name="ctaUrl"
-                    label="CTA URL"
+                    label={t("banners.form.ctaUrl")}
                     required
-                    description="Internal path (/bikes) or https:// URL"
+                    description={t("banners.form.ctaUrlHint")}
                     extra={
                       link ? (
                         <span className="rounded-full bg-[#efe9ff] px-2 py-0.5 text-[10px] font-bold text-[#6246c7]">
@@ -406,7 +408,7 @@ export function BannerForm({ banner }: { banner?: Banner }) {
                           key !== null && field.onChange(String(key))
                         }
                       >
-                        <Label>Placement</Label>
+                        <Label>{t("banners.form.placement")}</Label>
                         <Select.Trigger className="min-h-11">
                           <Select.Value />
                           <Select.Indicator />
@@ -431,7 +433,7 @@ export function BannerForm({ banner }: { banner?: Banner }) {
                   <TextInput
                     control={form.control}
                     name="displayOrder"
-                    label="Display order"
+                    label={t("banners.form.displayOrder")}
                     type="number"
                     required
                   />
@@ -440,8 +442,8 @@ export function BannerForm({ banner }: { banner?: Banner }) {
             </FormCard>
             <FormCard
               className="order-4 xl:order-0"
-              title="Status"
-              description="Expired is computed from the end date, not chosen."
+              title={t("banners.form.status")}
+              description={t("banners.form.statusDescription")}
               icon={<CheckIcon size={19} weight="bold" />}
             >
               <Controller
@@ -450,7 +452,7 @@ export function BannerForm({ banner }: { banner?: Banner }) {
                 render={({ field }) => (
                   <div
                     role="radiogroup"
-                    aria-label="Banner status"
+                    aria-label={t("banners.form.statusAria")}
                     className="grid gap-2 sm:grid-cols-2"
                   >
                     {statusOptions.map((option) => {
@@ -482,10 +484,10 @@ export function BannerForm({ banner }: { banner?: Banner }) {
                           />
                           <span>
                             <span className="block text-sm font-bold">
-                              {option.label}
+                              {t(option.label)}
                             </span>
                             <span className="block text-xs text-(--admin-muted)">
-                              {option.hint}
+                              {t(option.hint)}
                             </span>
                           </span>
                         </label>
@@ -500,9 +502,9 @@ export function BannerForm({ banner }: { banner?: Banner }) {
                         aria-hidden
                       />
                       <span>
-                        <span className="block text-sm font-bold">Expired</span>
+                        <span className="block text-sm font-bold">{t("banners.status.expired")}</span>
                         <span className="block text-xs text-(--admin-muted)">
-                          Computed after the end date.
+                          {t("banners.form.expiredHint")}
                         </span>
                       </span>
                     </div>
@@ -511,12 +513,12 @@ export function BannerForm({ banner }: { banner?: Banner }) {
               />
               {stored ? (
                 <p className="mt-3 text-xs text-(--admin-warning)">
-                  This banner has expired. Extend the end date to show it again.
+                  {t("banners.form.expiredNote")}
                 </p>
               ) : null}
               {values.status === "scheduled" ? (
                 <p className="mt-3 text-xs text-(--admin-muted)">
-                  The backend shows it automatically once the start date passes.
+                  {t("banners.form.scheduledNote")}
                 </p>
               ) : null}
             </FormCard>
@@ -531,6 +533,7 @@ export function BannerForm({ banner }: { banner?: Banner }) {
 }
 
 export function BannerFormPage({ id }: { id?: string }) {
+  const t = useAdminTranslations();
   const query = useBannerQuery(id ?? "");
   if (!id) return <BannerForm />;
   if (query.isError && !query.data) {
@@ -539,13 +542,13 @@ export function BannerFormPage({ id }: { id?: string }) {
       (query.error.status === 404 || query.error.status === 422);
     return (
       <AdminPage>
-        <PageHeader title="Edit Banner" />
+        <PageHeader title={t("banners.form.editTitle")} />
         <AdminErrorState
-          title={notFound ? "Banner not found" : "Couldn’t load the banner"}
+          title={notFound ? t("banners.form.notFound") : t("banners.form.loadError")}
           description={
             query.error instanceof ApiError
               ? query.error.message
-              : "Try again in a moment."
+              : t("common.retryLater")
           }
           onRetry={notFound ? undefined : () => void query.refetch()}
         />
@@ -555,8 +558,8 @@ export function BannerFormPage({ id }: { id?: string }) {
   if (!query.data)
     return (
       <AdminPage>
-        <PageHeader title="Edit Banner" />
-        <AdminLoadingState label="Loading banner…" />
+        <PageHeader title={t("banners.form.editTitle")} />
+        <AdminLoadingState label={t("banners.form.loadingBanner")} />
       </AdminPage>
     );
   return <BannerForm key={query.data.updatedAt} banner={query.data} />;

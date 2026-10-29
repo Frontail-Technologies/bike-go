@@ -28,6 +28,8 @@ import type {
 } from "../types/master-data";
 import { deactivateCopy, ItemRowActions } from "./item-row-actions";
 import { MasterDataDialog, type MasterDataSubmit } from "./master-data-dialog";
+import { useAdminTranslations } from "@/features/admin/i18n/hooks";
+import { adminT } from "@/features/admin/i18n/translate";
 
 type MasterDataSectionProps = {
   kind: MasterKind;
@@ -39,16 +41,16 @@ type MasterDataSectionProps = {
 };
 
 const PAGE_SIZE = 20;
-const statusOptions = [
-  { value: "all", label: "All statuses" },
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
+const statusOptions = () => [
+  { value: "all", label: adminT("filters.allStatuses") },
+  { value: "active", label: adminT("settings.master.active") },
+  { value: "inactive", label: adminT("settings.master.inactive") },
 ];
 
 const failure = (error: unknown) =>
   error instanceof ApiError
     ? error.message
-    : "Something went wrong. Try again.";
+    : adminT("common.genericError");
 
 export function MasterDataSection({
   kind,
@@ -58,6 +60,7 @@ export function MasterDataSection({
   reorder = false,
   withImage = false,
 }: MasterDataSectionProps) {
+  const t = useAdminTranslations();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
@@ -113,7 +116,7 @@ export function MasterDataSection({
       await mutations.setImage.mutateAsync({ id: saved.id, image });
     else if (withImage && removeImage && editing?.imageUrl)
       await mutations.removeImage.mutateAsync(saved.id);
-    toast.success(editing ? `${saved.name} updated` : `${saved.name} added`);
+    toast.success(t(editing ? "settings.master.updated" : "settings.master.added", { name: saved.name }));
   }
 
   function setActive(item: MasterItem, active: boolean, onSettled?: () => void) {
@@ -121,7 +124,7 @@ export function MasterDataSection({
       { id: item.id, active },
       {
         onSuccess: () => {
-          toast.success(`${item.name} ${active ? "activated" : "deactivated"}`);
+          toast.success(t(active ? "settings.master.activated" : "settings.master.deactivated", { name: item.name }));
           onSettled?.();
         },
         onError: (error) => toast.danger(failure(error)),
@@ -132,7 +135,7 @@ export function MasterDataSection({
   function remove(item: MasterItem, onSettled?: () => void) {
     mutations.remove.mutate(item.id, {
       onSuccess: () => {
-        toast.success(`${item.name} deleted`);
+        toast.success(t("settings.master.deleted", { name: item.name }));
         onSettled?.();
       },
       onError: (error) => toast.danger(failure(error)),
@@ -165,7 +168,7 @@ export function MasterDataSection({
         </div>
         <Button variant="primary" className="min-h-11" onPress={openAdd}>
           <PlusIcon />
-          Add {noun}
+          {t("settings.master.add", { noun })}
         </Button>
       </header>
 
@@ -176,17 +179,17 @@ export function MasterDataSection({
             setSearch(value);
             setPage(1);
           }}
-          placeholder={`Search ${title.toLowerCase()}…`}
+          placeholder={t("settings.master.search", { title: title.toLowerCase() })}
           className="w-full flex-1 sm:max-w-xs"
         />
         <AdminSelect
-          label="All statuses"
+          label={t("filters.allStatuses")}
           value={status}
           onChange={(value) => {
             setStatus(value);
             setPage(1);
           }}
-          options={statusOptions}
+          options={statusOptions()}
           icon={null}
           className="w-full sm:w-44"
         />
@@ -194,13 +197,13 @@ export function MasterDataSection({
 
       {query.isError ? (
         <AdminErrorState
-          title={`Couldn’t load ${title.toLowerCase()}`}
+          title={t("settings.master.loadError", { title: title.toLowerCase() })}
           description={failure(query.error)}
           onRetry={() => void query.refetch()}
         />
       ) : query.isLoading ? (
         <ul
-          aria-label={`Loading ${title.toLowerCase()}`}
+          aria-label={t("settings.master.loading", { title: title.toLowerCase() })}
           aria-busy="true"
           className="divide-y divide-[var(--admin-border)]"
         >
@@ -217,8 +220,8 @@ export function MasterDataSection({
       ) : items.length === 0 ? (
         <p className="px-5 py-10 text-center text-sm text-[var(--admin-muted)]">
           {filtered
-            ? `No ${title.toLowerCase()} match these filters.`
-            : `No ${title.toLowerCase()} yet. Add the first one.`}
+            ? t("settings.master.noMatches", { title: title.toLowerCase() })
+            : t("settings.master.empty", { title: title.toLowerCase() })}
         </p>
       ) : (
         <ul
@@ -310,9 +313,9 @@ export function MasterDataSection({
       <ConfirmationDialog
         isOpen={Boolean(deactivating)}
         onOpenChange={(open) => !open && setDeactivating(null)}
-        title={`Deactivate ${deactivating?.name ?? noun}?`}
-        description={deactivateCopy(deactivating?.name ?? "This item")}
-        confirmLabel="Deactivate"
+        title={t("settings.master.deactivateTitle", { name: deactivating?.name ?? noun })}
+        description={deactivateCopy(deactivating?.name ?? t("settings.master.thisItem"))}
+        confirmLabel={t("actions.deactivate")}
         danger
         isPending={mutations.update.isPending}
         onConfirm={() => {
@@ -322,9 +325,9 @@ export function MasterDataSection({
       <ConfirmationDialog
         isOpen={Boolean(deleting)}
         onOpenChange={(open) => !open && setDeleting(null)}
-        title={`Delete ${deleting?.name ?? noun}?`}
-        description={`This cannot be undone. Vehicles or loans that already used “${deleting?.name ?? "this item"}” keep that text; only new selections are affected.`}
-        confirmLabel="Delete"
+        title={t("settings.master.deleteTitle", { name: deleting?.name ?? noun })}
+        description={t("settings.master.deleteDescription", { name: deleting?.name ?? t("settings.master.thisItemLower") })}
+        confirmLabel={t("actions.delete")}
         danger
         isPending={mutations.remove.isPending}
         onConfirm={() => {

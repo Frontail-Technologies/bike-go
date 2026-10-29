@@ -1,5 +1,7 @@
-export const bookingWorkflowStatuses = ["Pending", "Confirmed", "Ready for pickup", "Active", "Completed", "Cancelled", "Expired"] as const;
+import { documentTypes, loanStatuses } from "@/features/admin/loans/types/loan";
 
-export const loanWorkflowStatuses = ["Draft", "Submitted", "Documents under review", "Additional documents required", "Eligibility review", "Approved", "Rejected"] as const;
+export const bookingWorkflowStatuses = ["pending", "confirmed", "ready_for_pickup", "active", "completed", "cancelled", "expired"] as const;
 
-export const documentTypeReference = ["Passport", "Visa / Residence permit", "Employment proof", "Salary / income proof", "Address proof", "Bank statement", "Other"] as const;
+export const loanWorkflowStatuses = loanStatuses;
+
+export const documentTypeReference = documentTypes;

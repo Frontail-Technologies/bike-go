@@ -45,6 +45,7 @@ import {
 } from "../schemas/admin-user-schemas";
 import type { AdminUser, AdminUsersParams } from "../types/admin-user";
 import type { z } from "zod";
+import { useAdminTranslations } from "@/features/admin/i18n/hooks";
 
 type CreateValues = z.infer<typeof adminUserSchema>;
 function ModalFrame({
@@ -77,6 +78,7 @@ function ModalFrame({
   );
 }
 export function AdminUsersPage() {
+  const t = useAdminTranslations();
   const session = useAdminSessionQuery();
   const listState = useAdminUsersListState();
   const { params, setFilters, setPage } = listState;
@@ -102,40 +104,40 @@ export function AdminUsersPage() {
     return (
       <AdminPage>
         <PageHeader
-          title="Admin Users"
-          description="Only super administrators can manage administrator accounts."
+          title={t("pages.admins.title")}
+          description={t("pages.admins.restricted")}
         />
       </AdminPage>
     );
   const columns: ColumnDef<AdminUser>[] = [
     {
       accessorKey: "name",
-      header: "Admin",
+      header: t("admins.columns.admin"),
       cell: ({ row }) => <span className="font-bold">{row.original.name}</span>,
     },
-    { accessorKey: "email", header: "Email" },
+    { accessorKey: "email", header: t("admins.columns.email") },
     {
       accessorKey: "role",
-      header: "Role",
+      header: t("admins.columns.role"),
       cell: ({ row }) =>
-        row.original.role === "super_admin" ? "Super admin" : "Admin",
+        t(`admins.roles.${row.original.role}`),
     },
     {
       accessorKey: "status",
-      header: "Status",
+      header: t("admins.columns.status"),
       cell: ({ row }) => <AdminStatusBadge status={row.original.status} />,
     },
     {
       accessorKey: "lastLoginAt",
-      header: "Last login",
+      header: t("admins.columns.lastLogin"),
       cell: ({ row }) =>
         row.original.lastLoginAt
           ? formatCambodiaDate(row.original.lastLoginAt)
-          : "Never",
+          : t("admins.never"),
     },
     {
       accessorKey: "createdAt",
-      header: "Created",
+      header: t("admins.columns.created"),
       cell: ({ row }) => formatCambodiaDate(row.original.createdAt),
     },
   ];
@@ -144,8 +146,8 @@ export function AdminUsersPage() {
   return (
     <AdminPage>
       <PageHeader
-        title="Admin Users"
-        description="Manage secure RideGo administrator access."
+        title={t("pages.admins.title")}
+        description={t("pages.admins.description")}
         actions={
           <Button
             variant="primary"
@@ -155,7 +157,7 @@ export function AdminUsersPage() {
             }}
           >
             <PlusIcon />
-            Add Admin
+            {t("pages.admins.add")}
           </Button>
         }
       />
@@ -165,24 +167,24 @@ export function AdminUsersPage() {
             <AdminSearch
               value={search}
               onChange={setSearch}
-              placeholder="Search administrators…"
+              placeholder={t("pages.admins.search")}
             />
           }
         >
           <AdminSelect
-            label="All roles"
+            label={t("filters.allRoles")}
             value={params.role ?? ""}
             onChange={(role) =>
               update({ role: role ? (role as AdminUser["role"]) : undefined })
             }
             options={[
-              { value: "", label: "All roles" },
-              { value: "admin", label: "Admin" },
-              { value: "super_admin", label: "Super admin" },
+              { value: "", label: t("filters.allRoles") },
+              { value: "admin", label: t("admins.roles.admin") },
+              { value: "super_admin", label: t("admins.roles.super_admin") },
             ]}
           />
           <AdminSelect
-            label="All statuses"
+            label={t("filters.allStatuses")}
             value={params.status ?? ""}
             onChange={(status) =>
               update({
@@ -190,16 +192,16 @@ export function AdminUsersPage() {
               })
             }
             options={[
-              { value: "", label: "All statuses" },
-              { value: "active", label: "Active" },
-              { value: "inactive", label: "Inactive" },
+              { value: "", label: t("filters.allStatuses") },
+              { value: "active", label: t("admins.active") },
+              { value: "inactive", label: t("admins.inactive") },
             ]}
           />
         </FilterBar>
         <AdminDataTable
           columns={columns}
           data={rows}
-          label="Administrator users"
+          label={t("admins.label")}
           loading={query.isLoading}
           manualSorting
           sorting={sorting}
@@ -223,12 +225,12 @@ export function AdminUsersPage() {
                 isIconOnly
                 size="sm"
                 variant="ghost"
-                aria-label={`Actions for ${admin.name}`}
+                aria-label={t("admins.actionsFor", { name: admin.name })}
               >
                 <DotsThreeVerticalIcon />
               </Button>
               <Dropdown.Popover className="adminOverlay">
-                <Dropdown.Menu aria-label={`Actions for ${admin.name}`}>
+                <Dropdown.Menu aria-label={t("admins.actionsFor", { name: admin.name })}>
                   <Dropdown.Item
                     id="edit"
                     onAction={() => {
@@ -236,7 +238,7 @@ export function AdminUsersPage() {
                       setDialog("edit");
                     }}
                   >
-                    <Label>Edit</Label>
+                    <Label>{t("admins.edit")}</Label>
                   </Dropdown.Item>
                   <Dropdown.Item
                     id="reset"
@@ -245,7 +247,7 @@ export function AdminUsersPage() {
                       setDialog("reset");
                     }}
                   >
-                    <Label>Reset password</Label>
+                    <Label>{t("admins.resetPassword")}</Label>
                   </Dropdown.Item>
                   <Dropdown.Item
                     id="status"
@@ -253,7 +255,7 @@ export function AdminUsersPage() {
                     onAction={() => setConfirm(admin)}
                   >
                     <Label>
-                      {admin.status === "active" ? "Deactivate" : "Activate"}
+                      {admin.status === "active" ? t("actions.deactivate") : t("actions.activate")}
                     </Label>
                   </Dropdown.Item>
                 </Dropdown.Menu>
@@ -276,11 +278,11 @@ export function AdminUsersPage() {
         onOpenChange={(open) => !open && setConfirm(null)}
         title={
           confirm?.status === "active"
-            ? "Deactivate administrator?"
-            : "Activate administrator?"
+            ? t("admins.deactivateTitle")
+            : t("admins.activateTitle")
         }
-        description="Deactivation immediately revokes every active administrator session."
-        confirmLabel={confirm?.status === "active" ? "Deactivate" : "Activate"}
+        description={t("admins.deactivateDescription")}
+        confirmLabel={confirm?.status === "active" ? t("actions.deactivate") : t("actions.activate")}
         danger={confirm?.status === "active"}
         isPending={
           confirm?.status === "active"
@@ -313,6 +315,7 @@ function AdminForm({
   update: ReturnType<typeof useAdminUserMutations>["update"];
   reset: ReturnType<typeof useAdminUserMutations>["reset"];
 }) {
+  const t = useAdminTranslations();
   const schema = (
     dialog === "edit"
       ? editAdminUserSchema
@@ -364,10 +367,10 @@ function AdminForm({
     <ModalFrame
       title={
         dialog === "create"
-          ? "Add Admin"
+          ? t("admins.form.add")
           : dialog === "edit"
-            ? "Edit Admin"
-            : "Reset Password"
+            ? t("admins.form.edit")
+            : t("admins.form.reset")
       }
       open
       onOpenChange={(o) => !o && close()}
@@ -388,7 +391,7 @@ function AdminForm({
                     onBlur={field.onBlur}
                     autoFocus
                   >
-                    <Label>Full name</Label>
+                    <Label>{t("admins.form.fullName")}</Label>
                     <Input />
                     <FieldError>{fieldState.error?.message}</FieldError>
                   </TextField>
@@ -407,7 +410,7 @@ function AdminForm({
                       onChange={field.onChange}
                       onBlur={field.onBlur}
                     >
-                      <Label>Email</Label>
+                      <Label>{t("admins.form.email")}</Label>
                       <Input />
                       <FieldError>{fieldState.error?.message}</FieldError>
                     </TextField>
@@ -415,10 +418,10 @@ function AdminForm({
                 />
               ) : (
                 <TextField isDisabled value={selected?.email ?? ""}>
-                  <Label>Email</Label>
+                  <Label>{t("admins.form.email")}</Label>
                   <Input />
                   <Description>
-                    The sign-in email can’t be changed here.
+                    {t("admins.form.emailLocked")}
                   </Description>
                 </TextField>
               )}
@@ -427,26 +430,26 @@ function AdminForm({
                 name="role"
                 render={({ field, fieldState }) => (
                   <Select
-                    placeholder="Select role"
+                    placeholder={t("admins.form.selectRole")}
                     value={field.value ?? null}
                     onChange={(key) =>
                       key !== null && field.onChange(String(key))
                     }
                     isInvalid={Boolean(fieldState.error)}
                   >
-                    <Label>Role</Label>
+                    <Label>{t("admins.form.role")}</Label>
                     <Select.Trigger>
                       <Select.Value />
                       <Select.Indicator />
                     </Select.Trigger>
                     <Select.Popover className="adminOverlay">
                       <ListBox>
-                        <ListBox.Item id="admin" textValue="Admin">
-                          Admin
+                        <ListBox.Item id="admin" textValue={t("admins.roles.admin")}>
+                          {t("admins.roles.admin")}
                           <ListBox.ItemIndicator />
                         </ListBox.Item>
-                        <ListBox.Item id="super_admin" textValue="Super admin">
-                          Super admin
+                        <ListBox.Item id="super_admin" textValue={t("admins.roles.super_admin")}>
+                          {t("admins.roles.super_admin")}
                           <ListBox.ItemIndicator />
                         </ListBox.Item>
                       </ListBox>
@@ -474,8 +477,8 @@ function AdminForm({
                   >
                     <Label>
                       {dialog === "reset"
-                        ? "Temporary password"
-                        : "Initial password"}
+                        ? t("admins.form.temporaryPassword")
+                        : t("admins.form.initialPassword")}
                     </Label>
                     <Input />
                     <FieldError>{fieldState.error?.message}</FieldError>
@@ -494,7 +497,7 @@ function AdminForm({
                     onChange={field.onChange}
                     onBlur={field.onBlur}
                   >
-                    <Label>Confirm password</Label>
+                    <Label>{t("admins.form.confirmPassword")}</Label>
                     <Input />
                     <FieldError>{fieldState.error?.message}</FieldError>
                   </TextField>
@@ -510,7 +513,7 @@ function AdminForm({
         </Modal.Body>
         <Modal.Footer>
           <Button type="button" variant="tertiary" onPress={close}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button
             type="submit"
@@ -521,10 +524,10 @@ function AdminForm({
               <Spinner color="current" size="sm" />
             ) : null}
             {dialog === "create"
-              ? "Add Admin"
+              ? t("admins.form.add")
               : dialog === "edit"
-                ? "Save Changes"
-                : "Reset Password"}
+                ? t("admins.form.save")
+                : t("admins.form.reset")}
           </Button>
         </Modal.Footer>
       </form>

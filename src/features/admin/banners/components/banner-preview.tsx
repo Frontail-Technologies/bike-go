@@ -9,6 +9,7 @@ import { formatSchedule, placementMeta } from "../lib/banner-model";
 import { placements, type Banner, type BannerPlacement } from "../types/banner";
 import { BannerImage } from "./banner-image";
 import { PlacementBadge } from "./banner-parts";
+import { useAdminTranslations } from "@/features/admin/i18n/hooks";
 
 function Cta({ banner, className }: { banner: Banner; className?: string }) {
   return <span className={cn("inline-flex min-h-8 items-center rounded-lg bg-[#111820] px-3 text-xs font-bold text-white", className)}>{banner.ctaLabel ?? ""}</span>;
@@ -51,6 +52,7 @@ function Frame({ placement, banner }: { placement: BannerPlacement; banner: Bann
 }
 
 function PreviewBody({ banner }: { banner: Banner }) {
+  const t = useAdminTranslations();
   const [placement, setPlacement] = useState<BannerPlacement>(banner.placement);
   return (
     <>
@@ -59,20 +61,21 @@ function PreviewBody({ banner }: { banner: Banner }) {
         <PlacementBadge placement={banner.placement} />
         <AdminStatusBadge status={banner.effectiveStatus} />
       </div>
-      <div className="overflow-x-auto"><ViewToggle label="Preview placement" value={placement} onChange={setPlacement} options={placements.map((value) => ({ value, label: placementMeta[value].label, icon: null }))} /></div>
+      <div className="overflow-x-auto"><ViewToggle label={t("banners.preview.placement")} value={placement} onChange={setPlacement} options={placements.map((value) => ({ value, label: placementMeta[value].label, icon: null }))} /></div>
       <div className="adminTile rounded-2xl p-3 sm:p-4"><Frame placement={placement} banner={banner} /></div>
-      <p className="text-xs text-(--admin-muted)">Contextual frame only, not the live page. Schedule: {formatSchedule(banner)} (ICT). {banner.ctaUrl ? <>Links to <span className="font-semibold text-(--admin-text)">{banner.ctaUrl}</span>.</> : null}</p>
+      <p className="text-xs text-(--admin-muted)">{t("banners.preview.note", { schedule: formatSchedule(banner) })}{banner.ctaUrl ? <>{t("banners.preview.links")}<span className="font-semibold text-(--admin-text)">{banner.ctaUrl}</span>.</> : null}</p>
     </>
   );
 }
 
 export function BannerPreview({ banner, isOpen, onOpenChange }: { banner: Banner | null; isOpen: boolean; onOpenChange: (open: boolean) => void }) {
+  const t = useAdminTranslations();
   return (
     <Modal.Backdrop isOpen={isOpen} onOpenChange={onOpenChange} className="adminOverlay">
       <Modal.Container size="lg">
-        <Modal.Dialog aria-label="Banner preview">
+        <Modal.Dialog aria-label={t("banners.preview.title")}>
           <Modal.CloseTrigger />
-          <Modal.Header><Modal.Heading>Banner preview</Modal.Heading></Modal.Header>
+          <Modal.Header><Modal.Heading>{t("banners.preview.title")}</Modal.Heading></Modal.Header>
           <Modal.Body className="space-y-4">{banner ? <PreviewBody key={banner.id} banner={banner} /> : null}</Modal.Body>
         </Modal.Dialog>
       </Modal.Container>

@@ -36,6 +36,11 @@ const en = {
       addVehicle: "Add Vehicle", newBooking: "New Booking", addCustomer: "Add Customer", reviewLoans: "Review Loans",
       reviewDocuments: "Review Documents", manageLocations: "Manage Locations",
     },
+    charts: {
+      label: "Dashboard charts", trends: "Booking Trends", trendsDescription: "Booked and paid revenue, last {days} days (USD).", vehicleStatus: "Vehicle Status",
+      vehicleStatusDescription: "{count} vehicles across the fleet.", vehicles: "Vehicles", activity: "Activity breakdown", volume: "Booking Volume",
+      volumeDescription: "Bookings created, last {days} days.", loanStatus: "Loan Status", loanStatusDescription: "Current loan application pipeline.", applications: "Applications",
+    },
   },
   common: {
     loadingRecords: "Loading records…", nothingHere: "Nothing here yet.", loadError: "We couldn’t load this section",
@@ -106,6 +111,11 @@ const km: typeof en = {
     actions: {
       addVehicle: "បន្ថែមយានយន្ត", newBooking: "ការកក់ថ្មី", addCustomer: "បន្ថែមអតិថិជន", reviewLoans: "ពិនិត្យកម្ចី",
       reviewDocuments: "ពិនិត្យឯកសារ", manageLocations: "គ្រប់គ្រងទីតាំង",
+    },
+    charts: {
+      label: "ក្រាហ្វផ្ទាំងគ្រប់គ្រង", trends: "និន្នាការការកក់", trendsDescription: "ចំណូលបានកក់ និងបានបង់ {days} ថ្ងៃចុងក្រោយ (USD)។", vehicleStatus: "ស្ថានភាពយានយន្ត",
+      vehicleStatusDescription: "យានយន្ត {count} ក្នុងក្រុមយានយន្តទាំងមូល។", vehicles: "យានយន្ត", activity: "ការបែងចែកសកម្មភាព", volume: "បរិមាណការកក់",
+      volumeDescription: "ការកក់ដែលបានបង្កើត {days} ថ្ងៃចុងក្រោយ។", loanStatus: "ស្ថានភាពកម្ចី", loanStatusDescription: "ដំណើរការពាក្យស្នើសុំកម្ចីបច្ចុប្បន្ន។", applications: "ពាក្យស្នើសុំ",
     },
   },
   common: {

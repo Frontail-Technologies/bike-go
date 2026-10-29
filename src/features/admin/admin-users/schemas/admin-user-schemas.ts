@@ -1,14 +1,15 @@
 import { z } from "zod";
+import { adminError } from "@/features/admin/i18n/translate";
 
 const adminUserFields = z.object({
-  name: z.string().trim().min(2, "Enter a full name."),
-  email: z.email("Enter a valid email."),
+  name: z.string().trim().min(2, adminError("authValidation.fullName")),
+  email: z.email(adminError("authValidation.email")),
   role: z.enum(["admin", "super_admin"]),
-  password: z.string().min(8, "Use at least 8 characters."),
+  password: z.string().min(8, adminError("authValidation.minPassword")),
   confirmPassword: z.string(),
 });
 
-const passwordsMatch = { path: ["confirmPassword"], message: "Passwords do not match." };
+const passwordsMatch = { path: ["confirmPassword"], ...adminError("authValidation.mismatch") };
 
 export const adminUserSchema = adminUserFields.refine((value) => value.password === value.confirmPassword, passwordsMatch);
 export const editAdminUserSchema = adminUserFields.pick({ name: true, role: true });
