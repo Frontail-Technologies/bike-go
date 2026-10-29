@@ -13,10 +13,6 @@ import { favoritesStore } from "@/features/customer/profile/stores/preferences-s
 import { useVehicleModelsQuery } from "../../hooks/use-vehicles";
 import { vehicleGroupToMotorcycleGroup } from "../../lib/vehicle-group-mapper";
 
-/**
- * Saved vehicles are a local preference until the customer API exposes a
- * favourite resource. Vehicle details themselves always come from the API.
- */
 export function SavedBikesView() {
   const t = useTranslations("browse");
   const favoriteIds = favoritesStore.useValue();

@@ -28,10 +28,6 @@ export function bookingQuoteToView(quote: BookingQuote): Quote {
   };
 }
 
-/**
- * Keeps the checkout total responsive while the authoritative quote is being
- * refreshed after an add-on toggle. All arithmetic remains in USD cents.
- */
 export function estimateBookingQuote({
   bike,
   days,

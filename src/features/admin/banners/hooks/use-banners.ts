@@ -14,7 +14,6 @@ export function useBannerQuery(id: string) {
   return useQuery({ queryKey: adminBannerQueryKeys.detail(id), queryFn: () => bannersApi.get(id) });
 }
 
-/** Every banner of each placement, in display order, for the ordering view. */
 export function usePlacementBannersQueries() {
   const results = useQueries({
     queries: placements.map((placement) => bannerListQuery({ page: 1, pageSize: 100, placement, sort: "displayOrder" })),

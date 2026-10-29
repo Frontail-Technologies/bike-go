@@ -18,7 +18,6 @@ export function useCustomerQuery(id: string) {
   return useQuery(customerDetailQuery(id));
 }
 
-/** The list stays lightweight, so editing loads the full profile first. */
 export function useCustomerLoader() {
   const client = useQueryClient();
   return (id: string) => client.fetchQuery({ ...customerDetailQuery(id), staleTime: 0 });

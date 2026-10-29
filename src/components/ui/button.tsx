@@ -5,12 +5,6 @@ import { cn } from "@/lib/cn";
 
 export type { ButtonProps };
 
-/**
- * HeroUI exposes pending state for behavior and styling, but intentionally does
- * not inject a visual indicator. This wrapper gives static-label buttons a
- * consistent spinner while retaining HeroUI's render-prop API for callers that
- * need custom pending content.
- */
 export function Button({ children, isPending, ...props }: ButtonProps) {
   return (
     <HeroButton {...props} isPending={isPending}>

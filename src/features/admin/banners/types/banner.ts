@@ -8,15 +8,12 @@ export type Banner = {
   id: string;
   title: string;
   subtitle: string | null;
-  /** Staff-only image address; the storage key is never exposed. */
   imageUrl: string;
   ctaLabel: string | null;
   ctaUrl: string | null;
   placement: BannerPlacement;
   displayOrder: number;
-  /** What staff stored. */
   status: BannerStatus;
-  /** What visitors get right now, derived by the backend from the status and the schedule. */
   effectiveStatus: BannerStatus;
   startAt: string | null;
   endAt: string | null;
@@ -31,7 +28,6 @@ export type BannerListParams = {
   pageSize: number;
   q?: string;
   placement?: BannerPlacement;
-  /** Effective status, as the backend derives it. */
   status?: BannerStatus;
   sort?: BannerSort;
 };
@@ -45,7 +41,6 @@ export type BannerFields = {
   placement: BannerPlacement;
   displayOrder: number;
   status: Exclude<BannerStatus, "expired">;
-  /** ISO-8601 with an offset; empty clears it. */
   startAt: string;
   endAt: string;
 };

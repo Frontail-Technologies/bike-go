@@ -11,7 +11,6 @@ type Filters = Pick<BookingListParams, "q" | "status" | "paymentStatus" | "locat
 
 const oneOf = <T extends string>(values: readonly T[], value: string | null) => values.find((item) => item === value);
 
-/** The list's whole state lives in the URL, so it survives refresh and back/forward navigation. */
 export function useBookingListState() {
   const router = useRouter();
   const pathname = usePathname();
@@ -24,7 +23,6 @@ export function useBookingListState() {
       page: Number.isFinite(page) && page > 0 ? page : 1,
       pageSize: BOOKING_PAGE_SIZE,
       q: searchParams.get("q")?.trim() || undefined,
-      // Overdue is an active rental past its return time, so it replaces any status filter.
       status: overdue ? undefined : oneOf(bookingStatuses, searchParams.get("status")),
       paymentStatus: oneOf(paymentStatuses, searchParams.get("paymentStatus")),
       locationId: searchParams.get("locationId") || undefined,
@@ -48,7 +46,6 @@ export function useBookingListState() {
   return {
     params,
     setPage: (page: number) => write({ page }),
-    /** Changing any filter or the sort returns to the first page. */
     setFilters: (filters: Partial<Filters>) => write({ ...filters, page: 1 }),
     reset: () => write({ q: undefined, status: undefined, paymentStatus: undefined, locationId: undefined, pickup: undefined, overdue: undefined, page: 1 }),
   };

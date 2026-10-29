@@ -1,6 +1,5 @@
 import type { DocumentListParams } from "./types/document";
 
-/** Query identities local to the documents feature. */
 export const adminDocumentQueryKeys = {
   root: () => ["admin", "documents"] as const,
   list: (params: DocumentListParams) => ["admin", "documents", "list", params] as const,

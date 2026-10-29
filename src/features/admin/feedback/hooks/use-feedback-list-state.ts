@@ -10,7 +10,6 @@ type Filters = Pick<SupportTicketListParams, "q" | "status" | "category" | "sort
 
 const oneOf = <T extends string>(values: readonly T[], value: string | null) => values.find((item) => item === value);
 
-/** The list's whole state lives in the URL, so it survives refresh and back/forward navigation. */
 export function useFeedbackListState() {
   const router = useRouter();
   const pathname = usePathname();
@@ -42,7 +41,6 @@ export function useFeedbackListState() {
   return {
     params,
     setPage: (page: number) => write({ page }),
-    /** Changing any filter or the sort returns to the first page. */
     setFilters: (filters: Partial<Filters>) => write({ ...filters, page: 1 }),
     reset: () => write({ q: undefined, status: undefined, category: undefined, sort: undefined, page: 1 }),
   };

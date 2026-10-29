@@ -8,7 +8,6 @@ import { useLoanMutations } from "./use-loans";
 
 export const loanActionError = (error: unknown) => (error instanceof ApiError ? error.message : "Something went wrong. Try again.");
 
-/** Staff decisions on an application. The backend decides what is allowed, so a refusal rejects with its message. */
 export function useLoanActions() {
   const mutations = useLoanMutations();
   return {

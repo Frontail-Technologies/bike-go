@@ -1,4 +1,3 @@
-/** Attempt states exactly as the backend records them. */
 export const paymentStatuses = ["pending", "paid", "failed"] as const;
 export type PaymentStatus = (typeof paymentStatuses)[number];
 
@@ -7,9 +6,7 @@ export type PaymentCurrency = "USD" | "KHR";
 
 export type Payment = {
   transactionId: string;
-  /** The payment provider key, for example `aba_payway`. */
   provider: string;
-  /** The payer's method exactly as the provider reports it (ABA Pay, KHQR, VISA …); null until reported. */
   method: string | null;
   status: PaymentStatus;
   refundState: RefundState;
@@ -26,7 +23,6 @@ export type Payment = {
     vehicleName: string;
     vehicleId: string;
     vehicleType: "motorcycle" | "scooter" | "car" | "other";
-    /** The vehicle's primary image address; never a storage key. */
     vehicleImage: { url: string | null; altText: string | null } | null;
     pickupAt: string;
     returnAt: string;
@@ -56,11 +52,9 @@ export type ProviderOperation = { status: string; amountMinor: number | null; at
 
 export type PaymentDetail = Payment & {
   review: string | null;
-  /** The provider's own status for the transaction, for example APPROVED. */
   providerStatus: string | null;
   approvalCode: string | null;
   bankRef: string | null;
-  /** Masked by the provider and again by the backend. */
   payerAccount: string | null;
   bankName: string | null;
   cardSource: string | null;
@@ -79,7 +73,6 @@ export type RefundInput = { amountMinor: number; reason: string; idempotencyKey:
 export type RefundResult = { refund: PaymentRefund; payment: PaymentDetail };
 
 export type PaymentSort = "newest" | "oldest" | "amount_desc" | "amount_asc";
-/** Date presets (days back); resolved to a date range when the request is sent. */
 export type PaymentWindow = "7" | "30" | "90";
 
 export type PaymentListParams = {

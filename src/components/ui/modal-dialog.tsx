@@ -13,7 +13,6 @@ type ModalDialogProps = {
   size?: "xs" | "sm" | "md" | "lg";
   placement?: "auto" | "top" | "center" | "bottom";
   className?: string;
-  /** Keep a remote mutation dialog open until its request settles. */
   isPending?: boolean;
 };
 

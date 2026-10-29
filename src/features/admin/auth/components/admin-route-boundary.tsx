@@ -17,7 +17,6 @@ function sessionReturnTo() {
     : "/admin";
 }
 
-/** Resolves the administrator session once at the admin layout boundary. */
 export function AdminRouteBoundary({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -54,7 +53,5 @@ export function AdminRouteBoundary({ children }: { children: React.ReactNode }) 
   if (!session.isPending && !session.data) return blank;
   if (session.data?.mustChangePassword) return blank;
 
-  // The shell and the page render while the session resolves, so the route segment is always part of the tree
-  // and the shell never remounts. The API enforces access; an unauthenticated visitor is redirected above.
   return <AdminShell>{children}</AdminShell>;
 }

@@ -12,7 +12,6 @@ type Filters = Pick<CustomerListParams, "q" | "status" | "city" | "joined" | "so
 
 const oneOf = <T extends string>(values: readonly T[], value: string | null) => values.find((item) => item === value);
 
-/** The list's whole state lives in the URL, so it survives refresh and back/forward navigation. */
 export function useCustomerListState() {
   const router = useRouter();
   const pathname = usePathname();
@@ -45,7 +44,6 @@ export function useCustomerListState() {
   return {
     params,
     setPage: (page: number) => write({ page }),
-    /** Changing any filter or the sort returns to the first page. */
     setFilters: (filters: Partial<Filters>) => write({ ...filters, page: 1 }),
     reset: () => write({ q: undefined, status: undefined, city: undefined, joined: undefined, page: 1 }),
   };

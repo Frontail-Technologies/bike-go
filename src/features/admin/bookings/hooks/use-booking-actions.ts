@@ -16,7 +16,6 @@ const success: Partial<Record<BookingStatus, (reference: string) => string>> = {
   completed: (reference) => `${reference} completed`,
 };
 
-/** Lifecycle actions for a booking. They reject with an ApiError so each dialog can show the backend's reason. */
 export function useBookingActions() {
   const mutations = useBookingMutations();
   return {

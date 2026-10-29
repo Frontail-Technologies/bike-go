@@ -35,7 +35,6 @@ const pickupOptions: Array<{ value: string; label: string }> = [
   { value: "last7", label: "Pickup in last 7 days" },
 ];
 
-/** Column id → the backend's sort keys for ascending and descending. */
 const sortColumns: Record<string, { asc: BookingSort; desc: BookingSort }> = {
   reference: { asc: "oldest", desc: "newest" },
   period: { asc: "pickup_asc", desc: "pickup_desc" },

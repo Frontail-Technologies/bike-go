@@ -23,8 +23,6 @@ export function TripSection({ bike, draft, patch, addons, addonsPending }: Patch
   const t = useTranslations("booking");
   const common = useTranslations("common");
   const value: RentalSelection = { range: toRange(draft.start ?? undefined, draft.end ?? undefined), pickupTime: draft.pickupTime, dropTime: draft.dropTime };
-  // Dates usually arrive already chosen from the bike page; collapse the picker into a
-  // summary so it isn't shown a second time, but let the customer reopen it to change them.
   const [editingDates, setEditingDates] = useState(!value.range);
 
   return (
@@ -83,11 +81,6 @@ const keyOnly: Say = (key) => key;
 
 export type RiderValues = z.infer<ReturnType<typeof riderSchema>>;
 
-/**
- * The rider is the signed-in customer. When their profile already has a name and phone this is a
- * one-line summary; it only becomes a form when something is missing or they choose to edit.
- * Submitting it (via the checkout footer) confirms the booking.
- */
 export function RiderDetails({ formId, initial, onSubmit }: { formId: string; initial: RiderValues; onSubmit: (rider: RiderValues) => void }) {
   const t = useTranslations("booking");
   const [editing, setEditing] = useState(false);
@@ -132,7 +125,6 @@ export function RiderDetails({ formId, initial, onSubmit }: { formId: string; in
   );
 }
 
-/** Licence isn't required to book: show it if it's on file, otherwise say to bring it (or add it now). */
 export function LicenceNote({ licence }: { licence: { number: string } | null }) {
   const t = useTranslations("booking");
 

@@ -9,9 +9,6 @@ function createQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        // Short enough that data is refetched on the next screen or tab focus (requests
-        // revalidate by ETag, so unchanged data is a cheap 304), long enough to share one
-        // request between components that mount together.
         staleTime: 5_000,
         gcTime: 10 * 60_000,
         retry: (failureCount, error) => failureCount < 1 && (!isApiError(error) || error.status === null || error.status >= 500),

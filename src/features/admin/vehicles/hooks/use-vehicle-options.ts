@@ -11,7 +11,6 @@ export type Option = { value: string; label: string };
 const kinds = ["vehicle_type", "vehicle_category", "brand", "transmission", "fuel_type"] as const satisfies readonly MasterKind[];
 const params: MasterPageParams = { page: 1, pageSize: 100, sortBy: "sortOrder", sortOrder: "asc" };
 
-/** Active items are offered for new values; the vehicle's current value is always kept so historical records still render. */
 function selectable(items: MasterItem[], current: string | undefined, valueOf: (item: MasterItem) => string): Option[] {
   const options = items.filter((item) => item.active).map((item) => ({ value: valueOf(item), label: item.name }));
   if (current && !options.some((option) => option.value === current)) {
@@ -29,7 +28,6 @@ export function useVehicleOptions() {
 
   return {
     isLoading: results.some((result) => result.isLoading),
-    /** Filter lists include inactive masters because existing vehicles may still reference them. */
     filterCategories: (): Option[] => items("vehicle_category").map((item) => ({ value: item.name, label: item.name })),
     vehicleTypes: (current?: string): Option[] =>
       vehicleTypes

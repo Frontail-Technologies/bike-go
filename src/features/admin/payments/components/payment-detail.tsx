@@ -36,7 +36,6 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 
 const dash = "—";
 
-/** Only what was recorded: this server's attempt, PayWay's own transaction, how it ended, and every refund. */
 function timelineFor(payment: PaymentDetailData): ActivityItem[] {
   const at = (iso: string) => `${fmtDateTime(iso)} ICT`;
   const events: Array<{ when: number; item: ActivityItem }> = [];

@@ -27,7 +27,6 @@ import { vehicleStatuses, type Vehicle } from "../types/vehicle";
 const MAX_IMAGES = 10;
 type Control_ = Control<VehicleFormValues>;
 
-/** Backend field names that differ from the form's. */
 const serverFieldMap: Record<string, FieldPath<VehicleFormValues>> = { dailyRentalPriceMinor: "dailyPrice", securityDepositMinor: "deposit" };
 
 function TextInput({ control, name, label, required = false, type = "text", description, inputMode, onValueChange }: { control: Control_; name: FieldPath<VehicleFormValues>; label: string; required?: boolean; type?: string; description?: string; inputMode?: "decimal" | "numeric"; onValueChange?: (value: string) => void }) {
@@ -53,7 +52,6 @@ function Choice({ control, name, label, options, loading = false, placeholder }:
   );
 }
 
-/** A master-data select; falls back to free text when no masters are configured so the form is never blocked. */
 function MasterChoice({ control, name, label, options, loading, required = false }: { control: Control_; name: FieldPath<VehicleFormValues>; label: string; options: Option[]; loading: boolean; required?: boolean }) {
   if (!loading && options.length === 0) return <TextInput control={control} name={name} label={label} required={required} description="No active options are configured in Settings." />;
   return <Choice control={control} name={name} label={label} options={options} loading={loading} placeholder={`Select ${label.toLowerCase()}`} />;
@@ -193,7 +191,6 @@ export function VehicleForm({ vehicle }: { vehicle?: Vehicle }) {
               emptyTitle={keptExisting ? "Add more images" : "Click to upload images"}
               onChange={(files) => setImages((current) => ({ ...current, files, primaryIndex: current.primaryIndex !== null && current.primaryIndex < files.length ? current.primaryIndex : null }))}
               onPrimaryChange={(file) => setImages((current) => {
-                // While stored images exist, the stored grid owns "primary"; new files are appended.
                 if (current.kept.length > 0) return current;
                 const index = file ? current.files.indexOf(file) : -1;
                 return { ...current, primaryIndex: index >= 0 ? index : null };

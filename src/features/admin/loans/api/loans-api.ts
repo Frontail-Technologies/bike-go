@@ -4,7 +4,6 @@ import type { Loan, LoanListMeta, LoanListParams, LoanStats, LoanStatusInput } f
 type Envelope<T> = { data: T; meta: Record<string, unknown> };
 const DAY = 86_400_000;
 
-/** Submission presets are rolling windows, resolved when the request is sent so they never go stale. */
 function toQuery({ submitted, ...params }: LoanListParams) {
   return { ...params, ...(submitted ? { from: new Date(Date.now() - Number(submitted) * DAY).toISOString() } : {}) };
 }

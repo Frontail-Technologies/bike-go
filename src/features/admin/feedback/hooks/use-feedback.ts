@@ -13,7 +13,6 @@ export function useFeedbackTicketQuery(reference: string) {
   return useQuery({ queryKey: adminFeedbackQueryKeys.detail(reference), queryFn: () => feedbackApi.get(reference) });
 }
 
-/** An update returns the fresh ticket, so the detail cache is replaced and the list refetches. */
 export function useFeedbackMutations() {
   const client = useQueryClient();
   const settle = (ticket: SupportTicket) => {

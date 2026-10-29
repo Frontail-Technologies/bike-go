@@ -1,7 +1,6 @@
 import Image from "next/image";
 import { AdminLoginForm } from "@/features/admin/auth/components/admin-login-form";
 
-/** Public, shell-free administrator sign-in screen. */
 export default function AdminLoginPage() {
   return (
     <main data-admin-ui className="relative isolate flex min-h-dvh overflow-hidden bg-[#07131c] text-white md:flex-row-reverse">

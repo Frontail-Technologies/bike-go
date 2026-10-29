@@ -29,11 +29,6 @@ function loadTelegramScript() {
   });
 }
 
-/**
- * Our own button driving Telegram's login popup (Telegram.Login.auth) instead of
- * Telegram's iframe widget. The popup returns the same signed payload the widget
- * does, so the server-side verification is unchanged.
- */
 export function TelegramLoginButton({
   label,
   isDisabled,
@@ -63,7 +58,6 @@ export function TelegramLoginButton({
       const login = window.Telegram?.Login;
       if (!login) throw new Error("Telegram sign-in could not be loaded.");
       const user = await new Promise<TelegramLoginPayload | false>((resolve) => login.auth({ bot_id: botId!, request_access: "write" }, resolve));
-      // false means the customer closed the popup without signing in.
       if (user) await onAuth(user);
     } catch (error) {
       onError(error);

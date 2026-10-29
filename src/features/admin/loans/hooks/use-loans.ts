@@ -20,7 +20,6 @@ export function useLoanQuery(reference: string) {
   return useQuery({ queryKey: adminLoanQueryKeys.detail(reference), queryFn: () => loansApi.get(reference) });
 }
 
-/** A status change returns the fresh application, so the detail cache is replaced and everything derived refetches. */
 export function useLoanMutations() {
   const client = useQueryClient();
   const settle = (loan: Loan) => {

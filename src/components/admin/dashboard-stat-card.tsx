@@ -10,7 +10,6 @@ type DashboardStatCardProps = {
   label: string;
   value: number;
   format?: keyof typeof formats;
-  /** Percent change vs previous period. */
   delta: number;
   trend: "up" | "down";
   icon?: React.ReactNode;

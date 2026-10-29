@@ -5,7 +5,6 @@ const valid = (latitude: number, longitude: number): Coordinates | null =>
 
 const pair = /(-?\d{1,3}(?:\.\d+)?)\s*,\s*(-?\d{1,3}(?:\.\d+)?)/;
 
-/** Reads coordinates out of a pasted map link (or plain "lat, lng"). Short links can't be resolved offline. */
 export function parseMapLink(input: string): Coordinates | null {
   const text = input.trim();
   if (!text) return null;

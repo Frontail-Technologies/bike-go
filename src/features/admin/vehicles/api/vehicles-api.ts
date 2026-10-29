@@ -4,7 +4,6 @@ import type { Vehicle, VehicleBlock, VehicleBlockInput, VehicleCreateInput, Vehi
 type Envelope<T> = { data: T; meta: Record<string, unknown> };
 const data = <T>(response: { data: Envelope<T> }) => response.data.data;
 
-/** Builds multipart bodies; undefined values are skipped so PATCH only sends what changed. */
 function toFormData(input: VehicleCreateInput | VehicleUpdateInput) {
   const body = new FormData();
   const { images, removeImageIds, imageOrder, ...scalars } = input as VehicleUpdateInput;

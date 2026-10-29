@@ -3,7 +3,6 @@ import { rejectionReasons } from "../lib/loan-model";
 
 const NOTE_LIMIT = 1000;
 const note = z.string().max(NOTE_LIMIT, `Keep the note under ${NOTE_LIMIT} characters.`);
-/** The backend requires at least 2 characters when a note is sent. */
 const optionalNote = note.refine((value) => value.trim() === "" || value.trim().length >= 2, "Enter at least 2 characters, or leave it empty.");
 
 export const statusUpdateSchema = z.object({ status: z.enum(["documents_under_review", "eligibility_review"]), note: optionalNote });

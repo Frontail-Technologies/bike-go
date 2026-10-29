@@ -14,7 +14,6 @@ export const handoverSchema = z
     identityVerified: z.boolean(),
     depositVerified: z.boolean(),
     staffNotes: z.string().max(1000, "Keep notes under 1000 characters."),
-    /** Whether a security deposit is held for this booking; set by the form, not typed. */
     depositRequired: z.boolean(),
   })
   .superRefine((value, context) => {
@@ -39,5 +38,4 @@ export const returnSchema = z
   });
 export type ReturnValues = z.infer<typeof returnSchema>;
 
-/** The backend requires 2–300 characters when a note is sent. */
 export const noteSchema = z.string().trim().max(300, "Keep the note under 300 characters.").refine((value) => value === "" || value.length >= 2, "Enter at least 2 characters, or leave it empty.");

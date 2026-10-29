@@ -34,44 +34,33 @@
     var(--admin-canvas);
 }
 
-/* HeroUI positions right drawers with a full-viewport content wrapper. Width
-   belongs to the dialog panel; legacy max-width utilities on the wrapper must
-   not pull the sheet away from the viewport edge. */
 .adminOverlay.drawer__backdrop .drawer__content--right {
   width: 100% !important;
   max-width: none !important;
 }
 
-/* HeroUI's Input has no fixed height (just padding), while Select/Button use
-   min-h-11 (44px). Align them so a text input and a selector never mismatch
-   height when placed side by side. Textareas are excluded on purpose. */
 .adminRoot [data-slot="input"],
 .adminOverlay [data-slot="input"] {
   min-height: 2.75rem;
 }
 
-/* HeroUI draws a thin vertical separator between table column headers; the
-   admin tables read cleaner without it. */
 .adminRoot .table__column::after,
 .adminOverlay .table__column::after {
   content: none;
 }
 
-/* Level 2: data surfaces such as tables, forms and info panels. */
 .adminSurface {
   border: 1px solid var(--admin-border);
   background: var(--admin-surface);
   box-shadow: var(--admin-shadow-1);
 }
 
-/* Level 1: primary operational cards such as metrics, the vehicle hero and charts. */
 .adminHero {
   border: 1px solid var(--admin-border);
   background: linear-gradient(180deg, #fff 0%, #fffdf6 100%);
   box-shadow: var(--admin-shadow-2);
 }
 
-/* Level 3: small supporting tiles such as specs, quick actions and list items. */
 .adminTile {
   border: 1px solid var(--admin-border);
   background: var(--admin-surface-muted);

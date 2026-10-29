@@ -45,8 +45,6 @@ export function BrowseView({ initialMasters }: { initialMasters: VehicleFilterMa
   const requestedStart = params.get("start");
   const requestedEnd = params.get("end");
   const requestedSort = params.get("sort");
-  // Use URL state during the first client render so a deep link never waits
-  // for the persisted filter store to hydrate before requesting its results.
   const activeFilters = requestedCategory ? { ...filters, category: requestedCategory } : filters;
   const activeQuery = requestedQuery ?? query;
   const activeDates = requestedStart && requestedEnd ? { start: requestedStart, end: requestedEnd } : dates;

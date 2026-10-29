@@ -6,12 +6,10 @@ type BannerImageProps = {
   banner: { title: string; imageUrl: string | null };
   className?: string;
   sizes?: string;
-  /** Kept for the preview frames, which draw their own text over the image. */
   textless?: boolean;
   src?: string | null;
 };
 
-/** The image is served privately by the API (or is a local preview), so it is never run through the image optimiser. */
 export function BannerImage({
   banner,
   className,

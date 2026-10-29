@@ -9,7 +9,6 @@ function useFilterMasterItems(kind: "vehicle_category" | "brand" | "transmission
   return useQuery({
     ...listMasterItemsQuery(kind),
     initialData,
-    // Server-rendered data may come from Next's fetch cache; paint it, then refetch at once.
     initialDataUpdatedAt: 0,
   });
 }

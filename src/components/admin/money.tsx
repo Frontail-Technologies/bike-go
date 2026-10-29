@@ -2,7 +2,6 @@ import { cn } from "@/lib/cn";
 
 export type CurrencyCode = "USD" | "KHR";
 
-/** USD amounts are in cents; KHR amounts are whole riel. */
 export function formatCurrency(amount: number, currency: CurrencyCode) {
   return currency === "USD"
     ? new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(amount / 100)

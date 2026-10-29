@@ -47,7 +47,6 @@ export type VehicleListParams = {
 
 export type VehicleListMeta = { page: number; pageSize: number; total: number; totalPages: number };
 
-/** Scalar fields sent to the backend; amounts are USD minor units (cents). */
 export type VehicleFields = {
   slug: string;
   vehicleType: VehicleType;
@@ -68,14 +67,10 @@ export type VehicleFields = {
 };
 
 export type VehicleImageChanges = {
-  /** New files, in upload order. */
   images: File[];
-  /** Index into `images` of the new primary file, if a new file is primary. */
   primaryImageIndex?: number;
   removeImageIds?: string[];
-  /** Existing image ids in the wanted order. */
   imageOrder?: string[];
-  /** An existing image to make primary. */
   primaryImageId?: string;
 };
 

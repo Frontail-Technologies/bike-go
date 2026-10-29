@@ -19,11 +19,9 @@ export function BookingOperationalStatus({ booking, now }: { booking: Booking; n
 
 export type BookingHandlers = {
   onView: (booking: Booking) => void;
-  /** Statuses that need no inspection: confirm and mark ready. */
   onAdvance: (booking: Booking, next: BookingStatus) => void;
   onCancel: (booking: Booking) => void;
   onNoShow: (booking: Booking) => void;
-  /** Handover, return and completion are done from the booking page. */
   onOperate: (booking: Booking) => void;
 };
 

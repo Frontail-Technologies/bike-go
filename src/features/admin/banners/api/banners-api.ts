@@ -4,7 +4,6 @@ import type { Banner, BannerCreateInput, BannerListMeta, BannerListParams, Banne
 type Envelope<T> = { data: T; meta: Record<string, unknown> };
 const data = <T>(response: { data: Envelope<T> }) => response.data.data;
 
-/** Multipart body: the fields and the image travel in one request. Undefined values are skipped so PATCH sends only changes. */
 function toFormData(input: BannerCreateInput | BannerUpdateInput) {
   const body = new FormData();
   for (const [key, value] of Object.entries(input)) {
@@ -24,7 +23,6 @@ export const bannersApi = {
   update: (id: string, input: BannerUpdateInput) => apiClient.patch<Envelope<Banner>>(`/admin/banners/${id}`, toFormData(input)).then(data),
   remove: (id: string) => apiClient.delete(`/admin/banners/${id}`).then(() => undefined),
   reorder: (placement: BannerPlacement, ids: string[]) => apiClient.put<Envelope<Banner[]>>("/admin/banners/order", { placement, ids }).then(data),
-  /** A copy starts inactive and re-uploads the original image, so the two never share a file. */
   duplicate: async (banner: Banner) => {
     const image = (await apiClient.get<Blob>(banner.imageUrl, { responseType: "blob" })).data;
     const file = new File([image], `${banner.id}.${image.type === "image/png" ? "png" : image.type === "image/webp" ? "webp" : "jpg"}`, { type: image.type });

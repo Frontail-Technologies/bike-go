@@ -15,7 +15,6 @@ import type { PaymentDetail } from "../types/payment";
 
 function RefundForm({ payment, onClose }: { payment: PaymentDetail; onClose: () => void }) {
   const mutations = usePaymentMutations(payment.transactionId);
-  // One key per opened form: submitting twice (double click, retry) refunds once.
   const [idempotencyKey] = useState(() => crypto.randomUUID());
   const [error, setError] = useState("");
   const paid = payment.paidAmountMinor ?? payment.amountMinor;

@@ -1,7 +1,6 @@
 import type { DocumentType, VerificationStatus } from "@/features/admin/loans/types/loan";
 
 export type DocumentSort = "newest" | "oldest";
-/** Upload-date presets (days back); resolved to a date range when the request is sent. */
 export type UploadedWindow = "7" | "30" | "90";
 
 export type DocumentListParams = {
@@ -28,7 +27,6 @@ export type ReviewDocument = {
   reviewedBy: { id: string; name: string } | null;
   loan: { reference: string; loanType: string; status: string };
   applicant: { id: string; reference: string; name: string; nationality: string | null };
-  /** Staff-only download path; the storage key is never exposed. */
   fileUrl: string;
 };
 

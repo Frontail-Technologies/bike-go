@@ -37,7 +37,6 @@ function OrderRow({ banner, index, count, handlers, onMove, onDragEnd }: { banne
   );
 }
 
-/** Keeps the dragged order locally and saves it when a drag ends or an arrow is pressed. It remounts when the server order changes. */
 function OrderList({ placement, initial, handlers }: { placement: BannerPlacement; initial: Banner[]; handlers: BannerHandlers }) {
   const { reorder } = useBannerMutations();
   const [items, setItems] = useState(initial);

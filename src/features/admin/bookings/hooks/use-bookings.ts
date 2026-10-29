@@ -19,13 +19,11 @@ export function useBookingQuery(reference: string) {
   return useQuery({ queryKey: adminBookingQueryKeys.detail(reference), queryFn: () => bookingsApi.get(reference) });
 }
 
-/** Every lifecycle action returns the fresh booking, so the detail cache is replaced and the lists refetch. */
 export function useBookingMutations() {
   const client = useQueryClient();
   const settle = (booking: Booking) => {
     client.setQueryData(adminBookingQueryKeys.detail(booking.reference), booking);
     void client.invalidateQueries({ queryKey: adminBookingQueryKeys.root() });
-    // Handover and completion change the vehicle's status, and every transition moves dashboard counts.
     void client.invalidateQueries({ queryKey: adminVehicleQueryKeys.root() });
     void client.invalidateQueries({ queryKey: adminDashboardQueryKeys.root() });
   };

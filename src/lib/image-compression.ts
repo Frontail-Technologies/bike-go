@@ -1,4 +1,3 @@
-/** Re-encodes an image client-side before upload. Non-image files (e.g. PDFs) pass through untouched. */
 export async function compressImage(file: File, quality = 0.6): Promise<File> {
   if (!file.type.startsWith("image/") || typeof createImageBitmap !== "function") return file;
 

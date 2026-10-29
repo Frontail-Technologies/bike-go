@@ -7,7 +7,6 @@ const apiBaseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:30
 
 type AdminSessionEnvelope = { data: AdminSession };
 
-/** Reads the safe admin session view on the server without exposing the cookie token. */
 export async function getAdminSessionServer(): Promise<AdminSession | null> {
   const cookieStore = await cookies();
   if (!cookieStore.has("ridego_admin_session")) return null;

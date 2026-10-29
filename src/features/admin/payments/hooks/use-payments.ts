@@ -20,13 +20,11 @@ export function usePaymentQuery(transactionId: string) {
   return useQuery({ queryKey: adminPaymentQueryKeys.detail(transactionId), queryFn: () => paymentsApi.get(transactionId) });
 }
 
-/** Sync and refund both return the fresh payment, so the detail is replaced and everything derived refetches. */
 export function usePaymentMutations(transactionId: string) {
   const client = useQueryClient();
   const settle = (payment: PaymentDetail) => {
     client.setQueryData(adminPaymentQueryKeys.detail(transactionId), payment);
     void client.invalidateQueries({ queryKey: adminPaymentQueryKeys.root() });
-    // A refund moves the booking's payment state and the customer's spend.
     void client.invalidateQueries({ queryKey: adminBookingQueryKeys.root() });
     void client.invalidateQueries({ queryKey: adminCustomerQueryKeys.root() });
     void client.invalidateQueries({ queryKey: adminDashboardQueryKeys.root() });
@@ -36,7 +34,6 @@ export function usePaymentMutations(transactionId: string) {
     refund: useMutation({
       mutationFn: (input: RefundInput) => paymentsApi.refund(transactionId, input),
       onSuccess: (result) => settle(result.payment),
-      // A refused or unclear refund still leaves a record, so the history must be refetched.
       onError: () => void client.invalidateQueries({ queryKey: adminPaymentQueryKeys.detail(transactionId) }),
     }),
   };

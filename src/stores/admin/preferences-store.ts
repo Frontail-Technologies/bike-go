@@ -13,7 +13,6 @@ type AdminPreferencesState = {
   setView: (key: PreferenceKey, view: AdminViewMode) => void;
 };
 
-/** Persisted, non-sensitive display preferences only. */
 export const useAdminPreferencesStore = create<AdminPreferencesState>()(
   persist(
     (set) => ({

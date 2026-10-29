@@ -17,8 +17,6 @@ export function CustomerAuthBoundary({ children }: { children: ReactNode }) {
     }
   }, [pathname, router, session.data, session.isPending]);
 
-  // Keep already-hydrated content visible during a background refresh. Blocking
-  // on `isFetching` here caused a full-page loader on ordinary client navigation.
   if (session.isPending || !session.data) {
     return <BrandLoader />;
   }

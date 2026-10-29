@@ -42,11 +42,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-/**
- * One-page checkout: trip (dates arrive from the bike page) and add-ons, the rider (pre-filled
- * from the profile), the licence status, then a single "Confirm booking". Payment happens on
- * the confirmation page.
- */
 export function BookingFlow({ bike, target, detailsHref }: { bike: Motorcycle; target: BookingTarget; detailsHref: string }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -96,7 +91,6 @@ export function BookingFlow({ bike, target, detailsHref }: { bike: Motorcycle; t
     const idempotencyKey = draft.idempotencyKey ?? crypto.randomUUID();
     if (!draft.idempotencyKey) patch({ idempotencyKey });
     try {
-      // The rider is the account holder: keep the profile in step with what they confirmed.
       if (values.name.trim() !== rider.name.trim() || values.phone.trim() !== rider.phone.trim()) {
         await updateProfile.mutateAsync({ input: { fullName: values.name.trim(), phone: values.phone.trim() } });
       }

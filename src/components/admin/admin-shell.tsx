@@ -6,7 +6,6 @@ import { AdminHeader } from "@/components/admin/shell/admin-header";
 import { AdminMobileBar, AdminSidebar } from "@/components/admin/shell/admin-sidebar";
 import { useAdminShellStore } from "@/stores/admin/shell-store";
 
-/** Admin layout foundation: collapsible sidebar on `lg+`, drawer bar below. */
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const collapsed = useAdminShellStore((state) => state.sidebarCollapsed);
   const setCollapsed = useAdminShellStore((state) => state.setSidebarCollapsed);

@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-/** Every field except the name may be left empty, which leaves the stored value unchanged. */
 const optional = (schema: z.ZodString) => z.union([z.literal(""), schema]);
 
 export const customerEditSchema = z.object({

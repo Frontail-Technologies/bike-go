@@ -42,7 +42,6 @@ export function CustomerList() {
   const [searchText, setSearchText] = useUrlSearchInput(params.q, (q) => state.setFilters({ q }));
   const [editing, setEditing] = useState<Customer | null>(null);
 
-
   const rows = query.data?.data ?? [];
   const total = query.data?.meta.total ?? 0;
   const pageCount = Math.max(1, query.data?.meta.totalPages ?? 1);
@@ -52,7 +51,6 @@ export function CustomerList() {
   const filtersActive = Boolean(params.q || activeFilters);
   const reset = () => { setSearchText(""); state.reset(); };
 
-  // The list is lightweight, so editing loads the full profile before opening the form.
   async function edit(person: CustomerSummary) {
     try {
       setEditing(await loadCustomer(person.id));
@@ -62,7 +60,6 @@ export function CustomerList() {
     }
   }
 
-  // Backend sorts: name (A–Z) and joined date (newest by default).
   const sorting: SortingState = params.sort === "name" ? [{ id: "name", desc: false }] : params.sort === "oldest" ? [{ id: "joined", desc: false }] : params.sort === "newest" ? [{ id: "joined", desc: true }] : [];
   const changeSorting: OnChangeFn<SortingState> = (updater) => {
     const next = typeof updater === "function" ? updater(sorting) : updater;

@@ -7,7 +7,6 @@ export type BookingTab = (typeof BOOKING_TABS)[number];
 
 const isTab = (value: string | null): value is BookingTab => BOOKING_TABS.some((tab) => tab === value);
 
-/** Which "my bookings" tab and page are open. Kept in the URL so refresh and back/forward preserve them. */
 export function useBookingTabParams() {
   const router = useRouter();
   const pathname = usePathname();

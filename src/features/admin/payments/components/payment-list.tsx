@@ -27,7 +27,6 @@ const dateOptions = [
   { value: "90", label: "Last 90 days" },
 ];
 
-/** Column id → the backend's sort keys for ascending and descending. */
 const sortColumns: Record<string, { asc: PaymentSort; desc: PaymentSort }> = {
   amount: { asc: "amount_asc", desc: "amount_desc" },
   created: { asc: "oldest", desc: "newest" },

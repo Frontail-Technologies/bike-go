@@ -5,7 +5,6 @@ import { adminAuthApi } from "../api/admin-auth-api";
 import { adminAuthQueryKeys } from "../query-keys";
 import type { AdminSession } from "../types/session";
 
-/** Signs an administrator in and stores the new session, so the admin shell has it immediately. */
 export function useAdminLogin() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -14,7 +13,6 @@ export function useAdminLogin() {
   });
 }
 
-/** Changes the administrator's password; the server returns the refreshed session. */
 export function useAdminChangePassword() {
   const queryClient = useQueryClient();
   return useMutation({

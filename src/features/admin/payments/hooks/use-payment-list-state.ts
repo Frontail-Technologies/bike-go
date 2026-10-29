@@ -12,7 +12,6 @@ type Filters = Pick<PaymentListParams, "q" | "status" | "method" | "currency" | 
 
 const oneOf = <T extends string>(values: readonly T[], value: string | null) => values.find((item) => item === value);
 
-/** The list's whole state lives in the URL, so it survives refresh and back/forward navigation. */
 export function usePaymentListState() {
   const router = useRouter();
   const pathname = usePathname();
@@ -46,7 +45,6 @@ export function usePaymentListState() {
   return {
     params,
     setPage: (page: number) => write({ page }),
-    /** Changing any filter or the sort returns to the first page. */
     setFilters: (filters: Partial<Filters>) => write({ ...filters, page: 1 }),
     reset: () => write({ q: undefined, status: undefined, method: undefined, currency: undefined, window: undefined, page: 1 }),
   };

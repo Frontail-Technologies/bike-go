@@ -24,7 +24,6 @@ export function useVehicleMutations() {
   return {
     create: useMutation({ mutationFn: (input: VehicleCreateInput) => vehiclesApi.create(input), onSuccess: invalidate }),
     update: useMutation({ mutationFn: ({ id, ...input }: { id: string } & VehicleUpdateInput) => vehiclesApi.update(id, input), onSuccess: invalidate }),
-    // Bookings show their vehicle's status (e.g. moved to maintenance after a damaged return).
     setStatus: useMutation({
       mutationFn: ({ id, status }: { id: string; status: "available" | "inactive" | "maintenance" }) => vehiclesApi.update(id, { status }),
       onSuccess: () => Promise.all([invalidate(), client.invalidateQueries({ queryKey: adminBookingQueryKeys.root() })]),

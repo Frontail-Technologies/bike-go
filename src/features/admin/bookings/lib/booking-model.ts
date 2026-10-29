@@ -24,20 +24,16 @@ export const toBadge = (status: BookingStatus): { status: AdminStatus; label: st
   status: badgeStatus[status], label: bookingLabels[status], className: status === "expired" ? "bg-[var(--admin-surface-muted)] text-[var(--admin-muted)]" : undefined,
 });
 
-/** Whether the backend currently permits this move. The backend stays authoritative; this only hides what it would refuse. */
 export const canMoveTo = (booking: Pick<Booking, "allowedNextStatuses">, status: BookingStatus) => booking.allowedNextStatuses.includes(status);
 
-/** The backend refuses no-show before the scheduled pickup, so the action is only offered after it. */
 export const canMarkNoShow = (booking: Pick<Booking, "allowedNextStatuses" | "pickupAt">, now: number) => canMoveTo(booking, "no_show") && Date.parse(booking.pickupAt) <= now;
 
-/** Overdue is derived, never stored: an active rental past its expected return. */
 export const isOverdue = (booking: Pick<Booking, "bookingStatus" | "returnAt">, now: number) => booking.bookingStatus === "active" && Date.parse(booking.returnAt) < now;
 
 export const distanceTravelled = (booking: Pick<Booking, "pickupInspection" | "returnInspection">) =>
   booking.pickupInspection && booking.returnInspection ? Math.max(0, booking.returnInspection.odometerKm - booking.pickupInspection.odometerKm) : null;
 
 const minutesBetween = (from: string, to: number) => Math.max(0, Math.round((to - Date.parse(from)) / 60_000));
-/** Minutes late: against the actual return once returned, otherwise against now for an active rental. */
 export const lateMinutes = (booking: Pick<Booking, "bookingStatus" | "returnAt" | "returnInspection">, now: number) =>
   booking.returnInspection ? minutesBetween(booking.returnAt, Date.parse(booking.returnInspection.occurredAt)) : booking.bookingStatus === "active" ? minutesBetween(booking.returnAt, now) : 0;
 

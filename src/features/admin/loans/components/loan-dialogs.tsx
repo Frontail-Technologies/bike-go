@@ -48,7 +48,6 @@ function NoteField<V extends StatusUpdateValues | ApproveValues | RejectValues |
 
 type DialogProps = { loan: Loan | null; isOpen: boolean; onOpenChange: (open: boolean) => void; onConfirm: (loan: Loan, input: LoanStatusInput) => Promise<unknown> };
 
-/** Runs a form's submit against the backend: the dialog closes on success and shows the backend's message otherwise. */
 function useSubmit(close: () => void) {
   const [error, setError] = useState("");
   return {
@@ -115,7 +114,6 @@ const verificationHint: Record<VerificationStatus, string> = { uploaded: "upload
 function RequestForm({ loan, onClose, onConfirm }: { loan: Loan; onClose: () => void; onConfirm: DialogProps["onConfirm"] }) {
   const { error, run } = useSubmit(onClose);
   const latest = (type: string) => loan.documents.filter((doc) => doc.type === type).at(-1);
-  // Start from what is missing or was sent back; verified and freshly uploaded documents are left alone.
   const initial = requiredDocumentTypes.filter((type) => { const doc = latest(type); return !doc || doc.verificationStatus === "needs_review" || doc.verificationStatus === "rejected"; });
   const form = useForm<RequestDocumentsValues>({ resolver: zodResolver(requestDocumentsSchema), defaultValues: { types: [...initial], message: "" } });
   const selected = form.watch("types");

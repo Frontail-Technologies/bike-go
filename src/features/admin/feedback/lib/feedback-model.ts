@@ -9,7 +9,6 @@ export const categoryLabels: Record<SupportTicketCategory, string> = {
   other: "Other",
 };
 
-/** Reuses the shared badge's existing tones: open reads as pending, resolved as completed. */
 export function ticketBadge(status: SupportTicketStatus) {
   return status === "resolved" ? { status: "completed" as const, label: "Resolved" } : { status: "pending" as const, label: "Open" };
 }

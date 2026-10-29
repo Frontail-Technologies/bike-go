@@ -7,7 +7,6 @@ export function BookingStatusBadge({ status, className }: { status: BookingStatu
   return <AdminStatusBadge status={badge.status} label={badge.label} className={`${badge.className ?? ""} ${className ?? ""}`} />;
 }
 
-/** Accepts backend values (`partially_refunded`) and the Payments mock's dashed form. */
 export function PaymentStatusBadge({ status, className }: { status: string; className?: string }) {
   return <AdminStatusBadge status={status.replaceAll("_", "-") as AdminStatus} label={paymentLabels[status.replaceAll("-", "_") as PaymentStatus] ?? status} className={className} />;
 }

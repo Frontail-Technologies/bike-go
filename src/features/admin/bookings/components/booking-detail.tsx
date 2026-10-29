@@ -116,7 +116,6 @@ function BookingWorkspace({ booking }: { booking: Booking }) {
     try {
       await vehicles.setStatus.mutateAsync({ id: vehicle.id, status: "maintenance" });
       toast.success(`${vehicle.name} moved to maintenance`);
-      // The confirm button no longer auto-closes the dialog; close it ourselves once the move succeeds.
       maintenanceDialog.close();
     } catch (error) {
       toast.danger(actionErrorMessage(error));

@@ -1,6 +1,5 @@
 import type { DocumentId } from "./data";
 
-/** Maps customer-facing document slots to the API's stable document codes. */
 export const loanDocumentType = (type: DocumentId): string => {
   switch (type) {
     case "residence": return "visa_or_residence_permit";

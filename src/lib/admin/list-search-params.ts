@@ -11,7 +11,6 @@ const positiveInt = (value: string | null, fallback: number) => {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
 };
 
-/** Parses URL state used by server-paginated administrator tables. */
 export function readAdminListState(searchParams: URLSearchParams, defaults: Pick<AdminListState, "pageSize">): AdminListState {
   const sortOrder = searchParams.get("sortOrder");
   return {

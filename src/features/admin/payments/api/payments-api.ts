@@ -4,14 +4,12 @@ import type { Payment, PaymentDetail, PaymentListMeta, PaymentListParams, Refund
 type Envelope<T> = { data: T; meta: Record<string, unknown> };
 const DAY = 86_400_000;
 
-/** Date presets are rolling windows, resolved when the request is sent so they never go stale. */
 function toQuery({ window, ...params }: PaymentListParams) {
   return { ...params, ...(window ? { from: new Date(Date.now() - Number(window) * DAY).toISOString() } : {}) };
 }
 
 const path = (transactionId: string) => `/admin/payments/${encodeURIComponent(transactionId)}`;
 
-/** Everything the browser knows about PayWay comes from the backend's stored record; it never calls PayWay. */
 export const paymentsApi = {
   list: async (params: PaymentListParams) => {
     const response = await apiClient.get<Envelope<Payment[]>>("/admin/payments", { params: toQuery(params) });

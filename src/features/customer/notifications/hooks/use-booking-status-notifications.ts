@@ -22,10 +22,6 @@ const labels: Record<ApiBookingStatus, string> = {
 
 const WATCH_PARAMS = { page: 1, pageSize: 100 } as const;
 
-/**
- * While the customer has booking updates turned on, polls their bookings and shows a browser
- * notification whenever one changes status. Shares its cache entry with the notifications page.
- */
 export function useBookingStatusNotifications() {
   const session = useCustomerSessionQuery();
   const preferences = profileStore.useValue().notifications;

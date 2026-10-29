@@ -14,30 +14,21 @@ declare global {
   }
 }
 
-/** PayWay's checkout plugin. It builds the payment window around the form below; the form action decides sandbox or production. */
 const PLUGIN_URL = process.env.NEXT_PUBLIC_PAYWAY_SCRIPT_URL ?? "https://checkout.payway.com.kh/plugins/checkout2-0.js";
 
 const money = (minor: number, currency: string) => new Intl.NumberFormat("en-US", { style: "currency", currency }).format(minor / 100);
 
-/**
- * Pays a pending booking through ABA PayWay's hosted checkout (ABA Pay, KHQR and the other methods the merchant account enables).
- * The signed form comes from the backend; the browser never holds the signing key and success is only ever read back from the server.
- */
 export function PaywayCheckout({ reference, onPaid }: { reference: string; onPaid?: () => void }) {
   const start = useStartPaymentMutation();
   const formRef = useRef<HTMLFormElement>(null);
   const [payment, setPayment] = useState<StartedPayment | null>(null);
   const opened = useRef(false);
-  // Fetched from the start (not just once a payment attempt is open) so we learn
-  // paymentsEnabled from the server before deciding whether to offer checkout at all —
-  // a client-side flag here could drift from the backend's actual payment driver.
   const status = useBookingPayment(reference, true);
   const paymentsEnabled = status.data?.paymentsEnabled ?? false;
   const attempt = status.data?.attempt;
   const state = attempt?.status ?? (payment ? "pending" : "idle");
   const expired = status.data?.bookingStatus === "expired";
 
-  // Open PayWay's window once the signed form is in the page. The plugin may still be loading, so wait for it briefly.
   useEffect(() => {
     if (!payment || opened.current) return;
     const open = () => {
@@ -62,13 +53,11 @@ export function PaywayCheckout({ reference, onPaid }: { reference: string; onPai
     setPayment(await start.mutateAsync({ reference }));
   }
 
-  // Avoid flashing the "not available" warning while the first fetch is still settling.
   if (status.isPending) return null;
 
   return (
     <section aria-label="Payment" className="flex flex-col gap-3">
       {!paymentsEnabled ? <Alert status="warning"><Alert.Indicator /><Alert.Content><Alert.Title>Online payments are not available yet</Alert.Title><Alert.Description>Your booking can be created, but checkout remains disabled until RideGo enables payments.</Alert.Description></Alert.Content></Alert> : null}
-      {/* The plugin looks for this modal shell when it loads, so it is always present; the signed form is filled in when a payment starts. */}
       {paymentsEnabled ? <Script id="aba-payway-checkout" src={PLUGIN_URL} strategy="afterInteractive" /> : null}
       <div id="aba_main_modal" className="aba-modal">
         <div className="aba-modal-content">

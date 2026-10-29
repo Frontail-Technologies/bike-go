@@ -18,7 +18,6 @@ export const customerToFormValues = (customer: Customer): CustomerEditValues => 
   address: customer.profile.address ?? "",
 });
 
-/** Only filled fields are sent; the backend can't clear a stored value. */
 export const formValuesToInput = (values: CustomerEditValues): CustomerUpdateInput => {
   const input: CustomerUpdateInput = { fullName: values.fullName };
   for (const key of ["phone", "email", "dateOfBirth", "nationality", "city", "address"] as const) if (values[key]) input[key] = values[key];

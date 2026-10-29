@@ -4,7 +4,6 @@ import { toApiError } from "@/lib/api/error";
 export const apiBaseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001/api/v1").replace(/\/$/, "");
 export const CUSTOMER_SESSION_EXPIRED_EVENT = "ridego:customer-session-expired";
 
-/** The sole browser transport for RideGo API feature modules. */
 export const apiClient = axios.create({
   baseURL: apiBaseUrl,
   withCredentials: true,

@@ -7,11 +7,6 @@ import { motion, useReducedMotion } from "motion/react";
 import { Fragment, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
-/**
- * The admin equivalent of the customer Button wrapper. HeroUI's `isPending`
- * manages interaction state only; this makes the pending state visible for
- * standard-label buttons while retaining render-prop children when needed.
- */
 export function AdminButton({ children, isPending, ...props }: ButtonProps) {
   return (
     <Button {...props} isPending={isPending}>

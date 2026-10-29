@@ -9,7 +9,6 @@ const page = async <T>(path: string, params: object) => {
 };
 
 const DAY = 86_400_000;
-/** Joined presets are rolling windows, resolved when the request is sent so they never go stale. */
 const joinedFrom = (window: JoinedWindow, now = Date.now()) => new Date(now - Number(window) * DAY).toISOString();
 
 function toQuery({ joined, ...params }: CustomerListParams) {
@@ -22,7 +21,6 @@ export const customersApi = {
   get: (id: string) => apiClient.get<Envelope<Customer>>(`/admin/customers/${id}`).then((response) => response.data.data),
   update: (id: string, input: CustomerUpdateInput) => apiClient.patch<Envelope<Customer>>(`/admin/customers/${id}`, input).then((response) => response.data.data),
   activity: (id: string, params: PageParams) => page<CustomerActivity>(`/admin/customers/${id}/activity`, params),
-  // The shared admin lists, scoped to one customer.
   bookings: (id: string, params: PageParams) => page<Booking>("/admin/bookings", { ...params, customerId: id, sort: "newest" }),
   loans: (id: string, params: PageParams) => page<CustomerLoan>("/admin/loans", { ...params, customerId: id }),
   documents: (id: string, params: PageParams) => page<CustomerDocument>("/admin/documents", { ...params, customerId: id })

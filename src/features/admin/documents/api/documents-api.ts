@@ -4,12 +4,10 @@ import type { DocumentListMeta, DocumentListParams, DocumentReviewInput, Documen
 type Envelope<T> = { data: T; meta: Record<string, unknown> };
 const DAY = 86_400_000;
 
-/** Upload presets are rolling windows, resolved when the request is sent so they never go stale. */
 function toQuery({ uploaded, ...params }: DocumentListParams) {
   return { ...params, ...(uploaded ? { from: new Date(Date.now() - Number(uploaded) * DAY).toISOString() } : {}) };
 }
 
-/** Where the browser can open a staff-only document: a private, authorised download, never a storage path. */
 export const documentFileUrl = (path: string) => new URL(path, apiClient.defaults.baseURL).toString();
 
 export const documentsApi = {

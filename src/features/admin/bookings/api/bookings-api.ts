@@ -7,7 +7,6 @@ const data = <T>(response: { data: Envelope<T> }) => response.data.data;
 const DAY = 86_400_000;
 const ICT_OFFSET = 7 * 3_600_000;
 
-/** Pickup presets are Cambodia calendar days; resolved when the request is sent so they never go stale. */
 function pickupRange(window: PickupWindow, now = Date.now()) {
   const startOfToday = Math.floor((now + ICT_OFFSET) / DAY) * DAY - ICT_OFFSET;
   const range = { today: [startOfToday, startOfToday + DAY], next7: [startOfToday, startOfToday + 7 * DAY], last7: [startOfToday - 7 * DAY, startOfToday] }[window];

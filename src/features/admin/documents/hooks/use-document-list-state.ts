@@ -12,7 +12,6 @@ type Filters = Pick<DocumentListParams, "q" | "status" | "type" | "uploaded" | "
 
 const oneOf = <T extends string>(values: readonly T[], value: string | null) => values.find((item) => item === value);
 
-/** The list's whole state lives in the URL, so it survives refresh and back/forward navigation. */
 export function useDocumentListState() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -45,7 +44,6 @@ export function useDocumentListState() {
   return {
     params,
     setPage: (page: number) => write({ page }),
-    /** Changing any filter or the sort returns to the first page. */
     setFilters: (filters: Partial<Filters>) => write({ ...filters, page: 1 }),
     reset: () => write({ q: undefined, status: undefined, type: undefined, uploaded: undefined, page: 1 }),
   };

@@ -57,7 +57,6 @@ export type VehicleAvailability = {
 
 export type VehicleGroupLocation = { locationId: string; name: string; city: string; availableCount: number };
 
-/** One brand+model across every location, with a live available-unit count. */
 export type VehicleModelGroup = {
   groupSlug: string;
   vehicleType: VehicleType;

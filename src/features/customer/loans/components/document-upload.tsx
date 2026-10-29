@@ -32,8 +32,6 @@ export function DocumentUpload({ label, hint, file, onChange, doc, requested }: 
   const t = useTranslations("loans");
   const [error, setError] = useState<string | null>(null);
   const Icon = doc ? icons[doc] : IdentificationCardIcon;
-  // Browser File objects cannot survive sessionStorage serialization. Keep the
-  // draft metadata, but require a fresh file selection after a page reload.
   const selected = file?.raw instanceof File ? file : undefined;
 
   async function pick(files: FileList | null) {

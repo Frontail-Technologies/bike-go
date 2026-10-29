@@ -331,7 +331,6 @@ function AdminForm({
   update: ReturnType<typeof useAdminUserMutations>["update"];
   reset: ReturnType<typeof useAdminUserMutations>["reset"];
 }) {
-  // Each dialog validates only the fields it shows; the schemas are subsets of the same field set, so this cast is safe.
   const schema = (
     dialog === "edit"
       ? editAdminUserSchema

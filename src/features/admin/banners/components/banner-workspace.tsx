@@ -29,7 +29,6 @@ type ViewMode = "table" | "cards";
 const statusLabels: Record<BannerStatus, string> = { active: "Active", scheduled: "Scheduled", inactive: "Inactive", expired: "Expired" };
 const failure = (error: unknown) => (error instanceof ApiError ? error.message : "Something went wrong. Try again.");
 
-/** The backend sorts ascending by these columns; a second press clears the sort. */
 const sortColumns: Record<string, BannerSort> = { title: "title", displayOrder: "displayOrder", schedule: "startAt" };
 const sortingFor = (sort: BannerSort | undefined): SortingState => {
   const found = Object.entries(sortColumns).find(([, key]) => key === sort);

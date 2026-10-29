@@ -37,10 +37,8 @@
   --header-height: 64px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-top: env(safe-area-inset-top, 0px);
-  /* Set at runtime by KeyboardInsetWatcher while the on-screen keyboard is open. */
   --keyboard-inset: 0px;
 
-  
   --background: #f7f8fa;
   --foreground: #111111;
   --surface: #ffffff;
@@ -77,7 +75,6 @@
   --danger: #ef4444;
   --danger-foreground: #111111;
 
-  
   --radius: 0.5rem;
 }
 

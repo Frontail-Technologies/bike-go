@@ -54,7 +54,6 @@ export type Loan = {
 };
 
 export type LoanSort = "newest" | "oldest" | "amount_desc" | "amount_asc";
-/** Submission-date presets (days back); resolved to a date range when the request is sent. */
 export type SubmittedWindow = "7" | "30" | "90";
 
 export type LoanListParams = {

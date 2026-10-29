@@ -2,11 +2,6 @@
 
 import { useEffect } from "react";
 
-/**
- * Tracks how much the on-screen keyboard is covering the visual viewport and
- * exposes it as --keyboard-inset on the root element, so fixed bottom bars can
- * rise above the keyboard instead of being hidden or overlapping a focused input.
- */
 export function KeyboardInsetWatcher() {
   useEffect(() => {
     const viewport = window.visualViewport;

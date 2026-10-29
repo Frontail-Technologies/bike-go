@@ -27,7 +27,6 @@ function ErrorAlert({ title, message }: { title: string; message: string }) {
   return message ? <Alert status="danger"><Alert.Indicator /><Alert.Content><Alert.Title>{title}</Alert.Title><Alert.Description>{message}</Alert.Description></Alert.Content></Alert> : null;
 }
 
-/** Runs a confirm action, keeps the dialog open with the backend's message on failure and closes it on success. */
 function useConfirm(onDone: () => void) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");

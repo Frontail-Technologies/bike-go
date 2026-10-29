@@ -33,7 +33,6 @@ export const loanStatusMetrics = (data: DashboardOverview) => toMetrics(data.loa
 
 const dayLabel = (date: string) => new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", day: "numeric", month: "short" }).format(new Date(`${date}T00:00:00Z`));
 
-/** Charts show an empty state instead of a flat line when nothing happened in the range. */
 export function revenuePoints(data: DashboardOverview): RevenueTrendPoint[] {
   const series = data.trends?.revenue ?? [];
   return series.some((point) => point.bookedMinor > 0 || point.paidMinor > 0) ? series.map((point) => ({ label: dayLabel(point.date), bookedMinor: point.bookedMinor, paidMinor: point.paidMinor })) : [];

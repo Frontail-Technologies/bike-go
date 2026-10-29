@@ -316,7 +316,6 @@ export function MasterDataSection({
         danger
         isPending={mutations.update.isPending}
         onConfirm={() => {
-          // Close only once the mutation settles, so the dialog can't be dismissed mid-request or submitted twice.
           if (deactivating) setActive(deactivating, false, () => setDeactivating(null));
         }}
       />

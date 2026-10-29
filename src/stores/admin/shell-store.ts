@@ -10,7 +10,6 @@ type AdminShellState = {
   setMobileNavigationOpen: (open: boolean) => void;
 };
 
-/** UI-only state. Server data must live in React Query. */
 export const useAdminShellStore = create<AdminShellState>()(
   persist(
     (set) => ({

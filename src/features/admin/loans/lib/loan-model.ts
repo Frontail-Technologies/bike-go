@@ -10,7 +10,6 @@ const loanTone: Record<LoanStatus, AdminStatus> = {
   draft: "draft", submitted: "submitted", documents_under_review: "under-review", additional_documents_required: "action-required", eligibility_review: "eligibility", approved: "approved", rejected: "rejected",
 };
 
-/** Accepts backend values and the Payments mock's dashed form (`documents-review`). */
 const legacy: Record<string, LoanStatus> = { "documents-review": "documents_under_review", "action-required": "additional_documents_required", "eligibility-review": "eligibility_review" };
 export const normalizeLoanStatus = (status: string) => (legacy[status] ?? status) as LoanStatus;
 export const toLoanBadge = (status: string) => {
@@ -26,7 +25,6 @@ export const documentTypeLabels: Record<DocumentType, string> = {
   address_proof: "Address proof", bank_statement: "Bank statement", other: "Other",
 };
 export const documentTypeLabel = (type: string) => documentTypeLabels[type as DocumentType] ?? type;
-/** Mirrors the backend's required set; the backend does not expose it. */
 export const requiredDocumentTypes: readonly DocumentType[] = ["passport", "visa_or_residence_permit", "employment_proof", "salary_or_income_proof", "address_proof", "bank_statement"];
 
 export const verificationLabels: Record<VerificationStatus, string> = { uploaded: "Uploaded", verified: "Verified", needs_review: "Needs review", rejected: "Rejected" };
@@ -38,7 +36,6 @@ export const employmentLabels: Record<string, string> = { salaried: "Salaried em
 
 export const rejectionReasons = ["Income does not meet the minimum requirement", "Documents could not be verified", "Incomplete or inconsistent information", "Residency status not eligible", "Other"] as const;
 
-/** Statuses with their own action; the plain "Update status" form covers the rest. */
 export const reviewStatusOptions = (loan: Pick<Loan, "allowedNextStatuses">): LoanStatus[] =>
   loan.allowedNextStatuses.filter((status) => status === "documents_under_review" || status === "eligibility_review");
 
@@ -48,5 +45,4 @@ export const isOpenForReview = (status: LoanStatus) => !["draft", "approved", "r
 export const ageOf = (iso: string, now: number) => Math.floor((now - Date.parse(iso)) / (365.25 * 86_400_000));
 export const monthsToYears = (months: number) => (months % 12 === 0 ? `${months / 12} years` : `${(months / 12).toFixed(1)} years`);
 
-/** The file route for a loan document; the storage key is never exposed. */
 export const loanDocumentPath = (reference: string, documentId: string) => `/api/v1/admin/loans/${reference}/documents/${documentId}/file`;

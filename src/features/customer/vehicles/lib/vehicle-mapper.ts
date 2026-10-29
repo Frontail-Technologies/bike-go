@@ -4,7 +4,6 @@ import type { Vehicle } from "../types";
 const categories = new Set<BikeCategory>(["cruiser", "sports", "adventure", "touring", "scooter"]);
 const numberSpec = (specs: Record<string, unknown>, key: string) => typeof specs[key] === "number" ? specs[key] : 0;
 
-/** Shared between a single unit and a model group — both carry the same brand/category/specifications shape. */
 export function categoryOf(category: string, vehicleType: string): BikeCategory {
   return categories.has(category as BikeCategory) ? (category as BikeCategory) : vehicleType === "scooter" ? "scooter" : "touring";
 }

@@ -98,8 +98,6 @@ function PrivateLicenceImage({ src, alt }: { src: string; alt: string }) {
     let active = true;
     let objectUrl: string | null = null;
 
-    // src is a root-relative API path (/api/v1/...); resolve it against the API origin,
-    // not the client's baseURL, which already ends in /api/v1.
     void apiClient.get<Blob>(new URL(src, apiClient.defaults.baseURL).toString(), { responseType: "blob" })
       .then((response) => {
         objectUrl = URL.createObjectURL(response.data);
@@ -148,7 +146,6 @@ export function ProfileView() {
   const [licencePhotoError, setLicencePhotoError] = useState<string | null>(null);
   const close = () => setModal(null);
   const avatarUrl = remoteProfile?.avatarUrl || session.data?.user.image || null;
-  // Long legal names overflow the card on phones; show the Telegram handle when there is one.
   const displayName = remoteProfile?.telegramUsername ? `@${remoteProfile.telegramUsername}` : profile.name;
   const secondaryLine = remoteProfile?.telegramUsername ? profile.name : profile.email;
 

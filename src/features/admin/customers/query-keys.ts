@@ -1,6 +1,5 @@
 import type { CustomerListParams, PageParams } from "./types/customer";
 
-/** Query identities local to the customers feature. */
 export const adminCustomerQueryKeys = {
   root: () => ["admin", "customers"] as const,
   list: (params: CustomerListParams) => ["admin", "customers", "list", params] as const,

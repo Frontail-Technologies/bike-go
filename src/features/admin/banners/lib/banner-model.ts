@@ -18,7 +18,6 @@ export const formatSchedule = (banner: Pick<Banner, "startAt" | "endAt">) => {
 
 export const blankBannerForm = (placement: BannerPlacement): BannerFormValues => ({ title: "", subtitle: "", ctaLabel: "", ctaUrl: "", placement, displayOrder: "0", status: "active", startAt: "", endAt: "" });
 
-/** Expired is derived and cannot be chosen, so an expired banner edits as active until its dates change. */
 export const bannerToFormValues = (banner: Banner): BannerFormValues => ({
   title: banner.title, subtitle: banner.subtitle ?? "", ctaLabel: banner.ctaLabel ?? "", ctaUrl: banner.ctaUrl ?? "", placement: banner.placement, displayOrder: String(banner.displayOrder),
   status: banner.status === "inactive" ? "inactive" : banner.status === "scheduled" ? "scheduled" : "active", startAt: banner.startAt ? isoToIctLocal(banner.startAt) : "", endAt: banner.endAt ? isoToIctLocal(banner.endAt) : "",
