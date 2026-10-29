@@ -21,6 +21,7 @@ import { useDocumentsQuery, useDocumentStatsQuery } from "../hooks/use-documents
 import type { ReviewDocument, UploadedWindow } from "../types/document";
 import { DocumentTypeIcon, fmtShort, isPdf, ReviewStatusBadge } from "./document-parts";
 import { useUrlSearchInput } from "@/hooks/use-url-search-input";
+import { useAdminTranslations } from "@/features/admin/i18n/hooks";
 
 const DocumentReviewDrawer = dynamic(() => import("./document-review-drawer").then((module) => module.DocumentReviewDrawer));
 
@@ -29,6 +30,7 @@ const dateOptions = [{ value: all, label: "Any upload date" }, { value: "7", lab
 const statCount = { uploaded: "uploaded", verified: "verified", needs_review: "needsReview", rejected: "rejected" } as const;
 
 export function DocumentList({ initialId }: { initialId?: string }) {
+  const t = useAdminTranslations();
   const router = useRouter();
   const filterDrawer = useOverlayState();
   const reviewDrawer = useOverlayState({ defaultOpen: Boolean(initialId) });
@@ -86,18 +88,18 @@ export function DocumentList({ initialId }: { initialId?: string }) {
   );
   const emptyText = query.isLoading ? "Loading documents…" : filtersActive ? "No documents match these filters." : "No documents have been uploaded yet.";
 
-  if (query.isError && !query.data) return <AdminPage><PageHeader title="Documents" description="Review and verify documents submitted with loan applications." /><AdminErrorState title="Couldn’t load documents" description={query.error instanceof ApiError ? query.error.message : "Try again in a moment."} onRetry={() => void query.refetch()} /></AdminPage>;
+  if (query.isError && !query.data) return <AdminPage><PageHeader title={t("pages.documents.title")} description={t("pages.documents.description")} /><AdminErrorState description={query.error instanceof ApiError ? query.error.message : undefined} onRetry={() => void query.refetch()} /></AdminPage>;
 
   return (
     <AdminPage>
-      <PageHeader title="Documents" description="Review and verify documents submitted with loan applications." />
+      <PageHeader title={t("pages.documents.title")} description={t("pages.documents.description")} />
       <ul aria-label="Review queue summary" aria-busy={stats.isLoading} className="flex flex-wrap gap-2">
         {verificationStatuses.map((value) => <li key={value}><button type="button" onClick={() => state.setFilters({ status: params.status === value ? undefined : value })} aria-pressed={params.status === value} className="adminTile flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--admin-accent-strong)] aria-pressed:border-[var(--admin-accent-strong)] aria-pressed:bg-[var(--admin-accent-soft)]"><ReviewStatusBadge status={value} /><strong className="tabular-nums">{stats.data ? stats.data[statCount[value]] : "—"}</strong></button></li>)}
       </ul>
       <ContentSection className="overflow-visible">
         <div className="space-y-3 p-4">
           <div className="flex items-center gap-2">
-            <AdminSearch className="w-auto min-w-0 max-w-none flex-1 basis-0 sm:max-w-xl" value={searchText} onChange={setSearchText} placeholder="Search applicant, loan reference or file…" />
+            <AdminSearch className="w-auto min-w-0 max-w-none flex-1 basis-0 sm:max-w-xl" value={searchText} onChange={setSearchText} placeholder={t("pages.documents.search")} />
             <Button variant="outline" className="relative min-h-11 shrink-0 lg:hidden" onPress={filterDrawer.open} aria-label={`Filters${activeFilters ? `, ${activeFilters} active` : ""}`}>
               <SlidersHorizontalIcon size={18} /><span className="max-sm:sr-only">Filters</span>
               {activeFilters ? <span className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-[var(--admin-accent)] text-[11px] font-extrabold text-[#111820]">{activeFilters}</span> : null}

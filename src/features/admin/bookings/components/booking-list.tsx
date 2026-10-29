@@ -24,6 +24,7 @@ import { bookingStatuses, paymentStatuses, type Booking, type BookingSort, type 
 import { BookingActions, type BookingHandlers, BookingOperationalStatus } from "./booking-actions";
 import { CancelBookingDialog, NoShowDialog, UpdateStatusModal } from "./booking-dialogs";
 import { useUrlSearchInput } from "@/hooks/use-url-search-input";
+import { useAdminTranslations } from "@/features/admin/i18n/hooks";
 
 const all = "all";
 const overdueValue = "overdue";
@@ -46,6 +47,7 @@ const sortingFor = (sort: BookingSort | undefined): SortingState => {
 };
 
 export function BookingList() {
+  const t = useAdminTranslations();
   const router = useRouter();
   const filterDrawer = useOverlayState();
   const statusModal = useOverlayState();
@@ -105,15 +107,15 @@ export function BookingList() {
 
   const emptyText = query.isLoading ? "Loading bookings…" : filtersActive ? "No bookings match these filters." : "No bookings yet.";
 
-  if (query.isError && !query.data) return <AdminPage><PageHeader title="Bookings" description="Manage vehicle bookings, rental status, and customer activity." /><AdminErrorState title="Couldn’t load bookings" description={query.error instanceof ApiError ? query.error.message : "Try again in a moment."} onRetry={() => void query.refetch()} /></AdminPage>;
+  if (query.isError && !query.data) return <AdminPage><PageHeader title={t("pages.bookings.title")} description={t("pages.bookings.description")} /><AdminErrorState description={query.error instanceof ApiError ? query.error.message : undefined} onRetry={() => void query.refetch()} /></AdminPage>;
 
   return (
     <AdminPage>
-      <PageHeader title="Bookings" description="Manage vehicle bookings, rental status, and customer activity." />
+      <PageHeader title={t("pages.bookings.title")} description={t("pages.bookings.description")} />
       <ContentSection className="overflow-visible">
         <div className="space-y-3 p-4">
           <div className="flex items-center gap-2">
-            <AdminSearch className="w-auto min-w-0 max-w-none flex-1 basis-0 sm:max-w-xl" value={searchText} onChange={setSearchText} placeholder="Search booking, customer, vehicle…" />
+            <AdminSearch className="w-auto min-w-0 max-w-none flex-1 basis-0 sm:max-w-xl" value={searchText} onChange={setSearchText} placeholder={t("pages.bookings.search")} />
             <Button variant="outline" className="relative min-h-11 shrink-0 lg:hidden" onPress={filterDrawer.open} aria-label={`Filters${activeFilters ? `, ${activeFilters} active` : ""}`}>
               <SlidersHorizontalIcon size={18} /><span className="max-sm:sr-only">Filters</span>
               {activeFilters ? <span className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-[var(--admin-accent)] text-[11px] font-extrabold text-[#111820]">{activeFilters}</span> : null}

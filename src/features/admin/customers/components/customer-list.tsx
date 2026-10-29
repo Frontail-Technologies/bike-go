@@ -21,6 +21,7 @@ import type { Customer, CustomerStatus, CustomerSummary, JoinedWindow } from "..
 import { CustomerActions } from "./admin-customer-card";
 import { CustomerEditDrawer } from "./customer-edit-drawer";
 import { useUrlSearchInput } from "@/hooks/use-url-search-input";
+import { useAdminTranslations } from "@/features/admin/i18n/hooks";
 
 const all = "all";
 
@@ -32,6 +33,7 @@ const joinedOptions = [
 ];
 
 export function CustomerList() {
+  const t = useAdminTranslations();
   const router = useRouter();
   const filterDrawer = useOverlayState();
   const editDrawer = useOverlayState();
@@ -88,11 +90,11 @@ export function CustomerList() {
   const emptyText = query.isLoading ? "Loading customers…" : filtersActive ? "No customers match these filters." : "No customers yet.";
   const summary = stats.data;
 
-  if (query.isError && !query.data) return <AdminPage><PageHeader title="Customers" description="Manage customers, view their bookings, loan applications and account status." /><AdminErrorState title="Couldn’t load customers" description={query.error instanceof ApiError ? query.error.message : "Try again in a moment."} onRetry={() => void query.refetch()} /></AdminPage>;
+  if (query.isError && !query.data) return <AdminPage><PageHeader title={t("pages.customers.title")} description={t("pages.customers.description")} /><AdminErrorState description={query.error instanceof ApiError ? query.error.message : undefined} onRetry={() => void query.refetch()} /></AdminPage>;
 
   return (
     <AdminPage>
-      <PageHeader title="Customers" description="Manage customers, view their bookings, loan applications and account status." />
+      <PageHeader title={t("pages.customers.title")} description={t("pages.customers.description")} />
 
       <section aria-label="Customer overview" aria-busy={stats.isLoading} className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <StatCard loading={stats.isLoading} tone="purple" label="Total Customers" value={summary?.total ?? 0} icon={<UsersIcon size={22} weight="duotone" />} />
@@ -104,7 +106,7 @@ export function CustomerList() {
       <ContentSection className="overflow-visible">
         <div className="space-y-3 p-4">
           <div className="flex items-center gap-2">
-            <AdminSearch className="w-auto min-w-0 max-w-none flex-1 basis-0 sm:max-w-xl" value={searchText} onChange={setSearchText} placeholder="Search customers by name, email, phone…" />
+            <AdminSearch className="w-auto min-w-0 max-w-none flex-1 basis-0 sm:max-w-xl" value={searchText} onChange={setSearchText} placeholder={t("pages.customers.search")} />
             <Button variant="outline" className="relative min-h-11 shrink-0 lg:hidden" onPress={filterDrawer.open} aria-label={`Filters${activeFilters ? `, ${activeFilters} active` : ""}`}>
               <SlidersHorizontalIcon size={18} /><span className="max-sm:sr-only">Filters</span>
               {activeFilters ? <span className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-[var(--admin-accent)] text-[11px] font-extrabold text-[#111820]">{activeFilters}</span> : null}

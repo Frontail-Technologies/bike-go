@@ -9,6 +9,7 @@ import type { z } from "zod";
 import { ApiError } from "@/lib/api/error";
 import { useAdminLogin } from "../hooks/use-admin-credentials";
 import { adminLoginSchema } from "../schemas/auth-schemas";
+import { useAdminTranslations } from "@/features/admin/i18n/hooks";
 
 type Values = z.infer<typeof adminLoginSchema>;
 
@@ -27,6 +28,7 @@ function requestedDestination() {
 }
 
 export function AdminLoginForm() {
+  const t = useAdminTranslations();
   const router = useRouter();
   const form = useForm<Values>({
     resolver: zodResolver(adminLoginSchema),
@@ -43,9 +45,9 @@ export function AdminLoginForm() {
   return (
     <Card className="w-full max-w-md p-6 shadow-xl">
       <Card.Header>
-        <Card.Title>Admin sign in</Card.Title>
+        <Card.Title>{t("auth.title")}</Card.Title>
         <Card.Description>
-          Use your RideGo administrator email and password.
+          {t("auth.description")}
         </Card.Description>
       </Card.Header>
       <form
@@ -64,7 +66,7 @@ export function AdminLoginForm() {
               onBlur={field.onBlur}
               autoComplete="email"
             >
-              <Label>Email</Label>
+              <Label>{t("auth.email")}</Label>
               <Input />
               <FieldError>{fieldState.error?.message}</FieldError>
             </TextField>
@@ -83,7 +85,7 @@ export function AdminLoginForm() {
               onBlur={field.onBlur}
               autoComplete="current-password"
             >
-              <Label>Password</Label>
+              <Label>{t("auth.password")}</Label>
               <Input />
               <FieldError>{fieldState.error?.message}</FieldError>
             </TextField>
@@ -100,7 +102,7 @@ export function AdminLoginForm() {
           isPending={mutation.isPending}
           fullWidth
         >
-          {mutation.isPending ? "Signing in…" : "Sign in"}
+          {mutation.isPending ? t("auth.signingIn") : t("auth.signIn")}
         </Button>
       </form>
     </Card>

@@ -1,4 +1,7 @@
- import { cn } from "@/lib/cn";
+"use client";
+
+import { useAdminTranslations } from "@/features/admin/i18n/hooks";
+import { cn } from "@/lib/cn";
 
 export type AdminStatus =
   | "available" | "rented" | "maintenance" | "inactive" | "active" | "scheduled" | "ready-for-pickup" | "unpaid" | "partially-refunded" | "draft" | "submitted" | "action-required" | "eligibility"
@@ -49,7 +52,8 @@ const tones: Record<AdminStatus, string> = {
 };
 
 export function AdminStatusBadge({ status, className, label }: { status: AdminStatus; className?: string; label?: string }) {
-  return <span className={cn("inline-flex min-h-6 items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px] font-bold", tones[status], className)}>{label ?? labels[status]}</span>;
+  const t = useAdminTranslations();
+  return <span className={cn("inline-flex min-h-6 items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px] font-bold", tones[status], className)}>{label ?? t(`status.${status}`)}</span>;
 }
 
 export const adminStatusVariants = Object.keys(labels) as AdminStatus[];

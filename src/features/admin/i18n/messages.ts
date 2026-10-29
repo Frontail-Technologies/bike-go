@@ -1,0 +1,141 @@
+const en = {
+  language: { label: "Language", choose: "Choose admin language", english: "English", khmer: "Khmer" },
+  nav: {
+    dashboard: "Dashboard", vehicles: "Vehicles", banners: "Banners", bookings: "Bookings", customers: "Customers",
+    admins: "Admin Users", loans: "Loan Applications", documents: "Documents", payments: "Payments", feedback: "Feedback",
+    locations: "Locations", settings: "Settings", sections: "Admin sections",
+  },
+  shell: {
+    portal: "Admin Portal", search: "Search anything…", searchAdmin: "Search admin", openProfile: "Open profile menu",
+    profileActions: "Profile actions", signOut: "Sign out", signingOut: "Signing out…", admin: "Admin", superAdmin: "Super Admin",
+    collapse: "Collapse sidebar", expand: "Expand sidebar", openMenu: "Open menu", navigation: "Admin navigation",
+    manage: "Manage your fleet. Grow your business.", searchButton: "Search",
+  },
+  auth: {
+    welcome: "Welcome back.", welcomeDescription: "Sign in to manage RideGo.", title: "Admin sign in",
+    description: "Use your RideGo administrator email and password.", email: "Email", password: "Password",
+    signIn: "Sign in", signingIn: "Signing in…", setPassword: "Set a new password",
+    setPasswordDescription: "Choose a new administrator password to continue to RideGo Admin.", currentPassword: "Current password",
+    newPassword: "New password", confirmPassword: "Confirm new password", changePassword: "Change password",
+    savingPassword: "Saving password…",
+  },
+  dashboard: {
+    title: "Dashboard", welcome: "Welcome back, {name}! Here’s what’s happening with RideGo today.",
+    description: "Here’s what’s happening with RideGo today.", dateRange: "Date range", addVehicle: "Add Vehicle",
+    loadError: "Couldn’t load the dashboard", retry: "Try again in a moment.", metrics: "Operational metrics",
+    totalVehicles: "Total Vehicles", available: "{count} available", activeBookings: "Active Bookings",
+    pickups: "{count} pickups in 7 days", customers: "Customers", newCustomers: "{count} new in 30 days",
+    revenue: "Revenue (USD)", paid: "{amount} paid", loanApplications: "Loan Applications",
+    awaitingReview: "{count} awaiting review", operations: "Operations", recentBookings: "Recent Bookings",
+    viewAll: "View all", noBookings: "No bookings yet.", quickActions: "Quick Actions", loadingCharts: "Loading dashboard charts",
+    loadingBookings: "Loading recent bookings", refreshError: "Couldn’t refresh the latest numbers. Showing the last loaded data.",
+    range: { "7d": "Last 7 days", "30d": "Last 30 days", "90d": "Last 90 days" },
+    actions: {
+      addVehicle: "Add Vehicle", newBooking: "New Booking", addCustomer: "Add Customer", reviewLoans: "Review Loans",
+      reviewDocuments: "Review Documents", manageLocations: "Manage Locations",
+    },
+  },
+  common: {
+    loadingRecords: "Loading records…", nothingHere: "Nothing here yet.", loadError: "We couldn’t load this section",
+    contactAdmin: "Try again or contact your administrator.", tryAgain: "Try again", confirm: "Confirm", cancel: "Cancel",
+    noRecords: "No records found.", previousPage: "Previous page", nextPage: "Next page", page: "Page {page}",
+    showing: "Showing {from}–{to} of {total}", openConfirmation: "Open confirmation",
+  },
+  status: {
+    active: "Active", scheduled: "Scheduled", "ready-for-pickup": "Ready for pickup", draft: "Draft", submitted: "Submitted",
+    "action-required": "Action required", eligibility: "Eligibility review", unpaid: "Unpaid", "partially-refunded": "Partially refunded",
+    available: "Available", rented: "Rented", maintenance: "Maintenance", inactive: "Inactive", pending: "Pending", confirmed: "Confirmed",
+    ongoing: "On Rent", returned: "Returned", completed: "Completed", cancelled: "Cancelled", "no-show": "No Show", paid: "Paid",
+    "partially-paid": "Partially paid", refunded: "Refunded", failed: "Failed", "under-review": "Under review", approved: "Approved",
+    rejected: "Rejected", verified: "Verified", "needs-review": "Needs review", expired: "Expired",
+  },
+  pages: {
+    admins: { title: "Admin Users", description: "Manage secure RideGo administrator access.", restricted: "Only super administrators can manage administrator accounts.", add: "Add Admin", search: "Search administrators…" },
+    banners: { title: "Banners", description: "Manage promotional banners across placements and schedules.", add: "Add Banner", edit: "Edit Banner", search: "Search banners…" },
+    bookings: { title: "Bookings", description: "Manage vehicle bookings, rental status, and customer activity.", detail: "Booking Details", search: "Search bookings…" },
+    customers: { title: "Customers", description: "Manage customers, bookings, loan applications, and account status.", detail: "Customer Details", search: "Search customers…" },
+    documents: { title: "Documents", description: "Review and verify documents submitted with loan applications.", search: "Search applicant, loan reference or file…" },
+    feedback: { title: "Feedback", description: "Issues customers reported through the app.", search: "Search feedback…" },
+    loans: { title: "Loan Applications", description: "Review customer loan applications, documents, and decisions.", detail: "Loan Application", search: "Search applicant or reference…" },
+    locations: { title: "Locations", description: "Manage Cambodia pickup and return locations.", add: "Add Location", edit: "Edit Location", search: "Search locations…" },
+    payments: { title: "Payments", description: "View booking payment attempts and their customer records.", detail: "Payment Details", search: "Search payments…" },
+    settings: { title: "Settings", description: "Master data and operational rules that drive RideGo." },
+    vehicles: { title: "Vehicles", description: "Manage vehicles, pricing, location assignment, and availability.", add: "Add Vehicle", addTitle: "Add New Vehicle", edit: "Edit Vehicle", detail: "Vehicle Details", search: "Search vehicles…" },
+  },
+  filters: { allStatuses: "All statuses", allTypes: "All types", allLocations: "All locations", allRoles: "All roles", anyDate: "Any date", filters: "Filters", clear: "Clear filters" },
+  actions: { add: "Add", edit: "Edit", save: "Save", saving: "Saving…", view: "View", review: "Review", activate: "Activate", deactivate: "Deactivate", delete: "Delete", close: "Close", back: "Back" },
+} as const;
+
+type WidenMessages<T> = {
+  [Key in keyof T]: T[Key] extends string ? string : WidenMessages<T[Key]>;
+};
+
+const km: WidenMessages<typeof en> = {
+  language: { label: "ភាសា", choose: "ជ្រើសរើសភាសាសម្រាប់ផ្ទាំងអ្នកគ្រប់គ្រង", english: "អង់គ្លេស", khmer: "ខ្មែរ" },
+  nav: {
+    dashboard: "ផ្ទាំងគ្រប់គ្រង", vehicles: "យានយន្ត", banners: "បដា", bookings: "ការកក់", customers: "អតិថិជន",
+    admins: "អ្នកគ្រប់គ្រង", loans: "ពាក្យស្នើសុំកម្ចី", documents: "ឯកសារ", payments: "ការទូទាត់", feedback: "មតិកែលម្អ",
+    locations: "ទីតាំង", settings: "ការកំណត់", sections: "ផ្នែកគ្រប់គ្រង",
+  },
+  shell: {
+    portal: "ផ្ទាំងអ្នកគ្រប់គ្រង", search: "ស្វែងរក…", searchAdmin: "ស្វែងរកក្នុងផ្ទាំងគ្រប់គ្រង", openProfile: "បើកម៉ឺនុយប្រវត្តិរូប",
+    profileActions: "សកម្មភាពប្រវត្តិរូប", signOut: "ចាកចេញ", signingOut: "កំពុងចាកចេញ…", admin: "អ្នកគ្រប់គ្រង", superAdmin: "អ្នកគ្រប់គ្រងជាន់ខ្ពស់",
+    collapse: "បង្រួមរបារចំហៀង", expand: "ពង្រីករបារចំហៀង", openMenu: "បើកម៉ឺនុយ", navigation: "ការរុករកផ្ទាំងគ្រប់គ្រង",
+    manage: "គ្រប់គ្រងយានយន្ត និងពង្រីកអាជីវកម្មរបស់អ្នក។", searchButton: "ស្វែងរក",
+  },
+  auth: {
+    welcome: "សូមស្វាគមន៍មកវិញ។", welcomeDescription: "ចូលដើម្បីគ្រប់គ្រង RideGo។", title: "ចូលផ្ទាំងអ្នកគ្រប់គ្រង",
+    description: "ប្រើអ៊ីមែល និងពាក្យសម្ងាត់អ្នកគ្រប់គ្រង RideGo របស់អ្នក។", email: "អ៊ីមែល", password: "ពាក្យសម្ងាត់",
+    signIn: "ចូល", signingIn: "កំពុងចូល…", setPassword: "កំណត់ពាក្យសម្ងាត់ថ្មី",
+    setPasswordDescription: "ជ្រើសរើសពាក្យសម្ងាត់អ្នកគ្រប់គ្រងថ្មី ដើម្បីបន្តទៅ RideGo Admin។", currentPassword: "ពាក្យសម្ងាត់បច្ចុប្បន្ន",
+    newPassword: "ពាក្យសម្ងាត់ថ្មី", confirmPassword: "បញ្ជាក់ពាក្យសម្ងាត់ថ្មី", changePassword: "ប្តូរពាក្យសម្ងាត់",
+    savingPassword: "កំពុងរក្សាទុកពាក្យសម្ងាត់…",
+  },
+  dashboard: {
+    title: "ផ្ទាំងគ្រប់គ្រង", welcome: "សូមស្វាគមន៍មកវិញ {name}! នេះជាស្ថានភាព RideGo ថ្ងៃនេះ។",
+    description: "នេះជាស្ថានភាព RideGo ថ្ងៃនេះ។", dateRange: "ចន្លោះកាលបរិច្ឆេទ", addVehicle: "បន្ថែមយានយន្ត",
+    loadError: "មិនអាចផ្ទុកផ្ទាំងគ្រប់គ្រងបាន", retry: "សូមព្យាយាមម្តងទៀត។", metrics: "ទិន្នន័យប្រតិបត្តិការ",
+    totalVehicles: "យានយន្តសរុប", available: "ទំនេរ {count}", activeBookings: "ការកក់កំពុងដំណើរការ",
+    pickups: "ទទួលយានយន្ត {count} ក្នុង 7 ថ្ងៃ", customers: "អតិថិជន", newCustomers: "ថ្មី {count} ក្នុង 30 ថ្ងៃ",
+    revenue: "ចំណូល (USD)", paid: "បានបង់ {amount}", loanApplications: "ពាក្យស្នើសុំកម្ចី",
+    awaitingReview: "រង់ចាំពិនិត្យ {count}", operations: "ប្រតិបត្តិការ", recentBookings: "ការកក់ថ្មីៗ",
+    viewAll: "មើលទាំងអស់", noBookings: "មិនទាន់មានការកក់។", quickActions: "សកម្មភាពរហ័ស", loadingCharts: "កំពុងផ្ទុកក្រាហ្វ",
+    loadingBookings: "កំពុងផ្ទុកការកក់ថ្មីៗ", refreshError: "មិនអាចធ្វើបច្ចុប្បន្នភាពទិន្នន័យបាន។ កំពុងបង្ហាញទិន្នន័យចុងក្រោយ។",
+    range: { "7d": "៧ ថ្ងៃចុងក្រោយ", "30d": "៣០ ថ្ងៃចុងក្រោយ", "90d": "៩០ ថ្ងៃចុងក្រោយ" },
+    actions: {
+      addVehicle: "បន្ថែមយានយន្ត", newBooking: "ការកក់ថ្មី", addCustomer: "បន្ថែមអតិថិជន", reviewLoans: "ពិនិត្យកម្ចី",
+      reviewDocuments: "ពិនិត្យឯកសារ", manageLocations: "គ្រប់គ្រងទីតាំង",
+    },
+  },
+  common: {
+    loadingRecords: "កំពុងផ្ទុកទិន្នន័យ…", nothingHere: "មិនទាន់មានទិន្នន័យ។", loadError: "មិនអាចផ្ទុកផ្នែកនេះបាន",
+    contactAdmin: "សូមព្យាយាមម្តងទៀត ឬទាក់ទងអ្នកគ្រប់គ្រង។", tryAgain: "ព្យាយាមម្តងទៀត", confirm: "បញ្ជាក់", cancel: "បោះបង់",
+    noRecords: "រកមិនឃើញទិន្នន័យ។", previousPage: "ទំព័រមុន", nextPage: "ទំព័របន្ទាប់", page: "ទំព័រ {page}",
+    showing: "បង្ហាញ {from}–{to} នៃ {total}", openConfirmation: "បើកការបញ្ជាក់",
+  },
+  status: {
+    active: "សកម្ម", scheduled: "បានកំណត់ពេល", "ready-for-pickup": "ត្រៀមសម្រាប់ទទួល", draft: "ព្រាង", submitted: "បានដាក់ស្នើ",
+    "action-required": "ត្រូវការសកម្មភាព", eligibility: "ពិនិត្យលក្ខខណ្ឌ", unpaid: "មិនទាន់បង់", "partially-refunded": "បានសងខ្លះ",
+    available: "ទំនេរ", rented: "បានជួល", maintenance: "ថែទាំ", inactive: "អសកម្ម", pending: "កំពុងរង់ចាំ", confirmed: "បានបញ្ជាក់",
+    ongoing: "កំពុងជួល", returned: "បានប្រគល់វិញ", completed: "បានបញ្ចប់", cancelled: "បានលុបចោល", "no-show": "មិនមក", paid: "បានបង់",
+    "partially-paid": "បានបង់ខ្លះ", refunded: "បានសងប្រាក់", failed: "បរាជ័យ", "under-review": "កំពុងពិនិត្យ", approved: "បានអនុម័ត",
+    rejected: "បានបដិសេធ", verified: "បានផ្ទៀងផ្ទាត់", "needs-review": "ត្រូវការពិនិត្យ", expired: "ផុតកំណត់",
+  },
+  pages: {
+    admins: { title: "អ្នកគ្រប់គ្រង", description: "គ្រប់គ្រងសិទ្ធិចូលរបស់អ្នកគ្រប់គ្រង RideGo។", restricted: "មានតែអ្នកគ្រប់គ្រងជាន់ខ្ពស់ប៉ុណ្ណោះដែលអាចគ្រប់គ្រងគណនីអ្នកគ្រប់គ្រង។", add: "បន្ថែមអ្នកគ្រប់គ្រង", search: "ស្វែងរកអ្នកគ្រប់គ្រង…" },
+    banners: { title: "បដា", description: "គ្រប់គ្រងបដាផ្សព្វផ្សាយ តាមទីតាំង និងកាលវិភាគ។", add: "បន្ថែមបដា", edit: "កែសម្រួលបដា", search: "ស្វែងរកបដា…" },
+    bookings: { title: "ការកក់", description: "គ្រប់គ្រងការកក់ ស្ថានភាពជួល និងសកម្មភាពអតិថិជន។", detail: "ព័ត៌មានការកក់", search: "ស្វែងរកការកក់…" },
+    customers: { title: "អតិថិជន", description: "គ្រប់គ្រងអតិថិជន ការកក់ កម្ចី និងស្ថានភាពគណនី។", detail: "ព័ត៌មានអតិថិជន", search: "ស្វែងរកអតិថិជន…" },
+    documents: { title: "ឯកសារ", description: "ពិនិត្យ និងផ្ទៀងផ្ទាត់ឯកសារដែលបានដាក់ជាមួយពាក្យស្នើសុំកម្ចី។", search: "ស្វែងរកអ្នកដាក់ពាក្យ លេខកម្ចី ឬឯកសារ…" },
+    feedback: { title: "មតិកែលម្អ", description: "បញ្ហាដែលអតិថិជនបានរាយការណ៍តាមកម្មវិធី។", search: "ស្វែងរកមតិកែលម្អ…" },
+    loans: { title: "ពាក្យស្នើសុំកម្ចី", description: "ពិនិត្យពាក្យស្នើសុំ ឯកសារ និងសេចក្តីសម្រេច។", detail: "ព័ត៌មានពាក្យស្នើសុំកម្ចី", search: "ស្វែងរកអ្នកដាក់ពាក្យ ឬលេខយោង…" },
+    locations: { title: "ទីតាំង", description: "គ្រប់គ្រងទីតាំងទទួល និងប្រគល់យានយន្តនៅកម្ពុជា។", add: "បន្ថែមទីតាំង", edit: "កែសម្រួលទីតាំង", search: "ស្វែងរកទីតាំង…" },
+    payments: { title: "ការទូទាត់", description: "មើលប្រតិបត្តិការទូទាត់ការកក់ និងទិន្នន័យអតិថិជន។", detail: "ព័ត៌មានការទូទាត់", search: "ស្វែងរកការទូទាត់…" },
+    settings: { title: "ការកំណត់", description: "ទិន្នន័យប្រតិបត្តិការ និងច្បាប់ប្រព័ន្ធរបស់ RideGo។" },
+    vehicles: { title: "យានយន្ត", description: "គ្រប់គ្រងយានយន្ត តម្លៃ ទីតាំង និងភាពទំនេរ។", add: "បន្ថែមយានយន្ត", addTitle: "បន្ថែមយានយន្តថ្មី", edit: "កែសម្រួលយានយន្ត", detail: "ព័ត៌មានយានយន្ត", search: "ស្វែងរកយានយន្ត…" },
+  },
+  filters: { allStatuses: "ស្ថានភាពទាំងអស់", allTypes: "ប្រភេទទាំងអស់", allLocations: "ទីតាំងទាំងអស់", allRoles: "តួនាទីទាំងអស់", anyDate: "កាលបរិច្ឆេទណាមួយ", filters: "តម្រង", clear: "សម្អាតតម្រង" },
+  actions: { add: "បន្ថែម", edit: "កែសម្រួល", save: "រក្សាទុក", saving: "កំពុងរក្សាទុក…", view: "មើល", review: "ពិនិត្យ", activate: "ធ្វើឱ្យសកម្ម", deactivate: "បិទសកម្មភាព", delete: "លុប", close: "បិទ", back: "ត្រឡប់ក្រោយ" },
+};
+
+export const adminMessages = { en, km } as const;

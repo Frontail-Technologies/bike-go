@@ -7,6 +7,7 @@ import { motion, useReducedMotion } from "motion/react";
 import { Fragment, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { formatDate } from "@/lib/date";
+import { useAdminTranslations } from "@/features/admin/i18n/hooks";
 
 export function AdminButton({ children, isPending, ...props }: ButtonProps) {
   return (
@@ -61,15 +62,16 @@ export function CambodiaDateFilter({ value, onChange }: { value: AdminDateRange;
 export function TableActions({ children }: { children: ReactNode }) { return <div className="flex items-center justify-end gap-1">{children}</div>; }
 
 export function AdminPagination({ page, pageCount, total, pageSize, onPageChange }: { page: number; pageCount: number; total: number; pageSize: number; onPageChange: (page: number) => void }) {
+  const t = useAdminTranslations();
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const to = Math.min(total, page * pageSize);
   const visiblePages = Array.from({ length: pageCount }, (_, index) => index + 1).filter((candidate) => pageCount <= 5 || candidate === 1 || candidate === pageCount || Math.abs(candidate - page) <= 1);
   return <Pagination size="sm" className="w-full px-4 py-3 text-xs text-[var(--admin-muted)]">
-    <Pagination.Summary>Showing {from}–{to} of {total}</Pagination.Summary>
+    <Pagination.Summary>{t("common.showing", { from, to, total })}</Pagination.Summary>
     <Pagination.Content>
-      <Pagination.Item><Pagination.Previous aria-label="Previous page" isDisabled={page <= 1} onPress={() => onPageChange(page - 1)}><Pagination.PreviousIcon /></Pagination.Previous></Pagination.Item>
-      {visiblePages.map((candidate, index) => <Fragment key={candidate}>{index > 0 && candidate - visiblePages[index - 1] > 1 ? <Pagination.Item><Pagination.Ellipsis /></Pagination.Item> : null}<Pagination.Item><Pagination.Link isActive={candidate === page} aria-label={`Page ${candidate}`} onPress={() => onPageChange(candidate)}>{candidate}</Pagination.Link></Pagination.Item></Fragment>)}
-      <Pagination.Item><Pagination.Next aria-label="Next page" isDisabled={page >= pageCount} onPress={() => onPageChange(page + 1)}><Pagination.NextIcon /></Pagination.Next></Pagination.Item>
+      <Pagination.Item><Pagination.Previous aria-label={t("common.previousPage")} isDisabled={page <= 1} onPress={() => onPageChange(page - 1)}><Pagination.PreviousIcon /></Pagination.Previous></Pagination.Item>
+      {visiblePages.map((candidate, index) => <Fragment key={candidate}>{index > 0 && candidate - visiblePages[index - 1] > 1 ? <Pagination.Item><Pagination.Ellipsis /></Pagination.Item> : null}<Pagination.Item><Pagination.Link isActive={candidate === page} aria-label={t("common.page", { page: candidate })} onPress={() => onPageChange(candidate)}>{candidate}</Pagination.Link></Pagination.Item></Fragment>)}
+      <Pagination.Item><Pagination.Next aria-label={t("common.nextPage")} isDisabled={page >= pageCount} onPress={() => onPageChange(page + 1)}><Pagination.NextIcon /></Pagination.Next></Pagination.Item>
     </Pagination.Content>
   </Pagination>;
 }

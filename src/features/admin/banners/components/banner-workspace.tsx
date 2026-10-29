@@ -24,6 +24,7 @@ import { BannerOrder } from "./banner-order";
 import { BannerActions, type BannerHandlers, PlacementBadge } from "./banner-parts";
 import { BannerPreview } from "./banner-preview";
 import { useUrlSearchInput } from "@/hooks/use-url-search-input";
+import { useAdminTranslations } from "@/features/admin/i18n/hooks";
 
 const all = "all";
 type ViewMode = "table" | "cards";
@@ -37,6 +38,7 @@ const sortingFor = (sort: BannerSort | undefined): SortingState => {
 };
 
 export function BannerWorkspace() {
+  const t = useAdminTranslations();
   const router = useRouter();
   const filterDrawer = useOverlayState();
   const preview = useOverlayState();
@@ -136,7 +138,7 @@ export function BannerWorkspace() {
     <ContentSection className="overflow-visible">
       <div className="space-y-3 p-4">
         <div className="flex items-center gap-2">
-          <AdminSearch className="w-auto min-w-0 max-w-none flex-1 basis-0 sm:max-w-md" value={searchText} onChange={setSearchText} placeholder="Search banners…" />
+          <AdminSearch className="w-auto min-w-0 max-w-none flex-1 basis-0 sm:max-w-md" value={searchText} onChange={setSearchText} placeholder={t("pages.banners.search")} />
           <Button variant="outline" className="relative min-h-11 shrink-0 lg:hidden" onPress={filterDrawer.open} aria-label={`Filters${activeFilters ? `, ${activeFilters} active` : ""}`}>
             <SlidersHorizontalIcon size={18} /><span className="max-sm:sr-only">Filters</span>
             {activeFilters ? <span className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-[var(--admin-accent)] text-[11px] font-extrabold text-[#111820]">{activeFilters}</span> : null}
@@ -162,7 +164,7 @@ export function BannerWorkspace() {
 
   return (
     <AdminPage>
-      <PageHeader title="Banners" description="Manage promotional banners across different placements and schedules." actions={<Button variant="primary" className="min-h-11" onPress={() => router.push("/admin/banners/new")}><PlusIcon />Add Banner</Button>} />
+      <PageHeader title={t("pages.banners.title")} description={t("pages.banners.description")} actions={<Button variant="primary" className="min-h-11" onPress={() => router.push("/admin/banners/new")}><PlusIcon />{t("pages.banners.add")}</Button>} />
       <AdminTabs label="Banner views" selectedKey={tab} onSelectionChange={setTab} items={[
         { id: "banners", label: "All Banners", content: list },
         { id: "order", label: "Order & Placement", content: <BannerOrder handlers={handlers} /> },

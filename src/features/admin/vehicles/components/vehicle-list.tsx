@@ -24,11 +24,13 @@ import { AdminVehicleCard } from "./admin-vehicle-card";
 import { VehicleActions } from "./vehicle-actions";
 import { VehiclePhoto } from "@/components/admin/vehicles/vehicle-photo";
 import { useUrlSearchInput } from "@/hooks/use-url-search-input";
+import { useAdminTranslations } from "@/features/admin/i18n/hooks";
 
 type ViewMode = "table" | "cards";
 
 
 export function VehicleList() {
+  const t = useAdminTranslations();
   const router = useRouter();
   const filterDrawer = useOverlayState();
   const state = useVehicleListState();
@@ -75,10 +77,10 @@ export function VehicleList() {
   const withAll = (label: string, items: Array<{ value: string; label: string }>) => [{ value: all, label }, ...items];
   const filterControls = (className?: string) => (
     <>
-      <AdminSelect className={className} label="All types" value={params.vehicleType ?? all} onChange={(value) => state.setFilters({ vehicleType: value === all ? undefined : (value as VehicleType) })} options={withAll("All types", vehicleTypes.map((value) => ({ value, label: capitalize(value) })))} />
+      <AdminSelect className={className} label={t("filters.allTypes")} value={params.vehicleType ?? all} onChange={(value) => state.setFilters({ vehicleType: value === all ? undefined : (value as VehicleType) })} options={withAll(t("filters.allTypes"), vehicleTypes.map((value) => ({ value, label: capitalize(value) })))} />
       <AdminSelect className={className} label="All categories" value={params.category ?? all} onChange={(value) => state.setFilters({ category: value === all ? undefined : value })} options={withAll("All categories", options.filterCategories())} />
-      <AdminSelect className={className} label="All statuses" value={params.status ?? all} onChange={(value) => state.setFilters({ status: value === all ? undefined : (value as VehicleStatus) })} options={withAll("All statuses", vehicleStatuses.map((value) => ({ value, label: capitalize(value) })))} />
-      <AdminSelect className={className} label="All locations" value={params.locationId ?? all} onChange={(value) => state.setFilters({ locationId: value === all ? undefined : value })} options={withAll("All locations", (locationsQuery.data ?? []).map((value) => ({ value: value.id, label: value.name })))} />
+      <AdminSelect className={className} label={t("filters.allStatuses")} value={params.status ?? all} onChange={(value) => state.setFilters({ status: value === all ? undefined : (value as VehicleStatus) })} options={withAll(t("filters.allStatuses"), vehicleStatuses.map((value) => ({ value, label: capitalize(value) })))} />
+      <AdminSelect className={className} label={t("filters.allLocations")} value={params.locationId ?? all} onChange={(value) => state.setFilters({ locationId: value === all ? undefined : value })} options={withAll(t("filters.allLocations"), (locationsQuery.data ?? []).map((value) => ({ value: value.id, label: value.name })))} />
     </>
   );
 
@@ -98,14 +100,14 @@ export function VehicleList() {
 
   const empty = <p className="py-12 text-center text-sm text-[var(--admin-muted)]">{query.isLoading ? "Loading vehicles…" : filtersActive ? "No vehicles match these filters." : "No vehicles yet. Add your first vehicle to get started."}</p>;
 
-  if (query.isError && !query.data) return <AdminPage><PageHeader title="Vehicles" description="Manage your vehicles, pricing, location assignment, and availability." /><AdminErrorState title="Couldn’t load vehicles" description={query.error instanceof ApiError ? query.error.message : "Try again in a moment."} onRetry={() => void query.refetch()} /></AdminPage>;
+  if (query.isError && !query.data) return <AdminPage><PageHeader title={t("pages.vehicles.title")} description={t("pages.vehicles.description")} /><AdminErrorState description={query.error instanceof ApiError ? query.error.message : undefined} onRetry={() => void query.refetch()} /></AdminPage>;
 
   return <AdminPage>
-    <PageHeader title="Vehicles" description="Manage your vehicles, pricing, location assignment, and availability." actions={<Button onPress={() => router.push("/admin/vehicles/new")} variant="primary" className="min-h-11"><PlusIcon />Add Vehicle</Button>} />
+    <PageHeader title={t("pages.vehicles.title")} description={t("pages.vehicles.description")} actions={<Button onPress={() => router.push("/admin/vehicles/new")} variant="primary" className="min-h-11"><PlusIcon />{t("pages.vehicles.add")}</Button>} />
     <ContentSection className="overflow-visible">
       <div className="space-y-3 p-4">
         <div className="flex items-center gap-2">
-          <AdminSearch className="w-auto min-w-0 max-w-none flex-1 basis-0 sm:max-w-xl" value={searchText} onChange={setSearchText} placeholder="Search vehicles…" />
+          <AdminSearch className="w-auto min-w-0 max-w-none flex-1 basis-0 sm:max-w-xl" value={searchText} onChange={setSearchText} placeholder={t("pages.vehicles.search")} />
           <Button variant="outline" className="relative min-h-11 shrink-0 lg:hidden" onPress={filterDrawer.open} aria-label={`Filters${activeFilters ? `, ${activeFilters} active` : ""}`}>
             <SlidersHorizontalIcon size={18} /><span className="max-sm:sr-only">Filters</span>
             {activeFilters ? <span className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-[var(--admin-accent)] text-[11px] font-extrabold text-[#111820]">{activeFilters}</span> : null}

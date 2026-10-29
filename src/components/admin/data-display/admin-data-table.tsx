@@ -5,6 +5,7 @@ import { type ColumnDef, flexRender, getCoreRowModel, getPaginationRowModel, get
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { AdminPagination } from "@/components/admin/controls";
+import { useAdminTranslations } from "@/features/admin/i18n/hooks";
 
 type ControlledPagination = { page: number; pageSize: number; total: number; onPageChange: (page: number) => void };
 export type AdminDataTableProps<T extends { id: string }> = {
@@ -25,6 +26,7 @@ export type AdminDataTableProps<T extends { id: string }> = {
 };
 
 export function AdminDataTable<T extends { id: string }>({ columns, data, label, pageSize = 6, pagination, sorting: controlledSorting, onSortingChange, manualSorting = false, loading = false, emptyState, rowActions, onRowNavigate, minWidth = 760, showPagination = true }: AdminDataTableProps<T>) {
+  const t = useAdminTranslations();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [localPagination, setLocalPagination] = useState<PaginationState>({ pageIndex: 0, pageSize });
   const finalColumns: ColumnDef<T>[] = rowActions ? [...columns, { id: "actions", header: "", enableSorting: false, cell: ({ row }) => rowActions(row.original) }] : columns;
@@ -47,7 +49,7 @@ export function AdminDataTable<T extends { id: string }>({ columns, data, label,
       <Table.ScrollContainer className="max-w-full overflow-x-auto">
         <Table.Content aria-label={label} style={{ minWidth }} sortDescriptor={sortDescriptor} onSortChange={(descriptor) => changeSorting([{ id: String(descriptor.column), desc: descriptor.direction === "descending" }])}>
           <Table.Header>{headers.map((header, index) => <Table.Column key={header.id} id={header.id} isRowHeader={index === 0} allowsSorting={header.column.getCanSort()}>{flexRender(header.column.columnDef.header, header.getContext())}</Table.Column>)}</Table.Header>
-          <Table.Body renderEmptyState={() => <div className="py-10 text-center text-sm text-[var(--admin-muted)]">{emptyState ?? "No records found."}</div>}>
+          <Table.Body renderEmptyState={() => <div className="py-10 text-center text-sm text-[var(--admin-muted)]">{emptyState ?? t("common.noRecords")}</div>}>
             {loading ? Array.from({ length: 4 }, (_, index) => <Table.Row key={`loading-${index}`} id={`loading-${index}`}>{headers.map((header) => <Table.Cell key={header.id}><Skeleton className="h-5 w-3/4 rounded" /></Table.Cell>)}</Table.Row>) : table.getRowModel().rows.map((row) => <Table.Row key={row.original.id} id={row.original.id} onAction={onRowNavigate ? () => onRowNavigate(row.original) : undefined} className={onRowNavigate ? "cursor-pointer" : undefined}>{row.getVisibleCells().map((cell) => <Table.Cell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</Table.Cell>)}</Table.Row>)}
           </Table.Body>
         </Table.Content>

@@ -6,6 +6,7 @@ import { adminNavigation } from "@/components/admin/config";
 import { cn } from "@/lib/cn";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { useAdminSessionQuery } from "@/features/admin/auth/hooks/use-admin-session-query";
+import { useAdminTranslations } from "@/features/admin/i18n/hooks";
 
 export const adminNav = adminNavigation;
 const highFrequencyRoutes = new Set(["/admin", "/admin/vehicles", "/admin/bookings", "/admin/customers", "/admin/loans", "/admin/documents"]);
@@ -22,12 +23,14 @@ export function AdminNavList({
   onNavigate,
 }: AdminNavListProps) {
   const session = useAdminSessionQuery();
+  const t = useAdminTranslations();
   const hydrated = useHydrated();
   const [navigationIntent, setNavigationIntent] = useState<{ href: string; from: string } | null>(null);
   const effectiveHref = navigationIntent?.from === activeHref ? navigationIntent.href : activeHref;
   return (
     <ul className="flex flex-col gap-1">
-      {adminNavigation.filter((item) => !item.superAdminOnly || hydrated && session.data?.role === "super_admin").map(({ href, label, Icon }) => {
+      {adminNavigation.filter((item) => !item.superAdminOnly || hydrated && session.data?.role === "super_admin").map(({ href, labelKey, Icon }) => {
+        const label = t(`nav.${labelKey}`);
         const active = href === "/admin" ? effectiveHref === href : effectiveHref.startsWith(href);
         return (
           <li key={href}>
