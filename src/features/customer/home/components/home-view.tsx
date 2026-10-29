@@ -13,7 +13,7 @@ import { AnimatedGrid } from "@/components/motion/animated-grid";
 import { Reveal } from "@/components/motion/reveal";
 import { AppBar } from "@/components/shared/app-bar";
 import { Screen } from "@/components/shared/screen";
-import { IconButton } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button-link";
 import { AppSearchField } from "@/components/ui/search-field";
 import { BlockSkeleton, MotorcycleCardSkeleton } from "@/components/ui/skeleton";
 import { vehicleToMotorcycle } from "@/features/customer/vehicles/lib/vehicle-mapper";
@@ -61,7 +61,9 @@ export function HomeView({ initialData }: HomeViewProps) {
           <>
             {!session.isPending && !session.data ? <Link href="/signin" className="flex h-10 items-center rounded-control bg-brand px-3 text-sm font-bold text-ink outline-none focus-visible:ring-2 focus-visible:ring-ink">{auth("signIn")}</Link> : null}
             <LanguageSwitcher />
-            <IconButton label={common("notifications")} icon={<BellIcon size={24} />} />
+            <ButtonLink href="/notifications" variant="ghost" iconOnly aria-label={common("notifications")}>
+              <BellIcon size={24} />
+            </ButtonLink>
           </>
         } />
       <Screen bottom="nav" className="flex flex-col gap-6 md:gap-10">
