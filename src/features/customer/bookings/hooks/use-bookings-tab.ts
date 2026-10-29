@@ -7,19 +7,14 @@ import { apiBookingToView } from "../lib/booking-mapper";
 import { listBookingsQuery } from "../queries";
 import { useBookingsQuery } from "./use-bookings";
 
-export const BOOKING_TABS = [
-  { id: "upcoming", label: "tabUpcoming", empty: "emptyUpcoming" },
-  { id: "active", label: "tabActive", empty: "emptyActive" },
-  { id: "completed", label: "tabCompleted", empty: "emptyCompleted" },
-  { id: "cancelled", label: "tabCancelled", empty: "emptyCancelled" },
-] as const;
-
+export const BOOKING_TABS = ["upcoming", "active", "completed", "cancelled"] as const;
 export type BookingTab = (typeof BOOKING_TABS)[number];
-type TabId = BookingTab["id"];
 
 const PAGE_SIZE = 12;
-const isTab = (value: string | null): value is TabId => BOOKING_TABS.some((tab) => tab.id === value);
-const paramsFor = (group: TabId, page: number) => ({ page, pageSize: PAGE_SIZE, group });
+// Prefetched tabs count as fresh for a minute, so flipping between tabs doesn't refetch the others each time.
+const PREFETCH_STALE_MS = 60_000;
+const isTab = (value: string | null): value is BookingTab => BOOKING_TABS.some((tab) => tab === value);
+const paramsFor = (group: BookingTab, page: number) => ({ page, pageSize: PAGE_SIZE, group });
 
 /**
  * "My bookings": the tab and page live in the URL (so refresh and back/forward keep them), the server
@@ -32,22 +27,22 @@ export function useBookingsTab() {
   const queryClient = useQueryClient();
 
   const tabParam = searchParams.get("tab");
-  const selected: TabId = isTab(tabParam) ? tabParam : "upcoming";
+  const selected: BookingTab = isTab(tabParam) ? tabParam : "upcoming";
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
   const query = useBookingsQuery(paramsFor(selected, page));
 
   useEffect(() => {
     if (!query.isSuccess) return;
     for (const tab of BOOKING_TABS) {
-      if (tab.id === selected) continue;
-      void queryClient.prefetchQuery(listBookingsQuery(paramsFor(tab.id, 1)));
+      if (tab === selected) continue;
+      void queryClient.prefetchQuery({ ...listBookingsQuery(paramsFor(tab, 1)), staleTime: PREFETCH_STALE_MS });
     }
   }, [query.isSuccess, queryClient, selected]);
 
   const items = useMemo(() => (query.data?.data ?? []).map(apiBookingToView), [query.data]);
   const total = query.data?.meta.total ?? 0;
 
-  function navigate(tab: TabId, nextPage = 1) {
+  function navigate(tab: BookingTab, nextPage = 1) {
     const next = new URLSearchParams(searchParams.toString());
     if (tab === "upcoming") next.delete("tab"); else next.set("tab", tab);
     if (nextPage <= 1) next.delete("page"); else next.set("page", String(nextPage));
@@ -55,9 +50,8 @@ export function useBookingsTab() {
   }
 
   return {
-    tabs: BOOKING_TABS,
-    selected: BOOKING_TABS.find((tab) => tab.id === selected)!,
-    selectTab: (tab: TabId) => navigate(tab),
+    selected,
+    selectTab: (tab: BookingTab) => navigate(tab),
     page,
     pageCount: Math.max(1, Math.ceil(total / PAGE_SIZE)),
     goToPage: (next: number) => navigate(selected, next),

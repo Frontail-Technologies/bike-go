@@ -11,8 +11,15 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Pagination } from "@/components/ui/pagination";
 import { Tabs } from "@/components/ui/tabs";
 import { useTranslations } from "@/i18n/hooks";
-import { useBookingsTab } from "../hooks/use-bookings-tab";
+import { BOOKING_TABS, useBookingsTab, type BookingTab } from "../hooks/use-bookings-tab";
 import { BookingCard } from "./booking-card";
+
+const tabText = {
+  upcoming: { label: "tabUpcoming", empty: "emptyUpcoming" },
+  active: { label: "tabActive", empty: "emptyActive" },
+  completed: { label: "tabCompleted", empty: "emptyCompleted" },
+  cancelled: { label: "tabCancelled", empty: "emptyCancelled" },
+} as const satisfies Record<BookingTab, { label: string; empty: string }>;
 
 export function BookingsView() {
   const t = useTranslations("booking");
@@ -22,7 +29,7 @@ export function BookingsView() {
   const content = list.isLoading ? (
     <BrandLoader className="min-h-64" />
   ) : list.items.length === 0 ? (
-    <EmptyState icon={<CalendarXIcon size={24} />} title={t(list.selected.empty)} action={<ButtonLink href="/bikes" variant="outline" size="sm">{t("browseBikes")}</ButtonLink>} />
+    <EmptyState icon={<CalendarXIcon size={24} />} title={t(tabText[list.selected].empty)} action={<ButtonLink href="/bikes" variant="outline" size="sm">{t("browseBikes")}</ButtonLink>} />
   ) : (
     <div className="flex flex-col gap-5">
       <AnimatedGrid className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
@@ -46,9 +53,9 @@ export function BookingsView() {
         <DesktopTitle title={t("myBookings")} />
         <Tabs
           aria-label={t("bookingStatusAria")}
-          selectedKey={list.selected.id}
-          onSelectionChange={(key) => list.selectTab(key as typeof list.selected.id)}
-          items={list.tabs.map((tab) => ({ id: tab.id, label: t(tab.label), content: tab.id === list.selected.id ? content : null }))}
+          selectedKey={list.selected}
+          onSelectionChange={(key) => list.selectTab(key as BookingTab)}
+          items={BOOKING_TABS.map((tab) => ({ id: tab, label: t(tabText[tab].label), content: tab === list.selected ? content : null }))}
         />
       </Screen>
     </>
