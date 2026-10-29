@@ -98,7 +98,9 @@ function PrivateLicenceImage({ src, alt }: { src: string; alt: string }) {
     let active = true;
     let objectUrl: string | null = null;
 
-    void apiClient.get<Blob>(src, { responseType: "blob" })
+    // src is a root-relative API path (/api/v1/...); resolve it against the API origin,
+    // not the client's baseURL, which already ends in /api/v1.
+    void apiClient.get<Blob>(new URL(src, apiClient.defaults.baseURL).toString(), { responseType: "blob" })
       .then((response) => {
         objectUrl = URL.createObjectURL(response.data);
         if (active) setImageUrl(objectUrl);
