@@ -6,6 +6,7 @@ import { addonQueryKeys } from "../query-keys";
 import type { AddonCreateInput, AddonUpdateInput } from "../types/addon";
 
 export const useAddonsQuery = () => useQuery({ queryKey: addonQueryKeys.list(), queryFn: addonsApi.list });
+export const useAddonsPageQuery = (params: { page: number; pageSize: number; q?: string; active?: boolean }) => useQuery({ queryKey: addonQueryKeys.list(params), queryFn: () => addonsApi.page(params), placeholderData: (previous) => previous });
 
 export function useAddonMutations() {
   const client = useQueryClient();

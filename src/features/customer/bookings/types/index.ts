@@ -11,6 +11,7 @@ export type BookingPlace = { id: string; name: string; city: string; address: st
 export type ApiBooking = {
   reference: string;
   bookingStatus: ApiBookingStatus;
+  statusGroup: BookingStatus;
   paymentStatus: ApiPaymentStatus;
   vehicle: { id: string; slug: string; name: string; brand: string; model: string };
   pickupLocation: BookingPlace;
@@ -26,7 +27,8 @@ export type ApiBooking = {
   cancellationReason: string | null;
   createdAt: string;
 };
-export type BookingQuote = { currency: "USD"; rentalDays: number; pricing: BookingPricing; addons: BookingAddonLine[] };
+export type BookingQuoteLine = { code: "rental" | "addon" | "tax" | "platform_fee" | "security_deposit"; labelCode: string; amountMinor: number; refundable?: boolean; addonCode?: string | null };
+export type BookingQuote = { currency: "USD"; rentalDays: number; taxRateBps: number; pricing: BookingPricing; addons: BookingAddonLine[]; lines: BookingQuoteLine[] };
 export type BookingRequest = {
   vehicle?: string;
   group?: { brand: string; model: string; locationId: string };
@@ -37,6 +39,7 @@ export type BookingRequest = {
   addons?: { code: string; quantity?: number }[];
 };
 export type BookingListParams = { page?: number; pageSize?: number; status?: ApiBookingStatus; group?: "upcoming" | "active" | "completed" | "cancelled" };
+export type BookingOption = { reference: string; vehicleName: string; pickupAt: string; returnAt: string };
 export type BookingCancelInput = { reason?: string };
 
 export type RiderDetails = { name: string; phone: string; email: string };

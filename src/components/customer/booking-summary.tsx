@@ -11,10 +11,11 @@ export type SummaryLine = { id: string; label?: string; days?: number; rate?: nu
 type BookingSummaryProps = {
   lines: SummaryLine[];
   totalLabel?: "totalAmount" | "totalPayable" | "totalPaid";
+  totalAmount?: number;
   className?: string;
 };
 
-export function BookingSummary({ lines, totalLabel = "totalAmount", className }: BookingSummaryProps) {
+export function BookingSummary({ lines, totalLabel = "totalAmount", totalAmount, className }: BookingSummaryProps) {
   const t = useTranslations("booking");
   const common = useTranslations("common");
   const labelOf = (line: SummaryLine) => {
@@ -26,7 +27,7 @@ export function BookingSummary({ lines, totalLabel = "totalAmount", className }:
     if (line.id === "fee") return t("lineFee");
     return t("lineDeposit");
   };
-  const total = lines.reduce((sum, line) => sum + line.amount, 0);
+  const total = totalAmount ?? lines.reduce((sum, line) => sum + line.amount, 0);
 
   return (
     <section aria-label={t("summaryAria")} className={cn("rounded-card border border-line bg-surface p-4 shadow-card", className)}>

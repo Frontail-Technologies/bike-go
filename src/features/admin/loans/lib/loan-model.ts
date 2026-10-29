@@ -1,17 +1,12 @@
 import type { AdminStatus } from "@/components/admin/data-display/status-badge";
 import type { DocumentType, Loan, LoanStatus, LoanType, VerificationStatus } from "../types/loan";
+import { legacyLoanStatus, loanStatus } from "@/lib/status/loan";
 
-export const loanStatusLabels: Record<LoanStatus, string> = {
-  draft: "Draft", submitted: "Submitted", documents_under_review: "Documents under review", additional_documents_required: "Additional documents required",
-  eligibility_review: "Eligibility review", approved: "Approved", rejected: "Rejected",
-};
+export const loanStatusLabels = Object.fromEntries(Object.entries(loanStatus).map(([code, meta]) => [code, meta.label])) as Record<LoanStatus, string>;
 
-const loanTone: Record<LoanStatus, AdminStatus> = {
-  draft: "draft", submitted: "submitted", documents_under_review: "under-review", additional_documents_required: "action-required", eligibility_review: "eligibility", approved: "approved", rejected: "rejected",
-};
+const loanTone = Object.fromEntries(Object.entries(loanStatus).map(([code, meta]) => [code, meta.tone])) as Record<LoanStatus, AdminStatus>;
 
-const legacy: Record<string, LoanStatus> = { "documents-review": "documents_under_review", "action-required": "additional_documents_required", "eligibility-review": "eligibility_review" };
-export const normalizeLoanStatus = (status: string) => (legacy[status] ?? status) as LoanStatus;
+export const normalizeLoanStatus = (status: string) => (legacyLoanStatus[status] ?? status) as LoanStatus;
 export const toLoanBadge = (status: string) => {
   const key = normalizeLoanStatus(status);
   return { status: loanTone[key] ?? ("pending" as AdminStatus), label: loanStatusLabels[key] ?? status };

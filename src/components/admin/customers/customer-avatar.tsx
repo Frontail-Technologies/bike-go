@@ -1,5 +1,5 @@
 import { cn } from "@/lib/cn";
-const initialsOf = (name: string) => name.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+import { initials } from "@/lib/text";
 
 const palettes = [
   "bg-[var(--admin-accent-soft)] text-[var(--admin-warning)]",
@@ -13,5 +13,5 @@ const sizes = { sm: "size-9 text-xs", md: "size-11 text-sm", lg: "size-16 text-x
 
 export function CustomerAvatar({ name, size = "md", className }: { name: string; size?: keyof typeof sizes; className?: string }) {
   const tone = palettes[[...name].reduce((sum, char) => sum + char.charCodeAt(0), 0) % palettes.length];
-  return <span aria-hidden className={cn("flex shrink-0 items-center justify-center rounded-full font-extrabold", sizes[size], tone, className)}>{initialsOf(name)}</span>;
+  return <span aria-hidden className={cn("flex shrink-0 items-center justify-center rounded-full font-extrabold", sizes[size], tone, className)}>{initials(name)}</span>;
 }

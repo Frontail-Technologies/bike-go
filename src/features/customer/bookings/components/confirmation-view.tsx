@@ -107,7 +107,7 @@ export function ConfirmationView({ reference }: { reference: string }) {
         </p>
       </section>
 
-      <BookingSummary lines={quoteLines(booking.quote)} totalLabel="totalPaid" />
+      <BookingSummary lines={quoteLines(booking.quote)} totalLabel="totalPaid" totalAmount={booking.quote.payable} />
       {found.paymentStatus !== "paid" ? <PaywayCheckout reference={booking.reference} /> : null}
 
       <div className="grid grid-cols-2 gap-3">

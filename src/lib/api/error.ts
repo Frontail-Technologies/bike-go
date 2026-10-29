@@ -54,3 +54,7 @@ export function toApiError(error: unknown): ApiError {
 export function isApiError(error: unknown): error is ApiError {
   return error instanceof ApiError;
 }
+
+export function errorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback;
+}

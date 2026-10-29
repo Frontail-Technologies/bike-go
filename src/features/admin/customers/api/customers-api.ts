@@ -1,8 +1,8 @@
 import type { Booking } from "@/features/admin/bookings/types/booking";
 import { apiClient } from "@/lib/api/client";
+import type { ApiEnvelope as Envelope } from "@/lib/api/contracts";
 import type { Customer, CustomerActivity, CustomerDocument, CustomerListMeta, CustomerListParams, CustomerLoan, CustomerStats, CustomerSummary, CustomerUpdateInput, JoinedWindow, PageParams } from "../types/customer";
 
-type Envelope<T> = { data: T; meta: Record<string, unknown> };
 const page = async <T>(path: string, params: object) => {
   const response = await apiClient.get<Envelope<T[]>>(path, { params });
   return { data: response.data.data, meta: response.data.meta as CustomerListMeta };

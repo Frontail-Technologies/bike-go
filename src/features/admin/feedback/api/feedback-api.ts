@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/api/client";
+import type { ApiEnvelope as Envelope } from "@/lib/api/contracts";
 import type { SupportTicket, SupportTicketListMeta, SupportTicketListParams, SupportTicketUpdateInput } from "../types/feedback";
 
-type Envelope<T> = { data: T; meta: Record<string, unknown> };
 
 export const feedbackApi = {
   list: async (params: SupportTicketListParams) => {

@@ -1,5 +1,5 @@
 import type { Motorcycle } from "@/features/customer/vehicles/lib/view-model";
-import type { ApiBooking, ApiBookingStatus, BookingAddon, BookingQuote, CustomerBooking } from "../types";
+import type { ApiBooking, ApiBookingStatus, BookingQuote, CustomerBooking } from "../types";
 import type { Quote } from "./pricing";
 
 const status = (value: ApiBookingStatus): CustomerBooking["status"] => {
@@ -13,7 +13,6 @@ export function bookingQuoteToView(quote: BookingQuote): Quote {
   if (quote.currency !== "USD") throw new Error("RideGo customer pricing supports USD only.");
   const helmet = quote.addons.filter((item) => item.code === "helmet").reduce((sum, item) => sum + item.totalMinor, 0);
   const jacket = quote.addons.filter((item) => item.code === "riding-jacket").reduce((sum, item) => sum + item.totalMinor, 0);
-  const taxable = quote.pricing.rentalSubtotalMinor + quote.pricing.addonsTotalMinor;
   return {
     days: quote.rentalDays,
     rental: quote.pricing.rentalSubtotalMinor / 100,
@@ -24,56 +23,19 @@ export function bookingQuoteToView(quote: BookingQuote): Quote {
     fee: quote.pricing.platformFeeMinor / 100,
     deposit: quote.pricing.securityDepositMinor / 100,
     payable: quote.pricing.totalPayableMinor / 100,
-    taxRate: taxable ? (quote.pricing.taxesMinor / taxable) * 100 : 0,
-  };
-}
-
-export function estimateBookingQuote({
-  bike,
-  days,
-  selected,
-  addons,
-  previous,
-}: {
-  bike: Motorcycle;
-  days: number;
-  selected: Record<string, boolean>;
-  addons: BookingAddon[];
-  previous?: BookingQuote;
-}): Quote {
-  const rentalMinor = (previous?.pricing.dailyRateMinor ?? Math.round(bike.pricePerDay * 100)) * days;
-  const addonLines = addons
-    .filter((addon) => selected[addon.code])
-    .map((addon) => ({ code: addon.code, name: addon.name, amountMinor: addon.pricePerDayMinor * days }));
-  const addonsMinor = addonLines.reduce((sum, addon) => sum + addon.amountMinor, 0);
-  const previousTaxBase = previous ? previous.pricing.rentalSubtotalMinor + previous.pricing.addonsTotalMinor : 0;
-  const taxRateBps = previousTaxBase > 0 ? Math.round((previous!.pricing.taxesMinor * 10_000) / previousTaxBase) : 1_800;
-  const taxesMinor = Math.round(((rentalMinor + addonsMinor) * taxRateBps) / 10_000);
-  const platformFeeMinor = previous?.pricing.platformFeeMinor ?? 100;
-  const depositMinor = previous?.pricing.securityDepositMinor ?? Math.round(bike.deposit * 100);
-  const totalMinor = rentalMinor + addonsMinor + taxesMinor + platformFeeMinor + depositMinor;
-
-  return {
-    days,
-    rental: rentalMinor / 100,
-    addons: addonLines.map((addon) => ({ code: addon.code, name: addon.name, amount: addon.amountMinor / 100 })),
-    helmet: 0,
-    jacket: 0,
-    tax: taxesMinor / 100,
-    fee: platformFeeMinor / 100,
-    deposit: depositMinor / 100,
-    payable: totalMinor / 100,
-    taxRate: taxRateBps / 100,
+    taxRate: quote.taxRateBps / 100,
   };
 }
 
 export function apiBookingToView(value: ApiBooking): { booking: CustomerBooking; bike: Motorcycle } {
   if (value.currency !== "USD") throw new Error("RideGo customer pricing supports USD only.");
-  const quote = bookingQuoteToView({ currency: value.currency, rentalDays: value.rentalDays, pricing: value.pricing, addons: value.addons });
+  const taxable = value.pricing.rentalSubtotalMinor + value.pricing.addonsTotalMinor;
+  const taxRateBps = taxable ? Math.round((value.pricing.taxesMinor * 10_000) / taxable) : 0;
+  const quote = bookingQuoteToView({ currency: value.currency, rentalDays: value.rentalDays, taxRateBps, pricing: value.pricing, addons: value.addons, lines: [] });
   const booking: CustomerBooking = {
     reference: value.reference,
     bikeId: value.vehicle.slug,
-    status: status(value.bookingStatus),
+    status: value.statusGroup ?? status(value.bookingStatus),
     apiStatus: value.bookingStatus,
     pickupPlace: { name: value.pickupLocation.name, address: value.pickupLocation.address },
     startDate: value.pickupAt,
@@ -97,9 +59,9 @@ export function apiBookingToView(value: ApiBooking): { booking: CustomerBooking;
     category: "touring",
     pricePerDay: value.pricing.dailyRateMinor / 100,
     deposit: value.pricing.securityDepositMinor / 100,
-    rating: 0, reviews: 0, engineCc: 0, powerBhp: 0, torqueNm: 0, mileageKmpl: 0, gears: 0, weightKg: 0, fuelTankL: 0,
+    engineCc: 0, powerBhp: 0, torqueNm: 0, mileageKmpl: 0, gears: 0, weightKg: 0, fuelTankL: 0,
     transmission: "manual", color: "#FFC400", colorways: ["#FFC400"], images: [], location: value.pickupLocation.city,
-    description: "", highlights: [], available: true, bookedRanges: [],
+    description: "", highlights: [], available: true,
   };
   return { booking, bike };
 }

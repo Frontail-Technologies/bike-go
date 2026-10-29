@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import type { StartedPayment } from "../types";
 import { useBookingPayment } from "../hooks/use-checkout";
 import { useStartPaymentMutation } from "../hooks/use-payments";
+import { formatMinor, type CurrencyCode } from "@/lib/format";
 
 declare global {
   interface Window {
@@ -16,7 +17,7 @@ declare global {
 
 const PLUGIN_URL = process.env.NEXT_PUBLIC_PAYWAY_SCRIPT_URL ?? "https://checkout.payway.com.kh/plugins/checkout2-0.js";
 
-const money = (minor: number, currency: string) => new Intl.NumberFormat("en-US", { style: "currency", currency }).format(minor / 100);
+const money = (minor: number, currency: string) => formatMinor(minor, currency as CurrencyCode);
 
 export function PaywayCheckout({ reference, onPaid }: { reference: string; onPaid?: () => void }) {
   const start = useStartPaymentMutation();

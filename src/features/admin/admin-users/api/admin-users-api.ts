@@ -1,6 +1,6 @@
 import { apiClient } from "@/lib/api/client";
+import type { ApiEnvelope as Envelope } from "@/lib/api/contracts";
 import type { AdminUser, AdminUsersMeta, AdminUsersParams } from "../types/admin-user";
-type Envelope<T> = { data: T; meta: Record<string, unknown> };
 const data = <T>(response: { data: Envelope<T> }) => response.data.data;
 export const adminUsersApi = {
   list: async (params: AdminUsersParams) => { const response = await apiClient.get<Envelope<AdminUser[]>>("/admin/admins", { params }); return { data: response.data.data, meta: response.data.meta as AdminUsersMeta }; },

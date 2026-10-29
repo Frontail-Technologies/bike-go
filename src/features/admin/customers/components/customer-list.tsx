@@ -14,6 +14,7 @@ import { AdminErrorState } from "@/components/admin/feedback";
 import { AdminPage, ContentSection, PageHeader } from "@/components/admin/layout";
 import { toast } from "@/components/ui/toast";
 import { ApiError } from "@/lib/api/error";
+import { activeFilterCount, pageCount as getPageCount } from "@/hooks/use-list-state";
 import { CUSTOMER_PAGE_SIZE, useCustomerListState } from "../hooks/use-customer-list-state";
 import { useCustomerLoader, useCustomerStatsQuery, useCustomersQuery } from "../hooks/use-customers";
 import type { Customer, CustomerStatus, CustomerSummary, JoinedWindow } from "../types/customer";
@@ -44,10 +45,10 @@ export function CustomerList() {
 
   const rows = query.data?.data ?? [];
   const total = query.data?.meta.total ?? 0;
-  const pageCount = Math.max(1, query.data?.meta.totalPages ?? 1);
+  const pageCount = getPageCount(query.data?.meta);
   const page = Math.min(params.page, pageCount);
   const open = (person: CustomerSummary) => router.push(`/admin/customers/${person.id}`);
-  const activeFilters = [params.status, params.city, params.joined].filter(Boolean).length;
+  const activeFilters = activeFilterCount(params, ["page", "pageSize", "sort", "q"]);
   const filtersActive = Boolean(params.q || activeFilters);
   const reset = () => { setSearchText(""); state.reset(); };
 

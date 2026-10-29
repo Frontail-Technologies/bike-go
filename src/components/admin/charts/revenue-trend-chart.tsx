@@ -5,13 +5,14 @@ import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YA
 import type { RevenueTrendPoint } from "@/components/admin/data";
 import { AdminChartTooltip } from "./chart-tooltip";
 import { ChartEmptyState } from "./chart-empty-state";
+import { formatMinor } from "@/lib/format";
 
 function formatMoney(value: number) {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value / 100);
+  return formatMinor(value, "USD").replace(/\.00$/, "");
 }
 
 function formatAxisMoney(value: number) {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 1 }).format(value / 100);
+  return formatMinor(value, "USD", { compact: true });
 }
 
 export function RevenueTrendChart({ data }: { data: RevenueTrendPoint[] }) {

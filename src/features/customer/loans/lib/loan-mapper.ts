@@ -1,4 +1,4 @@
-import { calculateEmi, experienceBandFor, getLoanType, type LoanApplication, type LoanStatus } from "./data";
+import { experienceBandFor, type LoanApplication, type LoanStatus } from "./data";
 import { customerDocumentId } from "./document-types";
 import type { ApiLoan } from "../types";
 
@@ -21,7 +21,7 @@ export function apiLoanToApplication(loan: ApiLoan): LoanApplication {
     amount,
     tenure: loan.tenureMonths,
     purpose: loan.purpose ?? "other",
-    emi: calculateEmi(amount, getLoanType(loan.loanType)?.apr ?? 0, loan.tenureMonths).monthly,
+    emi: loan.monthlyPaymentMinor / 100,
     status: status[loan.status],
     applicant: { fullName: loan.applicant.fullName ?? "", mobile: loan.applicant.mobile ?? "", email: loan.applicant.email ?? "", dob: loan.applicant.dateOfBirth ?? "", nationality: loan.applicant.nationality ?? "", city: loan.applicant.currentCity ?? "", residence: loan.applicant.residenceStatus ?? "" },
     employment: { type: loan.employment.employmentType ?? "", employer: loan.employment.employerName ?? "", jobTitle: loan.employment.jobTitle ?? "", monthlyIncome: (loan.employment.monthlyIncomeMinor ?? 0) / 100, experience: experienceBandFor(loan.employment.workExperienceMonths), bankAccount: loan.employment.hasActiveBankAccount ? "yes" : "no" },
@@ -33,7 +33,7 @@ export function apiLoanToApplication(loan: ApiLoan): LoanApplication {
       const customerType = customerDocumentId(type);
       return customerType ? [customerType] : [];
     }),
-    history: loan.history.map((event) => ({ status: status[event.newStatus], at: event.createdAt, note: event.note ?? undefined })),
+    history: loan.history.map((event) => ({ status: status[event.newStatus], at: event.createdAt, note: event.note ?? undefined, noteCode: event.noteCode ?? undefined, noteParams: event.noteParams })),
     createdAt: loan.createdAt,
   };
 }

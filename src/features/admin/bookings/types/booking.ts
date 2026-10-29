@@ -29,6 +29,7 @@ export type Inspection = {
 };
 
 export type BookingEvent = { fromStatus: string | null; toStatus: string; note: string | null; actor: string | null; at: string };
+export type BookingTimelineItem = { kind: "created" | "payment_confirmed" | "confirmed" | "ready_for_pickup" | "handed_over" | "rental_active" | "returned" | "completed" | "cancelled" | "expired" | "no_show"; at: string; note: string | null; actor: string | null };
 
 export type Booking = {
   reference: string;
@@ -67,9 +68,14 @@ export type Booking = {
   cancellationReason: string | null;
   createdAt: string;
   allowedNextStatuses: BookingStatus[];
+  isOverdue: boolean;
+  lateMinutes: number;
+  distanceKm: number | null;
+  canMarkNoShow: boolean;
   pickupInspection: Inspection | null;
   returnInspection: Inspection | null;
   events: BookingEvent[];
+  timeline: BookingTimelineItem[];
 };
 
 export type BookingSort = "newest" | "oldest" | "pickup_asc" | "pickup_desc" | "total_asc" | "total_desc";

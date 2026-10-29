@@ -7,7 +7,8 @@ export function CustomerNotifications() {
   useBookingStatusNotifications();
 
   useEffect(() => {
-    if ("serviceWorker" in navigator) void navigator.serviceWorker.register("/sw.js");
+    if ("serviceWorker" in navigator)
+      void navigator.serviceWorker.register("/sw.js");
   }, []);
 
   return null;

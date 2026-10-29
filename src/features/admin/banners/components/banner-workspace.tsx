@@ -13,6 +13,7 @@ import { AdminPage, ContentSection, PageHeader } from "@/components/admin/layout
 import { AdminTabs } from "@/components/admin/navigation";
 import { toast } from "@/components/ui/toast";
 import { ApiError } from "@/lib/api/error";
+import { activeFilterCount, pageCount as getPageCount } from "@/hooks/use-list-state";
 import { BANNER_PAGE_SIZE, useBannerListState } from "../hooks/use-banner-list-state";
 import { useBannerMutations, useBannersQuery } from "../hooks/use-banners";
 import { formatSchedule, placementMeta } from "../lib/banner-model";
@@ -59,9 +60,9 @@ export function BannerWorkspace() {
 
   const rows = query.data?.data ?? [];
   const total = query.data?.meta.total ?? 0;
-  const pageCount = Math.max(1, query.data?.meta.totalPages ?? 1);
+  const pageCount = getPageCount(query.data?.meta);
   const page = Math.min(params.page, pageCount);
-  const activeFilters = [params.placement, params.status].filter(Boolean).length;
+  const activeFilters = activeFilterCount(params, ["page", "pageSize", "sort", "q"]);
   const filtersActive = Boolean(params.q || activeFilters);
   const reset = () => { setSearchText(""); state.reset(); };
   const sorting = sortingFor(params.sort);

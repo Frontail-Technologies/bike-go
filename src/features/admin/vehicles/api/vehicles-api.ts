@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/api/client";
+import type { ApiEnvelope as Envelope } from "@/lib/api/contracts";
 import type { Vehicle, VehicleBlock, VehicleBlockInput, VehicleCreateInput, VehicleDeleteResult, VehicleListMeta, VehicleListParams, VehicleUpdateInput } from "../types/vehicle";
 
-type Envelope<T> = { data: T; meta: Record<string, unknown> };
 const data = <T>(response: { data: Envelope<T> }) => response.data.data;
 
 function toFormData(input: VehicleCreateInput | VehicleUpdateInput) {
@@ -18,6 +18,7 @@ function toFormData(input: VehicleCreateInput | VehicleUpdateInput) {
 }
 
 export const vehiclesApi = {
+  options: () => apiClient.get<Envelope<VehicleOptionsResponse>>("/admin/vehicles/options").then((response) => response.data.data),
   list: async (params: VehicleListParams) => {
     const response = await apiClient.get<Envelope<Vehicle[]>>("/admin/vehicles", { params });
     return { data: response.data.data, meta: response.data.meta as VehicleListMeta };
@@ -30,3 +31,5 @@ export const vehiclesApi = {
   addBlock: (id: string, input: VehicleBlockInput) => apiClient.post<Envelope<VehicleBlock>>(`/admin/vehicles/${id}/blocks`, input).then(data),
   removeBlock: (id: string, blockId: string) => apiClient.delete(`/admin/vehicles/${id}/blocks/${blockId}`).then(() => undefined),
 };
+export type VehicleOption = { value: string; label: string; active: boolean };
+export type VehicleOptionsResponse = { vehicleTypes: VehicleOption[]; categories: VehicleOption[]; brands: VehicleOption[]; transmissions: VehicleOption[]; fuelTypes: VehicleOption[] };

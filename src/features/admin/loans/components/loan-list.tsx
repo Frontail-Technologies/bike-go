@@ -14,6 +14,7 @@ import { AdminPage, ContentSection, PageHeader } from "@/components/admin/layout
 import { LoanStatusBadge } from "@/components/admin/loans/loan-parts";
 import { CurrencyAmount } from "@/components/admin/money";
 import { ApiError } from "@/lib/api/error";
+import { activeFilterCount, pageCount as getPageCount } from "@/hooks/use-list-state";
 import { LOAN_PAGE_SIZE, useLoanListState } from "../hooks/use-loan-list-state";
 import { useLoansQuery, useLoanStatsQuery } from "../hooks/use-loans";
 import { employmentLabels, loanStatusLabels, loanTypeLabel } from "../lib/loan-model";
@@ -49,9 +50,9 @@ export function LoanList() {
 
   const rows = query.data?.data ?? [];
   const total = query.data?.meta.total ?? 0;
-  const pageCount = Math.max(1, query.data?.meta.totalPages ?? 1);
+  const pageCount = getPageCount(query.data?.meta);
   const page = Math.min(params.page, pageCount);
-  const activeFilters = [params.status, params.loanType, params.currency, params.submitted].filter(Boolean).length;
+  const activeFilters = activeFilterCount(params, ["page", "pageSize", "sort", "q", "currency"]);
   const filtersActive = Boolean(params.q || activeFilters);
   const reset = () => { setSearchText(""); state.reset(); };
   const review = (loan: Loan) => router.push(`/admin/loans/${loan.reference}`);

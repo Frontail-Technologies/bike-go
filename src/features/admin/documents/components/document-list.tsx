@@ -14,6 +14,7 @@ import { AdminPage, ContentSection, PageHeader } from "@/components/admin/layout
 import { documentTypeLabel, verificationLabels } from "@/features/admin/loans/lib/loan-model";
 import { documentTypes, verificationStatuses, type DocumentType, type VerificationStatus } from "@/features/admin/loans/types/loan";
 import { ApiError } from "@/lib/api/error";
+import { activeFilterCount, pageCount as getPageCount } from "@/hooks/use-list-state";
 import { documentFileUrl } from "../api/documents-api";
 import { DOCUMENT_PAGE_SIZE, useDocumentListState } from "../hooks/use-document-list-state";
 import { useDocumentsQuery, useDocumentStatsQuery } from "../hooks/use-documents";
@@ -40,9 +41,9 @@ export function DocumentList({ initialId }: { initialId?: string }) {
 
   const rows = query.data?.data ?? [];
   const total = query.data?.meta.total ?? 0;
-  const pageCount = Math.max(1, query.data?.meta.totalPages ?? 1);
+  const pageCount = getPageCount(query.data?.meta);
   const page = Math.min(params.page, pageCount);
-  const activeFilters = [params.status, params.type, params.uploaded].filter(Boolean).length;
+  const activeFilters = activeFilterCount(params, ["page", "pageSize", "sort", "q"]);
   const filtersActive = Boolean(params.q || activeFilters);
   const reset = () => { setSearchText(""); state.reset(); };
   const sorting: SortingState = params.sort ? [{ id: "uploaded", desc: params.sort === "newest" }] : [];

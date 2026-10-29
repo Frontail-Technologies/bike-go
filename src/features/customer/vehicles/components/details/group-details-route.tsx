@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { BikeDetailsSkeleton } from "./bike-details-skeleton";
 import { useVehicleModelGroupQuery } from "@/features/customer/vehicles/hooks/use-vehicles";
-import { vehicleGroupToMotorcycleGroup } from "@/features/customer/vehicles/lib/vehicle-group-mapper";
+import { vehicleGroupToMotorcycleGroup } from "@/features/customer/vehicles/lib/vehicle-mapper";
 import { cambodiaRentalRange } from "@/lib/cambodia-time";
 import { GroupDetailsView } from "./group-details-view";
 

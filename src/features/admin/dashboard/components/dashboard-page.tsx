@@ -14,6 +14,7 @@ import { AdminPage, ContentSection, PageHeader } from "@/components/admin/layout
 import { CurrencyAmount, formatCurrency } from "@/components/admin/money";
 import { ApiError } from "@/lib/api/error";
 import { cn } from "@/lib/cn";
+import { initials } from "@/lib/text";
 import { useAdminSessionQuery } from "@/features/admin/auth/hooks/use-admin-session-query";
 import { useDashboardQuery } from "../hooks/use-dashboard";
 import type { DashboardRange } from "../types/dashboard";
@@ -27,8 +28,6 @@ const quickActions: ReadonlyArray<{ href: string; label: string; Icon: Icon; ton
   { href: "/admin/documents", label: "Review Documents", Icon: FileTextIcon, tone: "bg-[var(--admin-danger-soft)] text-[var(--admin-danger)]" },
   { href: "/admin/locations", label: "Manage Locations", Icon: BuildingsIcon, tone: "bg-[var(--admin-surface-muted)] text-[var(--admin-text)]" },
 ];
-
-const initials = (name: string) => name.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
 
 function ChartSectionSkeleton() {
   return (

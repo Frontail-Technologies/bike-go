@@ -17,7 +17,7 @@ import { Pagination } from "@/components/ui/pagination";
 import { useTranslations } from "@/i18n/hooks";
 import { favoritesStore } from "@/features/customer/profile/stores/preferences-store";
 import { useVehicleModelsQuery } from "@/features/customer/vehicles/hooks/use-vehicles";
-import { vehicleGroupToMotorcycleGroup } from "@/features/customer/vehicles/lib/vehicle-group-mapper";
+import { vehicleGroupToMotorcycleGroup } from "@/features/customer/vehicles/lib/vehicle-mapper";
 import { BikeFilters } from "./bike-filters";
 import { DEFAULT_BROWSE, browseStore } from "../../stores/browse-store";
 import { DEFAULT_FILTERS, activeFilterCount, sortOptions, type SortKey } from "../../lib/filters";

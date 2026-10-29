@@ -9,7 +9,8 @@ import { DataTable } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { MotorcycleCardSkeleton } from "@/components/ui/skeleton";
 import { type Booking, bookings } from "@/features/mock/data";
-import { formatDate, formatPrice } from "@/lib/format";
+import { formatDate } from "@/lib/date";
+import { formatPrice } from "@/lib/format";
 import { Demo, Section } from "../section";
 
 const columns: ColumnDef<Booking>[] = [

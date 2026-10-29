@@ -27,6 +27,8 @@ export type LoanHistoryItem = {
   oldStatus: LoanStatus | null;
   newStatus: LoanStatus;
   note: string | null;
+  noteCode: string | null;
+  noteParams: Record<string, string>;
   changedBy: string | null;
   changedByName: string | null;
   createdAt: string;
@@ -38,6 +40,9 @@ export type Loan = {
   loanType: LoanType;
   currency: LoanCurrency;
   requestedAmountMinor: number;
+  monthlyPaymentMinor: number;
+  interestRateBps: number;
+  applicantAge: number | null;
   tenureMonths: number;
   purpose: string | null;
   applicant: { fullName: string | null; mobile: string | null; email: string | null; dateOfBirth: string | null; nationality: string | null; currentCity: string | null; residenceStatus: string | null };
@@ -51,6 +56,7 @@ export type Loan = {
   userId: string;
   customer: { reference: string; name: string; email: string | null; phone: string | null };
   allowedNextStatuses: LoanStatus[];
+  documentChecklist: Array<{ type: DocumentType; documentId: string | null; status: string | null; uploadedAt: string | null }>;
 };
 
 export type LoanSort = "newest" | "oldest" | "amount_desc" | "amount_asc";

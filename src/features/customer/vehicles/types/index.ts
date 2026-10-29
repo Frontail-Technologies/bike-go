@@ -84,6 +84,7 @@ export type VehicleModelListParams = {
   page?: number;
   pageSize?: number;
   q?: string;
+  slugs?: string[];
   vehicleType?: VehicleType;
   category?: string;
   brand?: string[];

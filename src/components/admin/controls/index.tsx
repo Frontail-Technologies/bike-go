@@ -6,6 +6,7 @@ import { FunnelIcon } from "@phosphor-icons/react";
 import { motion, useReducedMotion } from "motion/react";
 import { Fragment, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
+import { formatDate } from "@/lib/date";
 
 export function AdminButton({ children, isPending, ...props }: ButtonProps) {
   return (
@@ -74,7 +75,7 @@ export function AdminPagination({ page, pageCount, total, pageSize, onPageChange
 }
 
 export function formatCambodiaDate(value: string | Date, options?: Intl.DateTimeFormatOptions) {
-  return new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Phnom_Penh", day: "2-digit", month: "short", year: "numeric", ...options }).format(new Date(value));
+  return formatDate(value, options);
 }
 
 export type ViewOption<T extends string> = { value: T; label: string; icon: ReactNode };

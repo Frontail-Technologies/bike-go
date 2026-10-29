@@ -10,16 +10,15 @@ import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { Checkbox } from "@/components/ui/selection-controls";
 import { TextInput } from "@/components/ui/text-field";
-import { formatRange, isBooked, toISO, toRange } from "@/features/customer/bookings/lib/dates";
+import { formatRange, toISO, toRange } from "@/features/customer/bookings/lib/dates";
 import { maskLicence } from "@/features/customer/bookings/hooks/use-booking";
 import type { BookingAddon, BookingDraft } from "@/features/customer/bookings/types";
-import type { Motorcycle } from "@/features/customer/vehicles/lib/view-model";
 import { useTranslations } from "@/i18n/hooks";
 import { formatMoney } from "@/lib/format";
 
 type PatchProps = { draft: BookingDraft; patch: (partial: Partial<BookingDraft>) => void };
 
-export function TripSection({ bike, draft, patch, addons, addonsPending }: PatchProps & { bike: Motorcycle; addons: BookingAddon[]; addonsPending: boolean }) {
+export function TripSection({ draft, patch, addons, addonsPending }: PatchProps & { addons: BookingAddon[]; addonsPending: boolean }) {
   const t = useTranslations("booking");
   const common = useTranslations("common");
   const value: RentalSelection = { range: toRange(draft.start ?? undefined, draft.end ?? undefined), pickupTime: draft.pickupTime, dropTime: draft.dropTime };
@@ -30,7 +29,6 @@ export function TripSection({ bike, draft, patch, addons, addonsPending }: Patch
       {editingDates ? (
         <RentalDateSelector
           value={value}
-          isDateUnavailable={(date) => isBooked(bike, date)}
           onChange={(next) => {
             patch({
               start: next.range ? toISO(next.range.start) : null,

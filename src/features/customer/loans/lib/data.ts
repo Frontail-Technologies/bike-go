@@ -41,16 +41,6 @@ export function experienceBandFor(months: number | null | undefined) {
   return "5-plus";
 }
 
-export type Emi = { monthly: number; total: number; interest: number };
-
-export function calculateEmi(amount: number, apr: number, months: number): Emi {
-  const r = apr / 12 / 100;
-  const raw = r === 0 ? amount / months : (amount * r) / (1 - Math.pow(1 + r, -months));
-  const monthly = Math.round(raw * 100) / 100;
-  const total = Math.round(monthly * months * 100) / 100;
-  return { monthly, total, interest: Math.round((total - amount) * 100) / 100 };
-}
-
 export const MAX_EMI_SHARE = 0.5;
 
 export type DocumentId = "passport" | "residence" | "employment" | "income" | "address" | "bank";
@@ -73,7 +63,7 @@ export const statusMeta: Record<LoanStatus, { tone: "info" | "brand" | "success"
   rejected: { tone: "danger" },
 };
 
-export type StatusEvent = { status: LoanStatus; at: string; note?: string };
+export type StatusEvent = { status: LoanStatus; at: string; note?: string; noteCode?: string; noteParams?: Record<string, string> };
 
 export type Applicant = {
   fullName: string;

@@ -1,15 +1,15 @@
 import { Avatar } from "@heroui/react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
+import { formatMinor } from "@/lib/format";
+import { initials } from "@/lib/text";
 
 export function MoneyDisplay({ amount, className }: { amount: number; className?: string }) {
-  const formatted = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(amount / 100);
-  return <span className={cn("whitespace-nowrap font-semibold tabular-nums", className)}>{formatted}</span>;
+  return <span className={cn("whitespace-nowrap font-semibold tabular-nums", className)}>{formatMinor(amount)}</span>;
 }
 
 export function AvatarCell({ name, detail, src }: { name: string; detail?: string; src?: string }) {
-  const initials = name.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
-  return <div className="flex min-w-[180px] items-center gap-3"><Avatar size="sm" aria-label={name}>{src ? <Avatar.Image src={src} alt="" /> : null}<Avatar.Fallback>{initials}</Avatar.Fallback></Avatar><span className="min-w-0"><span className="block truncate text-sm font-bold">{name}</span>{detail ? <span className="block truncate text-xs text-[var(--admin-muted)]">{detail}</span> : null}</span></div>;
+  return <div className="flex min-w-[180px] items-center gap-3"><Avatar size="sm" aria-label={name}>{src ? <Avatar.Image src={src} alt="" /> : null}<Avatar.Fallback>{initials(name)}</Avatar.Fallback></Avatar><span className="min-w-0"><span className="block truncate text-sm font-bold">{name}</span>{detail ? <span className="block truncate text-xs text-[var(--admin-muted)]">{detail}</span> : null}</span></div>;
 }
 
 export type ActivityState = "done" | "current" | "future" | "failed";

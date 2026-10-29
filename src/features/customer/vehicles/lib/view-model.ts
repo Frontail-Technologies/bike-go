@@ -9,8 +9,6 @@ export type CustomerVehicle = {
   category: VehicleCategory;
   pricePerDay: number;
   deposit: number;
-  rating: number;
-  reviews: number;
   engineCc: number;
   powerBhp: number;
   torqueNm: number;
@@ -28,7 +26,6 @@ export type CustomerVehicle = {
   available: boolean;
   totalAvailable?: number;
   availableFrom?: string;
-  bookedRanges: [string, string][];
 };
 
 export type Motorcycle = CustomerVehicle;

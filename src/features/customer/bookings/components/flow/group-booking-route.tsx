@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { CustomerAuthBoundary } from "@/features/customer/auth/components/customer-auth-boundary";
 import { useVehicleModelGroupQuery } from "@/features/customer/vehicles/hooks/use-vehicles";
-import { vehicleGroupToMotorcycleGroup } from "@/features/customer/vehicles/lib/vehicle-group-mapper";
+import { vehicleGroupToMotorcycleGroup } from "@/features/customer/vehicles/lib/vehicle-mapper";
 import { BikeDetailsSkeleton } from "@/features/customer/vehicles/components/details/bike-details-skeleton";
 import { BookingFlow } from "./booking-flow";
 

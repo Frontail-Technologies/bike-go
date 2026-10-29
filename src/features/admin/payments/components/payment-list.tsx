@@ -13,6 +13,7 @@ import { AdminErrorState } from "@/components/admin/feedback";
 import { AdminPage, ContentSection, PageHeader } from "@/components/admin/layout";
 import { CurrencyAmount } from "@/components/admin/money";
 import { ApiError } from "@/lib/api/error";
+import { activeFilterCount, pageCount as getPageCount } from "@/hooks/use-list-state";
 import { PAYMENT_PAGE_SIZE, usePaymentListState } from "../hooks/use-payment-list-state";
 import { usePaymentMethodsQuery, usePaymentsQuery } from "../hooks/use-payments";
 import { badgeStatus, fmtShort, providerLabel, statusLabels } from "../lib/payment-model";
@@ -47,9 +48,9 @@ export function PaymentList() {
 
   const rows = query.data?.data ?? [];
   const total = query.data?.meta.total ?? 0;
-  const pageCount = Math.max(1, query.data?.meta.totalPages ?? 1);
+  const pageCount = getPageCount(query.data?.meta);
   const page = Math.min(params.page, pageCount);
-  const activeFilters = [params.status, params.method, params.currency, params.window].filter(Boolean).length;
+  const activeFilters = activeFilterCount(params, ["page", "pageSize", "sort", "q", "currency"]);
   const filtersActive = Boolean(params.q || activeFilters);
   const reset = () => { setSearchText(""); state.reset(); };
   const open = (payment: Payment) => router.push(`/admin/payments/${encodeURIComponent(payment.transactionId)}`);

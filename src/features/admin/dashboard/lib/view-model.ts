@@ -1,6 +1,7 @@
 import type { MetricPoint, RevenueTrendPoint, StatusMetric } from "@/components/admin/data";
 import { bookingStatuses, type BookingStatus } from "@/features/admin/bookings/types/booking";
 import type { DashboardOverview, DashboardRange } from "../types/dashboard";
+import { titleCase } from "@/lib/text";
 
 export const rangeOptions: ReadonlyArray<{ value: DashboardRange; label: string }> = [
   { value: "7d", label: "Last 7 days" },
@@ -9,8 +10,6 @@ export const rangeOptions: ReadonlyArray<{ value: DashboardRange; label: string 
 ];
 
 export const rangeDays = (range: DashboardRange) => Number.parseInt(range, 10);
-
-const titleCase = (value: string) => value.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
 
 const vehicleColors: Record<string, string> = { available: "var(--admin-success)", rented: "var(--admin-info)", maintenance: "var(--admin-warning)", inactive: "var(--admin-muted)" };
 const loanColors: Record<string, string> = {

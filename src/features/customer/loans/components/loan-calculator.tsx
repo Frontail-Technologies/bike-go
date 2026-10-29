@@ -7,7 +7,8 @@ import { ButtonLink } from "@/components/ui/button-link";
 import { ChipGroup } from "@/components/ui/chip-group";
 import { formatMoney, formatPrice } from "@/lib/format";
 import { useTranslations } from "@/i18n/hooks";
-import { RATE_MAX, RATE_MIN, calculateEmi, getLoanType, tenuresFor } from "../lib/data";
+import { getLoanType, tenuresFor } from "../lib/data";
+import { useLoanQuote } from "../hooks/use-loan-quote";
 
 const type = getLoanType("personal")!;
 const tenures = tenuresFor(type);
@@ -61,9 +62,12 @@ export function LoanCalculator() {
   const t = useTranslations("loans");
   const [amount, setAmount] = useState(5000);
   const [tenure, setTenure] = useState(24);
-  const [rate, setRate] = useState(type.apr);
 
-  const emi = calculateEmi(amount, rate, tenure);
+  const quote = useLoanQuote({ loanType: type.id, amount, tenureMonths: tenure });
+  const monthly = (quote.data?.monthlyPaymentMinor ?? 0) / 100;
+  const total = (quote.data?.totalPaymentMinor ?? 0) / 100;
+  const interest = (quote.data?.totalInterestMinor ?? 0) / 100;
+  const effectiveRate = (quote.data?.interestRateBps ?? Math.round(type.apr * 100)) / 100;
 
   return (
     <div className="grid gap-5 md:grid-cols-2 md:gap-8">
@@ -91,24 +95,14 @@ export function LoanCalculator() {
           />
         </div>
 
-        <SingleSlider
-          label={t("calcRate")}
-          value={rate}
-          min={RATE_MIN}
-          max={RATE_MAX}
-          step={0.5}
-          display={`${rate}%`}
-          minLabel={`${RATE_MIN}%`}
-          maxLabel={`${RATE_MAX}%`}
-          onChange={setRate}
-        />
+        <div className="rounded-control bg-surface-secondary p-4"><p className="text-sm text-subtle">{t("calcRate")}</p><p className="tabular text-2xl font-extrabold">{effectiveRate}%</p></div>
       </div>
 
       <div className="flex flex-col gap-4 rounded-card border border-line bg-surface p-4 shadow-card md:p-6">
         <div>
           <p className="text-sm text-subtle">{t("calcEmi")}</p>
           <p data-testid="emi" className="tabular text-4xl font-extrabold">
-            {formatMoney(emi.monthly)}
+            {formatMoney(monthly)}
           </p>
         </div>
         <dl className="flex flex-col gap-3 border-t border-line pt-4 text-sm">
@@ -118,11 +112,11 @@ export function LoanCalculator() {
           </div>
           <div className="flex justify-between gap-4">
             <dt className="text-subtle">{t("calcInterest")}</dt>
-            <dd className="tabular font-semibold">{formatMoney(emi.interest)}</dd>
+            <dd className="tabular font-semibold">{formatMoney(interest)}</dd>
           </div>
           <div className="flex justify-between gap-4 border-t border-line pt-3">
             <dt className="font-bold">{t("calcTotal")}</dt>
-            <dd className="tabular font-bold">{formatMoney(emi.total)}</dd>
+            <dd className="tabular font-bold">{formatMoney(total)}</dd>
           </div>
         </dl>
         <p className="flex items-start gap-2 text-xs leading-5 text-subtle">

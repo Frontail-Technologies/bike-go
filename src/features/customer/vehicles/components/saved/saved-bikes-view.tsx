@@ -11,12 +11,12 @@ import { MotorcycleCardSkeleton } from "@/components/ui/skeleton";
 import { useTranslations } from "@/i18n/hooks";
 import { favoritesStore } from "@/features/customer/profile/stores/preferences-store";
 import { useVehicleModelsQuery } from "../../hooks/use-vehicles";
-import { vehicleGroupToMotorcycleGroup } from "../../lib/vehicle-group-mapper";
+import { vehicleGroupToMotorcycleGroup } from "../../lib/vehicle-mapper";
 
 export function SavedBikesView() {
   const t = useTranslations("browse");
   const favoriteIds = favoritesStore.useValue();
-  const vehicles = useVehicleModelsQuery({ page: 1, pageSize: 100, sort: "newest" });
+  const vehicles = useVehicleModelsQuery({ page: 1, pageSize: Math.max(1, favoriteIds.length), slugs: favoriteIds.length ? favoriteIds : ["__none__"], sort: "newest" });
   const savedBikes = (vehicles.data?.data ?? [])
     .map(vehicleGroupToMotorcycleGroup)
     .filter((vehicle) => favoriteIds.includes(vehicle.id));

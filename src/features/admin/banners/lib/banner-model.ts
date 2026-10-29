@@ -2,6 +2,7 @@ import { CarProfileIcon, HouseLineIcon, MegaphoneIcon, MotorcycleIcon, type Icon
 import { ictLocalToIso, isoToIctLocal } from "@/features/admin/bookings/lib/booking-model";
 import type { Banner, BannerFields, BannerPlacement } from "../types/banner";
 import type { BannerFormValues } from "../schemas/banner-schemas";
+import { formatDate } from "@/lib/date";
 
 export const placementMeta: Record<BannerPlacement, { label: string; description: string; hint: string; Icon: Icon; badge: string; tile: string }> = {
   home_hero: { label: "Home Hero", description: "Large banners at the top of the homepage.", hint: "Main hero banners displayed on the homepage (large format).", Icon: HouseLineIcon, badge: "bg-[var(--admin-accent-soft)] text-[var(--admin-warning)]", tile: "bg-[var(--admin-accent-soft)] text-[var(--admin-warning)]" },
@@ -11,7 +12,7 @@ export const placementMeta: Record<BannerPlacement, { label: string; description
 };
 
 export const formatSchedule = (banner: Pick<Banner, "startAt" | "endAt">) => {
-  const fmt = (value: string) => new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Phnom_Penh", day: "2-digit", month: "short", year: "numeric" }).format(new Date(value));
+  const fmt = formatDate;
   if (!banner.startAt && !banner.endAt) return "Always on";
   return `${banner.startAt ? fmt(banner.startAt) : "Now"} – ${banner.endAt ? fmt(banner.endAt) : "No end"}`;
 };

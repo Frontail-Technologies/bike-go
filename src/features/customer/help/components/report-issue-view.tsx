@@ -14,7 +14,7 @@ import { AppSelect } from "@/components/ui/select";
 import { TextAreaInput } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { formatRange } from "@/features/customer/bookings/lib/dates";
-import { useBookingsQuery } from "@/features/customer/bookings/hooks/use-bookings";
+import { useBookingOptionsQuery } from "@/features/customer/bookings/hooks/use-booking-options";
 import { useCreateSupportTicketMutation } from "@/features/customer/help/hooks/use-support-tickets";
 import type { SupportTicketCategory } from "@/features/customer/help/types";
 import { useTranslations } from "@/i18n/hooks";
@@ -37,15 +37,13 @@ const schema = (message: string) =>
   });
 
 export function ReportIssueView() {
-  const bookingQuery = useBookingsQuery({ page: 1, pageSize: 100 });
-  const bookings = (bookingQuery.data?.data ?? []).map((booking) => ({
+  const bookingQuery = useBookingOptionsQuery();
+  const bookings = (bookingQuery.data ?? []).map((booking) => ({
     reference: booking.reference,
-    bikeId: booking.vehicle.slug,
     startDate: booking.pickupAt,
     endDate: booking.returnAt,
-    vehicleName: booking.vehicle.name,
+    vehicleName: booking.vehicleName,
   }));
-  const getBike = (id: string) => bookings.find((booking) => booking.bikeId === id) ? { name: bookings.find((booking) => booking.bikeId === id)!.vehicleName } : undefined;
   const t = useTranslations("help");
   const [ticket, setTicket] = useState<string | null>(null);
   const createTicket = useCreateSupportTicketMutation();
@@ -57,7 +55,7 @@ export function ReportIssueView() {
 
   const bookingOptions = [
     { id: "none", label: t("reportNone") },
-    ...bookings.map((b) => ({ id: b.reference, label: `${b.reference} · ${getBike(b.bikeId)?.name ?? t("reportFallbackBike")} · ${formatRange(b.startDate, b.endDate)}` })),
+    ...bookings.map((b) => ({ id: b.reference, label: `${b.reference} · ${b.vehicleName || t("reportFallbackBike")} · ${formatRange(b.startDate, b.endDate)}` })),
   ];
 
   const send = handleSubmit(async (values) => {

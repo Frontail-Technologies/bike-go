@@ -1,50 +1,23 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo } from "react";
 import { documentTypes, verificationStatuses } from "@/features/admin/loans/types/loan";
+import { oneOf, useListState } from "@/hooks/use-list-state";
 import type { DocumentListParams, DocumentSort, UploadedWindow } from "../types/document";
 
 export const DOCUMENT_PAGE_SIZE = 10;
 const sorts: readonly DocumentSort[] = ["newest", "oldest"];
 const windows: readonly UploadedWindow[] = ["7", "30", "90"];
-type Filters = Pick<DocumentListParams, "q" | "status" | "type" | "uploaded" | "sort">;
-
-const oneOf = <T extends string>(values: readonly T[], value: string | null) => values.find((item) => item === value);
+const read = (search: URLSearchParams): DocumentListParams => ({
+  page: Math.max(1, Number.parseInt(search.get("page") ?? "1", 10) || 1), pageSize: DOCUMENT_PAGE_SIZE,
+  q: search.get("q")?.trim() || undefined, status: oneOf(verificationStatuses, search.get("status")),
+  type: oneOf(documentTypes, search.get("type")), uploaded: oneOf(windows, search.get("uploaded")), sort: oneOf(sorts, search.get("sort")),
+});
+const reset = { q: undefined, status: undefined, type: undefined, uploaded: undefined };
 
 export function useDocumentListState() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const pathname = "/admin/documents";
-
-  const params = useMemo<DocumentListParams>(() => {
-    const page = Number.parseInt(searchParams.get("page") ?? "1", 10);
-    return {
-      page: Number.isFinite(page) && page > 0 ? page : 1,
-      pageSize: DOCUMENT_PAGE_SIZE,
-      q: searchParams.get("q")?.trim() || undefined,
-      status: oneOf(verificationStatuses, searchParams.get("status")),
-      type: oneOf(documentTypes, searchParams.get("type")),
-      uploaded: oneOf(windows, searchParams.get("uploaded")),
-      sort: oneOf(sorts, searchParams.get("sort")),
-    };
-  }, [searchParams]);
-
-  const write = useCallback((next: Partial<DocumentListParams>) => {
-    const merged = { ...params, ...next };
-    const query = new URLSearchParams();
-    for (const [key, value] of Object.entries(merged)) {
-      if (key === "pageSize" || value === undefined || value === "" || (key === "page" && value === 1)) continue;
-      query.set(key, String(value));
-    }
-    const search = query.toString();
-    router.replace(search ? `${pathname}?${search}` : pathname, { scroll: false });
-  }, [params, router]);
-
-  return {
-    params,
-    setPage: (page: number) => write({ page }),
-    setFilters: (filters: Partial<Filters>) => write({ ...filters, page: 1 }),
-    reset: () => write({ q: undefined, status: undefined, type: undefined, uploaded: undefined, page: 1 }),
-  };
+  return useListState<DocumentListParams>({
+    pathname: "/admin/documents",
+    read,
+    reset,
+  });
 }

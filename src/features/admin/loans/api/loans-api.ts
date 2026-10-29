@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/api/client";
+import type { ApiEnvelope as Envelope } from "@/lib/api/contracts";
 import type { Loan, LoanListMeta, LoanListParams, LoanStats, LoanStatusInput } from "../types/loan";
 
-type Envelope<T> = { data: T; meta: Record<string, unknown> };
 const DAY = 86_400_000;
 
 function toQuery({ submitted, ...params }: LoanListParams) {

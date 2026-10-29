@@ -1,6 +1,7 @@
 import { BankIcon, CaretRightIcon } from "@phosphor-icons/react/ssr";
 import Link from "next/link";
-import { formatDate, formatPrice } from "@/lib/format";
+import { formatDate } from "@/lib/date";
+import { formatPrice } from "@/lib/format";
 import type { LoanApplication } from "../lib/data";
 import { LoanStatusBadge } from "./loan-status-badge";
 import { useLoanText } from "../lib/use-loan-text";

@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Alert, Button, Description, FieldError, Input, Label, Modal, Spinner, TextArea, TextField } from "@heroui/react";
 import { PlusIcon } from "@phosphor-icons/react";
-import { useMemo, useState } from "react";
+import { useDeferredValue, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { AdminSearch } from "@/components/admin/controls";
 import { AdminStatusBadge } from "@/components/admin/data-display/status-badge";
@@ -12,7 +12,7 @@ import { CurrencyAmount } from "@/components/admin/money";
 import { toast } from "@/components/ui/toast";
 import { ApiError } from "@/lib/api/error";
 import { cn } from "@/lib/cn";
-import { useAddonMutations, useAddonsQuery } from "../hooks/use-addons";
+import { useAddonMutations, useAddonsPageQuery } from "../hooks/use-addons";
 import { addonSchema, type AddonValues } from "../schemas/addon-schema";
 import type { Addon } from "../types/addon";
 import { deactivateCopy, ItemRowActions } from "./item-row-actions";
@@ -99,15 +99,16 @@ function AddonForm({ addon, onClose }: { addon: Addon | null; onClose: () => voi
 }
 
 export function AddonsSection() {
-  const query = useAddonsQuery();
   const mutations = useAddonMutations();
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search.trim());
+  const query = useAddonsPageQuery({ page: 1, pageSize: 50, q: deferredSearch || undefined });
   const [editing, setEditing] = useState<Addon | null>(null);
   const [open, setOpen] = useState(false);
   const [deactivating, setDeactivating] = useState<Addon | null>(null);
 
-  const term = search.trim().toLowerCase();
-  const items = useMemo(() => (query.data ?? []).filter((addon) => !term || `${addon.name} ${addon.code}`.toLowerCase().includes(term)), [query.data, term]);
+  const term = deferredSearch.toLowerCase();
+  const items = query.data?.data ?? [];
 
   function setActive(addon: Addon, active: boolean, onSettled?: () => void) {
     mutations.update.mutate({ id: addon.id, active }, { onSuccess: () => { toast.success(`${addon.name} ${active ? "activated" : "deactivated"}`); onSettled?.(); }, onError: (error) => toast.danger(failure(error)) });
@@ -117,7 +118,7 @@ export function AddonsSection() {
     <section aria-label="Add-ons" className="adminSurface rounded-2xl">
       <header className="flex flex-wrap items-center gap-3 border-b border-[var(--admin-border)] p-4 sm:p-5">
         <div className="min-w-0 flex-1">
-          <h2 className="text-base font-extrabold leading-tight">Add-ons {query.data ? <span className="ml-1 text-xs font-semibold text-[var(--admin-muted)]">{query.data.length}</span> : null}</h2>
+          <h2 className="text-base font-extrabold leading-tight">Add-ons {query.data ? <span className="ml-1 text-xs font-semibold text-[var(--admin-muted)]">{query.data.meta.total}</span> : null}</h2>
           <p className="text-sm text-[var(--admin-muted)]">Extras customers can add to a booking, priced per day in USD.</p>
         </div>
         <Button variant="primary" className="min-h-11" onPress={() => { setEditing(null); setOpen(true); }}>
@@ -125,7 +126,7 @@ export function AddonsSection() {
           Add add-on
         </Button>
       </header>
-      {(query.data?.length ?? 0) > 6 ? (
+      {(query.data?.meta.total ?? 0) > 6 || search ? (
         <div className="p-3 sm:px-5"><AdminSearch value={search} onChange={setSearch} placeholder="Search add-ons…" className="sm:max-w-xs" /></div>
       ) : null}
 

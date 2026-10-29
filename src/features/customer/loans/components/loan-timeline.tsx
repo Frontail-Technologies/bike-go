@@ -29,7 +29,10 @@ export function timelineFor(a: LoanApplication, { t, note }: Pick<Text, "t" | "n
   const { stage: current, state } = position[a.status];
 
   const notes: string[][] = [[], [], [], []];
-  for (const event of a.history) if (event.note) notes[stageOf[event.status]].push(note(event.note));
+  for (const event of a.history) {
+    const message = note(event);
+    if (message) notes[stageOf[event.status]].push(message);
+  }
 
   return titles.map((title, i) => {
     const stepState: StepState = i < current ? "done" : i === current ? state : "todo";

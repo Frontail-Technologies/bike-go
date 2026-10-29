@@ -11,7 +11,7 @@ import { LoadingRegion } from "@/components/ui/loading-region";
 import { toast } from "@/components/ui/toast";
 import { useBookingQuoteQuery } from "@/features/customer/bookings/hooks/use-booking-quote";
 import { useBookingAddonsQuery, useCreateBookingMutation } from "@/features/customer/bookings/hooks/use-bookings";
-import { bookingQuoteToView, estimateBookingQuote } from "@/features/customer/bookings/lib/booking-mapper";
+import { bookingQuoteToView } from "@/features/customer/bookings/lib/booking-mapper";
 import { rentalDaysBetween } from "@/features/customer/bookings/lib/dates";
 import { quoteLines, type Quote } from "@/features/customer/bookings/lib/pricing";
 import { draftStore, justBookedStore } from "@/features/customer/bookings/stores/booking-draft-store";
@@ -78,10 +78,7 @@ export function BookingFlow({ bike, target, detailsHref }: { bike: Motorcycle; t
     addons: Object.entries(draft.addOns).filter(([, selected]) => selected).map(([code]) => ({ code, quantity: 1 })),
   }), [draft.addOns, draft.dropTime, draft.end, draft.pickupTime, draft.start, hasDates, locationId, target]);
   const quoteQuery = useBookingQuoteQuery(bookingRequest);
-  const optimisticQuote = hasDates
-    ? estimateBookingQuote({ bike, days, selected: draft.addOns, addons: addonsQuery.data ?? [], previous: quoteQuery.data })
-    : { ...EMPTY_QUOTE, days };
-  const quote = quoteQuery.data && !quoteQuery.isFetching ? bookingQuoteToView(quoteQuery.data) : optimisticQuote;
+  const quote = quoteQuery.data ? bookingQuoteToView(quoteQuery.data) : { ...EMPTY_QUOTE, days };
   const overlaps = quoteQuery.isError;
 
   const rider: RiderValues = { name: profile.data?.fullName ?? "", phone: profile.data?.phone ?? "" };
@@ -149,7 +146,7 @@ export function BookingFlow({ bike, target, detailsHref }: { bike: Motorcycle; t
             <div className="lg:hidden">{bikeCard}</div>
 
             <Section title={t("sectionTrip")}>
-              <TripSection bike={bike} draft={draft} patch={patch} addons={addonsQuery.data ?? []} addonsPending={addonsQuery.isPending} />
+              <TripSection draft={draft} patch={patch} addons={addonsQuery.data ?? []} addonsPending={addonsQuery.isPending} />
               {overlaps ? <p className="text-sm text-danger" role="alert">{t("conflict")}</p> : null}
             </Section>
 
@@ -162,7 +159,7 @@ export function BookingFlow({ bike, target, detailsHref }: { bike: Motorcycle; t
             </Section>
 
             <div className="lg:hidden">
-              <BookingSummary lines={quoteLines(quote)} totalLabel="totalPayable" />
+              <BookingSummary lines={quoteLines(quote)} totalLabel="totalPayable" totalAmount={quote.payable} />
             </div>
 
             <p className="text-xs text-subtle">{t("termsNote")}</p>
@@ -172,7 +169,7 @@ export function BookingFlow({ bike, target, detailsHref }: { bike: Motorcycle; t
           <aside aria-label={t("priceSummary")} className="hidden lg:block">
             <div className="sticky top-24 flex flex-col gap-4">
               {bikeCard}
-              <BookingSummary lines={quoteLines(quote)} totalLabel="totalPayable" />
+              <BookingSummary lines={quoteLines(quote)} totalLabel="totalPayable" totalAmount={quote.payable} />
             </div>
           </aside>
         </div>

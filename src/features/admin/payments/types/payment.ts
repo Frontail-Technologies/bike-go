@@ -10,8 +10,10 @@ export type Payment = {
   method: string | null;
   status: PaymentStatus;
   refundState: RefundState;
+  displayStatus: "pending" | "paid" | "failed" | "partially_refunded" | "refunded";
   amountMinor: number;
   refundedMinor: number;
+  netMinor: number;
   currency: PaymentCurrency;
   paidAt: string | null;
   createdAt: string;
@@ -64,6 +66,7 @@ export type PaymentDetail = Payment & {
   failedAt: string | null;
   detailsSyncedAt: string | null;
   providerOperations: ProviderOperation[];
+  timeline: Array<{ kind: "created" | "provider_created" | "paid" | "failed" | "refund_pending" | "refund_completed" | "refund_failed"; at: string; amountMinor: number | null; actor: string | null; noteCode: string | null }>;
   refundableMinor: number;
   refundEligibility: { allowed: boolean; reason: string | null; windowEndsAt: string };
   refunds: PaymentRefund[];

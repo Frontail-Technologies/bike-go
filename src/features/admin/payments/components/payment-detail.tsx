@@ -8,6 +8,7 @@ import { AdminButton as Button } from "@/components/admin/controls";
 import { PaymentStatusBadge } from "@/components/admin/bookings/booking-parts";
 import { CustomerAvatar } from "@/components/admin/customers/customer-avatar";
 import { ActivityTimeline, type ActivityItem } from "@/components/admin/data-display/misc";
+import { DetailCard as Card, DetailRow as Row } from "@/components/admin/data-display/detail";
 import { AdminErrorState, AdminLoadingState } from "@/components/admin/feedback";
 import { AdminPage, PageHeader } from "@/components/admin/layout";
 import { CurrencyAmount } from "@/components/admin/money";
@@ -15,53 +16,31 @@ import { AdminBreadcrumbs } from "@/components/admin/navigation";
 import { VehiclePhoto } from "@/components/admin/vehicles/vehicle-photo";
 import { toast } from "@/components/ui/toast";
 import { ApiError } from "@/lib/api/error";
-import { cn } from "@/lib/cn";
 import { usePaymentMutations, usePaymentQuery } from "../hooks/use-payments";
 import { badgeStatus, fmtDateTime, providerLabel } from "../lib/payment-model";
 import type { PaymentDetail as PaymentDetailData } from "../types/payment";
 import { RefundDialog } from "./refund-dialog";
 
-function Card({ title, action, children, className }: { title: string; action?: ReactNode; children: ReactNode; className?: string }) {
-  return (
-    <section aria-label={title} className={cn("adminSurface rounded-2xl p-4 sm:p-5", className)}>
-      <header className="mb-4 flex items-center justify-between gap-3"><h2 className="text-sm font-extrabold">{title}</h2>{action}</header>
-      {children}
-    </section>
-  );
-}
-
-function Row({ label, children }: { label: string; children: ReactNode }) {
-  return <div className="flex items-start justify-between gap-4 text-sm"><dt className="shrink-0 text-[var(--admin-muted)]">{label}</dt><dd className="min-w-0 break-words text-right font-semibold">{children}</dd></div>;
-}
-
 const dash = "—";
 
 function timelineFor(payment: PaymentDetailData): ActivityItem[] {
-  const at = (iso: string) => `${fmtDateTime(iso)} ICT`;
-  const events: Array<{ when: number; item: ActivityItem }> = [];
-  const add = (when: string, item: ActivityItem) => events.push({ when: Date.parse(when), item });
-
-  add(payment.createdAt, { id: "created", state: "done", title: "Payment created", detail: payment.transactionId, time: at(payment.createdAt), icon: <ReceiptIcon size={16} /> });
-  if (payment.providerCreatedAt) add(payment.providerCreatedAt, { id: "provider", state: "done", title: "PayWay transaction created", detail: providerLabel(payment.provider), time: at(payment.providerCreatedAt), icon: <BankIcon size={16} /> });
-  if (payment.status === "paid" && payment.paidAt) add(payment.paidAt, { id: "paid", state: "done", title: "Paid", detail: [payment.method, payment.approvalCode ? `Approval ${payment.approvalCode}` : null, payment.bankRef ? `Ref ${payment.bankRef}` : null].filter(Boolean).join(" · ") || undefined, time: at(payment.paidAt), icon: <CheckCircleIcon size={16} /> });
-  if (payment.status === "failed") add(payment.failedAt ?? payment.updatedAt, { id: "failed", state: "failed", title: "Failed", detail: payment.review ?? undefined, time: at(payment.failedAt ?? payment.updatedAt), icon: <XCircleIcon size={16} /> });
-
-  let cumulative = 0;
-  for (const refund of payment.refunds) {
-    if (refund.status === "completed") {
-      cumulative += refund.amountMinor;
-      const full = cumulative >= payment.amountMinor;
-      add(refund.completedAt ?? refund.createdAt, { id: refund.id, state: "done", title: full ? "Full refund" : "Partial refund", detail: `${(refund.amountMinor / 100).toFixed(2)} ${refund.currency} — ${refund.reason}${refund.initiatedBy ? ` (${refund.initiatedBy})` : ""}`, time: at(refund.completedAt ?? refund.createdAt), icon: <ArrowCounterClockwiseIcon size={16} /> });
-    } else if (refund.status === "failed") {
-      add(refund.failedAt ?? refund.createdAt, { id: refund.id, state: "failed", title: "Refund declined", detail: `${(refund.amountMinor / 100).toFixed(2)} ${refund.currency} — ${refund.providerMessage ?? refund.reason}`, time: at(refund.failedAt ?? refund.createdAt), icon: <XCircleIcon size={16} /> });
-    } else {
-      add(refund.createdAt, { id: refund.id, state: "current", title: "Refund pending", detail: `${(refund.amountMinor / 100).toFixed(2)} ${refund.currency} — waiting for PayWay to confirm`, time: at(refund.createdAt), icon: <ClockIcon size={16} /> });
-    }
-  }
-
-  const sorted = events.sort((a, b) => a.when - b.when).map((entry) => entry.item);
-  if (payment.status === "pending") sorted.push({ id: "pending", state: "current", title: "Pending", detail: "Waiting for the provider to confirm the payment.", time: "Awaiting confirmation", icon: <ClockIcon size={16} /> });
-  return sorted;
+  const meta: Record<PaymentDetailData["timeline"][number]["kind"], { title: string; state: ActivityItem["state"]; icon: ReactNode }> = {
+    created: { title: "Payment created", state: "done", icon: <ReceiptIcon size={16} /> },
+    provider_created: { title: "Provider transaction created", state: "done", icon: <BankIcon size={16} /> },
+    paid: { title: "Paid", state: "done", icon: <CheckCircleIcon size={16} /> },
+    failed: { title: "Failed", state: "failed", icon: <XCircleIcon size={16} /> },
+    refund_pending: { title: "Refund pending", state: "current", icon: <ClockIcon size={16} /> },
+    refund_completed: { title: "Refund completed", state: "done", icon: <ArrowCounterClockwiseIcon size={16} /> },
+    refund_failed: { title: "Refund declined", state: "failed", icon: <XCircleIcon size={16} /> },
+  };
+  return payment.timeline.map((event, index) => ({
+    id: `${event.kind}-${event.at}-${index}`,
+    state: meta[event.kind].state,
+    title: meta[event.kind].title,
+    detail: [event.amountMinor === null ? null : `${(event.amountMinor / 100).toFixed(2)} ${payment.currency}`, event.actor].filter(Boolean).join(" · ") || undefined,
+    time: `${fmtDateTime(event.at)} ICT`,
+    icon: meta[event.kind].icon,
+  }));
 }
 
 export function PaymentDetail({ transactionId }: { transactionId: string }) {
@@ -177,7 +156,7 @@ function PaymentWorkspace({ payment }: { payment: PaymentDetailData }) {
               <Row label="Refunded amount">{payment.refundedMinor > 0 ? <span className="text-[var(--admin-danger)]">−<CurrencyAmount amount={payment.refundedMinor} currency={payment.currency} /></span> : <CurrencyAmount amount={0} currency={payment.currency} />}</Row>
               <Row label="Remaining refundable"><CurrencyAmount amount={payment.status === "paid" ? payment.refundableMinor : 0} currency={payment.currency} /></Row>
               <Row label="Processing fee"><span className="font-medium text-[var(--admin-muted)]">Not provided by PayWay</span></Row>
-              <div className="mt-1 flex items-end justify-between gap-3 rounded-xl bg-[var(--admin-accent-soft)] p-3"><dt className="text-sm font-extrabold">Net after refunds</dt><dd className="text-right"><CurrencyAmount amount={Math.max(0, paid - payment.refundedMinor)} currency={payment.currency} className="text-xl font-extrabold" /><span className="block text-[11px] text-[var(--admin-muted)]">Paid amount − refunded amount</span></dd></div>
+              <div className="mt-1 flex items-end justify-between gap-3 rounded-xl bg-[var(--admin-accent-soft)] p-3"><dt className="text-sm font-extrabold">Net after refunds</dt><dd className="text-right"><CurrencyAmount amount={payment.netMinor} currency={payment.currency} className="text-xl font-extrabold" /><span className="block text-[11px] text-[var(--admin-muted)]">Paid amount − refunded amount</span></dd></div>
             </dl>
           </Card>
         </div>

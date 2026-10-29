@@ -1,6 +1,6 @@
 "use client";
 
-import { CaretLeftIcon, CaretRightIcon, GaugeIcon, GasPumpIcon, StarIcon } from "@phosphor-icons/react";
+import { CaretLeftIcon, CaretRightIcon, GaugeIcon, GasPumpIcon } from "@phosphor-icons/react";
 import useEmblaCarousel from "embla-carousel-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -107,10 +107,6 @@ export function FeaturedBikeCarousel({ bikes, hrefFor = (bike) => `/bikes/${bike
                   <div className="flex flex-1 flex-col gap-3 p-4">
                     <div className="flex items-start justify-between gap-2">
                       <h3 className="text-base leading-5 font-bold">{bike.name}</h3>
-                      <span className="tabular flex shrink-0 items-center gap-1 text-xs font-medium text-subtle">
-                        <StarIcon size={14} weight="fill" className="text-brand" />
-                        {bike.rating.toFixed(1)}
-                      </span>
                     </div>
                     <ul className="flex flex-wrap gap-2 text-xs text-ink">
                       <li className="flex items-center gap-1 rounded-full bg-surface-secondary px-2.5 py-1">

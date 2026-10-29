@@ -2,16 +2,9 @@
 
 import { camel, dynamicT } from "@/i18n/helpers";
 import { useTranslations } from "@/i18n/hooks";
-import type { DocumentId, LoanStatus } from "./data";
+import type { DocumentId, LoanStatus, StatusEvent } from "./data";
 
 type Group = "purpose" | "residence" | "emp" | "exp";
-
-const NOTES: Record<string, string> = {
-  "The address proof is older than 3 months.": "note_addressOld",
-  "Approved at the requested amount.": "note_approved",
-  "Monthly repayments would be above 50% of the stated income.": "note_repay",
-  "Thanks, we received the new documents.": "note_received",
-};
 
 export function useLoanText() {
   const t = dynamicT(useTranslations("loans"));
@@ -34,11 +27,6 @@ export function useLoanText() {
     docLabel: (id: DocumentId) => t(`doc_${id}_label`),
     docHint: (id: DocumentId) => t(`doc_${id}_hint`),
     status: (status: LoanStatus, part: "label" | "summary" | "headline") => t(`status_${camel(status === "eligibility-review" ? "in-review" : status)}_${part}`),
-    note: (note: string) => {
-      const key = NOTES[note];
-      if (key) return t(key);
-      const extra = /^Additional document received: (.+)$/.exec(note);
-      return extra ? t("note_additional", { name: extra[1]! }) : note;
-    },
+    note: (event: StatusEvent) => event.noteCode === "staff_note" ? (event.noteParams?.note ?? event.note ?? "") : event.note ?? "",
   };
 }

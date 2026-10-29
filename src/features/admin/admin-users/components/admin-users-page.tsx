@@ -37,6 +37,7 @@ import {
   useAdminUserMutations,
   useAdminUsersQuery,
 } from "../hooks/use-admin-users";
+import { useAdminUsersListState } from "../hooks/use-admin-users-list-state";
 import {
   adminUserSchema,
   editAdminUserSchema,
@@ -46,24 +47,6 @@ import type { AdminUser, AdminUsersParams } from "../types/admin-user";
 import type { z } from "zod";
 
 type CreateValues = z.infer<typeof adminUserSchema>;
-const initial: AdminUsersParams = {
-  page: 1,
-  pageSize: 20,
-  sortBy: "createdAt",
-  sortOrder: "desc",
-};
-function sync(params: AdminUsersParams) {
-  const query = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== "" && !(key === "page" && value === 1))
-      query.set(key, String(value));
-  });
-  history.replaceState(
-    null,
-    "",
-    `/admin/admins${query.size ? `?${query}` : ""}`,
-  );
-}
 function ModalFrame({
   title,
   children,
@@ -95,8 +78,9 @@ function ModalFrame({
 }
 export function AdminUsersPage() {
   const session = useAdminSessionQuery();
-  const [params, setParams] = useState<AdminUsersParams>(initial);
-  const [search, setSearch] = useState("");
+  const listState = useAdminUsersListState();
+  const { params, setFilters, setPage } = listState;
+  const [search, setSearch] = useState(params.search ?? "");
   const [dialog, setDialog] = useState<"create" | "edit" | "reset" | null>(
     null,
   );
@@ -109,12 +93,11 @@ export function AdminUsersPage() {
     : [];
   useEffect(() => {
     const timer = setTimeout(
-      () => setParams((p) => ({ ...p, page: 1, search: search || undefined })),
+      () => setFilters({ search: search || undefined }),
       300,
     );
     return () => clearTimeout(timer);
-  }, [search]);
-  useEffect(() => sync(params), [params]);
+  }, [search, setFilters]);
   if (session.data?.role !== "super_admin")
     return (
       <AdminPage>
@@ -156,8 +139,7 @@ export function AdminUsersPage() {
       cell: ({ row }) => formatCambodiaDate(row.original.createdAt),
     },
   ];
-  const update = (next: Partial<AdminUsersParams>) =>
-    setParams((p) => ({ ...p, ...next, page: next.page ?? 1 }));
+  const update = (next: Partial<AdminUsersParams>) => next.page ? setPage(next.page) : setFilters(next);
   const rows = query.data?.data ?? [];
   return (
     <AdminPage>

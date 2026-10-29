@@ -1,12 +1,11 @@
 import type { AdminStatus } from "@/components/admin/data-display/status-badge";
+import { formatDate, formatDateTime, formatShort, formatTime, ictLocalToIso, isoToIctLocal } from "@/lib/date";
 import type { Booking, BookingStatus, FuelLevel, PaymentStatus, VehicleCondition } from "../types/booking";
+import { bookingStatus, paymentStatus } from "@/lib/status/booking";
 
-export const bookingLabels: Record<BookingStatus, string> = {
-  pending: "Pending", confirmed: "Confirmed", ready_for_pickup: "Ready for Pickup", active: "On Rent",
-  returned: "Returned", completed: "Completed", cancelled: "Cancelled", expired: "Expired", no_show: "No Show",
-};
+export const bookingLabels = Object.fromEntries(Object.entries(bookingStatus).map(([code, meta]) => [code, meta.label])) as Record<BookingStatus, string>;
 
-export const paymentLabels: Record<PaymentStatus, string> = { unpaid: "Unpaid", pending: "Pending", paid: "Paid", failed: "Failed", refunded: "Refunded", partially_refunded: "Partially refunded" };
+export const paymentLabels = Object.fromEntries(Object.entries(paymentStatus).map(([code, meta]) => [code, meta.label])) as Record<PaymentStatus, string>;
 
 export const actionLabels: Partial<Record<BookingStatus, string>> = {
   confirmed: "Confirm Booking", ready_for_pickup: "Mark Ready for Pickup", active: "Start Rental",
@@ -16,10 +15,7 @@ export const actionLabels: Partial<Record<BookingStatus, string>> = {
 export const fuelLabels: Record<FuelLevel, string> = { full: "Full", three_quarters: "3/4", half: "1/2", quarter: "1/4", empty: "Empty" };
 export const conditionLabels: Record<VehicleCondition, string> = { excellent: "Excellent", good: "Good", fair: "Fair", needs_attention: "Needs attention" };
 
-const badgeStatus: Record<BookingStatus, AdminStatus> = {
-  pending: "pending", confirmed: "confirmed", ready_for_pickup: "ready-for-pickup", active: "ongoing",
-  returned: "returned", completed: "completed", cancelled: "cancelled", expired: "expired", no_show: "no-show",
-};
+const badgeStatus = Object.fromEntries(Object.entries(bookingStatus).map(([code, meta]) => [code, meta.tone])) as Record<BookingStatus, AdminStatus>;
 export const toBadge = (status: BookingStatus): { status: AdminStatus; label: string; className?: string } => ({
   status: badgeStatus[status], label: bookingLabels[status], className: status === "expired" ? "bg-[var(--admin-surface-muted)] text-[var(--admin-muted)]" : undefined,
 });
@@ -47,14 +43,8 @@ export const durationLabel = (minutes: number) => {
 
 export const vehiclePhoto = (vehicle: Booking["vehicle"]) => ({ id: vehicle.id, name: vehicle.name, vehicleType: vehicle.vehicleType, images: vehicle.image ? [vehicle.image] : [] });
 
-export const ictLocalToIso = (value: string) => new Date(`${value.length === 16 ? `${value}:00` : value}+07:00`).toISOString();
-export const isoToIctLocal = (iso: string) => {
-  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Phnom_Penh", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date(iso)).map((part) => [part.type, part.value]));
-  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
-};
-
-const fmt = (iso: string, options: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Phnom_Penh", ...options }).format(new Date(iso));
-export const fmtDate = (iso: string) => fmt(iso, { day: "2-digit", month: "short", year: "numeric" });
-export const fmtDateTime = (iso: string) => fmt(iso, { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
-export const fmtShort = (iso: string) => fmt(iso, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
-export const fmtTime = (iso: string) => fmt(iso, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+export { ictLocalToIso, isoToIctLocal };
+export const fmtDate = formatDate;
+export const fmtDateTime = formatDateTime;
+export const fmtShort = formatShort;
+export const fmtTime = formatTime;

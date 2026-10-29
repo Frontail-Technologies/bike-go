@@ -1,20 +1,11 @@
 import { apiClient } from "@/lib/api/client";
-import type { Booking, BookingListMeta, BookingListParams, BookingStatusInput, HandoverInput, PickupWindow, ReturnInput } from "../types/booking";
+import type { ApiEnvelope as Envelope } from "@/lib/api/contracts";
+import type { Booking, BookingListMeta, BookingListParams, BookingStatusInput, HandoverInput, ReturnInput } from "../types/booking";
 
-type Envelope<T> = { data: T; meta: Record<string, unknown> };
 const data = <T>(response: { data: Envelope<T> }) => response.data.data;
 
-const DAY = 86_400_000;
-const ICT_OFFSET = 7 * 3_600_000;
-
-function pickupRange(window: PickupWindow, now = Date.now()) {
-  const startOfToday = Math.floor((now + ICT_OFFSET) / DAY) * DAY - ICT_OFFSET;
-  const range = { today: [startOfToday, startOfToday + DAY], next7: [startOfToday, startOfToday + 7 * DAY], last7: [startOfToday - 7 * DAY, startOfToday] }[window];
-  return { pickupFrom: new Date(range[0]).toISOString(), pickupTo: new Date(range[1]).toISOString() };
-}
-
 function toQuery({ pickup, overdue, ...params }: BookingListParams) {
-  return { ...params, ...(overdue ? { overdue: true } : {}), ...(pickup ? pickupRange(pickup) : {}) };
+  return { ...params, ...(overdue ? { overdue: true } : {}), ...(pickup ? { pickup } : {}) };
 }
 
 export const bookingsApi = {

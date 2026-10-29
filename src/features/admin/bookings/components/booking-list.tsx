@@ -14,11 +14,11 @@ import { AdminPage, ContentSection, PageHeader } from "@/components/admin/layout
 import { CurrencyAmount } from "@/components/admin/money";
 import { VehiclePhoto } from "@/components/admin/vehicles/vehicle-photo";
 import { useLocationsQuery } from "@/features/admin/locations/hooks/use-locations";
+import { activeFilterCount, pageCount as getPageCount } from "@/hooks/use-list-state";
 import { ApiError } from "@/lib/api/error";
 import { useBookingActions } from "../hooks/use-booking-actions";
 import { BOOKING_PAGE_SIZE, useBookingListState } from "../hooks/use-booking-list-state";
 import { useBookingsQuery } from "../hooks/use-bookings";
-import { useNow } from "../hooks/use-now";
 import { bookingLabels, fmtDate, fmtShort, paymentLabels, vehiclePhoto } from "../lib/booking-model";
 import { bookingStatuses, paymentStatuses, type Booking, type BookingSort, type BookingStatus, type PaymentStatus, type PickupWindow } from "../types/booking";
 import { BookingActions, type BookingHandlers, BookingOperationalStatus } from "./booking-actions";
@@ -47,7 +47,6 @@ const sortingFor = (sort: BookingSort | undefined): SortingState => {
 
 export function BookingList() {
   const router = useRouter();
-  const now = useNow();
   const filterDrawer = useOverlayState();
   const statusModal = useOverlayState();
   const cancelDialog = useOverlayState();
@@ -63,9 +62,9 @@ export function BookingList() {
 
   const rows = query.data?.data ?? [];
   const total = query.data?.meta.total ?? 0;
-  const pageCount = Math.max(1, query.data?.meta.totalPages ?? 1);
+  const pageCount = getPageCount(query.data?.meta);
   const page = Math.min(params.page, pageCount);
-  const activeFilters = [params.status ?? (params.overdue ? overdueValue : undefined), params.paymentStatus, params.locationId, params.pickup].filter(Boolean).length;
+  const activeFilters = activeFilterCount(params, ["page", "pageSize", "sort", "q"]);
   const filtersActive = Boolean(params.q || activeFilters);
   const reset = () => { setSearchText(""); state.reset(); };
   const sorting = sortingFor(params.sort);
@@ -90,7 +89,7 @@ export function BookingList() {
     { id: "period", header: "Rental period", accessorFn: (row) => row.pickupAt, cell: ({ row }) => <div className="min-w-24 whitespace-nowrap text-xs"><p className="font-medium">{fmtShort(row.original.pickupAt)}</p><p className="text-[var(--admin-muted)]">{fmtShort(row.original.returnAt)}</p></div> },
     { id: "location", header: "Location", enableSorting: false, accessorFn: (row) => row.pickupLocation.name, cell: ({ row }) => <div className="min-w-24 max-w-28 text-xs"><p className="font-medium">{row.original.pickupLocation.name}</p>{row.original.returnLocation.id !== row.original.pickupLocation.id ? <p className="text-[var(--admin-muted)]">Return: {row.original.returnLocation.name}</p> : null}</div> },
     { id: "amount", header: "Amount", accessorFn: (row) => row.pricing.totalPayableMinor, cell: ({ row }) => <CurrencyAmount amount={row.original.pricing.totalPayableMinor} currency={row.original.currency} /> },
-    { id: "status", header: "Status", enableSorting: false, accessorFn: (row) => row.bookingStatus, cell: ({ row }) => <BookingOperationalStatus booking={row.original} now={now} /> },
+    { id: "status", header: "Status", enableSorting: false, accessorFn: (row) => row.bookingStatus, cell: ({ row }) => <BookingOperationalStatus booking={row.original} /> },
     { id: "payment", header: "Payment", enableSorting: false, accessorFn: (row) => row.paymentStatus, cell: ({ row }) => <PaymentStatusBadge status={row.original.paymentStatus} /> },
   ];
   const data = rows.map((row) => ({ ...row, id: row.reference }));
@@ -127,7 +126,7 @@ export function BookingList() {
           </div>
         </div>
 
-        <AdminDataTable columns={columns} data={data} label="Bookings" emptyState={emptyText} pagination={{ page, pageSize: BOOKING_PAGE_SIZE, total, onPageChange: state.setPage }} manualSorting sorting={sorting} onSortingChange={changeSorting} loading={query.isLoading} onRowNavigate={handlers.onView} rowActions={(booking) => <BookingActions booking={booking} handlers={handlers} now={now} />} minWidth={960} />
+        <AdminDataTable columns={columns} data={data} label="Bookings" emptyState={emptyText} pagination={{ page, pageSize: BOOKING_PAGE_SIZE, total, onPageChange: state.setPage }} manualSorting sorting={sorting} onSortingChange={changeSorting} loading={query.isLoading} onRowNavigate={handlers.onView} rowActions={(booking) => <BookingActions booking={booking} handlers={handlers} />} minWidth={960} />
       </ContentSection>
 
       <Drawer.Backdrop isOpen={filterDrawer.isOpen} onOpenChange={filterDrawer.setOpen} className="adminOverlay">

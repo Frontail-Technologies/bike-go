@@ -174,7 +174,7 @@ export function BookingDetailsView({ reference }: { reference: string }) {
 
         <div className="flex min-w-0 flex-col gap-4 lg:sticky lg:top-24 lg:self-start">
           <section aria-label={t("paymentAria")} className="flex flex-col gap-3">
-            <BookingSummary lines={quoteLines(booking.quote)} totalLabel="totalPaid" />
+            <BookingSummary lines={quoteLines(booking.quote)} totalLabel="totalPaid" totalAmount={booking.quote.payable} />
             <div className="flex items-start gap-3 rounded-card border border-line bg-surface p-4 text-sm">
               <ShieldCheckIcon size={20} className="mt-0.5 shrink-0" />
               <div>

@@ -26,7 +26,6 @@ import { formatMoney, formatPrice } from "@/lib/format";
 import {
   type LoanDraft,
   type LoanTypeId,
-  calculateEmi,
   documentTypes,
   employmentTypes,
   experienceBands,
@@ -38,6 +37,7 @@ import {
   residenceStatuses,
   tenuresFor,
 } from "../lib/data";
+import { useLoanQuote } from "../hooks/use-loan-quote";
 import { useLoanText } from "../lib/use-loan-text";
 import { DocumentUpload } from "./document-upload";
 import {
@@ -197,7 +197,9 @@ function LoanStep({ draft, patch, formId, onValid }: PatchProps & { formId: stri
   });
 
   const type = getLoanType(draft.loanType) ?? loanTypes[0];
-  const emi = calculateEmi(draft.amount, type.apr, draft.tenure);
+  const quote = useLoanQuote({ loanType: type.id, amount: draft.amount, tenureMonths: draft.tenure });
+  const monthlyPayment = (quote.data?.monthlyPaymentMinor ?? 0) / 100;
+  const rate = (quote.data?.interestRateBps ?? Math.round(type.apr * 100)) / 100;
   const sliderValue = Math.min(type.maxAmount, Math.max(type.minAmount, draft.amount || type.minAmount));
 
   return (
@@ -248,7 +250,7 @@ function LoanStep({ draft, patch, formId, onValid }: PatchProps & { formId: stri
       <SelectField control={form.control} name="purpose" label={t("applyPurpose")} options={options("purpose", loanPurposes)} />
 
       <p className="rounded-control bg-surface-secondary px-4 py-3 text-sm" data-testid="emi-preview">
-        {intl.rich("applyEmiPreview", { amount: formatMoney(emi.monthly), rate: type.apr, b: (chunks) => <span className="tabular font-bold">{chunks}</span> })}
+        {intl.rich("applyEmiPreview", { amount: formatMoney(monthlyPayment), rate, b: (chunks) => <span className="tabular font-bold">{chunks}</span> })}
       </p>
     </form>
   );
@@ -279,7 +281,8 @@ function EmploymentStep({ draft, patch, formId, onValid }: PatchProps & { formId
 
   const income = Number(draft.employment.monthlyIncome);
   const type = getLoanType(draft.loanType) ?? loanTypes[0];
-  const emi = calculateEmi(draft.amount, type.apr, draft.tenure).monthly;
+  const quote = useLoanQuote({ loanType: type.id, amount: draft.amount, tenureMonths: draft.tenure });
+  const emi = (quote.data?.monthlyPaymentMinor ?? 0) / 100;
   const tooHigh = income > 0 && emi > income * MAX_EMI_SHARE;
 
   return (
@@ -352,7 +355,9 @@ function ReviewCard({ title, step, onEdit, children }: { title: string; step: nu
 function ReviewStep({ draft, agreed, onAgree, onEdit }: PatchProps & { agreed: boolean; onAgree: (v: boolean) => void; onEdit: (step: number) => void }) {
   const { t, typeName, choice, yesNoLabel, docLabel } = useLoanText();
   const type = getLoanType(draft.loanType) ?? loanTypes[0];
-  const emi = calculateEmi(draft.amount, type.apr, draft.tenure);
+  const quote = useLoanQuote({ loanType: type.id, amount: draft.amount, tenureMonths: draft.tenure });
+  const monthlyPayment = (quote.data?.monthlyPaymentMinor ?? 0) / 100;
+  const rate = (quote.data?.interestRateBps ?? Math.round(type.apr * 100)) / 100;
   const a = draft.applicant;
   const e = draft.employment;
 
@@ -364,7 +369,7 @@ function ReviewStep({ draft, agreed, onAgree, onEdit }: PatchProps & { agreed: b
         <ReviewRow label={t("rAmount")} value={formatMoney(draft.amount)} />
         <ReviewRow label={t("rTenure")} value={t("calcMonths", { count: draft.tenure })} />
         <ReviewRow label={t("rPurpose")} value={choice("purpose", draft.purpose)} />
-        <ReviewRow label={t("rMonthly")} value={t("rMonthlyValue", { amount: formatMoney(emi.monthly), rate: type.apr })} />
+        <ReviewRow label={t("rMonthly")} value={t("rMonthlyValue", { amount: formatMoney(monthlyPayment), rate })} />
       </ReviewCard>
       <ReviewCard title={t("reviewPersonal")} step={2} onEdit={onEdit}>
         <ReviewRow label={t("rName")} value={a.fullName} />
@@ -533,7 +538,8 @@ export function ApplyFlow() {
   }
 
   const type = getLoanType(draft.loanType) ?? loanTypes[0];
-  const emi = calculateEmi(draft.amount, type.apr, draft.tenure).monthly;
+  const quote = useLoanQuote({ loanType: type.id, amount: draft.amount, tenureMonths: draft.tenure });
+  const emi = (quote.data?.monthlyPaymentMinor ?? 0) / 100;
 
   const footerProps = { amount: emi, summaryLabel: t("rMonthly") } as const;
   const footer =

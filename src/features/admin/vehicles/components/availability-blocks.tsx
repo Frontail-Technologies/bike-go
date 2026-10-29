@@ -12,17 +12,11 @@ import { ApiError } from "@/lib/api/error";
 import { useVehicleBlockMutations, useVehicleBlocksQuery } from "../hooks/use-vehicles";
 import { blockFormSchema as blockSchema, type BlockFormValues as BlockForm } from "../schemas/vehicle-schemas";
 import type { VehicleBlock } from "../types/vehicle";
+import { formatDateTime as formatCambodiaDateTime, ictLocalToIso } from "@/lib/date";
 
 type FormErrors = Partial<Record<keyof BlockForm, string>>;
 const emptyForm: BlockForm = { startAt: "", endAt: "", reason: "" };
 
-function localCambodiaValueToIso(value: string) {
-  return `${value.length === 16 ? `${value}:00` : value}+07:00`;
-}
-
-function formatCambodiaDateTime(value: string) {
-  return new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Phnom_Penh", day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(value));
-}
 
 function blockIcon(reason: string): Icon {
   if (/inspect|safety/i.test(reason)) return ShieldCheckIcon;
@@ -55,7 +49,7 @@ export function AvailabilityBlocks({ vehicleId }: { vehicleId: string }) {
     }
     setSubmitError("");
     try {
-      await mutations.add.mutateAsync({ startAt: new Date(localCambodiaValueToIso(result.data.startAt)).toISOString(), endAt: new Date(localCambodiaValueToIso(result.data.endAt)).toISOString(), reason: result.data.reason.trim() });
+      await mutations.add.mutateAsync({ startAt: ictLocalToIso(result.data.startAt), endAt: ictLocalToIso(result.data.endAt), reason: result.data.reason.trim() });
       toast.success("Availability block added");
       setForm(emptyForm);
       setErrors({});

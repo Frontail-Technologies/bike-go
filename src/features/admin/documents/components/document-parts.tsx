@@ -4,6 +4,7 @@ import { AdminStatusBadge } from "@/components/admin/data-display/status-badge";
 import { toVerificationBadge } from "@/features/admin/loans/lib/loan-model";
 import type { DocumentType } from "@/features/admin/loans/types/loan";
 import { cn } from "@/lib/cn";
+import { formatDateTime, formatShort } from "@/lib/date";
 
 export function ReviewStatusBadge({ status, className }: { status: string; className?: string }) {
   const badge = toVerificationBadge(status);
@@ -22,6 +23,5 @@ export function DocumentTypeIcon({ type, className }: { type: DocumentType; clas
 
 export const isPdf = (mimeType: string) => mimeType === "application/pdf";
 
-const fmt = (iso: string, options: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Phnom_Penh", ...options }).format(new Date(iso));
-export const fmtDateTime = (iso: string) => fmt(iso, { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
-export const fmtShort = (iso: string) => fmt(iso, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+export const fmtDateTime = formatDateTime;
+export const fmtShort = formatShort;

@@ -14,6 +14,7 @@ import { AdminPage, ContentSection, PageHeader } from "@/components/admin/layout
 import { toast } from "@/components/ui/toast";
 import { useLocationsQuery } from "@/features/admin/locations/hooks/use-locations";
 import { ApiError } from "@/lib/api/error";
+import { activeFilterCount, pageCount as getPageCount } from "@/hooks/use-list-state";
 import { useVehicleListState, VEHICLE_PAGE_SIZE } from "../hooks/use-vehicle-list-state";
 import { useVehicleOptions } from "../hooks/use-vehicle-options";
 import { useVehicleMutations, useVehiclesQuery } from "../hooks/use-vehicles";
@@ -45,9 +46,9 @@ export function VehicleList() {
 
   const rows = query.data?.data ?? [];
   const total = query.data?.meta.total ?? 0;
-  const pageCount = Math.max(1, query.data?.meta.totalPages ?? 1);
+  const pageCount = getPageCount(query.data?.meta);
   const page = Math.min(params.page, pageCount);
-  const activeFilters = [params.vehicleType, params.category, params.status, params.locationId].filter(Boolean).length;
+  const activeFilters = activeFilterCount(params, ["page", "pageSize", "sortBy", "sortOrder", "q"]);
   const filtersActive = Boolean(params.q || activeFilters);
   const setPage = state.setPage;
   const resetFilters = () => { setSearchText(""); state.reset(); };

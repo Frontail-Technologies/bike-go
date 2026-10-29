@@ -1,8 +1,8 @@
 "use client";
 
-import { CalendarBlankIcon, CaretRightIcon, CheckIcon, HeartIcon, ShareNetworkIcon, StarIcon } from "@phosphor-icons/react";
+import { CalendarBlankIcon, CaretRightIcon, CheckIcon, HeartIcon, ShareNetworkIcon } from "@phosphor-icons/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { BookingSummary } from "@/components/customer/booking-summary";
 import { MotorcycleGallery } from "@/components/customer/motorcycle-gallery";
 import { PriceDisplay } from "@/components/customer/price-display";
@@ -17,14 +17,17 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Button, IconButton } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { toast } from "@/components/ui/toast";
-import { formatDay, formatRange, isBooked, toISO, toRange } from "@/features/customer/bookings/lib/dates";
-import { getQuote, quoteLines } from "@/features/customer/bookings/lib/pricing";
+import { formatDay, formatRange, toISO, toRange } from "@/features/customer/bookings/lib/dates";
+import { useBookingQuoteQuery } from "@/features/customer/bookings/hooks/use-booking-quote";
+import { bookingQuoteToView } from "@/features/customer/bookings/lib/booking-mapper";
+import { quoteLines } from "@/features/customer/bookings/lib/pricing";
 import { draftStore } from "@/features/customer/bookings/stores/booking-draft-store";
 import { useRequireSignIn } from "@/features/customer/auth/components/sign-in-prompt";
 import type { Motorcycle } from "@/features/customer/vehicles/lib/view-model";
 import { favoritesStore, toggleFavorite } from "@/features/customer/profile/stores/preferences-store";
 import { useTranslations } from "@/i18n/hooks";
 import { formatMoney } from "@/lib/format";
+import { cambodiaRentalDateTime } from "@/lib/date";
 import { PickupCard } from "./pickup-card";
 import { RentalTerms } from "./rental-terms";
 import type { VehicleLocation } from "@/features/customer/vehicles/types";
@@ -66,7 +69,15 @@ export function BikeDetailsView({ bike, location }: { bike: Motorcycle; location
 
   const range = selection.range;
   const days = rentalDays(range);
-  const quote = range ? getQuote(bike, days, { helmet: false, jacket: false }) : null;
+  const quoteRequest = useMemo(() => range && location ? {
+    vehicle: bike.id,
+    pickupLocationId: location.id,
+    returnLocationId: location.id,
+    pickupAt: cambodiaRentalDateTime(toISO(range.start), selection.pickupTime),
+    returnAt: cambodiaRentalDateTime(toISO(range.end), selection.dropTime),
+  } : null, [bike.id, location, range, selection.dropTime, selection.pickupTime]);
+  const quoteQuery = useBookingQuoteQuery(quoteRequest);
+  const quote = quoteQuery.data ? bookingQuoteToView(quoteQuery.data) : null;
   const dateLabel = range ? formatRange(toISO(range.start), toISO(range.end)) : null;
 
   function goBook() {
@@ -111,10 +122,10 @@ export function BikeDetailsView({ bike, location }: { bike: Motorcycle; location
     <IconButton label={t("share")} icon={<ShareNetworkIcon size={24} />} className={className} onPress={share} />
   );
 
-  const selector = <RentalDateSelector value={selection} onChange={setSelection} isDateUnavailable={(date) => isBooked(bike, date)} />;
+  const selector = <RentalDateSelector value={selection} onChange={setSelection} />;
 
   const summary = quote ? (
-    <BookingSummary lines={quoteLines(quote)} totalLabel="totalPayable" />
+    <BookingSummary lines={quoteLines(quote)} totalLabel="totalPayable" totalAmount={quote.payable} />
   ) : (
     <p className="rounded-control bg-surface-secondary px-4 py-3 text-sm text-subtle">{t("selectToSeeTotal")}</p>
   );
@@ -169,11 +180,6 @@ export function BikeDetailsView({ bike, location }: { bike: Motorcycle; location
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-3 text-sm">
-                      {bike.reviews > 0 ? <span className="tabular flex items-center gap-1 font-semibold">
-                        <StarIcon size={16} weight="fill" className="text-brand" />
-                        {bike.rating.toFixed(1)}
-                        <span className="font-normal text-subtle">{t("reviews", { count: bike.reviews })}</span>
-                      </span> : null}
                       {bike.available ? (
                         <StatusBadge tone="success">{t("available")}</StatusBadge>
                       ) : (

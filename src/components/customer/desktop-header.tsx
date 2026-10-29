@@ -16,7 +16,7 @@ import { useOptimisticNav } from "@/hooks/use-optimistic-nav";
 import { useTranslations } from "@/i18n/hooks";
 import { useCustomerSessionQuery } from "@/features/customer/auth/hooks/use-customer-session-query";
 import { useCustomerProfileQuery } from "@/features/customer/profile/hooks/use-profile";
-import { initials } from "@/features/customer/profile/stores/preferences-store";
+import { initials } from "@/lib/text";
 import { cn } from "@/lib/cn";
 
 const RADIUS = 12;

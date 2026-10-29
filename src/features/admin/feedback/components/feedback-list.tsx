@@ -9,6 +9,7 @@ import { AdminStatusBadge } from "@/components/admin/data-display/status-badge";
 import { AdminErrorState } from "@/components/admin/feedback";
 import { AdminPage, ContentSection, PageHeader } from "@/components/admin/layout";
 import { ApiError } from "@/lib/api/error";
+import { activeFilterCount, pageCount as getPageCount } from "@/hooks/use-list-state";
 import { FEEDBACK_PAGE_SIZE, useFeedbackListState } from "../hooks/use-feedback-list-state";
 import { useFeedbackQuery } from "../hooks/use-feedback";
 import { categoryLabels, ticketBadge } from "../lib/feedback-model";
@@ -26,10 +27,10 @@ export function FeedbackList() {
 
   const rows = query.data?.data ?? [];
   const total = query.data?.meta.total ?? 0;
-  const pageCount = Math.max(1, query.data?.meta.totalPages ?? 1);
+  const pageCount = getPageCount(query.data?.meta);
   const page = Math.min(params.page, pageCount);
   const open = (ticket: SupportTicket) => router.push(`/admin/feedback/${ticket.reference}`);
-  const filtersActive = Boolean(params.q || params.status || params.category);
+  const filtersActive = activeFilterCount(params, ["page", "pageSize", "sort"]) > 0;
 
   const columns: ColumnDef<SupportTicket & { id: string }>[] = [
     { id: "reference", header: "Reference", enableSorting: false, accessorFn: (row) => row.reference, cell: ({ row }) => <span className="font-bold">{row.original.reference}</span> },

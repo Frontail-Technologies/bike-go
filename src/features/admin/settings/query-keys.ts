@@ -7,7 +7,7 @@ export const masterDataQueryKeys = {
 
 export const addonQueryKeys = {
   all: ["admin", "addons"] as const,
-  list: () => [...addonQueryKeys.all, "list"] as const,
+  list: (params: Record<string, unknown> = {}) => [...addonQueryKeys.all, "list", params] as const,
 };
 
 export const systemRulesQueryKeys = {

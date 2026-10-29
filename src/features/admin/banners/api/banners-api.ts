@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/api/client";
+import type { ApiEnvelope as Envelope } from "@/lib/api/contracts";
 import type { Banner, BannerCreateInput, BannerListMeta, BannerListParams, BannerPlacement, BannerUpdateInput } from "../types/banner";
 
-type Envelope<T> = { data: T; meta: Record<string, unknown> };
 const data = <T>(response: { data: Envelope<T> }) => response.data.data;
 
 function toFormData(input: BannerCreateInput | BannerUpdateInput) {
@@ -23,12 +23,5 @@ export const bannersApi = {
   update: (id: string, input: BannerUpdateInput) => apiClient.patch<Envelope<Banner>>(`/admin/banners/${id}`, toFormData(input)).then(data),
   remove: (id: string) => apiClient.delete(`/admin/banners/${id}`).then(() => undefined),
   reorder: (placement: BannerPlacement, ids: string[]) => apiClient.put<Envelope<Banner[]>>("/admin/banners/order", { placement, ids }).then(data),
-  duplicate: async (banner: Banner) => {
-    const image = (await apiClient.get<Blob>(banner.imageUrl, { responseType: "blob" })).data;
-    const file = new File([image], `${banner.id}.${image.type === "image/png" ? "png" : image.type === "image/webp" ? "webp" : "jpg"}`, { type: image.type });
-    return bannersApi.create({
-      title: `${banner.title} (copy)`.slice(0, 120), subtitle: banner.subtitle ?? "", ctaLabel: banner.ctaLabel ?? "", ctaUrl: banner.ctaUrl ?? "", placement: banner.placement,
-      displayOrder: banner.displayOrder, status: "inactive", startAt: banner.startAt ?? "", endAt: banner.endAt ?? "", image: file,
-    });
-  },
+  duplicate: (banner: Banner) => apiClient.post<Envelope<Banner>>(`/admin/banners/${banner.id}/duplicate`).then(data),
 };

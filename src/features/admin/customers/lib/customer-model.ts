@@ -1,8 +1,7 @@
 import { bookingStatuses, type BookingStatus } from "@/features/admin/bookings/types/booking";
 import type { CustomerEditValues } from "../schemas/customer-schemas";
 import type { Customer, CustomerUpdateInput } from "../types/customer";
-
-export const titleCase = (value: string) => value.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
+export { titleCase } from "@/lib/text";
 
 export const asBookingStatus = (status: string): BookingStatus => ((bookingStatuses as readonly string[]).includes(status) ? (status as BookingStatus) : "pending");
 

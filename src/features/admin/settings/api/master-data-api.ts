@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/api/client";
+import type { ApiEnvelope as Envelope } from "@/lib/api/contracts";
 import type { MasterInput, MasterItem, MasterKind, MasterPageMeta, MasterPageParams } from "../types/master-data";
 
-type Envelope<T> = { data: T; meta: Record<string, unknown> };
 
 export const masterDataApi = {
   list: async (kind: MasterKind, params: MasterPageParams) => {

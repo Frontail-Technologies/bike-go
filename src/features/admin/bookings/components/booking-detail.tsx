@@ -3,10 +3,11 @@
 import { Alert, Button, useOverlayState } from "@heroui/react";
 import { ArrowRightIcon, CalendarCheckIcon, CheckIcon, ClockCountdownIcon, EnvelopeSimpleIcon, FlagCheckeredIcon, GasPumpIcon, HourglassIcon, KeyIcon, MapPinIcon, PackageIcon, PhoneIcon, PlusCircleIcon, ShieldCheckIcon, SpeedometerIcon, TimerIcon, WalletIcon, WarningIcon, WrenchIcon, XCircleIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { BookingStatusBadge, PaymentStatusBadge } from "@/components/admin/bookings/booking-parts";
 import { CustomerAvatar } from "@/components/admin/customers/customer-avatar";
 import { ActivityTimeline, type ActivityItem, type ActivityState } from "@/components/admin/data-display/misc";
+import { DetailCard as Card, DetailRow as Row } from "@/components/admin/data-display/detail";
 import { AdminStatusBadge } from "@/components/admin/data-display/status-badge";
 import { AdminErrorState, AdminLoadingState, ConfirmationDialog } from "@/components/admin/feedback";
 import { AdminPage, PageHeader } from "@/components/admin/layout";
@@ -19,57 +20,35 @@ import { ApiError } from "@/lib/api/error";
 import { cn } from "@/lib/cn";
 import { actionErrorMessage, useBookingActions } from "../hooks/use-booking-actions";
 import { useBookingQuery } from "../hooks/use-bookings";
-import { useNow } from "../hooks/use-now";
-import { bookingLabels, canMarkNoShow, canMoveTo, conditionLabels, distanceTravelled, durationLabel, fmtDateTime, fmtTime, fuelLabels, isOverdue, lateMinutes, vehiclePhoto } from "../lib/booking-model";
-import type { Booking, BookingStatus } from "../types/booking";
+import { bookingLabels, canMoveTo, conditionLabels, durationLabel, fmtDateTime, fmtTime, fuelLabels, vehiclePhoto } from "../lib/booking-model";
+import type { Booking } from "../types/booking";
 import { CancelBookingDialog, NoShowDialog, UpdateStatusModal } from "./booking-dialogs";
 import { CompleteBookingDialog, HandoverDrawer, ReturnInspectionDrawer } from "./rental-operation-drawers";
 
-const path: BookingStatus[] = ["confirmed", "ready_for_pickup", "active", "returned", "completed"];
-const stepMeta: Record<string, { title: string; icon: ReactNode; waiting: (booking: Booking) => string }> = {
-  confirmed: { title: "Booking Confirmed", icon: <CheckIcon size={16} />, waiting: () => "Not confirmed yet" },
-  ready_for_pickup: { title: "Ready for Pickup", icon: <PackageIcon size={16} />, waiting: (booking) => `Pickup ${fmtDateTime(booking.pickupAt)} ICT` },
-  active: { title: "Vehicle Handed Over", icon: <KeyIcon size={16} />, waiting: () => "Awaiting handover" },
-  returned: { title: "Vehicle Returned", icon: <ClockCountdownIcon size={16} />, waiting: (booking) => `Expected ${fmtDateTime(booking.returnAt)} ICT` },
-  completed: { title: "Booking Completed", icon: <FlagCheckeredIcon size={16} />, waiting: () => "After return inspection" },
-};
-
 function buildTimeline(booking: Booking): ActivityItem[] {
-  const at = (iso: string) => `${fmtDateTime(iso)} ICT`;
-  const eventFor = (status: string) => booking.events.find((event) => event.toStatus === status);
-  const created: ActivityItem = { id: "created", state: "done", title: "Booking Created", time: at(booking.createdAt), icon: <CalendarCheckIcon size={16} /> };
-  const paid = ["paid", "refunded", "partially_refunded"].includes(booking.paymentStatus);
-  const payment: ActivityItem = paid
-    ? { id: "payment", state: "done", title: "Payment Received", time: "Recorded", icon: <WalletIcon size={16} /> }
-    : { id: "payment", state: booking.paymentStatus === "failed" ? "failed" : "current", title: booking.paymentStatus === "failed" ? "Payment Failed" : "Payment Pending", time: "Awaiting confirmation", icon: <WalletIcon size={16} /> };
-
-  const status = booking.bookingStatus;
-  const failedStep = (id: string, title: string, time: string, icon: ReactNode, detail?: string | null): ActivityItem => ({ id, state: "failed", title, time, icon, detail: detail ?? undefined });
-  if (status === "expired") return [created, failedStep("expired", "Expired", booking.holdExpiresAt ? at(booking.holdExpiresAt) : "Hold lapsed", <HourglassIcon size={16} />)];
-
-  const reached = path.indexOf(status);
-  const steps = path.filter((step) => path.indexOf(step) <= reached || eventFor(step)).map((step): ActivityItem => {
-    const event = eventFor(step);
-    const meta = stepMeta[step]!;
-    const time = step === "active" && booking.pickupInspection ? at(booking.pickupInspection.occurredAt) : step === "returned" && booking.returnInspection ? at(booking.returnInspection.occurredAt) : event ? at(event.at) : step === "confirmed" ? at(booking.createdAt) : "Recorded";
-    return { id: step, state: step === status ? "current" : "done", title: meta.title, icon: meta.icon, time, detail: event?.actor ? `by ${event.actor}${event.note ? ` — ${event.note}` : ""}` : event?.note ?? undefined };
-  });
-
-  if (status === "cancelled") return [created, payment, ...steps, failedStep("cancelled", "Cancelled", booking.cancelledAt ? at(booking.cancelledAt) : "Cancelled", <XCircleIcon size={16} />, booking.cancellationReason)];
-  if (status === "no_show") {
-    const event = eventFor("no_show");
-    return [created, payment, ...steps, failedStep("no-show", "No Show", event ? at(event.at) : at(booking.pickupAt), <XCircleIcon size={16} />, event?.note)];
-  }
-  const future = path.filter((step) => !steps.some((item) => item.id === step)).map((step): ActivityItem => ({ id: step, state: "future" as ActivityState, title: stepMeta[step]!.title, icon: stepMeta[step]!.icon, time: stepMeta[step]!.waiting(booking) }));
-  return [created, payment, ...steps, ...future];
+  const meta: Record<Booking["timeline"][number]["kind"], { title: string; icon: ReactNode; state?: ActivityState }> = {
+    created: { title: "Booking Created", icon: <CalendarCheckIcon size={16} /> },
+    payment_confirmed: { title: "Payment Received", icon: <WalletIcon size={16} /> },
+    confirmed: { title: "Booking Confirmed", icon: <CheckIcon size={16} /> },
+    ready_for_pickup: { title: "Ready for Pickup", icon: <PackageIcon size={16} /> },
+    handed_over: { title: "Vehicle Handed Over", icon: <KeyIcon size={16} /> },
+    rental_active: { title: "Rental Active", icon: <KeyIcon size={16} /> },
+    returned: { title: "Vehicle Returned", icon: <ClockCountdownIcon size={16} /> },
+    completed: { title: "Booking Completed", icon: <FlagCheckeredIcon size={16} /> },
+    cancelled: { title: "Cancelled", icon: <XCircleIcon size={16} />, state: "failed" },
+    expired: { title: "Expired", icon: <HourglassIcon size={16} />, state: "failed" },
+    no_show: { title: "No Show", icon: <XCircleIcon size={16} />, state: "failed" },
+  };
+  return booking.timeline.map((event, index) => ({
+    id: `${event.kind}-${event.at}-${index}`,
+    state: meta[event.kind].state ?? "done",
+    title: meta[event.kind].title,
+    detail: [event.note, event.actor].filter(Boolean).join(" · ") || undefined,
+    time: `${fmtDateTime(event.at)} ICT`,
+    icon: meta[event.kind].icon,
+  }));
 }
 
-function Card({ title, action, children, className }: { title: string; action?: ReactNode; children: ReactNode; className?: string }) {
-  return <section aria-label={title} className={cn("adminSurface rounded-2xl p-4 sm:p-5", className)}><header className="mb-4 flex items-center justify-between gap-3"><h2 className="text-sm font-extrabold">{title}</h2>{action}</header>{children}</section>;
-}
-function Row({ icon, label, children }: { icon: ReactNode; label: string; children: ReactNode }) {
-  return <div className="flex items-start gap-3"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[var(--admin-surface-muted)] text-[var(--admin-muted)]">{icon}</span><div className="min-w-0 flex-1"><dt className="text-[11px] font-medium text-[var(--admin-muted)]">{label}</dt><dd className="break-words text-sm font-semibold">{children}</dd></div></div>;
-}
 function PriceLine({ label, value, muted = false }: { label: string; value: ReactNode; muted?: boolean }) { return <div className={cn("flex items-center justify-between gap-3 text-sm", muted && "text-[var(--admin-muted)]")}><dt>{label}</dt><dd className="tabular-nums">{value}</dd></div>; }
 
 export function BookingDetail({ reference }: { reference: string }) {
@@ -85,7 +64,7 @@ export function BookingDetail({ reference }: { reference: string }) {
 
 function BookingWorkspace({ booking }: { booking: Booking }) {
   const router = useRouter();
-  const now = useNow();
+  const [now] = useState(() => Date.now());
   const actions = useBookingActions();
   const vehicles = useVehicleMutations();
   const statusModal = useOverlayState(); const cancelDialog = useOverlayState(); const noShowDialog = useOverlayState();
@@ -95,10 +74,10 @@ function BookingWorkspace({ booking }: { booking: Booking }) {
   const status = booking.bookingStatus;
   const sameLocation = booking.pickupLocation.id === booking.returnLocation.id;
   const held = status === "pending" && booking.holdExpiresAt && Date.parse(booking.holdExpiresAt) > now;
-  const overdue = isOverdue(booking, now); const distance = distanceTravelled(booking); const late = lateMinutes(booking, now);
+  const overdue = booking.isOverdue; const distance = booking.distanceKm; const late = booking.lateMinutes;
   const damage = booking.returnInspection?.damageFound ?? false;
   const canMaintain = status === "returned" && damage && vehicle.status !== "maintenance";
-  const noShow = canMarkNoShow(booking, now);
+  const noShow = booking.canMarkNoShow;
 
   const primaryAction = canMoveTo(booking, "confirmed") ? { label: "Confirm Booking", press: statusModal.open }
     : canMoveTo(booking, "ready_for_pickup") ? { label: "Mark Ready for Pickup", press: statusModal.open }

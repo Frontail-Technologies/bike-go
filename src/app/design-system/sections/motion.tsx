@@ -16,7 +16,7 @@ import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Switch } from "@/components/ui/selection-controls";
 import { Tabs } from "@/components/ui/tabs";
 import { type Booking, bookings, dashboardStats, motorcycles } from "@/features/mock/data";
-import { formatDate } from "@/lib/format";
+import { formatDate } from "@/lib/date";
 import { cn } from "@/lib/cn";
 import { Demo, Section } from "../section";
 
