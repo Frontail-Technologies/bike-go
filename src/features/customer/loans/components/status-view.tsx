@@ -10,6 +10,7 @@ import { Spinner } from "@heroui/react";
 import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { EmptyState } from "@/components/ui/empty-state";
+import { BlockSkeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/toast";
 import { formatDay } from "@/features/customer/bookings/lib/dates";
 import { formatMoney } from "@/lib/format";
@@ -99,6 +100,17 @@ export function LoanStatusView({ reference }: { reference: string }) {
   const resubmit = useResubmitLoanMutation();
 
   const back = justApplied === reference ? () => router.replace("/loans") : undefined;
+
+  if (loan.isPending) {
+    return (
+      <>
+        <AppBar leading="back" backFallback="/loans" title={t("stTitle")} />
+        <Screen enter="slide">
+          <BlockSkeleton className="h-96 w-full" />
+        </Screen>
+      </>
+    );
+  }
 
   if (!application) {
     return (

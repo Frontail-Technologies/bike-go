@@ -6,6 +6,7 @@ import { DesktopTitle, Screen } from "@/components/shared/screen";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { ButtonLink } from "@/components/ui/button-link";
 import { EmptyState } from "@/components/ui/empty-state";
+import { BlockSkeleton } from "@/components/ui/skeleton";
 import { useTranslations } from "@/i18n/hooks";
 import { ApplicationCard } from "./application-card";
 import { useLoansQuery } from "../hooks/use-loans";
@@ -25,7 +26,11 @@ export function ApplicationsView() {
         </div>
         <DesktopTitle title={t("applicationsTitle")} subtitle={t("applicationsSub")} />
 
-        {applications.length === 0 ? (
+        {loans.isPending ? (
+          <div className="flex flex-col gap-3 md:grid md:grid-cols-2" role="status" aria-label={t("applicationsTitle")}>
+            {Array.from({ length: 2 }, (_, i) => <BlockSkeleton key={i} className="h-32 w-full" />)}
+          </div>
+        ) : applications.length === 0 ? (
           <EmptyState
             icon={<BankIcon size={28} />}
             title={t("applicationsEmptyTitle")}

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import { AppBar } from "@/components/shared/app-bar";
 import { Screen, ScreenFooter } from "@/components/shared/screen";
+import { Spinner } from "@heroui/react";
 import { Button } from "@/components/ui/button";
 import { useVehicleModelsQuery } from "@/features/customer/vehicles/hooks/use-vehicles";
 import { useBack } from "@/hooks/use-back";
@@ -72,8 +73,9 @@ export function FiltersScreen({ initialMasters }: { initialMasters: VehicleFilte
         <BikeFilters value={filters} onChange={(next) => browseStore.update((s) => ({ ...s, filters: next }))} initialMasters={initialMasters} />
       </Screen>
       <ScreenFooter>
-        <Button size="lg" fullWidth isDisabled={count === 0} onPress={back}>
-          {count === 0 ? t("noBikesMatch") : t("showBikes", { count })}
+        <Button size="lg" fullWidth isPending={vehicles.isPending} isDisabled={vehicles.isPending || count === 0} onPress={back}>
+          {vehicles.isPending ? <Spinner color="current" size="sm" /> : null}
+          {vehicles.isPending ? t("loading") : count === 0 ? t("noBikesMatch") : t("showBikes", { count })}
         </Button>
       </ScreenFooter>
     </>

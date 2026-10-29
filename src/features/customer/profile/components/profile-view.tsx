@@ -30,6 +30,7 @@ import { DesktopTitle, Screen } from "@/components/shared/screen";
 import { Button, IconButton } from "@/components/ui/button";
 import { ModalDialog } from "@/components/ui/modal-dialog";
 import { Switch } from "@/components/ui/selection-controls";
+import { BlockSkeleton } from "@/components/ui/skeleton";
 import { TextInput } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { Reveal } from "@/components/motion/reveal";
@@ -169,10 +170,17 @@ export function ProfileView() {
                 {avatarUrl ? <Avatar.Image src={avatarUrl} alt="" referrerPolicy="no-referrer" /> : null}
                 <Avatar.Fallback className="bg-ink text-lg font-bold text-white">{profile.name ? initials(profile.name) : "?"}</Avatar.Fallback>
               </Avatar>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-base font-bold">{displayName || "—"}</p>
-                {secondaryLine ? <p className="truncate text-sm text-subtle">{secondaryLine}</p> : null}
-              </div>
+              {profileQuery.isPending ? (
+                <div className="flex min-w-0 flex-1 flex-col gap-2" role="status" aria-label={t("yourDetails")}>
+                  <BlockSkeleton className="h-5 w-2/3" />
+                  <BlockSkeleton className="h-4 w-1/2" />
+                </div>
+              ) : (
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-base font-bold">{displayName || "—"}</p>
+                  {secondaryLine ? <p className="truncate text-sm text-subtle">{secondaryLine}</p> : null}
+                </div>
+              )}
               <Button variant="secondary" size="sm" onPress={() => setModal("edit")} aria-label={t("editDetails")}>
                 <PencilSimpleIcon size={20} />
                 <span className="hidden sm:inline">{t("edit")}</span>
@@ -181,7 +189,9 @@ export function ProfileView() {
           </Reveal>
 
           <SectionCard id="licence-title" title={t("drivingLicence")}>
-            {profile.licence ? (
+            {profileQuery.isPending ? (
+              <BlockSkeleton className="h-24 w-full" />
+            ) : profile.licence ? (
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-3">
                   <span className="flex size-10 shrink-0 items-center justify-center rounded-control bg-brand-soft">
@@ -250,7 +260,9 @@ export function ProfileView() {
           </SectionCard>
 
           <SectionCard id="loans-title" title={t("loanApplications")}>
-            {applications.length > 0 ? (
+            {loans.isPending ? (
+              <BlockSkeleton className="h-24 w-full" />
+            ) : applications.length > 0 ? (
               <div className="flex flex-col gap-3">
                 {applications.slice(0, 3).map((application) => (
                   <ApplicationCard key={application.reference} application={application} />
