@@ -4,7 +4,7 @@ import { Button, Drawer, useOverlayState } from "@heroui/react";
 import { ArrowCounterClockwiseIcon, SlidersHorizontalIcon } from "@phosphor-icons/react";
 import type { ColumnDef, OnChangeFn, SortingState } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
-import { startTransition, useEffect, useState } from "react";
+
 import { PaymentStatusBadge } from "@/components/admin/bookings/booking-parts";
 import { AdminSearch, AdminSelect } from "@/components/admin/controls";
 import { CustomerAvatar } from "@/components/admin/customers/customer-avatar";
@@ -17,6 +17,7 @@ import { PAYMENT_PAGE_SIZE, usePaymentListState } from "../hooks/use-payment-lis
 import { usePaymentMethodsQuery, usePaymentsQuery } from "../hooks/use-payments";
 import { badgeStatus, fmtShort, providerLabel, statusLabels } from "../lib/payment-model";
 import { paymentStatuses, type Payment, type PaymentCurrency, type PaymentSort, type PaymentStatus, type PaymentWindow } from "../types/payment";
+import { useUrlSearchInput } from "@/hooks/use-url-search-input";
 
 const all = "all";
 const dateOptions = [
@@ -43,15 +44,7 @@ export function PaymentList() {
   const { params } = state;
   const query = usePaymentsQuery(params);
   const methods = usePaymentMethodsQuery();
-  const [searchText, setSearchText] = useState(params.q ?? "");
-
-  // The URL is the source of truth; keep the input in step when it changes from outside (reset, back/forward).
-  useEffect(() => { startTransition(() => setSearchText(params.q ?? "")); }, [params.q]);
-  useEffect(() => {
-    if (searchText.trim() === (params.q ?? "")) return;
-    const timer = window.setTimeout(() => state.setFilters({ q: searchText.trim() || undefined }), 300);
-    return () => window.clearTimeout(timer);
-  }, [searchText]);
+  const [searchText, setSearchText] = useUrlSearchInput(params.q, (q) => state.setFilters({ q }));
 
   const rows = query.data?.data ?? [];
   const total = query.data?.meta.total ?? 0;

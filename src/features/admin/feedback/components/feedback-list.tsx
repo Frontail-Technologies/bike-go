@@ -2,7 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
-import { startTransition, useEffect, useState } from "react";
+
 import { AdminSearch, AdminSelect, formatCambodiaDate } from "@/components/admin/controls";
 import { AdminDataTable } from "@/components/admin/data-display/admin-data-table";
 import { AdminStatusBadge } from "@/components/admin/data-display/status-badge";
@@ -13,6 +13,7 @@ import { FEEDBACK_PAGE_SIZE, useFeedbackListState } from "../hooks/use-feedback-
 import { useFeedbackQuery } from "../hooks/use-feedback";
 import { categoryLabels, ticketBadge } from "../lib/feedback-model";
 import { supportTicketCategories, supportTicketStatuses, type SupportTicket, type SupportTicketCategory, type SupportTicketStatus } from "../types/feedback";
+import { useUrlSearchInput } from "@/hooks/use-url-search-input";
 
 const all = "all";
 
@@ -21,14 +22,7 @@ export function FeedbackList() {
   const state = useFeedbackListState();
   const { params } = state;
   const query = useFeedbackQuery(params);
-  const [searchText, setSearchText] = useState(params.q ?? "");
-
-  useEffect(() => { startTransition(() => setSearchText(params.q ?? "")); }, [params.q]);
-  useEffect(() => {
-    if (searchText.trim() === (params.q ?? "")) return;
-    const timer = window.setTimeout(() => state.setFilters({ q: searchText.trim() || undefined }), 300);
-    return () => window.clearTimeout(timer);
-  }, [searchText]);
+  const [searchText, setSearchText] = useUrlSearchInput(params.q, (q) => state.setFilters({ q }));
 
   const rows = query.data?.data ?? [];
   const total = query.data?.meta.total ?? 0;

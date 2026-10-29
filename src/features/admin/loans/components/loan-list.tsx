@@ -4,7 +4,7 @@ import { Button, Drawer, useOverlayState } from "@heroui/react";
 import { ArrowCounterClockwiseIcon, CheckCircleIcon, FileTextIcon, HourglassIcon, SlidersHorizontalIcon, XCircleIcon } from "@phosphor-icons/react";
 import type { ColumnDef, OnChangeFn, SortingState } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
-import { startTransition, useEffect, useState } from "react";
+
 import { AdminSearch, AdminSelect } from "@/components/admin/controls";
 import { CustomerAvatar } from "@/components/admin/customers/customer-avatar";
 import { AdminDataTable } from "@/components/admin/data-display/admin-data-table";
@@ -19,6 +19,7 @@ import { useLoansQuery, useLoanStatsQuery } from "../hooks/use-loans";
 import { employmentLabels, loanStatusLabels, loanTypeLabel } from "../lib/loan-model";
 import { loanStatuses, loanTypes, type Loan, type LoanCurrency, type LoanSort, type LoanStatus, type LoanType, type SubmittedWindow } from "../types/loan";
 import { fmtDateTime } from "./loan-format";
+import { useUrlSearchInput } from "@/hooks/use-url-search-input";
 
 const all = "all";
 const dateOptions = [
@@ -45,15 +46,7 @@ export function LoanList() {
   const { params } = state;
   const query = useLoansQuery(params);
   const stats = useLoanStatsQuery();
-  const [searchText, setSearchText] = useState(params.q ?? "");
-
-  // The URL is the source of truth; keep the input in step when it changes from outside (reset, back/forward).
-  useEffect(() => { startTransition(() => setSearchText(params.q ?? "")); }, [params.q]);
-  useEffect(() => {
-    if (searchText.trim() === (params.q ?? "")) return;
-    const timer = window.setTimeout(() => state.setFilters({ q: searchText.trim() || undefined }), 300);
-    return () => window.clearTimeout(timer);
-  }, [searchText]);
+  const [searchText, setSearchText] = useUrlSearchInput(params.q, (q) => state.setFilters({ q }));
 
   const rows = query.data?.data ?? [];
   const total = query.data?.meta.total ?? 0;

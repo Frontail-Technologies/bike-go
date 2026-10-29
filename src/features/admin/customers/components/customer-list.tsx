@@ -4,7 +4,7 @@ import { Button, Drawer, useOverlayState } from "@heroui/react";
 import { ArrowCounterClockwiseIcon, CalendarCheckIcon, CarProfileIcon, SlidersHorizontalIcon, UserPlusIcon, UsersIcon } from "@phosphor-icons/react";
 import type { ColumnDef, OnChangeFn, SortingState } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
-import { startTransition, useEffect, useState } from "react";
+import { useState } from "react";
 import { AdminSearch, AdminSelect, formatCambodiaDate } from "@/components/admin/controls";
 import { CustomerAvatar } from "@/components/admin/customers/customer-avatar";
 import { AdminDataTable } from "@/components/admin/data-display/admin-data-table";
@@ -19,6 +19,7 @@ import { useCustomerLoader, useCustomerStatsQuery, useCustomersQuery } from "../
 import type { Customer, CustomerStatus, CustomerSummary, JoinedWindow } from "../types/customer";
 import { CustomerActions } from "./admin-customer-card";
 import { CustomerEditDrawer } from "./customer-edit-drawer";
+import { useUrlSearchInput } from "@/hooks/use-url-search-input";
 
 const all = "all";
 
@@ -38,16 +39,9 @@ export function CustomerList() {
   const query = useCustomersQuery(params);
   const stats = useCustomerStatsQuery();
   const loadCustomer = useCustomerLoader();
-  const [searchText, setSearchText] = useState(params.q ?? "");
+  const [searchText, setSearchText] = useUrlSearchInput(params.q, (q) => state.setFilters({ q }));
   const [editing, setEditing] = useState<Customer | null>(null);
 
-  // The URL is the source of truth; keep the input in step when it changes from outside (reset, back/forward).
-  useEffect(() => { startTransition(() => setSearchText(params.q ?? "")); }, [params.q]);
-  useEffect(() => {
-    if (searchText.trim() === (params.q ?? "")) return;
-    const timer = window.setTimeout(() => state.setFilters({ q: searchText.trim() || undefined }), 300);
-    return () => window.clearTimeout(timer);
-  }, [searchText]);
 
   const rows = query.data?.data ?? [];
   const total = query.data?.meta.total ?? 0;

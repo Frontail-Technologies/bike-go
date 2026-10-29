@@ -22,6 +22,7 @@ import { vehicleStatuses, vehicleTypes, type Vehicle, type VehicleSortBy, type V
 import { AdminVehicleCard } from "./admin-vehicle-card";
 import { VehicleActions } from "./vehicle-actions";
 import { VehiclePhoto } from "@/components/admin/vehicles/vehicle-photo";
+import { useUrlSearchInput } from "@/hooks/use-url-search-input";
 
 type ViewMode = "table" | "cards";
 
@@ -37,16 +38,9 @@ export function VehicleList() {
   const locationsQuery = useLocationsQuery();
   const [view, setView] = useState<ViewMode>("table");
   const [changing, setChanging] = useState<Vehicle | null>(null);
-  const [searchText, setSearchText] = useState(params.q ?? "");
+  const [searchText, setSearchText] = useUrlSearchInput(params.q, (q) => state.setFilters({ q }));
 
   useEffect(() => { const saved = window.localStorage.getItem("ridego-admin-vehicle-view"); if (saved === "table" || saved === "cards") startTransition(() => setView(saved)); }, []);
-  // The URL is the source of truth; keep the input in step when it changes from outside (reset, back/forward).
-  useEffect(() => { startTransition(() => setSearchText(params.q ?? "")); }, [params.q]);
-  useEffect(() => {
-    if (searchText.trim() === (params.q ?? "")) return;
-    const timer = window.setTimeout(() => state.setFilters({ q: searchText.trim() || undefined }), 300);
-    return () => window.clearTimeout(timer);
-  }, [searchText]);
   function changeView(next: ViewMode) { setView(next); window.localStorage.setItem("ridego-admin-vehicle-view", next); }
 
   const rows = query.data?.data ?? [];

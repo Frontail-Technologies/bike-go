@@ -4,7 +4,7 @@ import { Drawer, useOverlayState } from "@heroui/react";
 import { ArrowCounterClockwiseIcon, SlidersHorizontalIcon } from "@phosphor-icons/react";
 import type { ColumnDef, OnChangeFn, SortingState } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
-import { startTransition, useEffect, useState } from "react";
+import { useState } from "react";
 import { PaymentStatusBadge } from "@/components/admin/bookings/booking-parts";
 import { AdminButton as Button, AdminSearch, AdminSelect } from "@/components/admin/controls";
 import { CustomerAvatar } from "@/components/admin/customers/customer-avatar";
@@ -23,6 +23,7 @@ import { bookingLabels, fmtDate, fmtShort, paymentLabels, vehiclePhoto } from ".
 import { bookingStatuses, paymentStatuses, type Booking, type BookingSort, type BookingStatus, type PaymentStatus, type PickupWindow } from "../types/booking";
 import { BookingActions, type BookingHandlers, BookingOperationalStatus } from "./booking-actions";
 import { CancelBookingDialog, NoShowDialog, UpdateStatusModal } from "./booking-dialogs";
+import { useUrlSearchInput } from "@/hooks/use-url-search-input";
 
 const all = "all";
 const overdueValue = "overdue";
@@ -59,15 +60,7 @@ export function BookingList() {
   const actions = useBookingActions();
   const [target, setTarget] = useState<Booking | null>(null);
   const [initialStatus, setInitialStatus] = useState<BookingStatus | null>(null);
-  const [searchText, setSearchText] = useState(params.q ?? "");
-
-  // The URL is the source of truth; keep the input in step when it changes from outside (reset, back/forward).
-  useEffect(() => { startTransition(() => setSearchText(params.q ?? "")); }, [params.q]);
-  useEffect(() => {
-    if (searchText.trim() === (params.q ?? "")) return;
-    const timer = window.setTimeout(() => state.setFilters({ q: searchText.trim() || undefined }), 300);
-    return () => window.clearTimeout(timer);
-  }, [searchText]);
+  const [searchText, setSearchText] = useUrlSearchInput(params.q, (q) => state.setFilters({ q }));
 
   const rows = query.data?.data ?? [];
   const total = query.data?.meta.total ?? 0;

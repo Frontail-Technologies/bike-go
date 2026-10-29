@@ -5,7 +5,7 @@ import { ArrowCounterClockwiseIcon, ArrowSquareOutIcon, DotsThreeVerticalIcon, D
 import type { ColumnDef, OnChangeFn, SortingState } from "@tanstack/react-table";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { startTransition, useEffect, useState } from "react";
+import { useState } from "react";
 import { AdminSearch, AdminSelect } from "@/components/admin/controls";
 import { CustomerAvatar } from "@/components/admin/customers/customer-avatar";
 import { AdminDataTable } from "@/components/admin/data-display/admin-data-table";
@@ -19,6 +19,7 @@ import { DOCUMENT_PAGE_SIZE, useDocumentListState } from "../hooks/use-document-
 import { useDocumentsQuery, useDocumentStatsQuery } from "../hooks/use-documents";
 import type { ReviewDocument, UploadedWindow } from "../types/document";
 import { DocumentTypeIcon, fmtShort, isPdf, ReviewStatusBadge } from "./document-parts";
+import { useUrlSearchInput } from "@/hooks/use-url-search-input";
 
 const DocumentReviewDrawer = dynamic(() => import("./document-review-drawer").then((module) => module.DocumentReviewDrawer));
 
@@ -35,15 +36,7 @@ export function DocumentList({ initialId }: { initialId?: string }) {
   const query = useDocumentsQuery(params);
   const stats = useDocumentStatsQuery();
   const [selectedId, setSelectedId] = useState<string | null>(initialId ?? null);
-  const [searchText, setSearchText] = useState(params.q ?? "");
-
-  // The URL is the source of truth; keep the input in step when it changes from outside (reset, back/forward).
-  useEffect(() => { startTransition(() => setSearchText(params.q ?? "")); }, [params.q]);
-  useEffect(() => {
-    if (searchText.trim() === (params.q ?? "")) return;
-    const timer = window.setTimeout(() => state.setFilters({ q: searchText.trim() || undefined }), 300);
-    return () => window.clearTimeout(timer);
-  }, [searchText]);
+  const [searchText, setSearchText] = useUrlSearchInput(params.q, (q) => state.setFilters({ q }));
 
   const rows = query.data?.data ?? [];
   const total = query.data?.meta.total ?? 0;

@@ -22,6 +22,7 @@ import { BannerImage } from "./banner-image";
 import { BannerOrder } from "./banner-order";
 import { BannerActions, type BannerHandlers, PlacementBadge } from "./banner-parts";
 import { BannerPreview } from "./banner-preview";
+import { useUrlSearchInput } from "@/hooks/use-url-search-input";
 
 const all = "all";
 type ViewMode = "table" | "cards";
@@ -45,7 +46,7 @@ export function BannerWorkspace() {
   const mutations = useBannerMutations();
   const [view, setView] = useState<ViewMode>("table");
   const [tab, setTab] = useState("banners");
-  const [searchText, setSearchText] = useState(params.q ?? "");
+  const [searchText, setSearchText] = useUrlSearchInput(params.q, (q) => state.setFilters({ q }));
   const [previewing, setPreviewing] = useState<Banner | null>(null);
   const [deactivating, setDeactivating] = useState<Banner | null>(null);
   const [deleting, setDeleting] = useState<Banner | null>(null);
@@ -55,13 +56,6 @@ export function BannerWorkspace() {
     const next: ViewMode = saved === "table" || saved === "cards" ? saved : window.innerWidth < 768 ? "cards" : "table";
     startTransition(() => setView(next));
   }, []);
-  // The URL is the source of truth; keep the input in step when it changes from outside (reset, back/forward).
-  useEffect(() => { startTransition(() => setSearchText(params.q ?? "")); }, [params.q]);
-  useEffect(() => {
-    if (searchText.trim() === (params.q ?? "")) return;
-    const timer = window.setTimeout(() => state.setFilters({ q: searchText.trim() || undefined }), 300);
-    return () => window.clearTimeout(timer);
-  }, [searchText]);
   function changeView(next: ViewMode) { setView(next); window.localStorage.setItem("ridego-admin-banner-view", next); }
 
   const rows = query.data?.data ?? [];
