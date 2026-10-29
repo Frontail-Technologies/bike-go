@@ -45,6 +45,8 @@ export type CustomerBooking = {
   reference: string;
   bikeId: string;
   status: BookingStatus;
+  apiStatus: ApiBookingStatus;
+  pickupPlace: { name: string; address: string };
   startDate: string;
   endDate: string;
   pickupTime: string;

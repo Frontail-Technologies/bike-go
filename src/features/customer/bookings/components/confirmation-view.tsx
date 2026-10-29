@@ -93,8 +93,8 @@ export function ConfirmationView({ reference }: { reference: string }) {
         <p className="flex items-start gap-3">
           <MapPinIcon size={20} weight="fill" className="mt-0.5 shrink-0" />
           <span>
-            <span className="block font-bold">{booking.city}</span>
-            <span className="block text-subtle">RideGo pickup location</span>
+            <span className="block font-bold">{booking.pickupPlace.name}</span>
+            <span className="block text-subtle">{booking.pickupPlace.address}</span>
           </span>
         </p>
         <p className="flex items-center gap-3 text-subtle">

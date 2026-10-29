@@ -74,6 +74,8 @@ export function apiBookingToView(value: ApiBooking): { booking: CustomerBooking;
     reference: value.reference,
     bikeId: value.vehicle.slug,
     status: status(value.bookingStatus),
+    apiStatus: value.bookingStatus,
+    pickupPlace: { name: value.pickupLocation.name, address: value.pickupLocation.address },
     startDate: value.pickupAt,
     endDate: value.returnAt,
     pickupTime: new Date(value.pickupAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "Asia/Phnom_Penh" }),

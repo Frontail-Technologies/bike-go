@@ -18,7 +18,7 @@ export function timelineFor(b: CustomerBooking, t: T): Step[] {
     return [booked, { title: t("tlCancelled"), detail: b.cancelledAt ? formatDay(b.cancelledAt.slice(0, 10)) : t("tlCancelledDetail"), state: "cancelled" }];
   }
 
-  const rank = { upcoming: 1, ongoing: 2, completed: 4 }[b.status];
+  const rank = b.apiStatus === "returned" ? 4 : { upcoming: 1, ongoing: 2, completed: 4 }[b.status];
   const state = (index: number): StepState => (index < rank ? "done" : index === rank ? "current" : "todo");
 
   return [
