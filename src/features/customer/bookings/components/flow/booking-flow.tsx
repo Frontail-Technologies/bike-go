@@ -1,61 +1,66 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useMemo, useState } from "react";
 import { BookingSummary } from "@/components/customer/booking-summary";
-import { LoadingRegion } from "@/components/ui/loading-region";
 import { BrandLoader } from "@/components/customer/brand-loader";
 import { AppBar } from "@/components/shared/app-bar";
 import { BikeImage } from "@/components/shared/bike-image";
 import { DesktopTitle, Screen } from "@/components/shared/screen";
+import { LoadingRegion } from "@/components/ui/loading-region";
+import { toast } from "@/components/ui/toast";
+import { useBookingQuoteQuery } from "@/features/customer/bookings/hooks/use-booking-quote";
+import { useBookingAddonsQuery, useCreateBookingMutation } from "@/features/customer/bookings/hooks/use-bookings";
+import { bookingQuoteToView, estimateBookingQuote } from "@/features/customer/bookings/lib/booking-mapper";
 import { rentalDaysBetween } from "@/features/customer/bookings/lib/dates";
 import { quoteLines, type Quote } from "@/features/customer/bookings/lib/pricing";
-import { formatMoney } from "@/lib/format";
 import { draftStore, justBookedStore } from "@/features/customer/bookings/stores/booking-draft-store";
 import type { BookingDraft } from "@/features/customer/bookings/types";
+import { showBrowserNotification } from "@/features/customer/notifications/lib/browser-notifications";
+import { useCustomerProfileQuery, useUpdateCustomerProfileMutation } from "@/features/customer/profile/hooks/use-profile";
+import { profileStore } from "@/features/customer/profile/stores/preferences-store";
 import type { Motorcycle } from "@/features/customer/vehicles/lib/view-model";
 import type { Vehicle } from "@/features/customer/vehicles/types";
+import { useTranslations } from "@/i18n/hooks";
+import { cambodiaRentalDateTime } from "@/lib/cambodia-time";
+import { LicenceNote, RiderDetails, TripSection, type RiderValues } from "./checkout-sections";
+import { FlowFooter } from "./flow-footer";
 
 export type BookingTarget =
   | { kind: "vehicle"; vehicle: Vehicle }
   | { kind: "group"; group: { brand: string; model: string; locationId: string } };
-import { useCustomerProfileQuery } from "@/features/customer/profile/hooks/use-profile";
-import { useBookingAddonsQuery, useCreateBookingMutation } from "@/features/customer/bookings/hooks/use-bookings";
-import { useBookingQuoteQuery } from "@/features/customer/bookings/hooks/use-booking-quote";
-import { bookingQuoteToView, estimateBookingQuote } from "@/features/customer/bookings/lib/booking-mapper";
-import { cambodiaRentalDateTime } from "@/lib/cambodia-time";
-import { useHydrated } from "@/hooks/use-hydrated";
-import { useTranslations } from "@/i18n/hooks";
-import { BookingProgress, flowSteps } from "./booking-progress";
-import { profileStore } from "@/features/customer/profile/stores/preferences-store";
-import { showBrowserNotification } from "@/features/customer/notifications/lib/browser-notifications";
-import { FlowFooter } from "./flow-footer";
-import { DatesStep, LicenceStep, PaymentStep, RiderStep, ReviewStep, licenceStepValid, riderStepValid } from "./steps";
 
-const LAST_STEP = flowSteps.length;
 const EMPTY_QUOTE: Quote = { days: 0, rental: 0, helmet: 0, jacket: 0, tax: 0, fee: 0, deposit: 0, payable: 0, taxRate: 0 };
+const CHECKOUT_FORM = "checkout-form";
 
-const clampStep = (n: number) => Math.max(1, Math.min(LAST_STEP, Number.isFinite(n) ? n : 1));
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="flex flex-col gap-3">
+      <h2 className="text-base font-bold">{title}</h2>
+      {children}
+    </section>
+  );
+}
 
-export function BookingFlow({ bike, target, detailsHref, bookHref }: { bike: Motorcycle; target: BookingTarget; detailsHref: string; bookHref: string }) {
+/**
+ * One-page checkout: trip (dates arrive from the bike page) and add-ons, the rider (pre-filled
+ * from the profile), the licence status, then a single "Confirm booking". Payment happens on
+ * the confirmation page.
+ */
+export function BookingFlow({ bike, target, detailsHref }: { bike: Motorcycle; target: BookingTarget; detailsHref: string }) {
   const router = useRouter();
   const params = useSearchParams();
-  const pathname = usePathname();
-  const hydrated = useHydrated();
   const t = useTranslations("booking");
   const common = useTranslations("common");
   const profile = useCustomerProfileQuery();
+  const updateProfile = useUpdateCustomerProfileMutation();
   const createBooking = useCreateBookingMutation();
   const addonsQuery = useBookingAddonsQuery();
   const stored = draftStore.useValue();
-  const justBooked = justBookedStore.useValue();
-  const [agreed, setAgreed] = useState(false);
   const [completing, setCompleting] = useState(false);
-  const paid = useRef(false);
 
-  const hasStored = stored?.bikeId === bike.id;
-  const draft: BookingDraft = hasStored
-    ? stored!
+  const draft: BookingDraft = stored?.bikeId === bike.id
+    ? stored
     : {
         bikeId: bike.id,
         start: params.get("start"),
@@ -63,13 +68,9 @@ export function BookingFlow({ bike, target, detailsHref, bookHref }: { bike: Mot
         pickupTime: params.get("pt") ?? "10:00 AM",
         dropTime: params.get("dt") ?? "10:00 AM",
         addOns: {},
-        rider: { name: profile.data?.fullName ?? "", phone: profile.data?.phone ?? "", email: profile.data?.email ?? "" },
-        licenceNumber: "",
-        licenceLater: false,
-        payment: "aba-khqr",
       };
-
   const patch = (partial: Partial<BookingDraft>) => draftStore.set({ ...draft, ...partial });
+
   const hasDates = Boolean(draft.start && draft.end);
   const days = hasDates ? rentalDaysBetween(draft.start!, draft.end!) : 0;
   const locationId = target.kind === "vehicle" ? target.vehicle.location.id : target.group.locationId;
@@ -88,51 +89,27 @@ export function BookingFlow({ bike, target, detailsHref, bookHref }: { bike: Mot
   const quote = quoteQuery.data && !quoteQuery.isFetching ? bookingQuoteToView(quoteQuery.data) : optimisticQuote;
   const overlaps = quoteQuery.isError;
 
-  const maxStep = !hasDates || overlaps || !hasStored ? 1 : !riderStepValid(draft) ? 2 : !licenceStepValid(draft) ? 3 : agreed ? LAST_STEP : 4;
-  const requested = clampStep(Number(params.get("step") ?? 1));
-  const step = Math.min(requested, maxStep);
+  const rider: RiderValues = { name: profile.data?.fullName ?? "", phone: profile.data?.phone ?? "" };
 
-  const withStep = (n: number) => {
-    const qs = new URLSearchParams(params.toString());
-    qs.set("step", String(n));
-    return `?${qs}`;
-  };
-
-  const flowPath = bookHref;
-  useEffect(() => {
-    if (pathname !== flowPath) paid.current = false;
-  }, [pathname, flowPath]);
-
-  useEffect(() => {
-    if (!hydrated || pathname !== flowPath || paid.current || step === requested) return;
-    if (!hasStored && justBooked) router.replace(`/bookings/${justBooked}`);
-    else router.replace(withStep(step), { scroll: false });
-  }, [hydrated, pathname, step, requested, hasStored, justBooked]);
-
-  function go(next: number) {
-    if (!hasStored) {
-      draftStore.set(draft);
-      justBookedStore.set(null);
-    }
-    router.push(withStep(next), { scroll: false });
-  }
-
-  async function pay() {
+  async function confirm(values: RiderValues) {
     if (!bookingRequest) return;
     const idempotencyKey = draft.idempotencyKey ?? crypto.randomUUID();
     if (!draft.idempotencyKey) patch({ idempotencyKey });
     try {
+      // The rider is the account holder: keep the profile in step with what they confirmed.
+      if (values.name.trim() !== rider.name.trim() || values.phone.trim() !== rider.phone.trim()) {
+        await updateProfile.mutateAsync({ input: { fullName: values.name.trim(), phone: values.phone.trim() } });
+      }
       const booking = await createBooking.mutateAsync({ input: bookingRequest, idempotencyKey });
       if (profileStore.get().notifications.reminders) {
         void showBrowserNotification("Booking created", { body: `${bike.name} · ${booking.reference}`, tag: `booking-${booking.reference}`, data: { url: `/bookings/${booking.reference}` } });
       }
-      paid.current = true;
       setCompleting(true);
       draftStore.set(null);
       justBookedStore.set(booking.reference);
       router.replace(`/bookings/${booking.reference}/confirmation`);
-    } catch {
-      setCompleting(false);
+    } catch (error) {
+      toast.danger(error instanceof Error ? error.message : "The booking could not be created.");
     }
   }
 
@@ -144,70 +121,63 @@ export function BookingFlow({ bike, target, detailsHref, bookHref }: { bike: Mot
     );
   }
 
-  const footer =
-    step === 1 ? (
-      <FlowFooter label={t("continue")} amount={quote.payable} onPress={() => go(2)} isDisabled={!hasDates || overlaps || quoteQuery.isPending} />
-    ) : step === 2 ? (
-      <FlowFooter label={t("continue")} amount={quote.payable} formId="rider-form" />
-    ) : step === 3 ? (
-      <FlowFooter
-        label={t("continue")}
-        amount={quote.payable}
-        formId={draft.licenceLater ? undefined : "licence-form"}
-        onPress={draft.licenceLater ? () => go(4) : undefined}
-      />
-    ) : step === 4 ? (
-      <FlowFooter label={t("continueToPayment")} amount={quote.payable} onPress={() => go(5)} isDisabled={!agreed} />
-    ) : (
-      <FlowFooter label={`Create booking · ${formatMoney(quote.payable)}`} amount={quote.payable} onPress={() => void pay()} isPending={createBooking.isPending} isDisabled={!quoteQuery.data} />
-    );
+  const footer = (
+    <FlowFooter
+      label={t("confirmBooking")}
+      amount={quote.payable}
+      formId={CHECKOUT_FORM}
+      isPending={createBooking.isPending || updateProfile.isPending}
+      isDisabled={!hasDates || overlaps || !quoteQuery.data || profile.isPending}
+    />
+  );
+
+  const bikeCard = (
+    <div className="flex gap-3 rounded-card border border-line bg-surface p-3">
+      <div className="size-16 shrink-0 overflow-hidden rounded-control bg-canvas">
+        <BikeImage bike={bike} decorative sizes="64px" />
+      </div>
+      <div className="flex min-w-0 flex-col justify-center">
+        <p className="truncate text-sm font-bold">{bike.name}</p>
+        <p className="text-xs text-subtle">{hasDates ? common("days", { count: days }) : t("chooseDates")}</p>
+      </div>
+    </div>
+  );
 
   return (
     <>
-      <AppBar
-        leading="back"
-        backFallback={detailsHref}
-        onBack={step > 1 ? () => router.back() : undefined}
-        title={t("bookThisBike")}
-        subtitle={bike.name}
-      />
+      <AppBar leading="back" backFallback={detailsHref} title={t("bookThisBike")} subtitle={bike.name} />
 
       <Screen enter="slide" bottom="footer" className="flex flex-col gap-5 lg:pb-12">
         <DesktopTitle title={t("bookNamed", { name: bike.name })} />
-        <BookingProgress step={step - 1} />
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-10">
-          <section aria-label={t(flowSteps[step - 1]!)} className="min-w-0">
-            <div key={step} className="rgo-stack-in flex flex-col gap-5">
-              {step === 1 ? (
-                <>
-                  <DatesStep bike={bike} draft={draft} patch={patch} addons={addonsQuery.data ?? []} addonsPending={addonsQuery.isPending} />
-                  {overlaps ? (
-                    <p className="text-sm text-danger" role="alert">
-                      {t("conflict")}
-                    </p>
-                  ) : null}
-                </>
-              ) : null}
-              {step === 2 ? <RiderStep formId="rider-form" draft={draft} patch={patch} onValid={() => go(3)} /> : null}
-              {step === 3 ? <LicenceStep formId="licence-form" draft={draft} patch={patch} onValid={() => go(4)} /> : null}
-              {step === 4 ? <ReviewStep bike={bike} draft={draft} quote={quote} agreed={agreed} onAgree={setAgreed} /> : null}
-              {step === 5 ? <PaymentStep patch={patch} /> : null}
+          <div className="flex min-w-0 flex-col gap-6">
+            <div className="lg:hidden">{bikeCard}</div>
+
+            <Section title={t("sectionTrip")}>
+              <TripSection bike={bike} draft={draft} patch={patch} addons={addonsQuery.data ?? []} addonsPending={addonsQuery.isPending} />
+              {overlaps ? <p className="text-sm text-danger" role="alert">{t("conflict")}</p> : null}
+            </Section>
+
+            <Section title={t("sectionDetails")}>
+              {profile.isPending ? null : <RiderDetails formId={CHECKOUT_FORM} initial={rider} onSubmit={(values) => void confirm(values)} />}
+            </Section>
+
+            <Section title={t("reviewLicence")}>
+              <LicenceNote licence={profile.data?.licence ?? null} />
+            </Section>
+
+            <div className="lg:hidden">
+              <BookingSummary lines={quoteLines(quote)} totalLabel="totalPayable" />
             </div>
-            <div className="mt-6 hidden lg:block">{footer}</div>
-          </section>
+
+            <p className="text-xs text-subtle">{t("termsNote")}</p>
+            <div className="hidden lg:block">{footer}</div>
+          </div>
 
           <aside aria-label={t("priceSummary")} className="hidden lg:block">
             <div className="sticky top-24 flex flex-col gap-4">
-              <div className="flex gap-3 rounded-card border border-line bg-surface p-3">
-                <div className="size-16 shrink-0 overflow-hidden rounded-control bg-canvas">
-                  <BikeImage bike={bike} decorative sizes="64px" />
-                </div>
-                <div className="flex min-w-0 flex-col justify-center">
-                  <p className="truncate text-sm font-bold">{bike.name}</p>
-                  <p className="text-xs text-subtle">{hasDates ? common("days", { count: days }) : t("chooseDates")}</p>
-                </div>
-              </div>
+              {bikeCard}
               <BookingSummary lines={quoteLines(quote)} totalLabel="totalPayable" />
             </div>
           </aside>

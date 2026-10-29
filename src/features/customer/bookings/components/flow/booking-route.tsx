@@ -17,7 +17,6 @@ export function BookingRoute({ id }: { id: string }) {
         bike={bike}
         target={{ kind: "vehicle", vehicle: vehicle.data }}
         detailsHref={`/bikes/${bike.id}`}
-        bookHref={`/bikes/${bike.id}/book`}
       />
     </CustomerAuthBoundary>
   );

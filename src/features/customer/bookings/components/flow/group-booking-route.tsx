@@ -20,7 +20,6 @@ export function GroupBookingRoute({ groupSlug }: { groupSlug: string }) {
         bike={bike}
         target={{ kind: "group", group: { brand: group.data.brand, model: group.data.model, locationId } }}
         detailsHref={`/bikes/models/${groupSlug}`}
-        bookHref={`/bikes/models/${groupSlug}/book`}
       />
     </CustomerAuthBoundary>
   );

@@ -66,9 +66,5 @@ export type BookingDraft = {
   pickupTime: string;
   dropTime: string;
   addOns: AddOns;
-  rider: RiderDetails;
-  licenceNumber: string;
-  licenceLater: boolean;
-  payment: string;
   idempotencyKey?: string;
 };
