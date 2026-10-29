@@ -9,6 +9,10 @@ export function middleware(request: NextRequest) {
   const configuredAdminHost = process.env.ADMIN_HOST;
   const isAdminHost = configuredAdminHost ? host === configuredAdminHost : host.startsWith("admin.");
   const { pathname } = request.nextUrl;
+  // Public files (/hero/welcome.jpg), metadata routes (/manifest.webmanifest, /icon.svg) and Next
+  // internals are shared by both apps. Rewriting them into /admin/... would 404 them, including
+  // the image optimizer's own fetch of the source file.
+  if (pathname.startsWith("/_next/") || /\.\w+$/.test(pathname)) return NextResponse.next();
   const isAdminPath = pathname === "/admin" || pathname.startsWith("/admin/");
 
   if (isAdminHost) {
