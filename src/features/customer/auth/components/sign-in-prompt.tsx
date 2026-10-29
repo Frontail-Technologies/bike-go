@@ -79,8 +79,7 @@ export function SignInPrompt() {
           <Button
             onPress={() => {
               const target = safeCustomerReturnTo(returnTo);
-              close();
-              router.push(`/signin?returnTo=${encodeURIComponent(target)}`);
+              router.replace(`/signin?returnTo=${encodeURIComponent(target)}`);
             }}
           >
             <SignInIcon size={20} />
