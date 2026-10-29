@@ -1,4 +1,4 @@
-import { calculateEmi, type LoanApplication, type LoanStatus } from "./data";
+import { calculateEmi, experienceBandFor, getLoanType, type LoanApplication, type LoanStatus } from "./data";
 import { customerDocumentId } from "./document-types";
 import type { ApiLoan } from "../types";
 
@@ -21,10 +21,10 @@ export function apiLoanToApplication(loan: ApiLoan): LoanApplication {
     amount,
     tenure: loan.tenureMonths,
     purpose: loan.purpose ?? "other",
-    emi: calculateEmi(amount, 0, loan.tenureMonths).monthly,
+    emi: calculateEmi(amount, getLoanType(loan.loanType)?.apr ?? 0, loan.tenureMonths).monthly,
     status: status[loan.status],
     applicant: { fullName: loan.applicant.fullName ?? "", mobile: loan.applicant.mobile ?? "", email: loan.applicant.email ?? "", dob: loan.applicant.dateOfBirth ?? "", nationality: loan.applicant.nationality ?? "", city: loan.applicant.currentCity ?? "", residence: loan.applicant.residenceStatus ?? "" },
-    employment: { type: loan.employment.employmentType ?? "", employer: loan.employment.employerName ?? "", jobTitle: loan.employment.jobTitle ?? "", monthlyIncome: (loan.employment.monthlyIncomeMinor ?? 0) / 100, experience: String(loan.employment.workExperienceMonths ?? ""), bankAccount: loan.employment.hasActiveBankAccount ? "yes" : "no" },
+    employment: { type: loan.employment.employmentType ?? "", employer: loan.employment.employerName ?? "", jobTitle: loan.employment.jobTitle ?? "", monthlyIncome: (loan.employment.monthlyIncomeMinor ?? 0) / 100, experience: experienceBandFor(loan.employment.workExperienceMonths), bankAccount: loan.employment.hasActiveBankAccount ? "yes" : "no" },
     documents: Object.fromEntries(loan.documents.flatMap((document) => {
       const type = customerDocumentId(document.type);
       return type ? [[type, { name: document.originalFilename, size: document.sizeBytes }] as const] : [];

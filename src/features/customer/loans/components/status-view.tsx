@@ -164,7 +164,7 @@ export function LoanStatusView({ reference }: { reference: string }) {
             <div>
               <dt className="text-xs text-white/60">{t("stSubmitted")}</dt>
               <dd className="tabular font-bold">
-                {formatDay(application.createdAt.slice(0, 10))}, {created.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
+                {formatDay(created.toLocaleDateString("en-CA", { timeZone: "Asia/Phnom_Penh" }))}, {created.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "Asia/Phnom_Penh" })}
               </dd>
             </div>
             <div>

@@ -30,6 +30,7 @@ import {
   documentTypes,
   employmentTypes,
   experienceBands,
+  experienceMonths,
   getLoanType,
   loanPurposes,
   loanTypes,
@@ -54,7 +55,6 @@ import { justAppliedStore, loanDraftStore } from "../stores/loan-draft-store";
 const STEPS = ["applyStep1", "applyStep2", "applyStep3", "applyStep4", "applyStep5"] as const;
 const LAST_STEP = STEPS.length;
 const clampStep = (n: number) => Math.max(1, Math.min(LAST_STEP, Number.isFinite(n) ? n : 1));
-const experienceMonths: Record<string, number> = { "under-1": 6, "1-3": 24, "3-5": 48, "5-plus": 72 };
 
 const apiResidenceStatus = (value: string) => value.replaceAll("-", "_");
 const apiEmploymentType = (value: string) => value.replaceAll("-", "_");

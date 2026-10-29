@@ -31,6 +31,16 @@ export const employmentTypes = [{ id: "salaried" }, { id: "self-employed" }, { i
 
 export const experienceBands = [{ id: "under-1" }, { id: "1-3" }, { id: "3-5" }, { id: "5-plus" }];
 
+export const experienceMonths: Record<string, number> = { "under-1": 6, "1-3": 24, "3-5": 48, "5-plus": 72 };
+
+export function experienceBandFor(months: number | null | undefined) {
+  if (months === null || months === undefined) return "";
+  if (months < 12) return "under-1";
+  if (months < 36) return "1-3";
+  if (months < 60) return "3-5";
+  return "5-plus";
+}
+
 export type Emi = { monthly: number; total: number; interest: number };
 
 export function calculateEmi(amount: number, apr: number, months: number): Emi {
