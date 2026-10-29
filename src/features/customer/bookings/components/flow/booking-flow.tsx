@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BookingSummary } from "@/components/customer/booking-summary";
 import { BrandLoader } from "@/components/customer/brand-loader";
 import { AppBar } from "@/components/shared/app-bar";
@@ -52,7 +52,12 @@ export function BookingFlow({ bike, target, detailsHref }: { bike: Motorcycle; t
   const createBooking = useCreateBookingMutation();
   const addonsQuery = useBookingAddonsQuery();
   const stored = draftStore.useValue();
+  const justBooked = justBookedStore.useValue();
   const [completing, setCompleting] = useState(false);
+
+  useEffect(() => {
+    if (justBooked && !completing) router.replace(`/bookings/${justBooked}`);
+  }, [completing, justBooked, router]);
 
   const draft: BookingDraft = stored?.bikeId === bike.id
     ? stored
@@ -104,7 +109,7 @@ export function BookingFlow({ bike, target, detailsHref }: { bike: Motorcycle; t
     }
   }
 
-  if (completing) {
+  if (completing || justBooked) {
     return (
       <LoadingRegion className="flex min-h-[60dvh] items-center justify-center">
         <BrandLoader className="min-h-0" />

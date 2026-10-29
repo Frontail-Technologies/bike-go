@@ -21,7 +21,7 @@ import { formatRange, toISO, toRange } from "@/features/customer/bookings/lib/da
 import { useBookingQuoteQuery } from "@/features/customer/bookings/hooks/use-booking-quote";
 import { bookingQuoteToView } from "@/features/customer/bookings/lib/booking-mapper";
 import { quoteLines } from "@/features/customer/bookings/lib/pricing";
-import { draftStore } from "@/features/customer/bookings/stores/booking-draft-store";
+import { draftStore, justBookedStore } from "@/features/customer/bookings/stores/booking-draft-store";
 import { useRequireSignIn } from "@/features/customer/auth/components/sign-in-prompt";
 import type { MotorcycleGroup } from "@/features/customer/vehicles/lib/view-model";
 import { favoritesStore, toggleFavorite } from "@/features/customer/profile/stores/preferences-store";
@@ -88,6 +88,7 @@ export function GroupDetailsView({ group }: { group: MotorcycleGroup }) {
       return;
     }
     draftStore.set(null);
+    justBookedStore.set(null);
     const qs = new URLSearchParams({
       start: toISO(range.start),
       end: toISO(range.end),
