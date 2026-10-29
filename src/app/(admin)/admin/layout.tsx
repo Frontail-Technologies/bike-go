@@ -7,9 +7,11 @@ import { ADMIN_LOCALE_COOKIE, defaultAdminLocale, isAdminLocale } from "@/featur
 import { AdminI18nProvider } from "@/features/admin/i18n/provider";
 import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import { Suspense } from "react";
 
 async function HydratedAdmin({ children }: { children: React.ReactNode }) {
+  await connection();
   const queryClient = new QueryClient();
   const [session, cookieStore] = await Promise.all([getAdminSessionServer(), cookies()]);
   queryClient.setQueryData(adminAuthQueryKeys.session(), session);
