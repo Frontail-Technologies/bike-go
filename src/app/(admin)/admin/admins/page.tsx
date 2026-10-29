@@ -4,7 +4,7 @@ import { SessionPendingGate } from "@/features/admin/auth/components/session-pen
 
 export default function AdminUsersRoute() {
   return (
-    <SessionPendingGate fallback={<AdminLoadingState label="Loading administrators…" />}>
+    <SessionPendingGate fallback={<AdminLoadingState labelKey="ui.loadingLabels.administrators" />}>
       <AdminUsersPage />
     </SessionPendingGate>
   );

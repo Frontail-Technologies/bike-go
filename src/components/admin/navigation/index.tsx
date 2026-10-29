@@ -4,6 +4,7 @@ import { Breadcrumbs, Tabs } from "@heroui/react";
 import { HouseIcon } from "@phosphor-icons/react";
 import { AnimatedSelection, SelectionIndicator } from "@/components/motion/animated-selection";
 import type { ReactNode } from "react";
+import { useAdminTranslations } from "@/features/admin/i18n/hooks";
 
 export type AdminTabItem = { id: string; label: string; content?: ReactNode; icon?: ReactNode };
 export function AdminTabs({ items, label, selectedKey, onSelectionChange }: { items: AdminTabItem[]; label: string; selectedKey?: string; onSelectionChange?: (key: string) => void }) {
@@ -32,8 +33,9 @@ export function AdminTabs({ items, label, selectedKey, onSelectionChange }: { it
 }
 
 export function AdminBreadcrumbs({ items }: { items: ReadonlyArray<{ label: string; href?: string }> }) {
-  return <Breadcrumbs aria-label="Breadcrumb" className="text-xs text-[var(--admin-muted)]">
-    <Breadcrumbs.Item href="/admin" aria-label="Dashboard"><HouseIcon size={14} /></Breadcrumbs.Item>
+  const t = useAdminTranslations();
+  return <Breadcrumbs aria-label={t("ui.breadcrumb")} className="text-xs text-[var(--admin-muted)]">
+    <Breadcrumbs.Item href="/admin" aria-label={t("nav.dashboard")}><HouseIcon size={14} /></Breadcrumbs.Item>
     {items.map((item, index) => <Breadcrumbs.Item key={`${item.label}-${index}`} href={item.href} className="font-semibold last:text-[var(--admin-text)]">{item.label}</Breadcrumbs.Item>)}
   </Breadcrumbs>;
 }

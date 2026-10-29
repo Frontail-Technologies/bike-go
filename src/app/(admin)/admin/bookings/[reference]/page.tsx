@@ -10,5 +10,5 @@ async function BookingWorkspace({ params }: { params: Promise<{ reference: strin
 }
 
 export default function BookingDetailPage({ params }: { params: Promise<{ reference: string }> }) {
-  return <Suspense fallback={<AdminLoadingState label="Loading booking…" />}><BookingWorkspace params={params} /></Suspense>;
+  return <Suspense fallback={<AdminLoadingState labelKey="ui.loadingLabels.booking" />}><BookingWorkspace params={params} /></Suspense>;
 }

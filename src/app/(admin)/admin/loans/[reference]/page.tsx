@@ -10,5 +10,5 @@ async function LoanWorkspace({ params }: { params: Promise<{ reference: string }
 }
 
 export default function LoanDetailPage({ params }: { params: Promise<{ reference: string }> }) {
-  return <Suspense fallback={<AdminLoadingState label="Loading application…" />}><LoanWorkspace params={params} /></Suspense>;
+  return <Suspense fallback={<AdminLoadingState labelKey="ui.loadingLabels.application" />}><LoanWorkspace params={params} /></Suspense>;
 }

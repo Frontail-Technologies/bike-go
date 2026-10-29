@@ -10,5 +10,5 @@ async function PaymentWorkspace({ params }: { params: Promise<{ reference: strin
 }
 
 export default function PaymentDetailPage({ params }: { params: Promise<{ reference: string }> }) {
-  return <Suspense fallback={<AdminLoadingState label="Loading payment…" />}><PaymentWorkspace params={params} /></Suspense>;
+  return <Suspense fallback={<AdminLoadingState labelKey="ui.loadingLabels.payment" />}><PaymentWorkspace params={params} /></Suspense>;
 }

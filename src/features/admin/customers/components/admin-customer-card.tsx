@@ -3,15 +3,17 @@
 import { Button, Dropdown, Label } from "@heroui/react";
 import { DotsThreeVerticalIcon, EyeIcon, NotePencilIcon } from "@phosphor-icons/react";
 import type { CustomerSummary } from "../types/customer";
+import { useAdminTranslations } from "@/features/admin/i18n/hooks";
 
 export function CustomerActions({ customer, onView, onEdit, className }: { customer: Pick<CustomerSummary, "name">; onView: () => void; onEdit: () => void; className?: string }) {
+  const t = useAdminTranslations();
   return (
     <Dropdown>
-      <Button isIconOnly size="sm" variant="ghost" aria-label={`Actions for ${customer.name}`} className={`size-11 min-w-11 md:size-9 md:min-w-9 ${className ?? ""}`}><DotsThreeVerticalIcon size={20} weight="bold" /></Button>
+      <Button isIconOnly size="sm" variant="ghost" aria-label={t("customers.actionsFor", { name: customer.name })} className={`size-11 min-w-11 md:size-9 md:min-w-9 ${className ?? ""}`}><DotsThreeVerticalIcon size={20} weight="bold" /></Button>
       <Dropdown.Popover className="adminOverlay">
-        <Dropdown.Menu aria-label={`Actions for ${customer.name}`}>
-          <Dropdown.Item id="view" textValue="View customer" onAction={onView}><EyeIcon size={16} /><Label>View customer</Label></Dropdown.Item>
-          <Dropdown.Item id="edit" textValue="Edit profile" onAction={onEdit}><NotePencilIcon size={16} /><Label>Edit profile</Label></Dropdown.Item>
+        <Dropdown.Menu aria-label={t("customers.actionsFor", { name: customer.name })}>
+          <Dropdown.Item id="view" textValue={t("customers.viewCustomer")} onAction={onView}><EyeIcon size={16} /><Label>{t("customers.viewCustomer")}</Label></Dropdown.Item>
+          <Dropdown.Item id="edit" textValue={t("customers.editProfile")} onAction={onEdit}><NotePencilIcon size={16} /><Label>{t("customers.editProfile")}</Label></Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown.Popover>
     </Dropdown>

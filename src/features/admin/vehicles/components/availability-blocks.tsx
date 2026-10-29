@@ -13,6 +13,7 @@ import { useVehicleBlockMutations, useVehicleBlocksQuery } from "../hooks/use-ve
 import { blockFormSchema as blockSchema, type BlockFormValues as BlockForm } from "../schemas/vehicle-schemas";
 import type { VehicleBlock } from "../types/vehicle";
 import { formatDateTime as formatCambodiaDateTime, ictLocalToIso } from "@/lib/date";
+import { useAdminTranslations } from "@/features/admin/i18n/hooks";
 
 type FormErrors = Partial<Record<keyof BlockForm, string>>;
 const emptyForm: BlockForm = { startAt: "", endAt: "", reason: "" };
@@ -25,6 +26,7 @@ function blockIcon(reason: string): Icon {
 }
 
 export function AvailabilityBlocks({ vehicleId }: { vehicleId: string }) {
+  const t = useAdminTranslations();
   const drawer = useOverlayState();
   const query = useVehicleBlocksQuery(vehicleId);
   const mutations = useVehicleBlockMutations(vehicleId);
@@ -50,12 +52,12 @@ export function AvailabilityBlocks({ vehicleId }: { vehicleId: string }) {
     setSubmitError("");
     try {
       await mutations.add.mutateAsync({ startAt: ictLocalToIso(result.data.startAt), endAt: ictLocalToIso(result.data.endAt), reason: result.data.reason.trim() });
-      toast.success("Availability block added");
+      toast.success(t("vehicles.blocks.added"));
       setForm(emptyForm);
       setErrors({});
       drawer.close();
     } catch (error) {
-      setSubmitError(error instanceof ApiError ? error.message : "The block could not be added. Try again.");
+      setSubmitError(error instanceof ApiError ? error.message : t("vehicles.blocks.addError"));
     }
   }
 
@@ -63,39 +65,39 @@ export function AvailabilityBlocks({ vehicleId }: { vehicleId: string }) {
     if (!removing) return;
     try {
       await mutations.remove.mutateAsync(removing.id);
-      toast.success("Availability block removed");
+      toast.success(t("vehicles.blocks.removed"));
     } catch (error) {
-      toast.danger(error instanceof ApiError ? error.message : "The block could not be removed.");
+      toast.danger(error instanceof ApiError ? error.message : t("vehicles.blocks.removeError"));
     }
     setRemoving(null);
   }
 
   return (
     <>
-      <section aria-label="Vehicle availability"><ContentSection title="Availability & Maintenance" description="Periods when this vehicle should not be available." actions={<Button className="min-h-11" onPress={drawer.open}><PlusIcon />Add block</Button>}>
+      <section aria-label={t("vehicles.blocks.section")}><ContentSection title={t("vehicles.blocks.title")} description={t("vehicles.blocks.description")} actions={<Button className="min-h-11" onPress={drawer.open}><PlusIcon />{t("vehicles.blocks.add")}</Button>}>
         <div className="space-y-4 p-4 sm:p-5">
-          {query.isError ? <AdminErrorState title="Couldn’t load availability" description={query.error instanceof ApiError ? query.error.message : "Try again in a moment."} onRetry={() => void query.refetch()} /> : query.isLoading ? <div role="status" aria-label="Loading availability" className="h-24 animate-pulse rounded-xl bg-[var(--admin-surface-muted)]" /> : blocks.length ? <ol className="relative space-y-3 before:absolute before:bottom-4 before:left-[19px] before:top-4 before:w-px before:bg-[var(--admin-border)]">{blocks.map((block, index) => { const Icon = blockIcon(block.reason); return <li key={block.id} className="relative flex items-start gap-3"><span className={"relative z-10 flex size-10 shrink-0 items-center justify-center rounded-full " + (index % 2 ? "bg-[var(--admin-warning-soft)] text-[var(--admin-warning)]" : "bg-[var(--admin-danger-soft)] text-[var(--admin-danger)]")}><Icon size={19} weight="duotone" aria-hidden /></span><article className="adminTile flex min-w-0 flex-1 items-start justify-between gap-3 rounded-xl p-3.5"><div className="min-w-0"><h3 className="text-sm font-extrabold">{block.reason}</h3><dl className="mt-1.5 grid gap-x-6 gap-y-1 text-xs text-[var(--admin-muted)] sm:grid-cols-2"><div><dt className="inline font-medium">Start </dt><dd className="inline font-semibold text-[var(--admin-text)]">{formatCambodiaDateTime(block.startAt)}</dd></div><div><dt className="inline font-medium">End </dt><dd className="inline font-semibold text-[var(--admin-text)]">{formatCambodiaDateTime(block.endAt)}</dd></div></dl><p className="mt-1 text-[11px] text-[var(--admin-muted)]">ICT · Asia/Phnom_Penh</p></div><Button isIconOnly size="sm" variant="ghost" className="size-11 min-w-11 shrink-0" aria-label={"Remove availability block: " + block.reason} onPress={() => setRemoving(block)}><TrashIcon size={17} /></Button></article></li>; })}</ol> : <div className="rounded-xl border border-dashed border-[var(--admin-border)] bg-[var(--admin-surface-muted)] px-5 py-9 text-center"><p className="text-sm font-bold">No availability blocks</p><p className="mt-1 text-xs text-[var(--admin-muted)]">This vehicle has no scheduled blocks.</p></div>}
+          {query.isError ? <AdminErrorState title={t("vehicles.blocks.loadError")} description={query.error instanceof ApiError ? query.error.message : t("common.retryLater")} onRetry={() => void query.refetch()} /> : query.isLoading ? <div role="status" aria-label={t("vehicles.blocks.loading")} className="h-24 animate-pulse rounded-xl bg-[var(--admin-surface-muted)]" /> : blocks.length ? <ol className="relative space-y-3 before:absolute before:bottom-4 before:left-[19px] before:top-4 before:w-px before:bg-[var(--admin-border)]">{blocks.map((block, index) => { const Icon = blockIcon(block.reason); return <li key={block.id} className="relative flex items-start gap-3"><span className={"relative z-10 flex size-10 shrink-0 items-center justify-center rounded-full " + (index % 2 ? "bg-[var(--admin-warning-soft)] text-[var(--admin-warning)]" : "bg-[var(--admin-danger-soft)] text-[var(--admin-danger)]")}><Icon size={19} weight="duotone" aria-hidden /></span><article className="adminTile flex min-w-0 flex-1 items-start justify-between gap-3 rounded-xl p-3.5"><div className="min-w-0"><h3 className="text-sm font-extrabold">{block.reason}</h3><dl className="mt-1.5 grid gap-x-6 gap-y-1 text-xs text-[var(--admin-muted)] sm:grid-cols-2"><div><dt className="inline font-medium">{t("vehicles.blocks.start")}</dt><dd className="inline font-semibold text-[var(--admin-text)]">{formatCambodiaDateTime(block.startAt)}</dd></div><div><dt className="inline font-medium">{t("vehicles.blocks.end")}</dt><dd className="inline font-semibold text-[var(--admin-text)]">{formatCambodiaDateTime(block.endAt)}</dd></div></dl><p className="mt-1 text-[11px] text-[var(--admin-muted)]">{t("common.ict")}</p></div><Button isIconOnly size="sm" variant="ghost" className="size-11 min-w-11 shrink-0" aria-label={t("vehicles.blocks.remove", { reason: block.reason })} onPress={() => setRemoving(block)}><TrashIcon size={17} /></Button></article></li>; })}</ol> : <div className="rounded-xl border border-dashed border-[var(--admin-border)] bg-[var(--admin-surface-muted)] px-5 py-9 text-center"><p className="text-sm font-bold">{t("vehicles.blocks.empty")}</p><p className="mt-1 text-xs text-[var(--admin-muted)]">{t("vehicles.blocks.emptyDescription")}</p></div>}
                   </div>
       </ContentSection></section>
       <Drawer.Backdrop isOpen={drawer.isOpen} onOpenChange={(open) => { drawer.setOpen(open); if (!open) { setErrors({}); setSubmitError(""); } }} className="adminOverlay">
         <Drawer.Content placement="right" className="w-full max-w-md">
-          <Drawer.Dialog aria-label="Add vehicle availability block">
+          <Drawer.Dialog aria-label={t("vehicles.blocks.drawerLabel")}>
             <Drawer.CloseTrigger />
-            <Drawer.Header><Drawer.Heading>Add availability block</Drawer.Heading></Drawer.Header>
+            <Drawer.Header><Drawer.Heading>{t("vehicles.blocks.drawerTitle")}</Drawer.Heading></Drawer.Header>
             <Form validationBehavior="aria" validationErrors={errors} onSubmit={submit} className="contents">
               <Drawer.Body className="space-y-5">
-                {submitError ? <Alert status="danger"><Alert.Indicator /><Alert.Content><Alert.Title>Block was not added</Alert.Title><Alert.Description>{submitError}</Alert.Description></Alert.Content></Alert> : null}
-                <p className="text-sm text-[var(--admin-muted)]">Enter Cambodia local time. All values below are interpreted as <strong>ICT — Asia/Phnom_Penh (UTC+7)</strong>.</p>
-                <TextField name="startAt" isRequired value={form.startAt} onChange={(value) => change("startAt", value)} isInvalid={Boolean(errors.startAt)}><Label>Start date and time — ICT</Label><Input type="datetime-local"  /><FieldError>{errors.startAt}</FieldError></TextField>
-                <TextField name="endAt" isRequired value={form.endAt} onChange={(value) => change("endAt", value)} isInvalid={Boolean(errors.endAt)}><Label>End date and time — ICT</Label><Input type="datetime-local"  /><FieldError>{errors.endAt}</FieldError></TextField>
-                <TextField name="reason" isRequired value={form.reason} onChange={(value) => change("reason", value)} isInvalid={Boolean(errors.reason)}><Label>Reason</Label><TextArea rows={4} maxLength={200}  /><div className="flex justify-between text-xs text-[var(--admin-muted)]"><span>2–200 characters</span><span>{form.reason.length}/200</span></div><FieldError>{errors.reason}</FieldError></TextField>
+                {submitError ? <Alert status="danger"><Alert.Indicator /><Alert.Content><Alert.Title>{t("vehicles.blocks.notAdded")}</Alert.Title><Alert.Description>{submitError}</Alert.Description></Alert.Content></Alert> : null}
+                <p className="text-sm text-[var(--admin-muted)]">{t("vehicles.blocks.timeHintBefore")}<strong>{t("vehicles.blocks.timeHintZone")}</strong>.</p>
+                <TextField name="startAt" isRequired value={form.startAt} onChange={(value) => change("startAt", value)} isInvalid={Boolean(errors.startAt)}><Label>{t("vehicles.blocks.startLabel")}</Label><Input type="datetime-local"  /><FieldError>{errors.startAt}</FieldError></TextField>
+                <TextField name="endAt" isRequired value={form.endAt} onChange={(value) => change("endAt", value)} isInvalid={Boolean(errors.endAt)}><Label>{t("vehicles.blocks.endLabel")}</Label><Input type="datetime-local"  /><FieldError>{errors.endAt}</FieldError></TextField>
+                <TextField name="reason" isRequired value={form.reason} onChange={(value) => change("reason", value)} isInvalid={Boolean(errors.reason)}><Label>{t("vehicles.blocks.reason")}</Label><TextArea rows={4} maxLength={200}  /><div className="flex justify-between text-xs text-[var(--admin-muted)]"><span>{t("common.characters", { min: 2, max: 200 })}</span><span>{form.reason.length}/200</span></div><FieldError>{errors.reason}</FieldError></TextField>
               </Drawer.Body>
-              <Drawer.Footer><Button type="button" variant="tertiary" onPress={drawer.close}>Cancel</Button><Button type="submit" isPending={mutations.add.isPending}>Add block</Button></Drawer.Footer>
+              <Drawer.Footer><Button type="button" variant="tertiary" onPress={drawer.close}>{t("common.cancel")}</Button><Button type="submit" isPending={mutations.add.isPending}>{t("vehicles.blocks.add")}</Button></Drawer.Footer>
             </Form>
           </Drawer.Dialog>
         </Drawer.Content>
       </Drawer.Backdrop>
-      <ConfirmationDialog isOpen={Boolean(removing)} onOpenChange={(open) => { if (!open) setRemoving(null); }} title="Remove availability block?" description="The vehicle becomes available for booking during this period again." confirmLabel="Remove block" danger isPending={mutations.remove.isPending} onConfirm={removeBlock} />
+      <ConfirmationDialog isOpen={Boolean(removing)} onOpenChange={(open) => { if (!open) setRemoving(null); }} title={t("vehicles.blocks.removeTitle")} description={t("vehicles.blocks.removeDescription")} confirmLabel={t("vehicles.blocks.removeConfirm")} danger isPending={mutations.remove.isPending} onConfirm={removeBlock} />
     </>
   );
 }

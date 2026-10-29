@@ -27,6 +27,7 @@ import { useCustomerActivityQuery, useCustomerBookingsQuery, useCustomerDocument
 import { asBookingStatus, monthsSince, titleCase } from "../lib/customer-model";
 import type { Customer, CustomerDocument, CustomerLoan } from "../types/customer";
 import { CustomerEditDrawer } from "./customer-edit-drawer";
+import { useAdminTranslations } from "@/features/admin/i18n/hooks";
 
 const TAB_PAGE_SIZE = 6;
 const dateTime = (value: string) => formatCambodiaDate(value, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
@@ -64,87 +65,91 @@ function ViewAll({ label, onPress }: { label: string; onPress: () => void }) {
   return <Button size="sm" variant="ghost" className="min-h-11 text-[var(--admin-accent-strong)] md:min-h-9" onPress={onPress}>{label}<ArrowRightIcon size={14} /></Button>;
 }
 
-const LoanStatus = ({ status }: { status: string }) => { const badge = toLoanBadge(status); return <AdminStatusBadge status={badge.status} label={badge.label} />; };
+const LoanStatus = ({ status }: { status: string }) => { useAdminTranslations(); const badge = toLoanBadge(status); return <AdminStatusBadge status={badge.status} label={badge.label} />; };
 
 function BookingsTab({ customerId, onOpen }: { customerId: string; onOpen: (booking: Booking) => void }) {
+  const t = useAdminTranslations();
   const [page, setPage] = useState(1);
   const query = useCustomerBookingsQuery(customerId, { page, pageSize: TAB_PAGE_SIZE });
   const columns: ColumnDef<Booking & { id: string }>[] = [
-    { id: "vehicle", header: "Vehicle", enableSorting: false, accessorFn: (row) => row.vehicle.name, cell: ({ row }) => (
+    { id: "vehicle", header: t("customers.detail.vehicle"), enableSorting: false, accessorFn: (row) => row.vehicle.name, cell: ({ row }) => (
       <div className="flex min-w-48 items-center gap-3">
         <VehiclePhoto vehicle={vehiclePhoto(row.original.vehicle)} className="h-10 w-14 shrink-0 rounded-lg border border-[var(--admin-border)]" sizes="56px" />
         <div className="min-w-0"><p className="truncate font-bold leading-tight">{row.original.vehicle.name}</p><p className="text-xs text-[var(--admin-muted)]">{row.original.reference}</p></div>
       </div>
     ) },
-    { id: "pickup", header: "Pickup", enableSorting: false, accessorFn: (row) => row.pickupAt, cell: ({ row }) => <span className="whitespace-nowrap">{dateTime(row.original.pickupAt)}</span> },
-    { id: "return", header: "Return", enableSorting: false, accessorFn: (row) => row.returnAt, cell: ({ row }) => <span className="whitespace-nowrap">{dateTime(row.original.returnAt)}</span> },
-    { id: "location", header: "Location", enableSorting: false, accessorFn: (row) => row.pickupLocation.name, cell: ({ row }) => <span className="inline-flex items-center gap-1.5 whitespace-nowrap"><MapPinIcon size={14} className="text-[var(--admin-muted)]" aria-hidden />{row.original.pickupLocation.name}</span> },
-    { id: "amount", header: "Amount", enableSorting: false, accessorFn: (row) => row.pricing.totalPayableMinor, cell: ({ row }) => money(row.original.pricing.totalPayableMinor, row.original.currency) },
-    { id: "status", header: "Booking", enableSorting: false, accessorFn: (row) => row.bookingStatus, cell: ({ row }) => <BookingStatusBadge status={row.original.bookingStatus} /> },
-    { id: "payment", header: "Payment", enableSorting: false, accessorFn: (row) => row.paymentStatus, cell: ({ row }) => <PaymentStatusBadge status={row.original.paymentStatus} /> },
+    { id: "pickup", header: t("customers.detail.pickup"), enableSorting: false, accessorFn: (row) => row.pickupAt, cell: ({ row }) => <span className="whitespace-nowrap">{dateTime(row.original.pickupAt)}</span> },
+    { id: "return", header: t("customers.detail.return"), enableSorting: false, accessorFn: (row) => row.returnAt, cell: ({ row }) => <span className="whitespace-nowrap">{dateTime(row.original.returnAt)}</span> },
+    { id: "location", header: t("customers.detail.location"), enableSorting: false, accessorFn: (row) => row.pickupLocation.name, cell: ({ row }) => <span className="inline-flex items-center gap-1.5 whitespace-nowrap"><MapPinIcon size={14} className="text-[var(--admin-muted)]" aria-hidden />{row.original.pickupLocation.name}</span> },
+    { id: "amount", header: t("customers.detail.amount"), enableSorting: false, accessorFn: (row) => row.pricing.totalPayableMinor, cell: ({ row }) => money(row.original.pricing.totalPayableMinor, row.original.currency) },
+    { id: "status", header: t("customers.detail.booking"), enableSorting: false, accessorFn: (row) => row.bookingStatus, cell: ({ row }) => <BookingStatusBadge status={row.original.bookingStatus} /> },
+    { id: "payment", header: t("customers.detail.payment"), enableSorting: false, accessorFn: (row) => row.paymentStatus, cell: ({ row }) => <PaymentStatusBadge status={row.original.paymentStatus} /> },
   ];
   const data = (query.data?.data ?? []).map((row) => ({ ...row, id: row.reference }));
-  if (query.isError && !query.data) return <AdminErrorState title="Couldn’t load bookings" description={query.error instanceof ApiError ? query.error.message : "Try again in a moment."} onRetry={() => void query.refetch()} />;
-  return <ContentSection><AdminDataTable label="Customer bookings" columns={columns} data={data} loading={query.isLoading} pagination={{ page, pageSize: TAB_PAGE_SIZE, total: query.data?.meta.total ?? 0, onPageChange: setPage }} minWidth={960} emptyState="This customer has no bookings." onRowNavigate={onOpen} rowActions={(booking) => <Button size="sm" variant="outline" className="min-h-11 md:min-h-8" onPress={() => onOpen(booking)}><EyeIcon size={15} />View</Button>} /></ContentSection>;
+  if (query.isError && !query.data) return <AdminErrorState title={t("customers.detail.bookingsError")} description={query.error instanceof ApiError ? query.error.message : t("common.retryLater")} onRetry={() => void query.refetch()} />;
+  return <ContentSection><AdminDataTable label={t("customers.detail.customerBookings")} columns={columns} data={data} loading={query.isLoading} pagination={{ page, pageSize: TAB_PAGE_SIZE, total: query.data?.meta.total ?? 0, onPageChange: setPage }} minWidth={960} emptyState={t("customers.detail.noBookings")} onRowNavigate={onOpen} rowActions={(booking) => <Button size="sm" variant="outline" className="min-h-11 md:min-h-8" onPress={() => onOpen(booking)}><EyeIcon size={15} />{t("customers.detail.view")}</Button>} /></ContentSection>;
 }
 
 function LoansTab({ customerId }: { customerId: string }) {
+  const t = useAdminTranslations();
   const router = useRouter();
   const [page, setPage] = useState(1);
   const query = useCustomerLoansQuery(customerId, { page, pageSize: TAB_PAGE_SIZE });
   const columns: ColumnDef<CustomerLoan & { id: string }>[] = [
-    { id: "reference", header: "Reference", enableSorting: false, accessorFn: (row) => row.reference, cell: ({ row }) => <span className="font-bold">{row.original.reference}</span> },
-    { id: "loanType", header: "Loan type", enableSorting: false, accessorFn: (row) => row.loanType, cell: ({ row }) => titleCase(row.original.loanType) },
-    { id: "requested", header: "Requested", enableSorting: false, accessorFn: (row) => row.requestedAmountMinor, cell: ({ row }) => money(row.original.requestedAmountMinor, row.original.currency) },
-    { id: "currency", header: "Currency", enableSorting: false, accessorFn: (row) => row.currency },
-    { id: "tenure", header: "Tenure", enableSorting: false, accessorFn: (row) => row.tenureMonths, cell: ({ row }) => `${row.original.tenureMonths} months` },
-    { id: "submitted", header: "Submitted", enableSorting: false, accessorFn: (row) => row.submittedAt, cell: ({ row }) => <span className="whitespace-nowrap">{row.original.submittedAt ? formatCambodiaDate(row.original.submittedAt) : "Not submitted"}</span> },
-    { id: "status", header: "Status", enableSorting: false, accessorFn: (row) => row.status, cell: ({ row }) => <LoanStatus status={row.original.status} /> },
+    { id: "reference", header: t("customers.detail.reference"), enableSorting: false, accessorFn: (row) => row.reference, cell: ({ row }) => <span className="font-bold">{row.original.reference}</span> },
+    { id: "loanType", header: t("customers.detail.loanType"), enableSorting: false, accessorFn: (row) => row.loanType, cell: ({ row }) => titleCase(row.original.loanType) },
+    { id: "requested", header: t("customers.detail.requested"), enableSorting: false, accessorFn: (row) => row.requestedAmountMinor, cell: ({ row }) => money(row.original.requestedAmountMinor, row.original.currency) },
+    { id: "currency", header: t("customers.detail.currency"), enableSorting: false, accessorFn: (row) => row.currency },
+    { id: "tenure", header: t("customers.detail.tenure"), enableSorting: false, accessorFn: (row) => row.tenureMonths, cell: ({ row }) => t("customers.detail.months", { count: row.original.tenureMonths }) },
+    { id: "submitted", header: t("customers.detail.submitted"), enableSorting: false, accessorFn: (row) => row.submittedAt, cell: ({ row }) => <span className="whitespace-nowrap">{row.original.submittedAt ? formatCambodiaDate(row.original.submittedAt) : t("customers.detail.notSubmitted")}</span> },
+    { id: "status", header: t("customers.detail.status"), enableSorting: false, accessorFn: (row) => row.status, cell: ({ row }) => <LoanStatus status={row.original.status} /> },
   ];
   const data = (query.data?.data ?? []).map((row) => ({ ...row, id: row.reference }));
-  if (query.isError && !query.data) return <AdminErrorState title="Couldn’t load loan applications" description={query.error instanceof ApiError ? query.error.message : "Try again in a moment."} onRetry={() => void query.refetch()} />;
-  return <ContentSection><AdminDataTable label="Customer loan applications" columns={columns} data={data} loading={query.isLoading} pagination={{ page, pageSize: TAB_PAGE_SIZE, total: query.data?.meta.total ?? 0, onPageChange: setPage }} minWidth={820} emptyState="This customer has no loan applications." onRowNavigate={(loan) => router.push(`/admin/loans/${loan.reference}`)} rowActions={(loan) => <Button size="sm" variant="outline" className="min-h-11 md:min-h-8" onPress={() => router.push(`/admin/loans/${loan.reference}`)}>Review Loan</Button>} /></ContentSection>;
+  if (query.isError && !query.data) return <AdminErrorState title={t("customers.detail.loansError")} description={query.error instanceof ApiError ? query.error.message : t("common.retryLater")} onRetry={() => void query.refetch()} />;
+  return <ContentSection><AdminDataTable label={t("customers.detail.customerLoans")} columns={columns} data={data} loading={query.isLoading} pagination={{ page, pageSize: TAB_PAGE_SIZE, total: query.data?.meta.total ?? 0, onPageChange: setPage }} minWidth={820} emptyState={t("customers.detail.noLoans")} onRowNavigate={(loan) => router.push(`/admin/loans/${loan.reference}`)} rowActions={(loan) => <Button size="sm" variant="outline" className="min-h-11 md:min-h-8" onPress={() => router.push(`/admin/loans/${loan.reference}`)}>{t("customers.detail.reviewLoan")}</Button>} /></ContentSection>;
 }
 
 function DocumentsTab({ customerId }: { customerId: string }) {
+  const t = useAdminTranslations();
   const router = useRouter();
   const [page, setPage] = useState(1);
   const query = useCustomerDocumentsQuery(customerId, { page, pageSize: TAB_PAGE_SIZE });
   const columns: ColumnDef<CustomerDocument>[] = [
-    { id: "type", header: "Document", enableSorting: false, accessorFn: (row) => row.type, cell: ({ row }) => <span className="inline-flex items-center gap-2 font-semibold"><FileTextIcon size={16} className="text-[var(--admin-muted)]" aria-hidden />{titleCase(row.original.type)}</span> },
-    { id: "filename", header: "File", enableSorting: false, accessorFn: (row) => row.originalFilename, cell: ({ row }) => <span className="block max-w-56 truncate">{row.original.originalFilename}</span> },
-    { id: "loan", header: "Loan reference", enableSorting: false, accessorFn: (row) => row.loan.reference },
-    { id: "uploaded", header: "Uploaded", enableSorting: false, accessorFn: (row) => row.uploadedAt, cell: ({ row }) => <span className="whitespace-nowrap">{dateTime(row.original.uploadedAt)}</span> },
-    { id: "status", header: "Verification", enableSorting: false, accessorFn: (row) => row.verificationStatus, cell: ({ row }) => { const badge = toVerificationBadge(row.original.verificationStatus); return <AdminStatusBadge status={badge.status} label={badge.label} />; } },
+    { id: "type", header: t("customers.detail.document"), enableSorting: false, accessorFn: (row) => row.type, cell: ({ row }) => <span className="inline-flex items-center gap-2 font-semibold"><FileTextIcon size={16} className="text-[var(--admin-muted)]" aria-hidden />{titleCase(row.original.type)}</span> },
+    { id: "filename", header: t("customers.detail.file"), enableSorting: false, accessorFn: (row) => row.originalFilename, cell: ({ row }) => <span className="block max-w-56 truncate">{row.original.originalFilename}</span> },
+    { id: "loan", header: t("customers.detail.loanReference"), enableSorting: false, accessorFn: (row) => row.loan.reference },
+    { id: "uploaded", header: t("customers.detail.uploaded"), enableSorting: false, accessorFn: (row) => row.uploadedAt, cell: ({ row }) => <span className="whitespace-nowrap">{dateTime(row.original.uploadedAt)}</span> },
+    { id: "status", header: t("customers.detail.verification"), enableSorting: false, accessorFn: (row) => row.verificationStatus, cell: ({ row }) => { const badge = toVerificationBadge(row.original.verificationStatus); return <AdminStatusBadge status={badge.status} label={badge.label} />; } },
   ];
-  if (query.isError && !query.data) return <AdminErrorState title="Couldn’t load documents" description={query.error instanceof ApiError ? query.error.message : "Try again in a moment."} onRetry={() => void query.refetch()} />;
+  if (query.isError && !query.data) return <AdminErrorState title={t("customers.detail.documentsError")} description={query.error instanceof ApiError ? query.error.message : t("common.retryLater")} onRetry={() => void query.refetch()} />;
   const actions = (doc: CustomerDocument) => (
     <div className="flex justify-end gap-1.5">
-      <a href={documentFileUrl(doc.fileUrl)} target="_blank" rel="noopener noreferrer" aria-label={`Open ${doc.originalFilename}`} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-bold text-[var(--admin-accent-strong)] outline-none hover:bg-[var(--admin-surface-muted)] focus-visible:ring-2 focus-visible:ring-[var(--admin-accent-strong)] md:min-h-8"><DownloadSimpleIcon size={15} />Open</a>
-      <Button size="sm" variant="outline" className="min-h-11 md:min-h-8" onPress={() => router.push(`/admin/documents/${doc.id}`)}><SealCheckIcon size={15} />Review</Button>
+      <a href={documentFileUrl(doc.fileUrl)} target="_blank" rel="noopener noreferrer" aria-label={t("customers.detail.openFile", { name: doc.originalFilename })} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-bold text-[var(--admin-accent-strong)] outline-none hover:bg-[var(--admin-surface-muted)] focus-visible:ring-2 focus-visible:ring-[var(--admin-accent-strong)] md:min-h-8"><DownloadSimpleIcon size={15} />{t("customers.detail.open")}</a>
+      <Button size="sm" variant="outline" className="min-h-11 md:min-h-8" onPress={() => router.push(`/admin/documents/${doc.id}`)}><SealCheckIcon size={15} />{t("customers.detail.review")}</Button>
     </div>
   );
-  return <ContentSection><AdminDataTable label="Customer documents" columns={columns} data={query.data?.data ?? []} loading={query.isLoading} pagination={{ page, pageSize: TAB_PAGE_SIZE, total: query.data?.meta.total ?? 0, onPageChange: setPage }} minWidth={860} emptyState="No loan documents have been uploaded." onRowNavigate={(doc) => router.push(`/admin/documents/${doc.id}`)} rowActions={actions} /></ContentSection>;
+  return <ContentSection><AdminDataTable label={t("customers.detail.customerDocuments")} columns={columns} data={query.data?.data ?? []} loading={query.isLoading} pagination={{ page, pageSize: TAB_PAGE_SIZE, total: query.data?.meta.total ?? 0, onPageChange: setPage }} minWidth={860} emptyState={t("customers.detail.noDocuments")} onRowNavigate={(doc) => router.push(`/admin/documents/${doc.id}`)} rowActions={actions} /></ContentSection>;
 }
 
 const activityIcon = { account: <UserPlusIcon size={16} />, booking: <CalendarCheckIcon size={16} />, loan: <HandCoinsIcon size={16} />, document: <FileTextIcon size={16} /> } as const;
 const activityTone = { account: "info", booking: "info", loan: "warning", document: "success" } as const;
 
 function ActivityTab({ customerId }: { customerId: string }) {
+  const t = useAdminTranslations();
   const [page, setPage] = useState(1);
   const query = useCustomerActivityQuery(customerId, { page, pageSize: 15 });
-  if (query.isError && !query.data) return <AdminErrorState title="Couldn’t load activity" description={query.error instanceof ApiError ? query.error.message : "Try again in a moment."} onRetry={() => void query.refetch()} />;
+  if (query.isError && !query.data) return <AdminErrorState title={t("customers.detail.activityError")} description={query.error instanceof ApiError ? query.error.message : t("common.retryLater")} onRetry={() => void query.refetch()} />;
   const meta = query.data?.meta;
   const items: ActivityItem[] = (query.data?.data ?? []).map((entry) => ({ id: entry.id, title: entry.title, detail: entry.detail ?? undefined, time: `${dateTime(entry.at)} · ICT`, tone: activityTone[entry.kind], icon: activityIcon[entry.kind] }));
   return (
-    <Panel title="Account activity">
-      {query.isLoading ? <div role="status" aria-label="Loading activity" className="h-32 animate-pulse rounded-xl bg-[var(--admin-surface-muted)]" /> : items.length ? <ActivityTimeline items={items} /> : <p className="text-sm text-[var(--admin-muted)]">No activity yet.</p>}
+    <Panel title={t("customers.detail.accountActivity")}>
+      {query.isLoading ? <div role="status" aria-label={t("customers.detail.loadingActivity")} className="h-32 animate-pulse rounded-xl bg-[var(--admin-surface-muted)]" /> : items.length ? <ActivityTimeline items={items} /> : <p className="text-sm text-[var(--admin-muted)]">{t("customers.detail.noActivity")}</p>}
       {meta && meta.totalPages > 1 ? (
         <div className="mt-4 flex items-center justify-between gap-3 border-t border-[var(--admin-border)] pt-3 text-xs text-[var(--admin-muted)]">
-          <span>Page {meta.page} of {meta.totalPages}</span>
+          <span>{t("customers.detail.pageOf", { page: meta.page, total: meta.totalPages })}</span>
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" className="min-h-11 md:min-h-9" isDisabled={page <= 1} onPress={() => setPage(page - 1)}>Newer</Button>
-            <Button size="sm" variant="outline" className="min-h-11 md:min-h-9" isDisabled={page >= meta.totalPages} onPress={() => setPage(page + 1)}>Older</Button>
+            <Button size="sm" variant="outline" className="min-h-11 md:min-h-9" isDisabled={page <= 1} onPress={() => setPage(page - 1)}>{t("customers.detail.newer")}</Button>
+            <Button size="sm" variant="outline" className="min-h-11 md:min-h-9" isDisabled={page >= meta.totalPages} onPress={() => setPage(page + 1)}>{t("customers.detail.older")}</Button>
           </div>
         </div>
       ) : null}
@@ -153,17 +158,19 @@ function ActivityTab({ customerId }: { customerId: string }) {
 }
 
 export function CustomerDetail({ id }: { id: string }) {
+  const t = useAdminTranslations();
   const query = useCustomerQuery(id);
   const customer = query.data;
   if (query.isError && !customer) {
     const notFound = query.error instanceof ApiError && (query.error.status === 404 || query.error.status === 422);
-    return <AdminPage><PageHeader title="Customer Details" /><AdminErrorState title={notFound ? "Customer not found" : "Couldn’t load the customer"} description={query.error instanceof ApiError ? query.error.message : "Try again in a moment."} onRetry={notFound ? undefined : () => void query.refetch()} /></AdminPage>;
+    return <AdminPage><PageHeader title={t("pages.customers.detail")} /><AdminErrorState title={notFound ? t("customers.detail.notFound") : t("customers.detail.customerLoadError")} description={query.error instanceof ApiError ? query.error.message : t("common.retryLater")} onRetry={notFound ? undefined : () => void query.refetch()} /></AdminPage>;
   }
-  if (!customer) return <AdminPage><PageHeader title="Customer Details" /><AdminLoadingState label="Loading customer…" /></AdminPage>;
+  if (!customer) return <AdminPage><PageHeader title={t("pages.customers.detail")} /><AdminLoadingState label={t("customers.detail.loadingCustomer")} /></AdminPage>;
   return <CustomerWorkspace customer={customer} />;
 }
 
 function CustomerWorkspace({ customer }: { customer: Customer }) {
+  const t = useAdminTranslations();
   const router = useRouter();
   const editDrawer = useOverlayState();
   const [tab, setTab] = useState("overview");
@@ -171,61 +178,61 @@ function CustomerWorkspace({ customer }: { customer: Customer }) {
   const { profile } = customer;
 
   const recentBookingColumns: ColumnDef<Customer["recentBookings"][number] & { id: string }>[] = [
-    { id: "vehicle", header: "Vehicle", enableSorting: false, accessorFn: (row) => row.vehicleName, cell: ({ row }) => <div className="min-w-40"><p className="truncate font-bold leading-tight">{row.original.vehicleName}</p><p className="text-xs text-[var(--admin-muted)]">{row.original.reference}</p></div> },
-    { id: "pickup", header: "Pickup", enableSorting: false, accessorFn: (row) => row.pickupAt, cell: ({ row }) => <span className="whitespace-nowrap text-xs">{fmtShort(row.original.pickupAt)}</span> },
-    { id: "amount", header: "Amount", enableSorting: false, accessorFn: (row) => row.totalPayableMinor, cell: ({ row }) => money(row.original.totalPayableMinor, row.original.currency) },
-    { id: "status", header: "Status", enableSorting: false, accessorFn: (row) => row.bookingStatus, cell: ({ row }) => <BookingStatusBadge status={asBookingStatus(row.original.bookingStatus)} /> },
+    { id: "vehicle", header: t("customers.detail.vehicle"), enableSorting: false, accessorFn: (row) => row.vehicleName, cell: ({ row }) => <div className="min-w-40"><p className="truncate font-bold leading-tight">{row.original.vehicleName}</p><p className="text-xs text-[var(--admin-muted)]">{row.original.reference}</p></div> },
+    { id: "pickup", header: t("customers.detail.pickup"), enableSorting: false, accessorFn: (row) => row.pickupAt, cell: ({ row }) => <span className="whitespace-nowrap text-xs">{fmtShort(row.original.pickupAt)}</span> },
+    { id: "amount", header: t("customers.detail.amount"), enableSorting: false, accessorFn: (row) => row.totalPayableMinor, cell: ({ row }) => money(row.original.totalPayableMinor, row.original.currency) },
+    { id: "status", header: t("customers.detail.status"), enableSorting: false, accessorFn: (row) => row.bookingStatus, cell: ({ row }) => <BookingStatusBadge status={asBookingStatus(row.original.bookingStatus)} /> },
   ];
   const recentLoanColumns: ColumnDef<Customer["recentLoans"][number] & { id: string }>[] = [
-    { id: "loanType", header: "Loan type", enableSorting: false, accessorFn: (row) => row.loanType, cell: ({ row }) => <div><p className="font-bold">{titleCase(row.original.loanType)}</p><p className="text-xs text-[var(--admin-muted)]">{row.original.reference}</p></div> },
-    { id: "requested", header: "Requested", enableSorting: false, accessorFn: (row) => row.requestedAmountMinor, cell: ({ row }) => money(row.original.requestedAmountMinor, row.original.currency) },
-    { id: "created", header: "Created", enableSorting: false, accessorFn: (row) => row.createdAt, cell: ({ row }) => <span className="whitespace-nowrap">{shortDate(row.original.createdAt)}</span> },
-    { id: "status", header: "Status", enableSorting: false, accessorFn: (row) => row.status, cell: ({ row }) => <LoanStatus status={row.original.status} /> },
+    { id: "loanType", header: t("customers.detail.loanType"), enableSorting: false, accessorFn: (row) => row.loanType, cell: ({ row }) => <div><p className="font-bold">{titleCase(row.original.loanType)}</p><p className="text-xs text-[var(--admin-muted)]">{row.original.reference}</p></div> },
+    { id: "requested", header: t("customers.detail.requested"), enableSorting: false, accessorFn: (row) => row.requestedAmountMinor, cell: ({ row }) => money(row.original.requestedAmountMinor, row.original.currency) },
+    { id: "created", header: t("customers.detail.created"), enableSorting: false, accessorFn: (row) => row.createdAt, cell: ({ row }) => <span className="whitespace-nowrap">{shortDate(row.original.createdAt)}</span> },
+    { id: "status", header: t("customers.detail.status"), enableSorting: false, accessorFn: (row) => row.status, cell: ({ row }) => <LoanStatus status={row.original.status} /> },
   ];
 
   const overview = (
     <div className="space-y-4 xl:space-y-5">
       <div className="grid items-stretch gap-4 lg:grid-cols-3 xl:gap-5">
-        <Panel title="Personal Information">
+        <Panel title={t("customers.detail.personal")}>
           <dl className="space-y-4">
-            <InfoRow icon={<UserCircleIcon size={18} />} label="Full name">{profile.fullName ?? customer.name}</InfoRow>
-            <InfoRow icon={<PhoneIcon size={18} />} label="Phone number">{customer.phone ?? "—"}</InfoRow>
-            <InfoRow icon={<EnvelopeSimpleIcon size={18} />} label="Email address">{customer.email ?? "—"}</InfoRow>
-            <InfoRow icon={<CakeIcon size={18} />} label="Date of birth">{profile.dateOfBirth ? formatCambodiaDate(profile.dateOfBirth) : "—"}</InfoRow>
-            <InfoRow icon={<FlagIcon size={18} />} label="Nationality">{profile.nationality ?? "—"}</InfoRow>
-            <InfoRow icon={<HouseLineIcon size={18} />} label="Address">{profile.address || "—"}</InfoRow>
+            <InfoRow icon={<UserCircleIcon size={18} />} label={t("customers.detail.fullName")}>{profile.fullName ?? customer.name}</InfoRow>
+            <InfoRow icon={<PhoneIcon size={18} />} label={t("customers.detail.phone")}>{customer.phone ?? "—"}</InfoRow>
+            <InfoRow icon={<EnvelopeSimpleIcon size={18} />} label={t("customers.detail.email")}>{customer.email ?? "—"}</InfoRow>
+            <InfoRow icon={<CakeIcon size={18} />} label={t("customers.detail.dob")}>{profile.dateOfBirth ? formatCambodiaDate(profile.dateOfBirth) : "—"}</InfoRow>
+            <InfoRow icon={<FlagIcon size={18} />} label={t("customers.detail.nationality")}>{profile.nationality ?? "—"}</InfoRow>
+            <InfoRow icon={<HouseLineIcon size={18} />} label={t("customers.detail.address")}>{profile.address || "—"}</InfoRow>
           </dl>
         </Panel>
-        <Panel title="Location & Account">
+        <Panel title={t("customers.detail.locationAccount")}>
           <dl className="space-y-4">
-            <InfoRow icon={<MapPinIcon size={18} />} label="Current location">{customer.city ? `${customer.city}, Cambodia` : "—"}</InfoRow>
-            <InfoRow icon={<CalendarDotsIcon size={18} />} label="Join date">{formatCambodiaDate(customer.createdAt)}</InfoRow>
-            <InfoRow icon={<ShieldCheckIcon size={18} />} label="Login providers">{customer.providers.length ? <span className="mt-0.5 flex flex-wrap gap-1.5">{customer.providers.map((provider) => <span key={provider} className="rounded-full bg-[#efe9ff] px-2 py-0.5 text-[11px] font-bold capitalize text-[#6246c7]">{provider}</span>)}</span> : "None"}</InfoRow>
-            <InfoRow icon={<PaperPlaneTiltIcon size={18} />} label="Telegram">{profile.telegramUsername ?? "Not linked"}</InfoRow>
+            <InfoRow icon={<MapPinIcon size={18} />} label={t("customers.detail.currentLocation")}>{customer.city ? t("customers.detail.cityCountry", { city: customer.city }) : "—"}</InfoRow>
+            <InfoRow icon={<CalendarDotsIcon size={18} />} label={t("customers.detail.joinDate")}>{formatCambodiaDate(customer.createdAt)}</InfoRow>
+            <InfoRow icon={<ShieldCheckIcon size={18} />} label={t("customers.detail.providers")}>{customer.providers.length ? <span className="mt-0.5 flex flex-wrap gap-1.5">{customer.providers.map((provider) => <span key={provider} className="rounded-full bg-[#efe9ff] px-2 py-0.5 text-[11px] font-bold capitalize text-[#6246c7]">{provider}</span>)}</span> : t("customers.detail.none")}</InfoRow>
+            <InfoRow icon={<PaperPlaneTiltIcon size={18} />} label={t("customers.detail.telegram")}>{profile.telegramUsername ?? t("customers.detail.notLinked")}</InfoRow>
           </dl>
         </Panel>
-        <Panel title="Quick Stats">
+        <Panel title={t("customers.detail.quickStats")}>
           <dl className="space-y-4">
-            <QuickStat tone="bg-[#efe9ff] text-[#6246c7]" icon={<CalendarCheckIcon size={20} weight="duotone" />} label="Total bookings" value={customer.metrics.totalBookings} />
-            <QuickStat tone="bg-[var(--admin-accent-soft)] text-[var(--admin-warning)]" icon={<WalletIcon size={20} weight="duotone" />} label="Total spent (USD, paid)" value={<CurrencyAmount amount={customer.metrics.totalSpentMinor} currency="USD" className="text-lg font-extrabold" />} />
-            <QuickStat tone="bg-[var(--admin-success-soft)] text-[var(--admin-success)]" icon={<HandCoinsIcon size={20} weight="duotone" />} label="Loan applications" value={customer.loanCount} />
-            <QuickStat tone="bg-[var(--admin-success-soft)] text-[var(--admin-success)]" icon={<CalendarCheckIcon size={20} weight="duotone" />} label="Active rentals" value={customer.metrics.activeRentals} />
-            <QuickStat tone="bg-[#efe9ff] text-[#6246c7]" icon={<ClockIcon size={20} weight="duotone" />} label="Member since" value={`${monthsSince(customer.createdAt)} months`} />
+            <QuickStat tone="bg-[#efe9ff] text-[#6246c7]" icon={<CalendarCheckIcon size={20} weight="duotone" />} label={t("customers.detail.totalBookings")} value={customer.metrics.totalBookings} />
+            <QuickStat tone="bg-[var(--admin-accent-soft)] text-[var(--admin-warning)]" icon={<WalletIcon size={20} weight="duotone" />} label={t("customers.detail.totalSpent")} value={<CurrencyAmount amount={customer.metrics.totalSpentMinor} currency="USD" className="text-lg font-extrabold" />} />
+            <QuickStat tone="bg-[var(--admin-success-soft)] text-[var(--admin-success)]" icon={<HandCoinsIcon size={20} weight="duotone" />} label={t("customers.detail.loanApplications")} value={customer.loanCount} />
+            <QuickStat tone="bg-[var(--admin-success-soft)] text-[var(--admin-success)]" icon={<CalendarCheckIcon size={20} weight="duotone" />} label={t("customers.detail.activeRentals")} value={customer.metrics.activeRentals} />
+            <QuickStat tone="bg-[#efe9ff] text-[#6246c7]" icon={<ClockIcon size={20} weight="duotone" />} label={t("customers.detail.memberSince")} value={t("customers.detail.months", { count: monthsSince(customer.createdAt) })} />
           </dl>
         </Panel>
       </div>
-      <Panel title="Recent Bookings" action={<ViewAll label="View all" onPress={() => setTab("bookings")} />} flush>
-        <AdminDataTable label="Recent bookings" columns={recentBookingColumns} data={customer.recentBookings.map((row) => ({ ...row, id: row.reference }))} showPagination={false} minWidth={620} emptyState="This customer has no bookings." onRowNavigate={openBooking} />
+      <Panel title={t("customers.detail.recentBookings")} action={<ViewAll label={t("customers.detail.viewAll")} onPress={() => setTab("bookings")} />} flush>
+        <AdminDataTable label={t("customers.detail.recentBookingsLabel")} columns={recentBookingColumns} data={customer.recentBookings.map((row) => ({ ...row, id: row.reference }))} showPagination={false} minWidth={620} emptyState={t("customers.detail.noBookings")} onRowNavigate={openBooking} />
       </Panel>
-      <Panel title="Recent Loan Applications" action={<ViewAll label="View all" onPress={() => setTab("loans")} />} flush>
-        <AdminDataTable label="Recent loan applications" columns={recentLoanColumns} data={customer.recentLoans.map((row) => ({ ...row, id: row.reference }))} showPagination={false} minWidth={560} emptyState="This customer has no loan applications." onRowNavigate={(loan) => router.push(`/admin/loans/${loan.reference}`)} />
+      <Panel title={t("customers.detail.recentLoans")} action={<ViewAll label={t("customers.detail.viewAll")} onPress={() => setTab("loans")} />} flush>
+        <AdminDataTable label={t("customers.detail.recentLoansLabel")} columns={recentLoanColumns} data={customer.recentLoans.map((row) => ({ ...row, id: row.reference }))} showPagination={false} minWidth={560} emptyState={t("customers.detail.noLoans")} onRowNavigate={(loan) => router.push(`/admin/loans/${loan.reference}`)} />
       </Panel>
     </div>
   );
 
   return (
     <AdminPage className="gap-4">
-      <AdminBreadcrumbs items={[{ label: "Customers", href: "/admin/customers" }, { label: customer.name }]} />
+      <AdminBreadcrumbs items={[{ label: t("pages.customers.title"), href: "/admin/customers" }, { label: customer.name }]} />
 
       <header className="flex items-center gap-3 sm:gap-4">
         <CustomerAvatar name={customer.name} size="lg" className="size-14 text-lg sm:size-16 sm:text-xl" />
@@ -236,19 +243,19 @@ function CustomerWorkspace({ customer }: { customer: Customer }) {
           </div>
           <p className="text-sm text-[var(--admin-muted)]">{customer.reference}</p>
         </div>
-        <Button variant="outline" aria-label="Edit customer" className="min-h-11 shrink-0 max-sm:size-11 max-sm:min-w-11 max-sm:p-0" onPress={editDrawer.open}><NotePencilIcon /><span className="max-sm:sr-only">Edit</span></Button>
+        <Button variant="outline" aria-label={t("customers.detail.editCustomer")} className="min-h-11 shrink-0 max-sm:size-11 max-sm:min-w-11 max-sm:p-0" onPress={editDrawer.open}><NotePencilIcon /><span className="max-sm:sr-only">{t("customers.detail.edit")}</span></Button>
       </header>
 
       <AdminTabs
-        label="Customer information"
+        label={t("customers.detail.information")}
         selectedKey={tab}
         onSelectionChange={setTab}
         items={[
-          { id: "overview", label: "Overview", content: overview },
-          { id: "bookings", label: "Bookings", content: <BookingsTab customerId={customer.id} onOpen={openBooking} /> },
-          { id: "loans", label: "Loan Applications", content: <LoansTab customerId={customer.id} /> },
-          { id: "documents", label: "Documents", content: <DocumentsTab customerId={customer.id} /> },
-          { id: "activity", label: "Activity", content: <ActivityTab customerId={customer.id} /> },
+          { id: "overview", label: t("customers.detail.tabs.overview"), content: overview },
+          { id: "bookings", label: t("customers.detail.tabs.bookings"), content: <BookingsTab customerId={customer.id} onOpen={openBooking} /> },
+          { id: "loans", label: t("customers.detail.tabs.loans"), content: <LoansTab customerId={customer.id} /> },
+          { id: "documents", label: t("customers.detail.tabs.documents"), content: <DocumentsTab customerId={customer.id} /> },
+          { id: "activity", label: t("customers.detail.tabs.activity"), content: <ActivityTab customerId={customer.id} /> },
         ]}
       />
 

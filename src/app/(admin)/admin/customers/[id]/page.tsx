@@ -10,5 +10,5 @@ async function CustomerDetail({ params }: { params: Promise<{ id: string }> }) {
 }
 
 export default function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  return <Suspense fallback={<AdminLoadingState label="Loading customer…" />}><CustomerDetail params={params} /></Suspense>;
+  return <Suspense fallback={<AdminLoadingState labelKey="ui.loadingLabels.customer" />}><CustomerDetail params={params} /></Suspense>;
 }

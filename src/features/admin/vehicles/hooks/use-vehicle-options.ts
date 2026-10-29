@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { vehiclesApi, type VehicleOption } from "../api/vehicles-api";
 import type { VehicleType } from "../types/vehicle";
+import { adminT } from "@/features/admin/i18n/translate";
 
 export type Option = { value: string; label: string };
 
@@ -10,7 +11,7 @@ function selectable(items: VehicleOption[], current?: string): Option[] {
   const options = items.filter((item) => item.active).map(({ value, label }) => ({ value, label }));
   if (current && !options.some((option) => option.value === current)) {
     const historical = items.find((item) => item.value === current);
-    options.push({ value: current, label: historical ? `${historical.label} (inactive)` : current });
+    options.push({ value: current, label: historical ? adminT("common.inactiveSuffix", { label: historical.label }) : current });
   }
   return options;
 }

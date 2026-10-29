@@ -17,7 +17,9 @@ export function AdminButton({ children, isPending, ...props }: ButtonProps) {
   );
 }
 
-export function AdminSearch({ value, onChange, placeholder = "Search…", className }: { value: string; onChange: (value: string) => void; placeholder?: string; className?: string }) {
+export function AdminSearch({ value, onChange, placeholder: placeholderProp, className }: { value: string; onChange: (value: string) => void; placeholder?: string; className?: string }) {
+  const t = useAdminTranslations();
+  const placeholder = placeholderProp ?? t("ui.search");
   return <SearchField value={value} onChange={onChange} aria-label={placeholder} className={cn("w-full sm:max-w-xs", className)}><SearchField.Group><SearchField.SearchIcon /><SearchField.Input placeholder={placeholder} /><SearchField.ClearButton /></SearchField.Group></SearchField>;
 }
 
@@ -41,9 +43,10 @@ export function AdminSelect({ label, value, onChange, options, className, icon }
 
 export type AdminDateRange = { start: string; end: string };
 export function CambodiaDateFilter({ value, onChange }: { value: AdminDateRange; onChange: (range: AdminDateRange) => void }) {
+  const t = useAdminTranslations();
   const range = { start: parseDate(value.start), end: parseDate(value.end) };
   return <DateRangePicker value={range} onChange={(next) => next && onChange({ start: next.start.toString(), end: next.end.toString() })} startName="startDate" endName="endDate">
-    <Label className="sr-only">Date range, Cambodia time</Label>
+    <Label className="sr-only">{t("ui.dateRangeIct")}</Label>
     <DateField.Group className="min-h-10 rounded-xl border border-[var(--admin-border)] bg-white px-2 shadow-none" variant="secondary">
       <DateField.Input slot="start" className="text-xs font-semibold">{(segment) => <DateField.Segment segment={segment} />}</DateField.Input>
       <DateRangePicker.RangeSeparator className="text-[var(--admin-muted)]" />
@@ -51,7 +54,7 @@ export function CambodiaDateFilter({ value, onChange }: { value: AdminDateRange;
       <DateField.Suffix><span className="hidden text-[10px] text-[var(--admin-muted)] sm:inline">ICT</span><DateRangePicker.Trigger><DateRangePicker.TriggerIndicator /></DateRangePicker.Trigger></DateField.Suffix>
     </DateField.Group>
     <DateRangePicker.Popover className="adminOverlay">
-      <RangeCalendar aria-label="Booking date range">
+      <RangeCalendar aria-label={t("ui.bookingDateRange")}>
         <RangeCalendar.Header><RangeCalendar.Heading /><RangeCalendar.NavButton slot="previous" /><RangeCalendar.NavButton slot="next" /></RangeCalendar.Header>
         <RangeCalendar.Grid><RangeCalendar.GridHeader>{(day) => <RangeCalendar.HeaderCell>{day}</RangeCalendar.HeaderCell>}</RangeCalendar.GridHeader><RangeCalendar.GridBody>{(date) => <RangeCalendar.Cell date={date} />}</RangeCalendar.GridBody></RangeCalendar.Grid>
       </RangeCalendar>
@@ -81,7 +84,9 @@ export function formatCambodiaDate(value: string | Date, options?: Intl.DateTime
 }
 
 export type ViewOption<T extends string> = { value: T; label: string; icon: ReactNode };
-export function ViewToggle<T extends string>({ value, onChange, options, label = "View" }: { value: T; onChange: (value: T) => void; options: ReadonlyArray<ViewOption<T>>; label?: string }) {
+export function ViewToggle<T extends string>({ value, onChange, options, label: labelProp }: { value: T; onChange: (value: T) => void; options: ReadonlyArray<ViewOption<T>>; label?: string }) {
+  const t = useAdminTranslations();
+  const label = labelProp ?? t("ui.view");
   const reduce = useReducedMotion();
   return <div role="group" aria-label={label} className="relative flex shrink-0 rounded-xl border border-[var(--admin-border)] bg-[var(--admin-surface-muted)] p-0.5">
     {options.map((option) => {

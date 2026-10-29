@@ -7,9 +7,11 @@ import { AdminButton as Button } from "@/components/admin/controls";
 import { BookingStatusBadge } from "@/components/admin/bookings/booking-parts";
 import { VehiclePhoto } from "@/components/admin/vehicles/vehicle-photo";
 import { actionErrorMessage } from "../hooks/use-booking-actions";
-import { bookingLabels, canMoveTo, fmtShort, vehiclePhoto } from "../lib/booking-model";
+import { actionLabels, bookingLabels, canMoveTo, fmtShort, vehiclePhoto } from "../lib/booking-model";
+import { adminT } from "@/features/admin/i18n/translate";
 import { noteSchema } from "../schemas/booking-schemas";
 import type { Booking, BookingStatus } from "../types/booking";
+import { useAdminTranslations } from "@/features/admin/i18n/hooks";
 
 const NOTE_LIMIT = 300;
 
@@ -58,10 +60,11 @@ function NoteField({ label, placeholder, value, onChange, error }: { label: stri
 
 const validateNote = (value: string) => {
   const result = noteSchema.safeParse(value);
-  return result.success ? { note: result.data } : { error: result.error.issues[0]?.message ?? "Check the note." };
+  return result.success ? { note: result.data } : { error: result.error.issues[0]?.message ?? adminT("bookings.dialogs.checkNote") };
 };
 
 function StatusForm({ booking, initial, onConfirm, onClose }: { booking: Booking; initial: BookingStatus | null; onConfirm: (status: BookingStatus, note: string) => Promise<unknown>; onClose: () => void }) {
+  const t = useAdminTranslations();
   const options = (["confirmed", "ready_for_pickup"] as const).filter((status) => canMoveTo(booking, status));
   const [next, setNext] = useState<BookingStatus | null>(initial && (options as readonly string[]).includes(initial) ? initial : options[0] ?? null);
   const [note, setNote] = useState("");
@@ -82,31 +85,32 @@ function StatusForm({ booking, initial, onConfirm, onClose }: { booking: Booking
         {options.length ? (
           <>
             <Select name="status" value={next} onChange={(key) => key !== null && setNext(String(key) as BookingStatus)}>
-              <Label>New status</Label>
+              <Label>{t("bookings.dialogs.newStatus")}</Label>
               <Select.Trigger className="min-h-11"><Select.Value /><Select.Indicator /></Select.Trigger>
               <Select.Popover className="adminOverlay"><ListBox>{options.map((value) => <ListBox.Item key={value} id={value} textValue={bookingLabels[value]}>{bookingLabels[value]}<ListBox.ItemIndicator /></ListBox.Item>)}</ListBox></Select.Popover>
             </Select>
-            <div className="flex items-start gap-2 rounded-xl bg-[#efe9ff] p-3 text-xs font-medium text-[#6246c7]"><BellIcon size={16} className="mt-0.5 shrink-0" aria-hidden />The customer may be notified when this status changes.</div>
-            <NoteField label="Add a note (optional)" placeholder="e.g. Vehicle is ready for pickup. Please bring your ID." value={note} onChange={(value) => { setNote(value); setNoteError(""); }} error={noteError} />
+            <div className="flex items-start gap-2 rounded-xl bg-[#efe9ff] p-3 text-xs font-medium text-[#6246c7]"><BellIcon size={16} className="mt-0.5 shrink-0" aria-hidden />{t("bookings.dialogs.notifyHint")}</div>
+            <NoteField label={t("bookings.dialogs.noteOptional")} placeholder={t("bookings.dialogs.notePlaceholder")} value={note} onChange={(value) => { setNote(value); setNoteError(""); }} error={noteError} />
           </>
-        ) : <p className="text-sm text-[var(--admin-muted)]">This booking is {bookingLabels[booking.bookingStatus].toLowerCase()}, so its status can’t be changed here.</p>}
-        <ErrorAlert title="Status was not updated" message={error} />
+        ) : <p className="text-sm text-[var(--admin-muted)]">{t("bookings.dialogs.cannotChange", { status: bookingLabels[booking.bookingStatus].toLowerCase() })}</p>}
+        <ErrorAlert title={t("bookings.dialogs.statusNotUpdated")} message={error} />
       </Modal.Body>
       <Modal.Footer className="flex justify-end gap-2">
-        <Button variant="tertiary" className="min-h-11" onPress={onClose}>Cancel</Button>
-        <Button variant="primary" className="min-h-11" isDisabled={!next} isPending={pending} onPress={submit}>Update Status</Button>
+        <Button variant="tertiary" className="min-h-11" onPress={onClose}>{t("common.cancel")}</Button>
+        <Button variant="primary" className="min-h-11" isDisabled={!next} isPending={pending} onPress={submit}>{t("bookings.dialogs.updateStatus")}</Button>
       </Modal.Footer>
     </>
   );
 }
 
 export function UpdateStatusModal({ booking, initial, isOpen, onOpenChange, onConfirm }: { booking: Booking | null; initial: BookingStatus | null; isOpen: boolean; onOpenChange: (open: boolean) => void; onConfirm: (booking: Booking, status: BookingStatus, note: string) => Promise<unknown> }) {
+  const t = useAdminTranslations();
   return (
     <Modal.Backdrop isOpen={isOpen} onOpenChange={onOpenChange} className="adminOverlay">
       <Modal.Container size="md">
-        <Modal.Dialog aria-label="Update booking status">
+        <Modal.Dialog aria-label={t("bookings.dialogs.updateAria")}>
           <Modal.CloseTrigger />
-          <Modal.Header><Modal.Heading>Update Booking Status</Modal.Heading></Modal.Header>
+          <Modal.Header><Modal.Heading>{t("bookings.dialogs.updateTitle")}</Modal.Heading></Modal.Header>
           {booking ? <StatusForm key={`${booking.reference}-${initial ?? ""}`} booking={booking} initial={initial} onClose={() => onOpenChange(false)} onConfirm={(status, note) => onConfirm(booking, status, note)} /> : null}
         </Modal.Dialog>
       </Modal.Container>
@@ -115,6 +119,7 @@ export function UpdateStatusModal({ booking, initial, isOpen, onOpenChange, onCo
 }
 
 function ReasonForm({ booking, intro, label, placeholder, keepLabel, confirmLabel, summary, onConfirm, onClose }: { booking: Booking; intro: string; label: string; placeholder: string; keepLabel: string; confirmLabel: string; summary?: boolean; onConfirm: (reason: string) => Promise<unknown>; onClose: () => void }) {
+  const t = useAdminTranslations();
   const [reason, setReason] = useState("");
   const [reasonError, setReasonError] = useState("");
   const { pending, error, run } = useConfirm(onClose);
@@ -132,7 +137,7 @@ function ReasonForm({ booking, intro, label, placeholder, keepLabel, confirmLabe
         <Summary booking={booking} />
         {summary ? <p className="flex items-center gap-2 text-xs text-[var(--admin-muted)]"><CalendarBlankIcon size={14} aria-hidden />{fmtShort(booking.pickupAt)} → {fmtShort(booking.returnAt)} (ICT)</p> : null}
         <NoteField label={label} placeholder={placeholder} value={reason} onChange={(value) => { setReason(value); setReasonError(""); }} error={reasonError} />
-        <ErrorAlert title="Not saved" message={error} />
+        <ErrorAlert title={t("bookings.dialogs.notSaved")} message={error} />
       </AlertDialog.Body>
       <AlertDialog.Footer>
         <Button variant="tertiary" className="min-h-11" onPress={onClose}>{keepLabel}</Button>
@@ -145,14 +150,15 @@ function ReasonForm({ booking, intro, label, placeholder, keepLabel, confirmLabe
 type ReasonDialogProps = { booking: Booking | null; isOpen: boolean; onOpenChange: (open: boolean) => void; onConfirm: (booking: Booking, reason: string) => Promise<unknown> };
 
 export function CancelBookingDialog({ booking, isOpen, onOpenChange, onConfirm }: ReasonDialogProps) {
+  const t = useAdminTranslations();
   return (
     <AlertDialog>
-      <AlertDialog.Trigger className="hidden" aria-hidden="true">Open cancel dialog</AlertDialog.Trigger>
+      <AlertDialog.Trigger className="hidden" aria-hidden="true">{t("bookings.dialogs.openCancel")}</AlertDialog.Trigger>
       <AlertDialog.Backdrop isOpen={isOpen} onOpenChange={onOpenChange} className="adminOverlay">
         <AlertDialog.Container>
           <AlertDialog.Dialog>
-            <AlertDialog.Header><AlertDialog.Icon status="danger" /><AlertDialog.Heading>Cancel booking {booking?.reference}?</AlertDialog.Heading></AlertDialog.Header>
-            {booking ? <ReasonForm key={booking.reference} booking={booking} summary intro="This booking will be cancelled and its vehicle released. The payment status isn’t changed automatically." label="Cancellation reason" placeholder="Why is this booking being cancelled?" keepLabel="Keep Booking" confirmLabel="Cancel Booking" onClose={() => onOpenChange(false)} onConfirm={(reason) => onConfirm(booking, reason)} /> : null}
+            <AlertDialog.Header><AlertDialog.Icon status="danger" /><AlertDialog.Heading>{t("bookings.dialogs.cancelTitle", { reference: booking?.reference ?? "" })}</AlertDialog.Heading></AlertDialog.Header>
+            {booking ? <ReasonForm key={booking.reference} booking={booking} summary intro={t("bookings.dialogs.cancelIntro")} label={t("bookings.dialogs.cancelReason")} placeholder={t("bookings.dialogs.cancelPlaceholder")} keepLabel={t("bookings.dialogs.keepBooking")} confirmLabel={actionLabels.cancelled ?? ""} onClose={() => onOpenChange(false)} onConfirm={(reason) => onConfirm(booking, reason)} /> : null}
           </AlertDialog.Dialog>
         </AlertDialog.Container>
       </AlertDialog.Backdrop>
@@ -161,13 +167,14 @@ export function CancelBookingDialog({ booking, isOpen, onOpenChange, onConfirm }
 }
 
 export function NoShowDialog({ booking, isOpen, onOpenChange, onConfirm }: ReasonDialogProps) {
+  const t = useAdminTranslations();
   return (
     <AlertDialog>
-      <AlertDialog.Trigger className="hidden" aria-hidden="true">Open no-show dialog</AlertDialog.Trigger>
+      <AlertDialog.Trigger className="hidden" aria-hidden="true">{t("bookings.dialogs.openNoShow")}</AlertDialog.Trigger>
       <AlertDialog.Backdrop isOpen={isOpen} onOpenChange={onOpenChange} className="adminOverlay">
         <AlertDialog.Container><AlertDialog.Dialog>
-          <AlertDialog.Header><AlertDialog.Icon status="warning" /><AlertDialog.Heading>Mark {booking?.reference} as No Show?</AlertDialog.Heading></AlertDialog.Header>
-          {booking ? <ReasonForm key={booking.reference} booking={booking} intro="Use this only when the scheduled pickup has passed and the customer did not arrive. It can’t be reversed, and the payment status isn’t changed automatically." label="Note (optional)" placeholder="e.g. Customer did not answer calls." keepLabel="Keep Booking" confirmLabel="Mark No Show" onClose={() => onOpenChange(false)} onConfirm={(reason) => onConfirm(booking, reason)} /> : null}
+          <AlertDialog.Header><AlertDialog.Icon status="warning" /><AlertDialog.Heading>{t("bookings.dialogs.noShowTitle", { reference: booking?.reference ?? "" })}</AlertDialog.Heading></AlertDialog.Header>
+          {booking ? <ReasonForm key={booking.reference} booking={booking} intro={t("bookings.dialogs.noShowIntro")} label={t("bookings.dialogs.noteLabel")} placeholder={t("bookings.dialogs.noShowPlaceholder")} keepLabel={t("bookings.dialogs.keepBooking")} confirmLabel={actionLabels.no_show ?? ""} onClose={() => onOpenChange(false)} onConfirm={(reason) => onConfirm(booking, reason)} /> : null}
         </AlertDialog.Dialog></AlertDialog.Container>
       </AlertDialog.Backdrop>
     </AlertDialog>

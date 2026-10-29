@@ -30,10 +30,10 @@ const all = "all";
 const overdueValue = "overdue";
 
 const pickupOptions: Array<{ value: string; label: string }> = [
-  { value: all, label: "All dates" },
-  { value: "today", label: "Pickup today" },
-  { value: "next7", label: "Pickup in next 7 days" },
-  { value: "last7", label: "Pickup in last 7 days" },
+  { value: all, label: "bookings.pickup.all" },
+  { value: "today", label: "bookings.pickup.today" },
+  { value: "next7", label: "bookings.pickup.next7" },
+  { value: "last7", label: "bookings.pickup.last7" },
 ];
 
 const sortColumns: Record<string, { asc: BookingSort; desc: BookingSort }> = {
@@ -85,27 +85,27 @@ export function BookingList() {
   };
 
   const columns: ColumnDef<Booking & { id: string }>[] = [
-    { id: "reference", header: "Booking", accessorFn: (row) => row.createdAt, cell: ({ row }) => <div className="min-w-14 whitespace-nowrap"><p className="font-bold">{row.original.reference}</p><p className="text-xs text-[var(--admin-muted)]">{fmtDate(row.original.createdAt).slice(0, 6)}</p></div> },
-    { id: "customer", header: "Customer", enableSorting: false, accessorFn: (row) => row.customer.name, cell: ({ row }) => <div className="flex min-w-28 max-w-40 items-center gap-2"><CustomerAvatar name={row.original.customer.name} size="sm" className="size-7 text-[10px]" /><div className="min-w-0"><p className="truncate font-semibold leading-tight">{row.original.customer.name}</p><p className="whitespace-nowrap text-xs text-[var(--admin-muted)]">{row.original.customer.phone ?? row.original.customer.email ?? "—"}</p></div></div> },
-    { id: "vehicle", header: "Vehicle", enableSorting: false, accessorFn: (row) => row.vehicle.name, cell: ({ row }) => <div className="flex min-w-32 max-w-40 items-center gap-2.5"><VehiclePhoto vehicle={vehiclePhoto(row.original.vehicle)} className="h-8 w-11 shrink-0 rounded-lg border border-[var(--admin-border)]" sizes="56px" /><div className="min-w-0"><p className="truncate font-semibold leading-tight">{row.original.vehicle.name}</p><p className="text-xs text-[var(--admin-muted)]">{row.original.vehicle.registrationNumber}</p></div></div> },
-    { id: "period", header: "Rental period", accessorFn: (row) => row.pickupAt, cell: ({ row }) => <div className="min-w-24 whitespace-nowrap text-xs"><p className="font-medium">{fmtShort(row.original.pickupAt)}</p><p className="text-[var(--admin-muted)]">{fmtShort(row.original.returnAt)}</p></div> },
-    { id: "location", header: "Location", enableSorting: false, accessorFn: (row) => row.pickupLocation.name, cell: ({ row }) => <div className="min-w-24 max-w-28 text-xs"><p className="font-medium">{row.original.pickupLocation.name}</p>{row.original.returnLocation.id !== row.original.pickupLocation.id ? <p className="text-[var(--admin-muted)]">Return: {row.original.returnLocation.name}</p> : null}</div> },
-    { id: "amount", header: "Amount", accessorFn: (row) => row.pricing.totalPayableMinor, cell: ({ row }) => <CurrencyAmount amount={row.original.pricing.totalPayableMinor} currency={row.original.currency} /> },
-    { id: "status", header: "Status", enableSorting: false, accessorFn: (row) => row.bookingStatus, cell: ({ row }) => <BookingOperationalStatus booking={row.original} /> },
-    { id: "payment", header: "Payment", enableSorting: false, accessorFn: (row) => row.paymentStatus, cell: ({ row }) => <PaymentStatusBadge status={row.original.paymentStatus} /> },
+    { id: "reference", header: t("bookings.columns.booking"), accessorFn: (row) => row.createdAt, cell: ({ row }) => <div className="min-w-14 whitespace-nowrap"><p className="font-bold">{row.original.reference}</p><p className="text-xs text-[var(--admin-muted)]">{fmtDate(row.original.createdAt).slice(0, 6)}</p></div> },
+    { id: "customer", header: t("bookings.columns.customer"), enableSorting: false, accessorFn: (row) => row.customer.name, cell: ({ row }) => <div className="flex min-w-28 max-w-40 items-center gap-2"><CustomerAvatar name={row.original.customer.name} size="sm" className="size-7 text-[10px]" /><div className="min-w-0"><p className="truncate font-semibold leading-tight">{row.original.customer.name}</p><p className="whitespace-nowrap text-xs text-[var(--admin-muted)]">{row.original.customer.phone ?? row.original.customer.email ?? "—"}</p></div></div> },
+    { id: "vehicle", header: t("bookings.columns.vehicle"), enableSorting: false, accessorFn: (row) => row.vehicle.name, cell: ({ row }) => <div className="flex min-w-32 max-w-40 items-center gap-2.5"><VehiclePhoto vehicle={vehiclePhoto(row.original.vehicle)} className="h-8 w-11 shrink-0 rounded-lg border border-[var(--admin-border)]" sizes="56px" /><div className="min-w-0"><p className="truncate font-semibold leading-tight">{row.original.vehicle.name}</p><p className="text-xs text-[var(--admin-muted)]">{row.original.vehicle.registrationNumber}</p></div></div> },
+    { id: "period", header: t("bookings.columns.period"), accessorFn: (row) => row.pickupAt, cell: ({ row }) => <div className="min-w-24 whitespace-nowrap text-xs"><p className="font-medium">{fmtShort(row.original.pickupAt)}</p><p className="text-[var(--admin-muted)]">{fmtShort(row.original.returnAt)}</p></div> },
+    { id: "location", header: t("bookings.columns.location"), enableSorting: false, accessorFn: (row) => row.pickupLocation.name, cell: ({ row }) => <div className="min-w-24 max-w-28 text-xs"><p className="font-medium">{row.original.pickupLocation.name}</p>{row.original.returnLocation.id !== row.original.pickupLocation.id ? <p className="text-[var(--admin-muted)]">{t("bookings.returnTo", { name: row.original.returnLocation.name })}</p> : null}</div> },
+    { id: "amount", header: t("bookings.columns.amount"), accessorFn: (row) => row.pricing.totalPayableMinor, cell: ({ row }) => <CurrencyAmount amount={row.original.pricing.totalPayableMinor} currency={row.original.currency} /> },
+    { id: "status", header: t("bookings.columns.status"), enableSorting: false, accessorFn: (row) => row.bookingStatus, cell: ({ row }) => <BookingOperationalStatus booking={row.original} /> },
+    { id: "payment", header: t("bookings.columns.payment"), enableSorting: false, accessorFn: (row) => row.paymentStatus, cell: ({ row }) => <PaymentStatusBadge status={row.original.paymentStatus} /> },
   ];
   const data = rows.map((row) => ({ ...row, id: row.reference }));
 
   const filterControls = (className?: string) => (
     <>
-      <AdminSelect className={className} label="All statuses" value={params.overdue ? overdueValue : params.status ?? all} onChange={(value) => state.setFilters(value === overdueValue ? { status: undefined, overdue: true } : { status: value === all ? undefined : (value as BookingStatus), overdue: undefined })} options={[{ value: all, label: "All statuses" }, ...bookingStatuses.map((value) => ({ value, label: bookingLabels[value] })), { value: overdueValue, label: "Overdue" }]} />
-      <AdminSelect className={className} label="All payments" value={params.paymentStatus ?? all} onChange={(value) => state.setFilters({ paymentStatus: value === all ? undefined : (value as PaymentStatus) })} options={[{ value: all, label: "All payments" }, ...paymentStatuses.map((value) => ({ value, label: paymentLabels[value] }))]} />
-      <AdminSelect className={className} label="All locations" value={params.locationId ?? all} onChange={(value) => state.setFilters({ locationId: value === all ? undefined : value })} options={[{ value: all, label: "All locations" }, ...(locationsQuery.data ?? []).map((location) => ({ value: location.id, label: location.name }))]} />
-      <AdminSelect className={className} label="All dates" value={params.pickup ?? all} onChange={(value) => state.setFilters({ pickup: value === all ? undefined : (value as PickupWindow) })} options={pickupOptions} />
+      <AdminSelect className={className} label={t("filters.allStatuses")} value={params.overdue ? overdueValue : params.status ?? all} onChange={(value) => state.setFilters(value === overdueValue ? { status: undefined, overdue: true } : { status: value === all ? undefined : (value as BookingStatus), overdue: undefined })} options={[{ value: all, label: t("filters.allStatuses") }, ...bookingStatuses.map((value) => ({ value, label: bookingLabels[value] })), { value: overdueValue, label: t("bookings.overdue") }]} />
+      <AdminSelect className={className} label={t("bookings.allPayments")} value={params.paymentStatus ?? all} onChange={(value) => state.setFilters({ paymentStatus: value === all ? undefined : (value as PaymentStatus) })} options={[{ value: all, label: t("bookings.allPayments") }, ...paymentStatuses.map((value) => ({ value, label: paymentLabels[value] }))]} />
+      <AdminSelect className={className} label={t("filters.allLocations")} value={params.locationId ?? all} onChange={(value) => state.setFilters({ locationId: value === all ? undefined : value })} options={[{ value: all, label: t("filters.allLocations") }, ...(locationsQuery.data ?? []).map((location) => ({ value: location.id, label: location.name }))]} />
+      <AdminSelect className={className} label={t("bookings.pickup.all")} value={params.pickup ?? all} onChange={(value) => state.setFilters({ pickup: value === all ? undefined : (value as PickupWindow) })} options={pickupOptions.map((option) => ({ ...option, label: t(option.label) }))} />
     </>
   );
 
-  const emptyText = query.isLoading ? "Loading bookings…" : filtersActive ? "No bookings match these filters." : "No bookings yet.";
+  const emptyText = query.isLoading ? t("bookings.loading") : filtersActive ? t("bookings.noMatches") : t("bookings.empty");
 
   if (query.isError && !query.data) return <AdminPage><PageHeader title={t("pages.bookings.title")} description={t("pages.bookings.description")} /><AdminErrorState description={query.error instanceof ApiError ? query.error.message : undefined} onRetry={() => void query.refetch()} /></AdminPage>;
 
@@ -116,30 +116,30 @@ export function BookingList() {
         <div className="space-y-3 p-4">
           <div className="flex items-center gap-2">
             <AdminSearch className="w-auto min-w-0 max-w-none flex-1 basis-0 sm:max-w-xl" value={searchText} onChange={setSearchText} placeholder={t("pages.bookings.search")} />
-            <Button variant="outline" className="relative min-h-11 shrink-0 lg:hidden" onPress={filterDrawer.open} aria-label={`Filters${activeFilters ? `, ${activeFilters} active` : ""}`}>
-              <SlidersHorizontalIcon size={18} /><span className="max-sm:sr-only">Filters</span>
+            <Button variant="outline" className="relative min-h-11 shrink-0 lg:hidden" onPress={filterDrawer.open} aria-label={activeFilters ? t("filters.activeCount", { count: activeFilters }) : t("filters.filters")}>
+              <SlidersHorizontalIcon size={18} /><span className="max-sm:sr-only">{t("filters.filters")}</span>
               {activeFilters ? <span className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-[var(--admin-accent)] text-[11px] font-extrabold text-[#111820]">{activeFilters}</span> : null}
             </Button>
           </div>
           <div className="hidden flex-wrap items-center gap-2 lg:flex">
             {filterControls()}
-            {filtersActive ? <Button size="sm" variant="ghost" className="min-h-10" onPress={reset}><ArrowCounterClockwiseIcon size={15} />Reset filters</Button> : null}
-            <p className="ml-auto text-xs font-semibold text-[var(--admin-muted)]" aria-live="polite">{total} booking{total === 1 ? "" : "s"}</p>
+            {filtersActive ? <Button size="sm" variant="ghost" className="min-h-10" onPress={reset}><ArrowCounterClockwiseIcon size={15} />{t("filters.resetFilters")}</Button> : null}
+            <p className="ml-auto text-xs font-semibold text-[var(--admin-muted)]" aria-live="polite">{t(total === 1 ? "bookings.countOne" : "bookings.count", { count: total })}</p>
           </div>
         </div>
 
-        <AdminDataTable columns={columns} data={data} label="Bookings" emptyState={emptyText} pagination={{ page, pageSize: BOOKING_PAGE_SIZE, total, onPageChange: state.setPage }} manualSorting sorting={sorting} onSortingChange={changeSorting} loading={query.isLoading} onRowNavigate={handlers.onView} rowActions={(booking) => <BookingActions booking={booking} handlers={handlers} />} minWidth={960} />
+        <AdminDataTable columns={columns} data={data} label={t("pages.bookings.title")} emptyState={emptyText} pagination={{ page, pageSize: BOOKING_PAGE_SIZE, total, onPageChange: state.setPage }} manualSorting sorting={sorting} onSortingChange={changeSorting} loading={query.isLoading} onRowNavigate={handlers.onView} rowActions={(booking) => <BookingActions booking={booking} handlers={handlers} />} minWidth={960} />
       </ContentSection>
 
       <Drawer.Backdrop isOpen={filterDrawer.isOpen} onOpenChange={filterDrawer.setOpen} className="adminOverlay">
         <Drawer.Content placement="bottom">
-          <Drawer.Dialog aria-label="Filter bookings">
+          <Drawer.Dialog aria-label={t("bookings.filterTitle")}>
             <Drawer.Handle />
-            <Drawer.Header><Drawer.Heading>Filter bookings</Drawer.Heading></Drawer.Header>
+            <Drawer.Header><Drawer.Heading>{t("bookings.filterTitle")}</Drawer.Heading></Drawer.Header>
             <Drawer.Body className="grid gap-3 overflow-y-auto">{filterControls("w-full")}</Drawer.Body>
             <Drawer.Footer className="grid grid-cols-2 gap-2">
-              <Button variant="tertiary" className="min-h-11" isDisabled={!filtersActive} onPress={reset}>Reset</Button>
-              <Button variant="primary" className="min-h-11" onPress={filterDrawer.close}>Show {total} booking{total === 1 ? "" : "s"}</Button>
+              <Button variant="tertiary" className="min-h-11" isDisabled={!filtersActive} onPress={reset}>{t("filters.reset")}</Button>
+              <Button variant="primary" className="min-h-11" onPress={filterDrawer.close}>{t(total === 1 ? "bookings.showOne" : "bookings.show", { count: total })}</Button>
             </Drawer.Footer>
           </Drawer.Dialog>
         </Drawer.Content>

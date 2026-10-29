@@ -5,9 +5,9 @@ import { FileMagnifyingGlassIcon } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import { useAdminTranslations } from "@/features/admin/i18n/hooks";
 
-export function AdminLoadingState({ label }: { label?: string }) {
+export function AdminLoadingState({ label, labelKey }: { label?: string; labelKey?: string }) {
   const t = useAdminTranslations();
-  const resolvedLabel = label ?? t("common.loadingRecords");
+  const resolvedLabel = label ?? t(labelKey ?? "common.loadingRecords");
   return <div role="status" className="flex min-h-40 flex-col items-center justify-center gap-3 p-8 text-sm text-[var(--admin-muted)]"><Spinner size="lg" aria-label={resolvedLabel} /><span>{resolvedLabel}</span></div>;
 }
 

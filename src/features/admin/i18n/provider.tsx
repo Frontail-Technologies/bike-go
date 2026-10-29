@@ -3,6 +3,7 @@
 import { I18nProvider as AriaI18nProvider } from "@heroui/react";
 import { createContext, startTransition, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { ADMIN_LOCALE_COOKIE, type AdminLocale, adminLocaleMeta } from "./config";
+import { setActiveAdminLocale } from "./translate";
 
 type AdminLocaleContextValue = { locale: AdminLocale; setLocale: (locale: AdminLocale) => void };
 const defaultContext: AdminLocaleContextValue = { locale: "en", setLocale: () => undefined };
@@ -10,6 +11,7 @@ const AdminLocaleContext = createContext<AdminLocaleContextValue>(defaultContext
 
 export function AdminI18nProvider({ initialLocale, children }: { initialLocale: AdminLocale; children: React.ReactNode }) {
   const [locale, setLocaleState] = useState(initialLocale);
+  setActiveAdminLocale(locale);
 
   const setLocale = useCallback((next: AdminLocale) => {
     document.cookie = `${ADMIN_LOCALE_COOKIE}=${next}; Path=/admin; Max-Age=31536000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;

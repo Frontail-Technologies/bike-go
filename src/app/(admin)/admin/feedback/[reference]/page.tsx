@@ -10,5 +10,5 @@ async function FeedbackWorkspace({ params }: { params: Promise<{ reference: stri
 }
 
 export default function FeedbackDetailPage({ params }: { params: Promise<{ reference: string }> }) {
-  return <Suspense fallback={<AdminLoadingState label="Loading ticket…" />}><FeedbackWorkspace params={params} /></Suspense>;
+  return <Suspense fallback={<AdminLoadingState labelKey="ui.loadingLabels.ticket" />}><FeedbackWorkspace params={params} /></Suspense>;
 }

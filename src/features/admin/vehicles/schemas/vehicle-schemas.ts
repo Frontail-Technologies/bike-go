@@ -1,41 +1,44 @@
 import { z } from "zod";
+import { adminError, adminT } from "@/features/admin/i18n/translate";
 import { vehicleStatuses, vehicleTypes } from "../types/vehicle";
 
-const optionalWhole = (label: string) =>
-  z.string().refine((value) => value === "" || (Number.isInteger(Number(value)) && Number(value) >= 1), `${label} must be a positive whole number.`);
+const labelled = (key: string, labelKey: string) => ({ error: () => adminT(key, { label: adminT(labelKey) }) });
 
-const money = (label: string, min: number) =>
+const optionalWhole = (labelKey: string) =>
+  z.string().refine((value) => value === "" || (Number.isInteger(Number(value)) && Number(value) >= 1), labelled("vehicles.validation.wholeNumber", labelKey));
+
+const money = (labelKey: string, min: number) =>
   z
     .string()
-    .min(1, `${label} is required.`)
-    .refine((value) => Number.isFinite(Number(value)) && Number(value) >= min, min > 0 ? "Enter an amount greater than zero." : "Enter zero or a positive amount.")
-    .refine((value) => !Number.isFinite(Number(value)) || Math.abs(Number(value) * 100 - Math.round(Number(value) * 100)) < 1e-6, "Use at most two decimal places.");
+    .min(1, labelled("vehicles.validation.required", labelKey))
+    .refine((value) => Number.isFinite(Number(value)) && Number(value) >= min, adminError(min > 0 ? "vehicles.validation.positive" : "vehicles.validation.nonNegative"))
+    .refine((value) => !Number.isFinite(Number(value)) || Math.abs(Number(value) * 100 - Math.round(Number(value) * 100)) < 1e-6, adminError("vehicles.validation.decimals"));
 
 export const vehicleFormSchema = z.object({
-  name: z.string().trim().min(2, "Enter at least 2 characters.").max(120),
-  slug: z.string().trim().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase words separated by dashes."),
+  name: z.string().trim().min(2, adminError("vehicles.validation.minChars")).max(120),
+  slug: z.string().trim().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, adminError("vehicles.validation.slug")),
   vehicleType: z.enum(vehicleTypes),
-  brand: z.string().trim().min(1, "Brand is required."),
-  model: z.string().trim().min(1, "Model is required."),
-  category: z.string().trim().min(1, "Category is required."),
-  description: z.string().trim().max(4000, "Keep the description under 4000 characters."),
-  engineCc: optionalWhole("Engine cc"),
+  brand: z.string().trim().min(1, adminError("vehicles.validation.brand")),
+  model: z.string().trim().min(1, adminError("vehicles.validation.model")),
+  category: z.string().trim().min(1, adminError("vehicles.validation.category")),
+  description: z.string().trim().max(4000, adminError("vehicles.validation.description")),
+  engineCc: optionalWhole("vehicles.validation.engineCc"),
   transmission: z.string(),
   fuelType: z.string(),
-  seats: optionalWhole("Seats"),
-  dailyPrice: money("Daily price", 0.01),
-  deposit: money("Deposit", 0),
-  locationId: z.string().uuid("Choose a location."),
-  registrationNumber: z.string().trim().min(2, "Registration number is required."),
+  seats: optionalWhole("vehicles.validation.seats"),
+  dailyPrice: money("vehicles.validation.dailyPrice", 0.01),
+  deposit: money("vehicles.validation.deposit", 0),
+  locationId: z.string().uuid(adminError("vehicles.validation.location")),
+  registrationNumber: z.string().trim().min(2, adminError("vehicles.validation.registration")),
   status: z.enum(vehicleStatuses),
 });
 export type VehicleFormValues = z.infer<typeof vehicleFormSchema>;
 
 export const blockFormSchema = z
   .object({
-    startAt: z.string().min(1, "Start date and time is required."),
-    endAt: z.string().min(1, "End date and time is required."),
-    reason: z.string().trim().min(2, "Reason must contain at least 2 characters.").max(200, "Reason must contain no more than 200 characters."),
+    startAt: z.string().min(1, adminError("vehicles.validation.startRequired")),
+    endAt: z.string().min(1, adminError("vehicles.validation.endRequired")),
+    reason: z.string().trim().min(2, adminError("vehicles.validation.reasonMin")).max(200, adminError("vehicles.validation.reasonMax")),
   })
-  .refine((value) => !value.startAt || !value.endAt || value.endAt > value.startAt, { path: ["endAt"], message: "End date and time must be after the start." });
+  .refine((value) => !value.startAt || !value.endAt || value.endAt > value.startAt, { path: ["endAt"], ...adminError("vehicles.validation.endAfterStart") });
 export type BlockFormValues = z.infer<typeof blockFormSchema>;

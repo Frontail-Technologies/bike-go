@@ -1,3 +1,5 @@
+import { adminPack } from "./pack";
+
 const en = {
   language: { label: "Language", choose: "Choose admin language", english: "English", khmer: "Khmer" },
   nav: {
@@ -40,6 +42,9 @@ const en = {
     contactAdmin: "Try again or contact your administrator.", tryAgain: "Try again", confirm: "Confirm", cancel: "Cancel",
     noRecords: "No records found.", previousPage: "Previous page", nextPage: "Next page", page: "Page {page}",
     showing: "Showing {from}–{to} of {total}", openConfirmation: "Open confirmation",
+    loading: "Loading…", retryLater: "Try again in a moment.", genericError: "Something went wrong. Try again.", checkFields: "Check the highlighted fields.",
+    inactiveSuffix: "{label} (inactive)", select: "Select {label}", none: "—", yes: "Yes", no: "No", optional: "Optional", required: "Required",
+    characters: "{min}–{max} characters", charCount: "{count}/{max}", ict: "ICT · Asia/Phnom_Penh", unknown: "Unknown",
   },
   status: {
     active: "Active", scheduled: "Scheduled", "ready-for-pickup": "Ready for pickup", draft: "Draft", submitted: "Submitted",
@@ -62,15 +67,11 @@ const en = {
     settings: { title: "Settings", description: "Master data and operational rules that drive RideGo." },
     vehicles: { title: "Vehicles", description: "Manage vehicles, pricing, location assignment, and availability.", add: "Add Vehicle", addTitle: "Add New Vehicle", edit: "Edit Vehicle", detail: "Vehicle Details", search: "Search vehicles…" },
   },
-  filters: { allStatuses: "All statuses", allTypes: "All types", allLocations: "All locations", allRoles: "All roles", anyDate: "Any date", filters: "Filters", clear: "Clear filters" },
+  filters: { allStatuses: "All statuses", allTypes: "All types", allLocations: "All locations", allRoles: "All roles", anyDate: "Any date", filters: "Filters", clear: "Clear filters", reset: "Reset", resetFilters: "Reset filters", activeCount: "Filters, {count} active", all: "All" },
   actions: { add: "Add", edit: "Edit", save: "Save", saving: "Saving…", view: "View", review: "Review", activate: "Activate", deactivate: "Deactivate", delete: "Delete", close: "Close", back: "Back" },
-} as const;
-
-type WidenMessages<T> = {
-  [Key in keyof T]: T[Key] extends string ? string : WidenMessages<T[Key]>;
 };
 
-const km: WidenMessages<typeof en> = {
+const km: typeof en = {
   language: { label: "ភាសា", choose: "ជ្រើសរើសភាសាសម្រាប់ផ្ទាំងអ្នកគ្រប់គ្រង", english: "អង់គ្លេស", khmer: "ខ្មែរ" },
   nav: {
     dashboard: "ផ្ទាំងគ្រប់គ្រង", vehicles: "យានយន្ត", banners: "បដា", bookings: "ការកក់", customers: "អតិថិជន",
@@ -112,6 +113,9 @@ const km: WidenMessages<typeof en> = {
     contactAdmin: "សូមព្យាយាមម្តងទៀត ឬទាក់ទងអ្នកគ្រប់គ្រង។", tryAgain: "ព្យាយាមម្តងទៀត", confirm: "បញ្ជាក់", cancel: "បោះបង់",
     noRecords: "រកមិនឃើញទិន្នន័យ។", previousPage: "ទំព័រមុន", nextPage: "ទំព័របន្ទាប់", page: "ទំព័រ {page}",
     showing: "បង្ហាញ {from}–{to} នៃ {total}", openConfirmation: "បើកការបញ្ជាក់",
+    loading: "កំពុងផ្ទុក…", retryLater: "សូមព្យាយាមម្តងទៀតបន្តិចទៀត។", genericError: "មានបញ្ហាកើតឡើង។ សូមព្យាយាមម្តងទៀត។", checkFields: "សូមពិនិត្យវាលដែលបានបន្លិច។",
+    inactiveSuffix: "{label} (អសកម្ម)", select: "ជ្រើសរើស{label}", none: "—", yes: "បាទ/ចាស", no: "ទេ", optional: "ស្រេចចិត្ត", required: "តម្រូវ",
+    characters: "{min}–{max} តួអក្សរ", charCount: "{count}/{max}", ict: "ICT · Asia/Phnom_Penh", unknown: "មិនស្គាល់",
   },
   status: {
     active: "សកម្ម", scheduled: "បានកំណត់ពេល", "ready-for-pickup": "ត្រៀមសម្រាប់ទទួល", draft: "ព្រាង", submitted: "បានដាក់ស្នើ",
@@ -134,8 +138,8 @@ const km: WidenMessages<typeof en> = {
     settings: { title: "ការកំណត់", description: "ទិន្នន័យប្រតិបត្តិការ និងច្បាប់ប្រព័ន្ធរបស់ RideGo។" },
     vehicles: { title: "យានយន្ត", description: "គ្រប់គ្រងយានយន្ត តម្លៃ ទីតាំង និងភាពទំនេរ។", add: "បន្ថែមយានយន្ត", addTitle: "បន្ថែមយានយន្តថ្មី", edit: "កែសម្រួលយានយន្ត", detail: "ព័ត៌មានយានយន្ត", search: "ស្វែងរកយានយន្ត…" },
   },
-  filters: { allStatuses: "ស្ថានភាពទាំងអស់", allTypes: "ប្រភេទទាំងអស់", allLocations: "ទីតាំងទាំងអស់", allRoles: "តួនាទីទាំងអស់", anyDate: "កាលបរិច្ឆេទណាមួយ", filters: "តម្រង", clear: "សម្អាតតម្រង" },
+  filters: { allStatuses: "ស្ថានភាពទាំងអស់", allTypes: "ប្រភេទទាំងអស់", allLocations: "ទីតាំងទាំងអស់", allRoles: "តួនាទីទាំងអស់", anyDate: "កាលបរិច្ឆេទណាមួយ", filters: "តម្រង", clear: "សម្អាតតម្រង", reset: "កំណត់ឡើងវិញ", resetFilters: "កំណត់តម្រងឡើងវិញ", activeCount: "តម្រង {count} កំពុងប្រើ", all: "ទាំងអស់" },
   actions: { add: "បន្ថែម", edit: "កែសម្រួល", save: "រក្សាទុក", saving: "កំពុងរក្សាទុក…", view: "មើល", review: "ពិនិត្យ", activate: "ធ្វើឱ្យសកម្ម", deactivate: "បិទសកម្មភាព", delete: "លុប", close: "បិទ", back: "ត្រឡប់ក្រោយ" },
 };
 
-export const adminMessages = { en, km } as const;
+export default adminPack(en, km);

@@ -5,8 +5,10 @@ import "@/components/admin/admin-theme.module.css";
 import { AdminHeader } from "@/components/admin/shell/admin-header";
 import { AdminMobileBar, AdminSidebar } from "@/components/admin/shell/admin-sidebar";
 import { useAdminShellStore } from "@/stores/admin/shell-store";
+import { useAdminTranslations } from "@/features/admin/i18n/hooks";
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
+  const t = useAdminTranslations();
   const collapsed = useAdminShellStore((state) => state.sidebarCollapsed);
   const setCollapsed = useAdminShellStore((state) => state.setSidebarCollapsed);
 
@@ -16,7 +18,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div data-admin-ui className="adminRoot flex min-h-dvh">
-      <Suspense fallback={<aside aria-label="Admin" className="hidden h-dvh w-[232px] shrink-0 bg-[var(--admin-sidebar)] lg:block" />}>
+      <Suspense fallback={<aside aria-label={t("shell.admin")} className="hidden h-dvh w-[232px] shrink-0 bg-[var(--admin-sidebar)] lg:block" />}>
         <AdminSidebar collapsed={collapsed} onCollapsedChange={setCollapsed} />
       </Suspense>
       <div className="flex min-w-0 flex-1 flex-col">

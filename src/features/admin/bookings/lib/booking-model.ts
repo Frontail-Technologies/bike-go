@@ -1,19 +1,17 @@
 import type { AdminStatus } from "@/components/admin/data-display/status-badge";
 import { formatDate, formatDateTime, formatShort, formatTime, ictLocalToIso, isoToIctLocal } from "@/lib/date";
-import type { Booking, BookingStatus, FuelLevel, PaymentStatus, VehicleCondition } from "../types/booking";
-import { bookingStatus, paymentStatus } from "@/lib/status/booking";
+import { adminLabels, adminT } from "@/features/admin/i18n/translate";
+import { bookingStatuses, fuelLevels, paymentStatuses, vehicleConditions, type Booking, type BookingStatus } from "../types/booking";
+import { bookingStatus } from "@/lib/status/booking";
 
-export const bookingLabels = Object.fromEntries(Object.entries(bookingStatus).map(([code, meta]) => [code, meta.label])) as Record<BookingStatus, string>;
+export const bookingLabels = adminLabels("bookings.status", bookingStatuses);
 
-export const paymentLabels = Object.fromEntries(Object.entries(paymentStatus).map(([code, meta]) => [code, meta.label])) as Record<PaymentStatus, string>;
+export const paymentLabels = adminLabels("bookings.payment", paymentStatuses);
 
-export const actionLabels: Partial<Record<BookingStatus, string>> = {
-  confirmed: "Confirm Booking", ready_for_pickup: "Mark Ready for Pickup", active: "Start Rental",
-  returned: "Return Vehicle", completed: "Complete Booking", cancelled: "Cancel Booking", no_show: "Mark No Show",
-};
+export const actionLabels: Partial<Record<BookingStatus, string>> = adminLabels("bookings.action", ["confirmed", "ready_for_pickup", "active", "returned", "completed", "cancelled", "no_show"] as const);
 
-export const fuelLabels: Record<FuelLevel, string> = { full: "Full", three_quarters: "3/4", half: "1/2", quarter: "1/4", empty: "Empty" };
-export const conditionLabels: Record<VehicleCondition, string> = { excellent: "Excellent", good: "Good", fair: "Fair", needs_attention: "Needs attention" };
+export const fuelLabels = adminLabels("bookings.fuel", fuelLevels);
+export const conditionLabels = adminLabels("bookings.condition", vehicleConditions);
 
 const badgeStatus = Object.fromEntries(Object.entries(bookingStatus).map(([code, meta]) => [code, meta.tone])) as Record<BookingStatus, AdminStatus>;
 export const toBadge = (status: BookingStatus): { status: AdminStatus; label: string; className?: string } => ({
@@ -34,11 +32,11 @@ export const lateMinutes = (booking: Pick<Booking, "bookingStatus" | "returnAt" 
   booking.returnInspection ? minutesBetween(booking.returnAt, Date.parse(booking.returnInspection.occurredAt)) : booking.bookingStatus === "active" ? minutesBetween(booking.returnAt, now) : 0;
 
 export const durationLabel = (minutes: number) => {
-  if (minutes < 60) return `${minutes} min`;
-  if (minutes < 1440) return `${Math.floor(minutes / 60)}h${minutes % 60 ? ` ${minutes % 60}m` : ""}`;
+  if (minutes < 60) return adminT("bookings.duration.minutes", { count: minutes });
+  if (minutes < 1440) return minutes % 60 ? adminT("bookings.duration.hoursMinutes", { hours: Math.floor(minutes / 60), minutes: minutes % 60 }) : adminT("bookings.duration.hours", { count: minutes / 60 });
   const days = Math.floor(minutes / 1440);
   const hours = Math.floor((minutes % 1440) / 60);
-  return `${days}d${hours ? ` ${hours}h` : ""}`;
+  return hours ? adminT("bookings.duration.daysHours", { days, hours }) : adminT("bookings.duration.days", { count: days });
 };
 
 export const vehiclePhoto = (vehicle: Booking["vehicle"]) => ({ id: vehicle.id, name: vehicle.name, vehicleType: vehicle.vehicleType, images: vehicle.image ? [vehicle.image] : [] });

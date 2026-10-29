@@ -10,5 +10,5 @@ async function EditBanner({ params }: { params: Promise<{ id: string }> }) {
 }
 
 export default function EditBannerPage({ params }: { params: Promise<{ id: string }> }) {
-  return <Suspense fallback={<AdminLoadingState label="Loading banner form…" />}><EditBanner params={params} /></Suspense>;
+  return <Suspense fallback={<AdminLoadingState labelKey="ui.loadingLabels.bannerForm" />}><EditBanner params={params} /></Suspense>;
 }

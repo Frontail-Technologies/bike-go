@@ -5,14 +5,17 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 import type { MetricPoint } from "@/components/admin/data";
 import { AdminChartTooltip } from "./chart-tooltip";
 import { ChartEmptyState } from "./chart-empty-state";
+import { useAdminTranslations } from "@/features/admin/i18n/hooks";
 
-export function MetricBarChart({ data, label = "Bookings" }: { data: MetricPoint[]; label?: string }) {
+export function MetricBarChart({ data, label: labelProp }: { data: MetricPoint[]; label?: string }) {
+  const t = useAdminTranslations();
+  const label = labelProp ?? t("nav.bookings");
   const reduceMotion = useReducedMotion();
-  if (!data.length) return <ChartEmptyState title={`No ${label.toLowerCase()} data`} />;
+  if (!data.length) return <ChartEmptyState title={t("ui.charts.noMetricData", { label: label.toLowerCase() })} />;
   return (
     <div>
-      <p className="sr-only">{label} by period. Values are also available in the chart tooltip.</p>
-      <div className="h-64 min-w-0 w-full" aria-label={`${label} bar chart`}>
+      <p className="sr-only">{t("ui.charts.barSummary", { label })}</p>
+      <div className="h-64 min-w-0 w-full" aria-label={t("ui.charts.barChart", { label })}>
         <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 640, height: 256 }}>
           <BarChart data={data} accessibilityLayer margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
             <CartesianGrid stroke="var(--admin-border)" strokeDasharray="3 3" vertical={false} />
@@ -23,7 +26,7 @@ export function MetricBarChart({ data, label = "Bookings" }: { data: MetricPoint
           </BarChart>
         </ResponsiveContainer>
       </div>
-      <p className="mt-3 text-xs text-[var(--admin-muted)]"><strong className="text-[var(--admin-text)]">{data.reduce((sum, item) => sum + item.value, 0)}</strong> {label.toLowerCase()} across the selected range</p>
+      <p className="mt-3 text-xs text-[var(--admin-muted)]"><strong className="text-[var(--admin-text)]">{data.reduce((sum, item) => sum + item.value, 0)}</strong> {t("ui.charts.acrossRange", { label: label.toLowerCase() })}</p>
     </div>
   );
 }

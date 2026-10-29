@@ -1,7 +1,10 @@
+"use client";
+
 import { Skeleton } from "@heroui/react";
 import { TrendDownIcon, TrendUpIcon } from "@phosphor-icons/react/ssr";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
+import { useAdminTranslations } from "@/features/admin/i18n/hooks";
 
 export type StatTone = "accent" | "purple" | "success" | "warning" | "danger";
 
@@ -25,6 +28,7 @@ type StatCardProps = {
 };
 
 export function StatCard({ label, value, icon, tone = "accent", trend, secondary, loading = false, className }: StatCardProps) {
+  const t = useAdminTranslations();
   const Trend = trend?.direction === "down" ? TrendDownIcon : TrendUpIcon;
   const palette = tones[tone];
   return (
@@ -36,7 +40,7 @@ export function StatCard({ label, value, icon, tone = "accent", trend, secondary
         <p className="mt-0.5 text-xs font-semibold text-[var(--admin-muted)]">{label}</p>
         {loading ? <Skeleton className="mt-2 h-4 w-28 rounded" /> : trend ? (
           <p className={cn("mt-2 flex items-center gap-1 text-xs font-bold", trend.direction === "up" ? "text-[var(--admin-success)]" : "text-[var(--admin-danger)]")}>
-            <Trend size={14} weight="bold" aria-hidden />{trend.value}<span className="truncate font-medium text-[var(--admin-muted)]">{trend.label ?? "vs last month"}</span>
+            <Trend size={14} weight="bold" aria-hidden />{trend.value}<span className="truncate font-medium text-[var(--admin-muted)]">{trend.label ?? t("ui.vsLastMonth")}</span>
           </p>
         ) : secondary ? <div className="mt-2 text-xs text-[var(--admin-muted)]">{secondary}</div> : null}
       </div>

@@ -10,16 +10,18 @@ import { actionErrorMessage } from "../hooks/use-booking-actions";
 import { conditionLabels, distanceTravelled, durationLabel, fmtDateTime, fuelLabels, ictLocalToIso, isoToIctLocal } from "../lib/booking-model";
 import { handoverSchema, returnSchema, type HandoverValues, type ReturnValues } from "../schemas/booking-schemas";
 import { fuelLevels, vehicleConditions, type Booking, type HandoverInput, type ReturnInput } from "../types/booking";
+import { useAdminTranslations } from "@/features/admin/i18n/hooks";
 
-const fuelOptions = fuelLevels.map((value) => ({ value, label: fuelLabels[value] }));
-const conditionOptions = vehicleConditions.map((value) => ({ value, label: conditionLabels[value] }));
+const fuelOptions = () => fuelLevels.map((value) => ({ value, label: fuelLabels[value] }));
+const conditionOptions = () => vehicleConditions.map((value) => ({ value, label: conditionLabels[value] }));
 
 function BookingSummary({ booking }: { booking: Booking }) {
+  const t = useAdminTranslations();
   return <dl className="adminTile grid gap-3 rounded-xl p-3 text-sm sm:grid-cols-2">
-    <div><dt className="text-[11px] text-[var(--admin-muted)]">Booking</dt><dd className="font-bold">{booking.reference}</dd></div>
-    <div><dt className="text-[11px] text-[var(--admin-muted)]">Customer</dt><dd className="font-bold">{booking.customer.name}</dd></div>
-    <div><dt className="text-[11px] text-[var(--admin-muted)]">Vehicle</dt><dd className="font-bold">{booking.vehicle.name}</dd></div>
-    <div><dt className="text-[11px] text-[var(--admin-muted)]">Scheduled pickup</dt><dd className="font-bold">{fmtDateTime(booking.pickupAt)} ICT</dd></div>
+    <div><dt className="text-[11px] text-[var(--admin-muted)]">{t("bookings.operations.booking")}</dt><dd className="font-bold">{booking.reference}</dd></div>
+    <div><dt className="text-[11px] text-[var(--admin-muted)]">{t("bookings.operations.customer")}</dt><dd className="font-bold">{booking.customer.name}</dd></div>
+    <div><dt className="text-[11px] text-[var(--admin-muted)]">{t("bookings.operations.vehicle")}</dt><dd className="font-bold">{booking.vehicle.name}</dd></div>
+    <div><dt className="text-[11px] text-[var(--admin-muted)]">{t("bookings.operations.scheduledPickup")}</dt><dd className="font-bold">{fmtDateTime(booking.pickupAt)} ICT</dd></div>
   </dl>;
 }
 
@@ -57,10 +59,12 @@ function NotesField<V extends HandoverValues | ReturnValues>({ control, name, la
 }
 
 function FormError({ message }: { message: string }) {
-  return message ? <Alert status="danger"><Alert.Indicator /><Alert.Content><Alert.Title>Not saved</Alert.Title><Alert.Description>{message}</Alert.Description></Alert.Content></Alert> : null;
+  const t = useAdminTranslations();
+  return message ? <Alert status="danger"><Alert.Indicator /><Alert.Content><Alert.Title>{t("bookings.dialogs.notSaved")}</Alert.Title><Alert.Description>{message}</Alert.Description></Alert.Content></Alert> : null;
 }
 
 function HandoverFormBody({ booking, onClose, onConfirm }: { booking: Booking; onClose: () => void; onConfirm: (input: HandoverInput) => Promise<unknown> }) {
+  const t = useAdminTranslations();
   const depositRequired = booking.pricing.securityDepositMinor > 0;
   const [error, setError] = useState("");
   const form = useForm<HandoverValues>({
@@ -87,35 +91,37 @@ function HandoverFormBody({ booking, onClose, onConfirm }: { booking: Booking; o
     <Drawer.Body className="space-y-5 pb-8">
       <FormError message={error} />
       <BookingSummary booking={booking} />
-      <p className="text-xs text-[var(--admin-muted)]">Date and time values are Cambodia local time: <strong>ICT — Asia/Phnom_Penh (UTC+7)</strong>.</p>
+      <p className="text-xs text-[var(--admin-muted)]">{t("bookings.operations.ictNoteBefore")}<strong>{t("bookings.operations.ictZone")}</strong>.</p>
       <div className="grid gap-4 sm:grid-cols-2">
-        <TextInput control={form.control} name="actualPickupAt" label="Actual pickup — ICT" type="datetime-local" />
-        <TextInput control={form.control} name="odometerKm" label="Current odometer (km)" type="number" min={0} placeholder="e.g. 12480" />
-        <ChoiceSelect control={form.control} name="fuelLevel" label="Fuel level" options={fuelOptions} />
-        <ChoiceSelect control={form.control} name="condition" label="Vehicle condition" options={conditionOptions} />
+        <TextInput control={form.control} name="actualPickupAt" label={t("bookings.operations.actualPickup")} type="datetime-local" />
+        <TextInput control={form.control} name="odometerKm" label={t("bookings.operations.odometer")} type="number" min={0} placeholder={t("bookings.operations.odometerPlaceholder")} />
+        <ChoiceSelect control={form.control} name="fuelLevel" label={t("bookings.operations.fuelLevel")} options={fuelOptions()} />
+        <ChoiceSelect control={form.control} name="condition" label={t("bookings.operations.condition")} options={conditionOptions()} />
       </div>
-      <NotesField control={form.control} name="existingDamageNotes" label="Existing damage notes" placeholder="Record scratches, dents, or write ‘None’." />
-      <fieldset className="space-y-1"><legend className="mb-1 text-sm font-bold">Required verification</legend>
-        <Controller control={form.control} name="licenceVerified" render={({ field }) => <Checkbox isSelected={field.value} onChange={(value) => { field.onChange(value); form.clearErrors(); }}>Driving licence verified</Checkbox>} />
-        <Controller control={form.control} name="identityVerified" render={({ field }) => <Checkbox isSelected={field.value} onChange={(value) => { field.onChange(value); form.clearErrors(); }}>Customer identity verified</Checkbox>} />
-        {depositRequired ? <Controller control={form.control} name="depositVerified" render={({ field }) => <Checkbox isSelected={field.value} onChange={(value) => { field.onChange(value); form.clearErrors(); }}>Security deposit received / verified</Checkbox>} /> : null}
+      <NotesField control={form.control} name="existingDamageNotes" label={t("bookings.operations.existingDamage")} placeholder={t("bookings.operations.existingDamagePlaceholder")} />
+      <fieldset className="space-y-1"><legend className="mb-1 text-sm font-bold">{t("bookings.operations.verification")}</legend>
+        <Controller control={form.control} name="licenceVerified" render={({ field }) => <Checkbox isSelected={field.value} onChange={(value) => { field.onChange(value); form.clearErrors(); }}>{t("bookings.operations.licence")}</Checkbox>} />
+        <Controller control={form.control} name="identityVerified" render={({ field }) => <Checkbox isSelected={field.value} onChange={(value) => { field.onChange(value); form.clearErrors(); }}>{t("bookings.operations.identity")}</Checkbox>} />
+        {depositRequired ? <Controller control={form.control} name="depositVerified" render={({ field }) => <Checkbox isSelected={field.value} onChange={(value) => { field.onChange(value); form.clearErrors(); }}>{t("bookings.operations.deposit")}</Checkbox>} /> : null}
         {verification ? <p role="alert" className="text-xs font-semibold text-[var(--admin-danger)]">{verification}</p> : null}
       </fieldset>
-      <NotesField control={form.control} name="staffNotes" label="Staff notes" placeholder="Optional internal handover notes" />
+      <NotesField control={form.control} name="staffNotes" label={t("bookings.operations.staffNotes")} placeholder={t("bookings.operations.handoverPlaceholder")} />
     </Drawer.Body>
-    <Drawer.Footer className="grid grid-cols-2 gap-2 border-t border-[var(--admin-border)] bg-white"><Button type="button" variant="tertiary" className="min-h-12" onPress={onClose}>Cancel</Button><Button type="submit" className="min-h-12" isPending={form.formState.isSubmitting}>Confirm Handover</Button></Drawer.Footer>
+    <Drawer.Footer className="grid grid-cols-2 gap-2 border-t border-[var(--admin-border)] bg-white"><Button type="button" variant="tertiary" className="min-h-12" onPress={onClose}>{t("common.cancel")}</Button><Button type="submit" className="min-h-12" isPending={form.formState.isSubmitting}>{t("bookings.operations.confirmHandover")}</Button></Drawer.Footer>
   </Form>;
 }
 
 type DrawerProps<T> = { booking: Booking; isOpen: boolean; onOpenChange: (open: boolean) => void; onConfirm: (input: T) => Promise<unknown> };
 
 export function HandoverDrawer({ booking, isOpen, onOpenChange, onConfirm }: DrawerProps<HandoverInput>) {
-  return <Drawer.Backdrop isOpen={isOpen} onOpenChange={onOpenChange} className="adminOverlay"><Drawer.Content placement="right" className="h-dvh w-full max-w-xl"><Drawer.Dialog aria-label="Start rental vehicle handover"><Drawer.CloseTrigger /><Drawer.Header><Drawer.Heading>Start Rental · Vehicle Handover</Drawer.Heading></Drawer.Header>
+  const t = useAdminTranslations();
+  return <Drawer.Backdrop isOpen={isOpen} onOpenChange={onOpenChange} className="adminOverlay"><Drawer.Content placement="right" className="h-dvh w-full max-w-xl"><Drawer.Dialog aria-label={t("bookings.operations.handoverAria")}><Drawer.CloseTrigger /><Drawer.Header><Drawer.Heading>{t("bookings.operations.handoverTitle")}</Drawer.Heading></Drawer.Header>
     <HandoverFormBody key={booking.reference} booking={booking} onClose={() => onOpenChange(false)} onConfirm={onConfirm} />
   </Drawer.Dialog></Drawer.Content></Drawer.Backdrop>;
 }
 
 function ReturnFormBody({ booking, onClose, onConfirm }: { booking: Booking; onClose: () => void; onConfirm: (input: ReturnInput) => Promise<unknown> }) {
+  const t = useAdminTranslations();
   const pickupOdometer = booking.pickupInspection?.odometerKm ?? 0;
   const [error, setError] = useState("");
   const form = useForm<ReturnValues>({
@@ -131,8 +137,8 @@ function ReturnFormBody({ booking, onClose, onConfirm }: { booking: Booking; onC
   const submit = form.handleSubmit(async (formValues) => {
     setError("");
     const actualReturnAt = ictLocalToIso(formValues.actualReturnAt);
-    if (booking.pickupInspection && Date.parse(actualReturnAt) < Date.parse(booking.pickupInspection.occurredAt)) { form.setError("actualReturnAt", { message: "Actual return must be after the vehicle handover." }); return; }
-    if (Number(formValues.odometerKm) < pickupOdometer) { form.setError("odometerKm", { message: `Return mileage must be at least ${pickupOdometer.toLocaleString()} km.` }); return; }
+    if (booking.pickupInspection && Date.parse(actualReturnAt) < Date.parse(booking.pickupInspection.occurredAt)) { form.setError("actualReturnAt", { message: t("bookings.operations.returnAfterHandover") }); return; }
+    if (Number(formValues.odometerKm) < pickupOdometer) { form.setError("odometerKm", { message: t("bookings.operations.minMileage", { value: pickupOdometer.toLocaleString() }) }); return; }
     try {
       await onConfirm({
         actualReturnAt, odometerKm: Number(formValues.odometerKm), fuelLevel: formValues.fuelLevel, condition: formValues.condition, newDamageFound: formValues.newDamageFound,
@@ -149,35 +155,37 @@ function ReturnFormBody({ booking, onClose, onConfirm }: { booking: Booking; onC
       <FormError message={error} />
       <BookingSummary booking={booking} />
       <div className="grid gap-2 rounded-xl bg-[var(--admin-surface-muted)] p-3 text-xs sm:grid-cols-3">
-        <div><p className="text-[var(--admin-muted)]">Scheduled return</p><p className="font-bold">{fmtDateTime(booking.returnAt)} ICT</p></div>
-        <div><p className="text-[var(--admin-muted)]">Distance travelled</p><p className="font-bold">{distance === null ? "—" : `${distance.toLocaleString()} km`}</p></div>
-        <div><p className="text-[var(--admin-muted)]">Late return</p><p className={`font-bold ${late ? "text-[var(--admin-danger)]" : ""}`}>{late ? durationLabel(late) : "On time"}</p></div>
+        <div><p className="text-[var(--admin-muted)]">{t("bookings.operations.scheduledReturn")}</p><p className="font-bold">{fmtDateTime(booking.returnAt)} ICT</p></div>
+        <div><p className="text-[var(--admin-muted)]">{t("bookings.operations.distance")}</p><p className="font-bold">{distance === null ? "—" : t("bookings.detail.km", { value: distance.toLocaleString() })}</p></div>
+        <div><p className="text-[var(--admin-muted)]">{t("bookings.operations.lateReturn")}</p><p className={`font-bold ${late ? "text-[var(--admin-danger)]" : ""}`}>{late ? durationLabel(late) : t("bookings.operations.onTime")}</p></div>
       </div>
-      <p className="text-xs text-[var(--admin-muted)]">Date and time values are Cambodia local time: <strong>ICT — Asia/Phnom_Penh (UTC+7)</strong>.</p>
+      <p className="text-xs text-[var(--admin-muted)]">{t("bookings.operations.ictNoteBefore")}<strong>{t("bookings.operations.ictZone")}</strong>.</p>
       <div className="grid gap-4 sm:grid-cols-2">
-        <TextInput control={form.control} name="actualReturnAt" label="Actual return — ICT" type="datetime-local" />
-        <TextInput control={form.control} name="odometerKm" label="Return odometer (km)" type="number" min={pickupOdometer} description={`Pickup: ${pickupOdometer.toLocaleString()} km`} />
-        <ChoiceSelect control={form.control} name="fuelLevel" label="Fuel level" options={fuelOptions} />
-        <ChoiceSelect control={form.control} name="condition" label="Vehicle condition" options={conditionOptions} />
+        <TextInput control={form.control} name="actualReturnAt" label={t("bookings.operations.actualReturn")} type="datetime-local" />
+        <TextInput control={form.control} name="odometerKm" label={t("bookings.operations.returnOdometer")} type="number" min={pickupOdometer} description={t("bookings.operations.pickupOdometer", { value: pickupOdometer.toLocaleString() })} />
+        <ChoiceSelect control={form.control} name="fuelLevel" label={t("bookings.operations.fuelLevel")} options={fuelOptions()} />
+        <ChoiceSelect control={form.control} name="condition" label={t("bookings.operations.condition")} options={conditionOptions()} />
       </div>
-      <fieldset><legend className="mb-2 text-sm font-bold">New damage found?</legend><div className="grid grid-cols-2 gap-2">
-        <Button type="button" variant={!values.newDamageFound ? "primary" : "outline"} className="min-h-11" onPress={() => form.setValue("newDamageFound", false, { shouldValidate: true })}>No</Button>
-        <Button type="button" variant={values.newDamageFound ? "danger" : "outline"} className="min-h-11" onPress={() => form.setValue("newDamageFound", true, { shouldValidate: true })}>Yes</Button>
+      <fieldset><legend className="mb-2 text-sm font-bold">{t("bookings.operations.newDamage")}</legend><div className="grid grid-cols-2 gap-2">
+        <Button type="button" variant={!values.newDamageFound ? "primary" : "outline"} className="min-h-11" onPress={() => form.setValue("newDamageFound", false, { shouldValidate: true })}>{t("common.no")}</Button>
+        <Button type="button" variant={values.newDamageFound ? "danger" : "outline"} className="min-h-11" onPress={() => form.setValue("newDamageFound", true, { shouldValidate: true })}>{t("common.yes")}</Button>
       </div></fieldset>
-      <NotesField control={form.control} name="damageNotes" label="Damage notes" required={values.newDamageFound} placeholder={values.newDamageFound ? "Describe location and severity." : "Optional condition notes"} />
-      <NotesField control={form.control} name="staffNotes" label="Staff notes" placeholder="Optional internal return notes" />
+      <NotesField control={form.control} name="damageNotes" label={t("bookings.operations.damageNotes")} required={values.newDamageFound} placeholder={values.newDamageFound ? t("bookings.operations.damagePlaceholder") : t("bookings.operations.conditionPlaceholder")} />
+      <NotesField control={form.control} name="staffNotes" label={t("bookings.operations.staffNotes")} placeholder={t("bookings.operations.returnPlaceholder")} />
     </Drawer.Body>
-    <Drawer.Footer className="grid grid-cols-2 gap-2 border-t border-[var(--admin-border)] bg-white"><Button type="button" variant="tertiary" className="min-h-12" onPress={onClose}>Cancel</Button><Button type="submit" className="min-h-12" isPending={form.formState.isSubmitting}>Confirm Return</Button></Drawer.Footer>
+    <Drawer.Footer className="grid grid-cols-2 gap-2 border-t border-[var(--admin-border)] bg-white"><Button type="button" variant="tertiary" className="min-h-12" onPress={onClose}>{t("common.cancel")}</Button><Button type="submit" className="min-h-12" isPending={form.formState.isSubmitting}>{t("bookings.operations.confirmReturn")}</Button></Drawer.Footer>
   </Form>;
 }
 
 export function ReturnInspectionDrawer({ booking, isOpen, onOpenChange, onConfirm }: DrawerProps<ReturnInput>) {
-  return <Drawer.Backdrop isOpen={isOpen} onOpenChange={onOpenChange} className="adminOverlay"><Drawer.Content placement="right" className="h-dvh w-full max-w-xl"><Drawer.Dialog aria-label="Return vehicle inspection"><Drawer.CloseTrigger /><Drawer.Header><Drawer.Heading>Return Vehicle · Inspection</Drawer.Heading></Drawer.Header>
+  const t = useAdminTranslations();
+  return <Drawer.Backdrop isOpen={isOpen} onOpenChange={onOpenChange} className="adminOverlay"><Drawer.Content placement="right" className="h-dvh w-full max-w-xl"><Drawer.Dialog aria-label={t("bookings.operations.returnAria")}><Drawer.CloseTrigger /><Drawer.Header><Drawer.Heading>{t("bookings.operations.returnTitle")}</Drawer.Heading></Drawer.Header>
     <ReturnFormBody key={booking.reference} booking={booking} onClose={() => onOpenChange(false)} onConfirm={onConfirm} />
   </Drawer.Dialog></Drawer.Content></Drawer.Backdrop>;
 }
 
 export function CompleteBookingDialog({ booking, isOpen, onOpenChange, onConfirm }: { booking: Booking; isOpen: boolean; onOpenChange: (open: boolean) => void; onConfirm: () => Promise<unknown> }) {
+  const t = useAdminTranslations();
   const distance = distanceTravelled(booking);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
@@ -193,12 +201,12 @@ export function CompleteBookingDialog({ booking, isOpen, onOpenChange, onConfirm
       setPending(false);
     }
   }
-  return <AlertDialog><AlertDialog.Trigger className="hidden" aria-hidden>Open completion dialog</AlertDialog.Trigger><AlertDialog.Backdrop isOpen={isOpen} onOpenChange={onOpenChange} className="adminOverlay"><AlertDialog.Container><AlertDialog.Dialog>
-    <AlertDialog.Header><AlertDialog.Icon status="accent" /><AlertDialog.Heading>Complete booking {booking.reference}?</AlertDialog.Heading></AlertDialog.Header>
-    <AlertDialog.Body className="space-y-4"><p className="text-sm text-[var(--admin-muted)]">Review the operational closure. Completing releases the vehicle unless it is inactive or has been moved to maintenance.</p>
-      <dl className="adminTile grid gap-3 rounded-xl p-3 text-sm sm:grid-cols-2"><div><dt className="text-xs text-[var(--admin-muted)]">Customer</dt><dd className="font-bold">{booking.customer.name}</dd></div><div><dt className="text-xs text-[var(--admin-muted)]">Vehicle</dt><dd className="font-bold">{booking.vehicle.name}</dd></div><div><dt className="text-xs text-[var(--admin-muted)]">Distance</dt><dd className="font-bold">{distance === null ? "—" : `${distance.toLocaleString()} km`}</dd></div><div><dt className="text-xs text-[var(--admin-muted)]">Damage</dt><dd className="font-bold">{booking.returnInspection?.damageFound ? "New damage reported" : "None reported"}</dd></div></dl>
+  return <AlertDialog><AlertDialog.Trigger className="hidden" aria-hidden>{t("bookings.operations.openComplete")}</AlertDialog.Trigger><AlertDialog.Backdrop isOpen={isOpen} onOpenChange={onOpenChange} className="adminOverlay"><AlertDialog.Container><AlertDialog.Dialog>
+    <AlertDialog.Header><AlertDialog.Icon status="accent" /><AlertDialog.Heading>{t("bookings.operations.completeTitle", { reference: booking.reference })}</AlertDialog.Heading></AlertDialog.Header>
+    <AlertDialog.Body className="space-y-4"><p className="text-sm text-[var(--admin-muted)]">{t("bookings.operations.completeIntro")}</p>
+      <dl className="adminTile grid gap-3 rounded-xl p-3 text-sm sm:grid-cols-2"><div><dt className="text-xs text-[var(--admin-muted)]">{t("bookings.operations.customer")}</dt><dd className="font-bold">{booking.customer.name}</dd></div><div><dt className="text-xs text-[var(--admin-muted)]">{t("bookings.operations.vehicle")}</dt><dd className="font-bold">{booking.vehicle.name}</dd></div><div><dt className="text-xs text-[var(--admin-muted)]">{t("bookings.operations.distanceShort")}</dt><dd className="font-bold">{distance === null ? "—" : t("bookings.detail.km", { value: distance.toLocaleString() })}</dd></div><div><dt className="text-xs text-[var(--admin-muted)]">{t("bookings.operations.damage")}</dt><dd className="font-bold">{booking.returnInspection?.damageFound ? t("bookings.operations.damageReported") : t("bookings.operations.noneReported")}</dd></div></dl>
       <FormError message={error} />
-    </AlertDialog.Body><AlertDialog.Footer><Button variant="tertiary" className="min-h-11" onPress={() => onOpenChange(false)}>Keep Returned</Button><Button className="min-h-11" isPending={pending} onPress={() => void confirm()}>Complete Booking</Button></AlertDialog.Footer>
+    </AlertDialog.Body><AlertDialog.Footer><Button variant="tertiary" className="min-h-11" onPress={() => onOpenChange(false)}>{t("bookings.operations.keepReturned")}</Button><Button className="min-h-11" isPending={pending} onPress={() => void confirm()}>{t("bookings.action.completed")}</Button></AlertDialog.Footer>
   </AlertDialog.Dialog></AlertDialog.Container></AlertDialog.Backdrop></AlertDialog>;
 }
 

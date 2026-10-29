@@ -17,5 +17,5 @@ async function AdminSection({ params }: { params: Promise<{ section: string }> }
 }
 
 export default function AdminSectionPage({ params }: { params: Promise<{ section: string }> }) {
-  return <Suspense fallback={<AdminLoadingState label="Loading workspace…" />}><AdminSection params={params} /></Suspense>;
+  return <Suspense fallback={<AdminLoadingState />}><AdminSection params={params} /></Suspense>;
 }

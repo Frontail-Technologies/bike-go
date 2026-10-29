@@ -29,7 +29,7 @@ export function AdminSidebar({ activeHref, onNavigate, collapsed, onCollapsedCha
   const pathname = usePathname();
   const t = useAdminTranslations();
   return (
-    <aside aria-label="Admin" className={cn("adminOverlay flex shrink-0 flex-col gap-5 bg-[var(--admin-sidebar)] p-3 transition-[width] duration-200 ease-out motion-reduce:transition-none", collapsed ? "w-[72px]" : "w-[232px]", inline ? "h-full" : "sticky top-0 hidden h-dvh lg:flex", className)}>
+    <aside aria-label={t("shell.admin")} className={cn("adminOverlay flex shrink-0 flex-col gap-5 bg-[var(--admin-sidebar)] p-3 transition-[width] duration-200 ease-out motion-reduce:transition-none", collapsed ? "w-[72px]" : "w-[232px]", inline ? "h-full" : "sticky top-0 hidden h-dvh lg:flex", className)}>
       <div className={cn("flex h-11 items-center", collapsed ? "justify-center" : "justify-between px-1")}>
         <AdminLogo compact={collapsed} />
         {collapsed ? null : <Button isIconOnly variant="ghost" aria-label={t("shell.collapse")} onPress={() => onCollapsedChange(true)} className="[--button-bg-hover:rgb(255_255_255/0.1)] [--button-bg-pressed:rgb(255_255_255/0.16)] text-white/80 hover:text-white"><SidebarSimpleIcon size={19} aria-hidden /></Button>}
