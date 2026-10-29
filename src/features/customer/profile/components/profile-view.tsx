@@ -263,10 +263,10 @@ export function ProfileView() {
               <BlockSkeleton className="h-24 w-full" />
             ) : applications.length > 0 ? (
               <div className="flex flex-col gap-3">
-                {applications.slice(0, 3).map((application) => (
+                {applications.map((application) => (
                   <ApplicationCard key={application.reference} application={application} />
                 ))}
-                <ListRow icon={<FilesIcon size={20} />} label={t("allApplications")} description={t("inTotal", { count: applications.length })} href="/loans/applications" />
+                <ListRow icon={<FilesIcon size={20} />} label={t("allApplications")} description={t("inTotal", { count: loans.data?.meta.total ?? applications.length })} href="/loans/applications" />
               </div>
             ) : (
               <div className="flex flex-col gap-2">
