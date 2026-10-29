@@ -11,7 +11,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Pagination } from "@/components/ui/pagination";
 import { Tabs } from "@/components/ui/tabs";
 import { useTranslations } from "@/i18n/hooks";
-import { BOOKING_TABS, useBookingsTab, type BookingTab } from "../hooks/use-bookings-tab";
+import { BOOKING_TABS, useBookingTabParams, type BookingTab } from "../hooks/use-booking-tab-params";
+import { useBookingTabList, usePrefetchBookingTabs } from "../hooks/use-booking-tab-queries";
 import { BookingCard } from "./booking-card";
 
 const tabText = {
@@ -24,18 +25,20 @@ const tabText = {
 export function BookingsView() {
   const t = useTranslations("booking");
   const common = useTranslations("common");
-  const list = useBookingsTab();
+  const tabs = useBookingTabParams();
+  const list = useBookingTabList(tabs.selected, tabs.page);
+  usePrefetchBookingTabs(tabs.selected, list.isLoaded);
 
   const content = list.isLoading ? (
     <BrandLoader className="min-h-64" />
   ) : list.items.length === 0 ? (
-    <EmptyState icon={<CalendarXIcon size={24} />} title={t(tabText[list.selected].empty)} action={<ButtonLink href="/bikes" variant="outline" size="sm">{t("browseBikes")}</ButtonLink>} />
+    <EmptyState icon={<CalendarXIcon size={24} />} title={t(tabText[tabs.selected].empty)} action={<ButtonLink href="/bikes" variant="outline" size="sm">{t("browseBikes")}</ButtonLink>} />
   ) : (
     <div className="flex flex-col gap-5">
       <AnimatedGrid className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
         {list.items.map(({ booking, bike }) => <BookingCard key={booking.reference} booking={booking} bike={bike} />)}
       </AnimatedGrid>
-      {list.pageCount > 1 ? <Pagination page={list.page} pageCount={list.pageCount} onPageChange={list.goToPage} summary={`${list.total} bookings`} /> : null}
+      {list.pageCount > 1 ? <Pagination page={tabs.page} pageCount={list.pageCount} onPageChange={tabs.goToPage} summary={`${list.total} bookings`} /> : null}
     </div>
   );
 
@@ -53,9 +56,9 @@ export function BookingsView() {
         <DesktopTitle title={t("myBookings")} />
         <Tabs
           aria-label={t("bookingStatusAria")}
-          selectedKey={list.selected}
-          onSelectionChange={(key) => list.selectTab(key as BookingTab)}
-          items={BOOKING_TABS.map((tab) => ({ id: tab, label: t(tabText[tab].label), content: tab === list.selected ? content : null }))}
+          selectedKey={tabs.selected}
+          onSelectionChange={(key) => tabs.selectTab(key as BookingTab)}
+          items={BOOKING_TABS.map((tab) => ({ id: tab, label: t(tabText[tab].label), content: tab === tabs.selected ? content : null }))}
         />
       </Screen>
     </>
