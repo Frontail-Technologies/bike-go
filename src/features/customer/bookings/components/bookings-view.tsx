@@ -2,94 +2,54 @@
 
 import { BellIcon, CalendarXIcon } from "@phosphor-icons/react";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { BrandLoader } from "@/components/customer/brand-loader";
 import { AnimatedGrid } from "@/components/motion/animated-grid";
 import { AppBar } from "@/components/shared/app-bar";
 import { DesktopTitle, Screen } from "@/components/shared/screen";
 import { ButtonLink } from "@/components/ui/button-link";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Tabs } from "@/components/ui/tabs";
 import { Pagination } from "@/components/ui/pagination";
+import { Tabs } from "@/components/ui/tabs";
 import { useTranslations } from "@/i18n/hooks";
+import { useBookingsTab } from "../hooks/use-bookings-tab";
 import { BookingCard } from "./booking-card";
-import type { CustomerBooking } from "../types";
-import { useBookingsQuery } from "../hooks/use-bookings";
-import { apiBookingToView } from "../lib/booking-mapper";
-import { BrandLoader } from "@/components/customer/brand-loader";
-import { ApiError } from "@/lib/api/error";
-import { customerAuthKeys } from "@/features/customer/auth/query-keys";
-
-const tabs = [
-  { id: "upcoming", label: "tabUpcoming", empty: "emptyUpcoming" },
-  { id: "active", label: "tabActive", empty: "emptyActive" },
-  { id: "completed", label: "tabCompleted", empty: "emptyCompleted" },
-  { id: "cancelled", label: "tabCancelled", empty: "emptyCancelled" },
-] as const;
-
-function sortByStart(list: CustomerBooking[], desc: boolean) {
-  return [...list].sort((a, b) => (desc ? b.startDate.localeCompare(a.startDate) : a.startDate.localeCompare(b.startDate)));
-}
 
 export function BookingsView() {
-  const router = useRouter();
-  const queryClient = useQueryClient();
-  const pathname = usePathname();
-  const params = useSearchParams();
-  const selected = tabs.some((tab) => tab.id === params.get("tab")) ? params.get("tab") as typeof tabs[number]["id"] : "upcoming";
-  const page = Math.max(1, Number(params.get("page")) || 1);
-  const pageSize = 12;
-  const bookings = useBookingsQuery({ page, pageSize, group: selected });
-
-  useEffect(() => {
-    if (bookings.error instanceof ApiError && bookings.error.status === 401) {
-      queryClient.setQueryData(customerAuthKeys.session(), null);
-    }
-  }, [bookings.error, queryClient]);
-  const all = (bookings.data?.data ?? []).map((item) => apiBookingToView(item));
   const t = useTranslations("booking");
-  const navigate = (tab: typeof selected, nextPage = 1) => {
-    const query = new URLSearchParams(params.toString());
-    if (tab === "upcoming") query.delete("tab"); else query.set("tab", tab);
-    if (nextPage <= 1) query.delete("page"); else query.set("page", String(nextPage));
-    router.replace(`${pathname}${query.size ? `?${query}` : ""}`, { scroll: false });
-  };
-  const list = sortByStart(all.map((item) => item.booking), selected !== "upcoming");
-  const total = bookings.data?.meta.total ?? 0;
-  const content = bookings.isPending ? (
+  const common = useTranslations("common");
+  const list = useBookingsTab();
+
+  const content = list.isLoading ? (
     <BrandLoader className="min-h-64" />
-  ) : list.length === 0 ? (
-    <EmptyState icon={<CalendarXIcon size={24} />} title={t(tabs.find((tab) => tab.id === selected)!.empty)} action={<ButtonLink href="/bikes" variant="outline" size="sm">{t("browseBikes")}</ButtonLink>} />
+  ) : list.items.length === 0 ? (
+    <EmptyState icon={<CalendarXIcon size={24} />} title={t(list.selected.empty)} action={<ButtonLink href="/bikes" variant="outline" size="sm">{t("browseBikes")}</ButtonLink>} />
   ) : (
     <div className="flex flex-col gap-5">
       <AnimatedGrid className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
-        {list.map((booking) => {
-          const bike = all.find((item) => item.booking.reference === booking.reference)?.bike;
-          return bike ? <BookingCard key={booking.reference} booking={booking} bike={bike} /> : null;
-        })}
+        {list.items.map(({ booking, bike }) => <BookingCard key={booking.reference} booking={booking} bike={bike} />)}
       </AnimatedGrid>
-      {total > pageSize ? <Pagination page={page} pageCount={Math.ceil(total / pageSize)} onPageChange={(next) => navigate(selected, next)} summary={`${total} bookings`} /> : null}
+      {list.pageCount > 1 ? <Pagination page={list.page} pageCount={list.pageCount} onPageChange={list.goToPage} summary={`${list.total} bookings`} /> : null}
     </div>
   );
 
   return (
     <>
-      <AppBar title={t("myBookings")} actions={<Link href="/notifications" aria-label="Notifications" className="flex size-11 items-center justify-center rounded-control outline-none transition-colors hover:bg-surface-secondary focus-visible:ring-2 focus-visible:ring-ink"><BellIcon size={22} /></Link>} />
+      <AppBar
+        title={t("myBookings")}
+        actions={
+          <Link href="/notifications" aria-label={common("notifications")} className="flex size-11 items-center justify-center rounded-control outline-none transition-colors hover:bg-surface-secondary focus-visible:ring-2 focus-visible:ring-ink">
+            <BellIcon size={22} />
+          </Link>
+        }
+      />
       <Screen bottom="nav" className="flex flex-col gap-4 md:gap-6">
         <DesktopTitle title={t("myBookings")} />
-      <Tabs
-        aria-label={t("bookingStatusAria")}
-        selectedKey={selected}
-        onSelectionChange={(key) => navigate(key as typeof selected)}
-        items={tabs.map((tab) => {
-          return {
-            id: tab.id,
-            label: t(tab.label),
-            content: tab.id === selected ? content : null,
-          };
-        })}
-      />
+        <Tabs
+          aria-label={t("bookingStatusAria")}
+          selectedKey={list.selected.id}
+          onSelectionChange={(key) => list.selectTab(key as typeof list.selected.id)}
+          items={list.tabs.map((tab) => ({ id: tab.id, label: t(tab.label), content: tab.id === list.selected.id ? content : null }))}
+        />
       </Screen>
     </>
   );
