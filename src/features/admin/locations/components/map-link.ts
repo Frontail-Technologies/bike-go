@@ -1,3 +1,5 @@
+import { adminT } from "@/features/admin/i18n/translate";
+
 export type Coordinates = { latitude: number; longitude: number };
 
 const valid = (latitude: number, longitude: number): Coordinates | null =>
@@ -26,6 +28,6 @@ export function parseMapLink(input: string): Coordinates | null {
 export const isShortMapLink = (input: string) => /^(https?:\/\/)?(maps\.app\.goo\.gl|goo\.gl\/maps|bit\.ly)\//i.test(input.trim());
 
 export function mapLinkError(input: string) {
-  if (isShortMapLink(input)) return "Short links can’t be read here. Open the link, then copy the full address from the browser.";
-  return "Couldn’t find coordinates in that link. Paste a full Google Maps link or “latitude, longitude”.";
+  if (isShortMapLink(input)) return adminT("locations.shortLink");
+  return adminT("locations.linkError");
 }

@@ -22,6 +22,8 @@ import { ageOf, canMoveTo, documentTypeLabel, employmentLabels, loanDocumentPath
 import type { Loan, LoanDocument } from "../types/loan";
 import { ApproveLoanDialog, RejectLoanDialog, RequestDocumentsDrawer, UpdateLoanStatusModal } from "./loan-dialogs";
 import { fmtDate, fmtDateTime } from "./loan-format";
+import { useAdminTranslations } from "@/features/admin/i18n/hooks";
+import { adminT } from "@/features/admin/i18n/translate";
 
 function Card({ title, action, children, className }: { title: string; action?: ReactNode; children: ReactNode; className?: string }) {
   return (
@@ -47,24 +49,26 @@ function buildTimeline(loan: Loan): ActivityItem[] {
   return loan.history.map((entry, index, all) => {
     const last = index === all.length - 1;
     const state = entry.newStatus === "rejected" ? "failed" : last && entry.newStatus !== "approved" ? "current" : "done";
-    const title = entry.newStatus === "draft" ? "Application started" : loanStatusLabels[entry.newStatus];
-    const detail = [entry.changedByName && entry.oldStatus !== null ? `by ${entry.changedByName}` : null, entry.note].filter(Boolean).join(" — ") || undefined;
+    const title = entry.newStatus === "draft" ? adminT("loans.detail.started") : loanStatusLabels[entry.newStatus];
+    const detail = [entry.changedByName && entry.oldStatus !== null ? adminT("loans.detail.by", { name: entry.changedByName }) : null, entry.note].filter(Boolean).join(" — ") || undefined;
     return { id: `${entry.newStatus}-${entry.createdAt}-${index}`, title, detail, state, time: `${fmtDateTime(entry.createdAt)} ICT` };
   });
 }
 
 export function LoanDetail({ reference }: { reference: string }) {
+  const t = useAdminTranslations();
   const query = useLoanQuery(reference);
   const loan = query.data;
   if (query.isError && !loan) {
     const notFound = query.error instanceof ApiError && (query.error.status === 404 || query.error.status === 422);
-    return <AdminPage><PageHeader title="Loan Application" /><AdminErrorState title={notFound ? "Application not found" : "Couldn’t load the application"} description={query.error instanceof ApiError ? query.error.message : "Try again in a moment."} onRetry={notFound ? undefined : () => void query.refetch()} /></AdminPage>;
+    return <AdminPage><PageHeader title={t("pages.loans.detail")} /><AdminErrorState title={notFound ? t("loans.detail.notFound") : t("loans.detail.appLoadError")} description={query.error instanceof ApiError ? query.error.message : t("common.retryLater")} onRetry={notFound ? undefined : () => void query.refetch()} /></AdminPage>;
   }
-  if (!loan) return <AdminPage><PageHeader title="Loan Application" /><AdminLoadingState label="Loading application…" /></AdminPage>;
+  if (!loan) return <AdminPage><PageHeader title={t("pages.loans.detail")} /><AdminLoadingState label={t("loans.detail.loadingApp")} /></AdminPage>;
   return <LoanWorkspace loan={loan} />;
 }
 
 function LoanWorkspace({ loan }: { loan: Loan }) {
+  const t = useAdminTranslations();
   const router = useRouter();
   const actions = useLoanActions();
   const now = useNow(60_000);
@@ -89,56 +93,56 @@ function LoanWorkspace({ loan }: { loan: Loan }) {
 
   const actionButtons = (
     <>
-      {reviewable ? <Button variant="outline" className="min-h-11 flex-1 lg:flex-none" onPress={statusModal.open}><ArrowsClockwiseIcon />Update Status</Button> : null}
-      {canRequest ? <Button variant="outline" className="min-h-11 flex-1 lg:flex-none" onPress={requestDrawer.open}><FileTextIcon />Request Documents</Button> : null}
-      {canReject ? <Button variant="danger" className="min-h-11 flex-1 lg:flex-none" onPress={rejectDialog.open}><XCircleIcon />Reject</Button> : null}
-      {canApprove ? <Button variant="primary" className="min-h-11 flex-1 lg:flex-none" onPress={approveDialog.open}>Approve</Button> : null}
+      {reviewable ? <Button variant="outline" className="min-h-11 flex-1 lg:flex-none" onPress={statusModal.open}><ArrowsClockwiseIcon />{t("loans.detail.updateStatus")}</Button> : null}
+      {canRequest ? <Button variant="outline" className="min-h-11 flex-1 lg:flex-none" onPress={requestDrawer.open}><FileTextIcon />{t("loans.detail.requestDocuments")}</Button> : null}
+      {canReject ? <Button variant="danger" className="min-h-11 flex-1 lg:flex-none" onPress={rejectDialog.open}><XCircleIcon />{t("loans.detail.reject")}</Button> : null}
+      {canApprove ? <Button variant="primary" className="min-h-11 flex-1 lg:flex-none" onPress={approveDialog.open}>{t("loans.detail.approve")}</Button> : null}
     </>
   );
 
   const applicantCard = (
-    <Card title="Applicant" action={<Button size="sm" variant="ghost" className="min-h-11 text-[var(--admin-accent-strong)] md:min-h-9" onPress={() => router.push(`/admin/customers/${loan.userId}`)}>View customer<ArrowRightIcon size={14} /></Button>}>
+    <Card title={t("loans.detail.applicant")} action={<Button size="sm" variant="ghost" className="min-h-11 text-[var(--admin-accent-strong)] md:min-h-9" onPress={() => router.push(`/admin/customers/${loan.userId}`)}>{t("loans.detail.viewCustomer")}<ArrowRightIcon size={14} /></Button>}>
       <div className="mb-4 flex items-center gap-3"><CustomerAvatar name={loan.customer.name} size="md" /><div className="min-w-0"><p className="truncate text-sm font-extrabold">{applicant.fullName ?? loan.customer.name}</p><p className="text-xs text-[var(--admin-muted)]">{loan.customer.reference}</p></div></div>
       <dl className="grid gap-4 sm:grid-cols-2">
-        <Row icon={<PhoneIcon size={18} />} label="Phone">{applicant.mobile ?? loan.customer.phone ?? dash}</Row>
-        <Row icon={<EnvelopeSimpleIcon size={18} />} label="Email">{applicant.email ?? loan.customer.email ?? dash}</Row>
-        <Row icon={<CakeIcon size={18} />} label="Date of birth">{applicant.dateOfBirth ? `${fmtDate(applicant.dateOfBirth)} (${ageOf(applicant.dateOfBirth, now)} years)` : dash}</Row>
-        <Row icon={<FlagIcon size={18} />} label="Nationality">{applicant.nationality ?? dash}</Row>
-        <Row icon={<MapPinIcon size={18} />} label="Current city">{applicant.currentCity ? `${applicant.currentCity}, Cambodia` : dash}</Row>
-        <Row icon={<IdentificationCardIcon size={18} />} label="Residence status">{applicant.residenceStatus ? residenceLabels[applicant.residenceStatus] ?? applicant.residenceStatus : dash}</Row>
+        <Row icon={<PhoneIcon size={18} />} label={t("loans.detail.phone")}>{applicant.mobile ?? loan.customer.phone ?? dash}</Row>
+        <Row icon={<EnvelopeSimpleIcon size={18} />} label={t("loans.detail.email")}>{applicant.email ?? loan.customer.email ?? dash}</Row>
+        <Row icon={<CakeIcon size={18} />} label={t("loans.detail.dob")}>{applicant.dateOfBirth ? t("loans.detail.age", { date: fmtDate(applicant.dateOfBirth), age: ageOf(applicant.dateOfBirth, now) }) : dash}</Row>
+        <Row icon={<FlagIcon size={18} />} label={t("loans.detail.nationality")}>{applicant.nationality ?? dash}</Row>
+        <Row icon={<MapPinIcon size={18} />} label={t("loans.detail.currentCity")}>{applicant.currentCity ? t("loans.detail.cityCountry", { city: applicant.currentCity }) : dash}</Row>
+        <Row icon={<IdentificationCardIcon size={18} />} label={t("loans.detail.residence")}>{applicant.residenceStatus ? residenceLabels[applicant.residenceStatus] ?? applicant.residenceStatus : dash}</Row>
       </dl>
     </Card>
   );
 
   const employmentCard = (
-    <Card title="Employment & Income">
+    <Card title={t("loans.detail.employmentIncome")}>
       <dl className="grid gap-4 sm:grid-cols-2">
-        <Row icon={<BriefcaseIcon size={18} />} label="Employment type">{employment.employmentType ? employmentLabels[employment.employmentType] ?? employment.employmentType : dash}</Row>
-        <Row icon={<BriefcaseIcon size={18} />} label="Employer">{employment.employerName ?? dash}</Row>
-        <Row icon={<IdentificationCardIcon size={18} />} label="Job title">{employment.jobTitle ?? dash}</Row>
-        <Row icon={<WalletIcon size={18} />} label="Monthly income">{employment.monthlyIncomeMinor === null ? dash : <><CurrencyAmount amount={employment.monthlyIncomeMinor} currency={loan.currency} /> <span className="text-xs font-medium text-[var(--admin-muted)]">{loan.currency}</span></>}</Row>
-        <Row icon={<CalendarCheckIcon size={18} />} label="Work experience">{employment.workExperienceMonths === null ? dash : monthsToYears(employment.workExperienceMonths)}</Row>
-        <Row icon={<BankIcon size={18} />} label="Active bank account">{employment.hasActiveBankAccount === null ? dash : employment.hasActiveBankAccount ? "Yes" : "No"}</Row>
+        <Row icon={<BriefcaseIcon size={18} />} label={t("loans.detail.employmentType")}>{employment.employmentType ? employmentLabels[employment.employmentType] ?? employment.employmentType : dash}</Row>
+        <Row icon={<BriefcaseIcon size={18} />} label={t("loans.detail.employer")}>{employment.employerName ?? dash}</Row>
+        <Row icon={<IdentificationCardIcon size={18} />} label={t("loans.detail.jobTitle")}>{employment.jobTitle ?? dash}</Row>
+        <Row icon={<WalletIcon size={18} />} label={t("loans.detail.monthlyIncome")}>{employment.monthlyIncomeMinor === null ? dash : <><CurrencyAmount amount={employment.monthlyIncomeMinor} currency={loan.currency} /> <span className="text-xs font-medium text-[var(--admin-muted)]">{loan.currency}</span></>}</Row>
+        <Row icon={<CalendarCheckIcon size={18} />} label={t("loans.detail.experience")}>{employment.workExperienceMonths === null ? dash : monthsToYears(employment.workExperienceMonths)}</Row>
+        <Row icon={<BankIcon size={18} />} label={t("loans.detail.bankAccount")}>{employment.hasActiveBankAccount === null ? dash : employment.hasActiveBankAccount ? t("common.yes") : t("common.no")}</Row>
       </dl>
     </Card>
   );
 
   const documentsCard = (
-    <Card title="Document checklist" action={<span className="text-xs font-semibold text-[var(--admin-muted)]">{verified}/{checklist.length} verified</span>}>
-      <div className="mb-4 h-2 overflow-hidden rounded-full bg-[var(--admin-surface-muted)]" role="progressbar" aria-valuemin={0} aria-valuemax={checklist.length} aria-valuenow={verified} aria-label="Verified documents"><div className="h-full rounded-full bg-[var(--admin-success)] transition-[width]" style={{ width: `${checklist.length ? (verified / checklist.length) * 100 : 0}%` }} /></div>
+    <Card title={t("loans.detail.checklist")} action={<span className="text-xs font-semibold text-[var(--admin-muted)]">{t("loans.detail.verifiedCount", { verified, total: checklist.length })}</span>}>
+      <div className="mb-4 h-2 overflow-hidden rounded-full bg-[var(--admin-surface-muted)]" role="progressbar" aria-valuemin={0} aria-valuemax={checklist.length} aria-valuenow={verified} aria-label={t("loans.detail.verifiedDocs")}><div className="h-full rounded-full bg-[var(--admin-success)] transition-[width]" style={{ width: `${checklist.length ? (verified / checklist.length) * 100 : 0}%` }} /></div>
       <ul className="divide-y divide-[var(--admin-border)]">
         {checklist.map(({ type, doc }) => (
           <li key={doc?.id ?? type} className="flex flex-wrap items-center gap-3 py-3 first:pt-0 last:pb-0">
             <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[var(--admin-surface-muted)] text-[var(--admin-muted)]"><FileTextIcon size={20} weight="duotone" aria-hidden /></span>
-            <div className="min-w-0 flex-1"><p className="text-sm font-bold">{documentTypeLabel(type)}</p><p className="text-xs text-[var(--admin-muted)]">{doc ? `Uploaded ${fmtDateTime(doc.uploadedAt)} ICT` : "Not uploaded yet"}</p>{doc?.reviewNote ? <p className="mt-0.5 text-xs text-[var(--admin-muted)]">Note: {doc.reviewNote}</p> : null}</div>
-            {doc ? <ReviewStatusBadge status={doc.verificationStatus} /> : <span className="rounded-full bg-[var(--admin-danger-soft)] px-2.5 py-0.5 text-[11px] font-bold text-[var(--admin-danger)]">Missing</span>}
+            <div className="min-w-0 flex-1"><p className="text-sm font-bold">{documentTypeLabel(type)}</p><p className="text-xs text-[var(--admin-muted)]">{doc ? t("loans.detail.uploadedAt", { date: fmtDateTime(doc.uploadedAt) }) : t("loans.detail.notUploaded")}</p>{doc?.reviewNote ? <p className="mt-0.5 text-xs text-[var(--admin-muted)]">{t("loans.detail.note", { note: doc.reviewNote })}</p> : null}</div>
+            {doc ? <ReviewStatusBadge status={doc.verificationStatus} /> : <span className="rounded-full bg-[var(--admin-danger-soft)] px-2.5 py-0.5 text-[11px] font-bold text-[var(--admin-danger)]">{t("loans.detail.missing")}</span>}
             <div className="flex w-full justify-end gap-1.5 sm:w-auto">
               {doc ? (
                 <>
-                  <a href={documentFileUrl(loanDocumentPath(loan.reference, doc.id))} target="_blank" rel="noopener noreferrer" aria-label={`Open ${doc.originalFilename}`} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-bold text-[var(--admin-accent-strong)] outline-none hover:bg-[var(--admin-surface-muted)] focus-visible:ring-2 focus-visible:ring-[var(--admin-accent-strong)] md:min-h-8"><DownloadSimpleIcon size={15} />Open</a>
-                  <Button size="sm" variant="outline" className="min-h-11 md:min-h-8" onPress={() => router.push(`/admin/documents/${doc.id}`)}>Review</Button>
+                  <a href={documentFileUrl(loanDocumentPath(loan.reference, doc.id))} target="_blank" rel="noopener noreferrer" aria-label={t("loans.detail.openFile", { name: doc.originalFilename })} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-bold text-[var(--admin-accent-strong)] outline-none hover:bg-[var(--admin-surface-muted)] focus-visible:ring-2 focus-visible:ring-[var(--admin-accent-strong)] md:min-h-8"><DownloadSimpleIcon size={15} />{t("loans.detail.open")}</a>
+                  <Button size="sm" variant="outline" className="min-h-11 md:min-h-8" onPress={() => router.push(`/admin/documents/${doc.id}`)}>{t("loans.detail.review")}</Button>
                 </>
-              ) : canRequest ? <Button size="sm" variant="outline" className="min-h-11 md:min-h-8" onPress={requestDrawer.open}>Request Document</Button> : null}
+              ) : canRequest ? <Button size="sm" variant="outline" className="min-h-11 md:min-h-8" onPress={requestDrawer.open}>{t("loans.detail.requestDocument")}</Button> : null}
             </div>
           </li>
         ))}
@@ -146,7 +150,7 @@ function LoanWorkspace({ loan }: { loan: Loan }) {
     </Card>
   );
 
-  const historyCard = <Card title="Status history"><ActivityTimeline items={buildTimeline(loan)} /></Card>;
+  const historyCard = <Card title={t("loans.detail.history")}><ActivityTimeline items={buildTimeline(loan)} /></Card>;
 
   const overview = (
     <div className="space-y-4 xl:space-y-5">
@@ -157,7 +161,7 @@ function LoanWorkspace({ loan }: { loan: Loan }) {
 
   return (
     <AdminPage className="gap-5">
-      <AdminBreadcrumbs items={[{ label: "Loan Applications", href: "/admin/loans" }, { label: loan.reference }]} />
+      <AdminBreadcrumbs items={[{ label: t("pages.loans.title"), href: "/admin/loans" }, { label: loan.reference }]} />
 
       <header className="adminHero rounded-3xl p-4 sm:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
@@ -166,24 +170,24 @@ function LoanWorkspace({ loan }: { loan: Loan }) {
               <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">{loan.reference}</h1>
               <LoanStatusBadge status={loan.status} />
             </div>
-            <p className="mt-1 text-sm text-[var(--admin-muted)]">{loan.customer.name} · {loan.submittedAt ? `Submitted on ${fmtDateTime(loan.submittedAt)}` : `Started on ${fmtDateTime(loan.createdAt)}`} (Asia/Phnom_Penh)</p>
+            <p className="mt-1 text-sm text-[var(--admin-muted)]">{loan.customer.name} · {loan.submittedAt ? t("loans.detail.submittedOn", { date: fmtDateTime(loan.submittedAt) }) : t("loans.detail.startedOn", { date: fmtDateTime(loan.createdAt) })} {t("loans.detail.timezone")}</p>
           </div>
           <div className="hidden gap-2 lg:flex">{actionButtons}</div>
         </div>
-        <dl aria-label="Loan details" className="mt-4 grid gap-x-6 gap-y-4 border-t border-[var(--admin-border)] pt-4 sm:grid-cols-2 xl:grid-cols-4">
-          <div><dt className="text-[11px] font-medium text-[var(--admin-muted)]">Requested amount</dt><dd><CurrencyAmount amount={loan.requestedAmountMinor} currency={loan.currency} showCode className="text-2xl font-extrabold" /></dd></div>
-          <div><dt className="text-[11px] font-medium text-[var(--admin-muted)]">Loan type</dt><dd className="text-sm font-bold">{loanTypeLabel(loan.loanType)}</dd></div>
-          <div><dt className="flex items-center gap-1 text-[11px] font-medium text-[var(--admin-muted)]"><TimerIcon size={12} aria-hidden />Tenure</dt><dd className="text-sm font-bold">{loan.tenureMonths} months <span className="text-xs font-medium text-[var(--admin-muted)]">· {loan.currency}</span></dd></div>
-          <div><dt className="text-[11px] font-medium text-[var(--admin-muted)]">Purpose</dt><dd className="text-sm font-semibold">{loan.purpose ?? dash}</dd></div>
+        <dl aria-label={t("loans.detail.loanDetails")} className="mt-4 grid gap-x-6 gap-y-4 border-t border-[var(--admin-border)] pt-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div><dt className="text-[11px] font-medium text-[var(--admin-muted)]">{t("loans.detail.requestedAmount")}</dt><dd><CurrencyAmount amount={loan.requestedAmountMinor} currency={loan.currency} showCode className="text-2xl font-extrabold" /></dd></div>
+          <div><dt className="text-[11px] font-medium text-[var(--admin-muted)]">{t("loans.detail.loanType")}</dt><dd className="text-sm font-bold">{loanTypeLabel(loan.loanType)}</dd></div>
+          <div><dt className="flex items-center gap-1 text-[11px] font-medium text-[var(--admin-muted)]"><TimerIcon size={12} aria-hidden />{t("loans.detail.tenure")}</dt><dd className="text-sm font-bold">{t("loans.months", { count: loan.tenureMonths })} <span className="text-xs font-medium text-[var(--admin-muted)]">· {loan.currency}</span></dd></div>
+          <div><dt className="text-[11px] font-medium text-[var(--admin-muted)]">{t("loans.detail.purpose")}</dt><dd className="text-sm font-semibold">{loan.purpose ?? dash}</dd></div>
         </dl>
       </header>
 
-      <AdminTabs label="Loan application" selectedKey={tab} onSelectionChange={setTab} items={[
-        { id: "overview", label: "Overview", content: overview },
-        { id: "applicant", label: "Applicant", content: applicantCard },
-        { id: "employment", label: "Employment", content: employmentCard },
-        { id: "documents", label: "Documents", content: documentsCard },
-        { id: "history", label: "Status History", content: historyCard },
+      <AdminTabs label={t("loans.detail.application")} selectedKey={tab} onSelectionChange={setTab} items={[
+        { id: "overview", label: t("loans.detail.tabs.overview"), content: overview },
+        { id: "applicant", label: t("loans.detail.tabs.applicant"), content: applicantCard },
+        { id: "employment", label: t("loans.detail.tabs.employment"), content: employmentCard },
+        { id: "documents", label: t("loans.detail.tabs.documents"), content: documentsCard },
+        { id: "history", label: t("loans.detail.tabs.history"), content: historyCard },
       ]} />
 
       {hasActions ? <div className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-2 gap-2 border-t border-[var(--admin-border)] bg-white/95 p-3 backdrop-blur-md lg:hidden">{actionButtons}</div> : null}

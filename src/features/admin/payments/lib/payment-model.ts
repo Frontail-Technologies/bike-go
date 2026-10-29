@@ -1,8 +1,9 @@
-import type { PaymentStatus, RefundState } from "../types/payment";
+import { adminLabels } from "@/features/admin/i18n/translate";
+import { paymentStatuses, type PaymentStatus, type RefundState } from "../types/payment";
 import { formatDateTime, formatShort } from "@/lib/date";
 import { toMajor, toMinor as majorToMinor } from "@/lib/format";
 
-export const statusLabels: Record<PaymentStatus, string> = { pending: "Pending", paid: "Paid", failed: "Failed" };
+export const statusLabels: Record<PaymentStatus, string> = adminLabels("bookings.payment", paymentStatuses);
 
 const providers: Record<string, string> = { aba_payway: "ABA PayWay" };
 export const providerLabel = (provider: string) => providers[provider] ?? provider.replace(/[_-]+/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());

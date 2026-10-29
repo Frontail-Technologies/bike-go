@@ -1,14 +1,8 @@
-import type { SupportTicketCategory, SupportTicketStatus } from "../types/feedback";
+import { adminLabels, adminT } from "@/features/admin/i18n/translate";
+import { supportTicketCategories, type SupportTicketCategory, type SupportTicketStatus } from "../types/feedback";
 
-export const categoryLabels: Record<SupportTicketCategory, string> = {
-  booking: "Booking",
-  payment: "Payment",
-  bike: "Bike",
-  pickup: "Pickup / return",
-  app: "App issue",
-  other: "Other",
-};
+export const categoryLabels: Record<SupportTicketCategory, string> = adminLabels("feedback.categories", supportTicketCategories);
 
 export function ticketBadge(status: SupportTicketStatus) {
-  return status === "resolved" ? { status: "completed" as const, label: "Resolved" } : { status: "pending" as const, label: "Open" };
+  return status === "resolved" ? { status: "completed" as const, label: adminT("feedback.status.resolved") } : { status: "pending" as const, label: adminT("feedback.status.open") };
 }
