@@ -4,6 +4,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as api from "../api/payments-api";
+import { getPaymentQuery } from "../queries";
 import { customerPaymentKeys } from "../query-keys";
 
 export function useStartPaymentMutation() {
@@ -15,9 +16,5 @@ export function useStartPaymentMutation() {
 }
 
 export function usePaymentQuery(reference: string) {
-  return useQuery({
-    queryKey: customerPaymentKeys.getPayment(reference),
-    queryFn: ({ signal }) => api.getPayment(reference, signal),
-    enabled: Boolean(reference),
-  });
+  return useQuery(getPaymentQuery(reference));
 }

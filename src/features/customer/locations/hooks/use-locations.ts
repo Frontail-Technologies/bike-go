@@ -3,13 +3,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import * as api from "../api/locations-api";
-import { customerLocationKeys } from "../query-keys";
+import { listLocationsQuery } from "../queries";
 import type { LocationListParams } from "../types";
 
 export function useLocationsQuery(params: LocationListParams) {
-  return useQuery({
-    queryKey: customerLocationKeys.listLocations(params),
-    queryFn: ({ signal }) => api.listLocations(params, signal),
-  });
+  return useQuery(listLocationsQuery(params));
 }

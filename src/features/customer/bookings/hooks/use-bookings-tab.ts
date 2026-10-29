@@ -3,9 +3,8 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo } from "react";
-import * as api from "../api/bookings-api";
 import { apiBookingToView } from "../lib/booking-mapper";
-import { customerBookingKeys } from "../query-keys";
+import { listBookingsQuery } from "../queries";
 import { useBookingsQuery } from "./use-bookings";
 
 export const BOOKING_TABS = [
@@ -41,8 +40,7 @@ export function useBookingsTab() {
     if (!query.isSuccess) return;
     for (const tab of BOOKING_TABS) {
       if (tab.id === selected) continue;
-      const params = paramsFor(tab.id, 1);
-      void queryClient.prefetchQuery({ queryKey: customerBookingKeys.listBookings(params), queryFn: ({ signal }) => api.listBookings(params, signal) });
+      void queryClient.prefetchQuery(listBookingsQuery(paramsFor(tab.id, 1)));
     }
   }, [query.isSuccess, queryClient, selected]);
 

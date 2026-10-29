@@ -13,6 +13,7 @@ export const artifactNames = (feature) => ({
   api: `${feature.domain}-api.ts`,
   hooks: `use-${feature.domain}.ts`,
   keys: "query-keys.ts",
+  queries: "queries.ts",
 });
 
 export const pathParams = (route) => [...route.matchAll(/:([A-Za-z][A-Za-z0-9_]*)/g)].map((match) => match[1]);
@@ -83,28 +84,44 @@ export function keysFile(feature) {
   return `${GENERATED}${queryTypes.length ? `\nimport type { ${queryTypes.join(", ")} } from "./types";\n` : "\n"}\nexport const ${feature.keyName} = {\n  root: () => ["customer", ${JSON.stringify(feature.domain)}] as const,\n${entries}\n} as const;\n`;
 }
 
+const queryArgs = (operation) => [...pathParams(operation.path), ...(operation.queryType ? ["params"] : [])];
+const querySignature = (operation) => [...pathParams(operation.path).map((name) => `${name}: string`), ...(operation.queryType ? [`params: ${operation.queryType}`] : [])];
+
+/**
+ * One queryOptions() factory per GET, so a query is defined once and shared by its hook and by
+ * any prefetch or cache read (queryClient.prefetchQuery(listBookingsQuery(params))).
+ */
+export function queriesFile(feature) {
+  const artifacts = artifactNames(feature);
+  const queries = feature.operations.filter((operation) => operation.kind === "query");
+  const hasPage = queries.some((operation) => operation.paginated);
+  const types = queryTypeNames(queries);
+  const factories = queries.map((operation) => {
+    const params = pathParams(operation.path);
+    const options = [
+      `queryKey: ${feature.keyName}.${operation.name}(${queryArgs(operation).join(", ")})`,
+      `queryFn: ({ signal }) => api.${operation.name}(${[...queryArgs(operation), "signal"].join(", ")})`,
+      operation.paginated ? "placeholderData: keepPreviousData" : null,
+      params.length ? `enabled: ${params.map((name) => `Boolean(${name})`).join(" && ")}` : null,
+    ].filter(Boolean).join(",\n    ");
+    return `export const ${operation.name}Query = (${querySignature(operation).join(", ")}) =>\n  queryOptions({\n    ${options},\n  });`;
+  }).join("\n\n");
+  return `${GENERATED}\nimport { ${hasPage ? "keepPreviousData, " : ""}queryOptions } from "@tanstack/react-query";\nimport * as api from "./api/${artifacts.api.replace(/\.ts$/, "")}";\nimport { ${feature.keyName} } from "./${artifacts.keys.replace(/\.ts$/, "")}";${types.length ? `\nimport type { ${types.join(", ")} } from "./types";` : ""}\n\n${factories}\n`;
+}
+
 export function hooksFile(feature) {
   const artifacts = artifactNames(feature);
-  const types = [...new Set(feature.operations.flatMap((operation) => [operation.queryType, operation.bodyType]).filter(Boolean))].sort();
-  const hasPage = feature.operations.some((operation) => operation.paginated);
-  const hasQuery = feature.operations.some((operation) => operation.kind === "query");
-  const hasMutation = feature.operations.some((operation) => operation.kind === "mutation");
-  const reactQueryImports = [hasPage ? "keepPreviousData" : null, hasMutation ? "useMutation" : null, hasQuery ? "useQuery" : null, hasMutation ? "useQueryClient" : null].filter(Boolean).join(", ");
+  const queries = feature.operations.filter((operation) => operation.kind === "query");
+  const mutations = feature.operations.filter((operation) => operation.kind === "mutation");
+  const types = [...new Set([...queries.map((operation) => operation.queryType), ...mutations.map((operation) => operation.bodyType)].filter(Boolean))].sort();
+  const reactQueryImports = [mutations.length ? "useMutation" : null, queries.length ? "useQuery" : null, mutations.length ? "useQueryClient" : null].filter(Boolean).join(", ");
   const hooks = feature.operations.map((operation) => {
     const params = pathParams(operation.path);
     if (operation.kind === "query") {
-      const signature = [...params.map((name) => `${name}: string`), ...(operation.queryType ? [`params: ${operation.queryType}`] : [])];
+      const signature = querySignature(operation);
       if (operation.enabledOption) signature.push("options: { enabled?: boolean } = {}");
-      const callArgs = [...params, ...(operation.queryType ? ["params"] : []), "signal"];
-      const keyArgs = [...params, ...(operation.queryType ? ["params"] : [])];
-      const options = [
-        `queryKey: ${feature.keyName}.${operation.name}(${keyArgs.join(", ")})`,
-        `queryFn: ({ signal }) => api.${operation.name}(${callArgs.join(", ")})`,
-        operation.paginated ? "placeholderData: keepPreviousData" : null,
-        params.length ? `enabled: ${params.map((name) => `Boolean(${name})`).join(" && ")}` : null,
-        operation.enabledOption ? "enabled: options.enabled" : null,
-      ].filter(Boolean).join(",\n    ");
-      return `export function ${operation.hook}(${signature.join(", ")}) {\n  return useQuery({\n    ${options},\n  });\n}`;
+      const query = `${operation.name}Query(${queryArgs(operation).join(", ")})`;
+      return `export function ${operation.hook}(${signature.join(", ")}) {\n  return useQuery(${operation.enabledOption ? `{ ...${query}, enabled: options.enabled }` : query});\n}`;
     }
 
     const variableFields = [...params.map((name) => `${name}: string`), ...(operation.bodyType ? [`input: ${operation.bodyType}`] : []), ...(operation.idempotency ? ["idempotencyKey?: string"] : [])];
@@ -112,7 +129,14 @@ export function hooksFile(feature) {
     const variableAccess = [...params.map((name) => `variables.${name}`), ...(operation.bodyType ? ["variables.input"] : []), ...(operation.idempotency ? ["{ idempotencyKey: variables.idempotencyKey }"] : [])];
     return `export function ${operation.hook}() {\n  const queryClient = useQueryClient();\n  return useMutation({\n    mutationFn: (variables: ${signature}) => api.${operation.name}(${variableAccess.join(", ")}),\n    onSuccess: () => queryClient.invalidateQueries({ queryKey: ${feature.keyName}.root() }),\n  });\n}`;
   }).join("\n\n");
-  return `${GENERATED}\n"use client";\n\nimport { ${reactQueryImports} } from "@tanstack/react-query";\nimport * as api from "../api/${artifacts.api.replace(/\.ts$/, "")}";\nimport { ${feature.keyName} } from "../${artifacts.keys.replace(/\.ts$/, "")}";${types.length ? `\nimport type { ${types.join(", ")} } from "../types";` : ""}\n\n${hooks}\n`;
+  const imports = [
+    `import { ${reactQueryImports} } from "@tanstack/react-query";`,
+    mutations.length ? `import * as api from "../api/${artifacts.api.replace(/\.ts$/, "")}";` : null,
+    queries.length ? `import { ${queries.map((operation) => `${operation.name}Query`).join(", ")} } from "../${artifacts.queries.replace(/\.ts$/, "")}";` : null,
+    mutations.length ? `import { ${feature.keyName} } from "../${artifacts.keys.replace(/\.ts$/, "")}";` : null,
+    types.length ? `import type { ${types.join(", ")} } from "../types";` : null,
+  ].filter(Boolean).join("\n");
+  return `${GENERATED}\n"use client";\n\n${imports}\n\n${hooks}\n`;
 }
 
 async function syncFile(file, content, stale) {
@@ -133,6 +157,7 @@ export async function scaffoldCustomerApi() {
     const artifacts = artifactNames(feature);
     await syncFile(path.join(directory, "api", artifacts.api), apiFile(feature), stale);
     await syncFile(path.join(directory, artifacts.keys), keysFile(feature), stale);
+    if (feature.operations.some((operation) => operation.kind === "query")) await syncFile(path.join(directory, artifacts.queries), queriesFile(feature), stale);
     await syncFile(path.join(directory, "hooks", artifacts.hooks), hooksFile(feature), stale);
   }
   if (stale.length) {

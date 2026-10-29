@@ -2,47 +2,26 @@
 
 "use client";
 
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import * as api from "../api/vehicles-api";
-import { customerVehicleKeys } from "../query-keys";
+import { useQuery } from "@tanstack/react-query";
+import { listVehiclesQuery, getVehicleQuery, getVehicleAvailabilityQuery, listVehicleModelsQuery, getVehicleModelGroupQuery } from "../queries";
 import type { VehicleAvailabilityParams, VehicleListParams, VehicleModelGroupParams, VehicleModelListParams } from "../types";
 
 export function useVehiclesQuery(params: VehicleListParams) {
-  return useQuery({
-    queryKey: customerVehicleKeys.listVehicles(params),
-    queryFn: ({ signal }) => api.listVehicles(params, signal),
-    placeholderData: keepPreviousData,
-  });
+  return useQuery(listVehiclesQuery(params));
 }
 
 export function useVehicleQuery(idOrSlug: string) {
-  return useQuery({
-    queryKey: customerVehicleKeys.getVehicle(idOrSlug),
-    queryFn: ({ signal }) => api.getVehicle(idOrSlug, signal),
-    enabled: Boolean(idOrSlug),
-  });
+  return useQuery(getVehicleQuery(idOrSlug));
 }
 
 export function useVehicleAvailabilityQuery(idOrSlug: string, params: VehicleAvailabilityParams) {
-  return useQuery({
-    queryKey: customerVehicleKeys.getVehicleAvailability(idOrSlug, params),
-    queryFn: ({ signal }) => api.getVehicleAvailability(idOrSlug, params, signal),
-    enabled: Boolean(idOrSlug),
-  });
+  return useQuery(getVehicleAvailabilityQuery(idOrSlug, params));
 }
 
 export function useVehicleModelsQuery(params: VehicleModelListParams) {
-  return useQuery({
-    queryKey: customerVehicleKeys.listVehicleModels(params),
-    queryFn: ({ signal }) => api.listVehicleModels(params, signal),
-    placeholderData: keepPreviousData,
-  });
+  return useQuery(listVehicleModelsQuery(params));
 }
 
 export function useVehicleModelGroupQuery(groupSlug: string, params: VehicleModelGroupParams) {
-  return useQuery({
-    queryKey: customerVehicleKeys.getVehicleModelGroup(groupSlug, params),
-    queryFn: ({ signal }) => api.getVehicleModelGroup(groupSlug, params, signal),
-    enabled: Boolean(groupSlug),
-  });
+  return useQuery(getVehicleModelGroupQuery(groupSlug, params));
 }

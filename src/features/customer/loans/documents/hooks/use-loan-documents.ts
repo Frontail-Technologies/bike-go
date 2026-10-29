@@ -4,15 +4,12 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as api from "../api/loan-documents-api";
+import { listLoanDocumentsQuery } from "../queries";
 import { customerLoanDocumentKeys } from "../query-keys";
 import type { LoanDocumentReplace, LoanDocumentUpload } from "../types";
 
 export function useLoanDocumentsQuery(reference: string) {
-  return useQuery({
-    queryKey: customerLoanDocumentKeys.listLoanDocuments(reference),
-    queryFn: ({ signal }) => api.listLoanDocuments(reference, signal),
-    enabled: Boolean(reference),
-  });
+  return useQuery(listLoanDocumentsQuery(reference));
 }
 
 export function useUploadLoanDocumentMutation() {

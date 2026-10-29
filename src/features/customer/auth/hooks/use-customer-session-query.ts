@@ -18,13 +18,18 @@ export function useCustomerSessionQuery() {
   });
 }
 
+/** Marks the customer as signed out in the cache right away (logout, or the API reporting a 401). */
+export function useClearCustomerSession() {
+  const queryClient = useQueryClient();
+  return () => queryClient.setQueryData(customerAuthKeys.session(), null);
+}
+
 export function useCustomerAuthMutations() {
   const queryClient = useQueryClient();
   const refresh = () => queryClient.invalidateQueries({ queryKey: customerAuthKeys.session() });
-  // Called explicitly, synchronously, before navigating away on logout — so the
-  // destination route never has to wait on (or briefly see stale data from) the
-  // sign-out request actually reaching the server.
-  const clearSession = () => queryClient.setQueryData(customerAuthKeys.session(), null);
+  // Called synchronously before navigating away on logout, so the destination never
+  // waits on (or briefly sees stale data from) the sign-out request.
+  const clearSession = useClearCustomerSession();
 
   return {
     google: useMutation({ mutationFn: (callbackURL: string) => customerAuthApi.signInWithGoogle(callbackURL) }),

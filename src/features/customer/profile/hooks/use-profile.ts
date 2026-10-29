@@ -4,15 +4,12 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as api from "../api/profile-api";
+import { getProfileQuery } from "../queries";
 import { customerProfileKeys } from "../query-keys";
 import type { CustomerProfileUpdate } from "../types";
 
 export function useCustomerProfileQuery(options: { enabled?: boolean } = {}) {
-  return useQuery({
-    queryKey: customerProfileKeys.getProfile(),
-    queryFn: ({ signal }) => api.getProfile(signal),
-    enabled: options.enabled,
-  });
+  return useQuery({ ...getProfileQuery(), enabled: options.enabled });
 }
 
 export function useUpdateCustomerProfileMutation() {

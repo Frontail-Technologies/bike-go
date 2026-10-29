@@ -3,13 +3,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import * as api from "../api/master-data-api";
-import { customerMasterDataKeys } from "../query-keys";
+import { listMasterItemsQuery } from "../queries";
 
 export function useMasterItemsQuery(kind: string) {
-  return useQuery({
-    queryKey: customerMasterDataKeys.listMasterItems(kind),
-    queryFn: ({ signal }) => api.listMasterItems(kind, signal),
-    enabled: Boolean(kind),
-  });
+  return useQuery(listMasterItemsQuery(kind));
 }

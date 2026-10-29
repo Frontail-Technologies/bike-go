@@ -2,17 +2,14 @@
 
 "use client";
 
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as api from "../api/loans-api";
+import { listLoansQuery, getLoanQuery } from "../queries";
 import { customerLoanKeys } from "../query-keys";
 import type { LoanCreateInput, LoanListParams, LoanUpdateInput } from "../types";
 
 export function useLoansQuery(params: LoanListParams) {
-  return useQuery({
-    queryKey: customerLoanKeys.listLoans(params),
-    queryFn: ({ signal }) => api.listLoans(params, signal),
-    placeholderData: keepPreviousData,
-  });
+  return useQuery(listLoansQuery(params));
 }
 
 export function useCreateLoanMutation() {
@@ -24,11 +21,7 @@ export function useCreateLoanMutation() {
 }
 
 export function useLoanQuery(reference: string) {
-  return useQuery({
-    queryKey: customerLoanKeys.getLoan(reference),
-    queryFn: ({ signal }) => api.getLoan(reference, signal),
-    enabled: Boolean(reference),
-  });
+  return useQuery(getLoanQuery(reference));
 }
 
 export function useUpdateLoanMutation() {

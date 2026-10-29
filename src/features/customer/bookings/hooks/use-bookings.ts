@@ -2,16 +2,14 @@
 
 "use client";
 
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as api from "../api/bookings-api";
+import { listAddonsQuery, listBookingsQuery, getBookingQuery } from "../queries";
 import { customerBookingKeys } from "../query-keys";
 import type { BookingCancelInput, BookingListParams, BookingRequest } from "../types";
 
 export function useBookingAddonsQuery() {
-  return useQuery({
-    queryKey: customerBookingKeys.listAddons(),
-    queryFn: ({ signal }) => api.listAddons(signal),
-  });
+  return useQuery(listAddonsQuery());
 }
 
 export function useBookingQuoteMutation() {
@@ -23,11 +21,7 @@ export function useBookingQuoteMutation() {
 }
 
 export function useBookingsQuery(params: BookingListParams) {
-  return useQuery({
-    queryKey: customerBookingKeys.listBookings(params),
-    queryFn: ({ signal }) => api.listBookings(params, signal),
-    placeholderData: keepPreviousData,
-  });
+  return useQuery(listBookingsQuery(params));
 }
 
 export function useCreateBookingMutation() {
@@ -39,11 +33,7 @@ export function useCreateBookingMutation() {
 }
 
 export function useBookingQuery(reference: string) {
-  return useQuery({
-    queryKey: customerBookingKeys.getBooking(reference),
-    queryFn: ({ signal }) => api.getBooking(reference, signal),
-    enabled: Boolean(reference),
-  });
+  return useQuery(getBookingQuery(reference));
 }
 
 export function useCancelBookingMutation() {
