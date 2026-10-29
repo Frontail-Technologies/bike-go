@@ -2,11 +2,12 @@
 
 import { keepPreviousData, useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { bannersApi } from "../api/banners-api";
+import { bannerListQuery } from "../queries";
 import { adminBannerQueryKeys } from "../query-keys";
 import { placements, type Banner, type BannerCreateInput, type BannerListParams, type BannerPlacement, type BannerUpdateInput } from "../types/banner";
 
 export function useBannersQuery(params: BannerListParams) {
-  return useQuery({ queryKey: adminBannerQueryKeys.list(params), queryFn: () => bannersApi.list(params), placeholderData: keepPreviousData });
+  return useQuery({ ...bannerListQuery(params), placeholderData: keepPreviousData });
 }
 
 export function useBannerQuery(id: string) {
@@ -16,10 +17,7 @@ export function useBannerQuery(id: string) {
 /** Every banner of each placement, in display order, for the ordering view. */
 export function usePlacementBannersQueries() {
   const results = useQueries({
-    queries: placements.map((placement) => {
-      const params: BannerListParams = { page: 1, pageSize: 100, placement, sort: "displayOrder" };
-      return { queryKey: adminBannerQueryKeys.list(params), queryFn: () => bannersApi.list(params) };
-    }),
+    queries: placements.map((placement) => bannerListQuery({ page: 1, pageSize: 100, placement, sort: "displayOrder" })),
   });
   return placements.map((placement, index) => ({ placement, query: results[index]! }));
 }

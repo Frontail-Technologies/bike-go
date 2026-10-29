@@ -3,13 +3,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, FieldError, Input, Label, TextField } from "@heroui/react";
 import { AdminButton as Button } from "@/components/admin/controls";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import type { z } from "zod";
 import { ApiError } from "@/lib/api/error";
-import { adminAuthApi } from "../api/admin-auth-api";
-import { adminAuthQueryKeys } from "../query-keys";
+import { useAdminLogin } from "../hooks/use-admin-credentials";
 import { adminLoginSchema } from "../schemas/auth-schemas";
 
 type Values = z.infer<typeof adminLoginSchema>;
@@ -30,22 +28,15 @@ function requestedDestination() {
 
 export function AdminLoginForm() {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const form = useForm<Values>({
     resolver: zodResolver(adminLoginSchema),
     defaultValues: { email: "", password: "" },
   });
-  const mutation = useMutation({
-    mutationFn: adminAuthApi.login,
-    onSuccess: (session) => {
-      queryClient.setQueryData(adminAuthQueryKeys.session(), session);
-      router.replace(
-        session.mustChangePassword
-          ? "/admin/change-password"
-          : requestedDestination(),
-      );
-    },
-  });
+  const mutation = useAdminLogin();
+  const signIn = (values: Values) =>
+    mutation.mutate(values, {
+      onSuccess: (session) => router.replace(session.mustChangePassword ? "/admin/change-password" : requestedDestination()),
+    });
   const message =
     mutation.error instanceof ApiError ? mutation.error.message : null;
 
@@ -59,7 +50,7 @@ export function AdminLoginForm() {
       </Card.Header>
       <form
         className="grid gap-4"
-        onSubmit={form.handleSubmit((values) => mutation.mutate(values))}
+        onSubmit={form.handleSubmit(signIn)}
       >
         <Controller
           control={form.control}

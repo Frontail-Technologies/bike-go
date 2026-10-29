@@ -2,11 +2,12 @@
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { masterDataApi } from "../api/master-data-api";
+import { masterDataListQuery } from "../queries";
 import { masterDataQueryKeys } from "../query-keys";
 import type { MasterInput, MasterKind, MasterPageParams } from "../types/master-data";
 
 export function useMasterDataQuery(kind: MasterKind, params: MasterPageParams) {
-  return useQuery({ queryKey: masterDataQueryKeys.list(kind, params), queryFn: () => masterDataApi.list(kind, params), placeholderData: keepPreviousData });
+  return useQuery({ ...masterDataListQuery(kind, params), placeholderData: keepPreviousData });
 }
 
 export function useMasterDataMutations(kind: MasterKind) {

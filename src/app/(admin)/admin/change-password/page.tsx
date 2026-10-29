@@ -3,12 +3,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, FieldError, Input, Label, TextField } from "@heroui/react";
 import { AdminButton as Button } from "@/components/admin/controls";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { ApiError } from "@/lib/api/error";
-import { adminAuthApi } from "@/features/admin/auth/api/admin-auth-api";
-import { adminAuthQueryKeys } from "@/features/admin/auth/query-keys";
+import { useAdminChangePassword } from "@/features/admin/auth/hooks/use-admin-credentials";
 import { adminPasswordSchema } from "@/features/admin/auth/schemas/auth-schemas";
 import type { z } from "zod";
 
@@ -22,18 +20,11 @@ const labels: Record<keyof Values, string> = {
 
 export default function ChangePasswordPage() {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const form = useForm<Values>({
     resolver: zodResolver(adminPasswordSchema),
     defaultValues: { currentPassword: "", newPassword: "", confirmPassword: "" },
   });
-  const mutation = useMutation({
-    mutationFn: adminAuthApi.changePassword,
-    onSuccess: (session) => {
-      queryClient.setQueryData(adminAuthQueryKeys.session(), session);
-      router.replace("/admin");
-    },
-  });
+  const mutation = useAdminChangePassword();
   const message = mutation.error instanceof ApiError ? mutation.error.message : null;
 
   return (
@@ -43,7 +34,7 @@ export default function ChangePasswordPage() {
           <Card.Title>Set a new password</Card.Title>
           <Card.Description>Choose a new administrator password to continue to RideGo Admin.</Card.Description>
         </Card.Header>
-        <form className="grid gap-4" onSubmit={form.handleSubmit(({ confirmPassword: _confirmPassword, ...input }) => mutation.mutate(input))}>
+        <form className="grid gap-4" onSubmit={form.handleSubmit((values) => mutation.mutate(values, { onSuccess: () => router.replace("/admin") }))}>
           {(Object.keys(labels) as Array<keyof Values>).map((field) => (
             <Controller key={field} control={form.control} name={field} render={({ field: formField, fieldState }) => (
               <TextField isRequired isInvalid={Boolean(fieldState.error)} type="password" value={formField.value} onChange={formField.onChange} onBlur={formField.onBlur} autoComplete={field === "currentPassword" ? "current-password" : "new-password"}>

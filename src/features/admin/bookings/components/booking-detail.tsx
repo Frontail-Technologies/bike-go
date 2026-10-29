@@ -1,7 +1,6 @@
 "use client";
 
 import { Alert, Button, useOverlayState } from "@heroui/react";
-import { useQueryClient } from "@tanstack/react-query";
 import { ArrowRightIcon, CalendarCheckIcon, CheckIcon, ClockCountdownIcon, EnvelopeSimpleIcon, FlagCheckeredIcon, GasPumpIcon, HourglassIcon, KeyIcon, MapPinIcon, PackageIcon, PhoneIcon, PlusCircleIcon, ShieldCheckIcon, SpeedometerIcon, TimerIcon, WalletIcon, WarningIcon, WrenchIcon, XCircleIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
@@ -20,7 +19,6 @@ import { ApiError } from "@/lib/api/error";
 import { cn } from "@/lib/cn";
 import { actionErrorMessage, useBookingActions } from "../hooks/use-booking-actions";
 import { useBookingQuery } from "../hooks/use-bookings";
-import { adminBookingQueryKeys } from "../query-keys";
 import { useNow } from "../hooks/use-now";
 import { bookingLabels, canMarkNoShow, canMoveTo, conditionLabels, distanceTravelled, durationLabel, fmtDateTime, fmtTime, fuelLabels, isOverdue, lateMinutes, vehiclePhoto } from "../lib/booking-model";
 import type { Booking, BookingStatus } from "../types/booking";
@@ -90,7 +88,6 @@ function BookingWorkspace({ booking }: { booking: Booking }) {
   const now = useNow();
   const actions = useBookingActions();
   const vehicles = useVehicleMutations();
-  const client = useQueryClient();
   const statusModal = useOverlayState(); const cancelDialog = useOverlayState(); const noShowDialog = useOverlayState();
   const handoverDrawer = useOverlayState(); const returnDrawer = useOverlayState(); const completeDialog = useOverlayState(); const maintenanceDialog = useOverlayState();
 
@@ -119,7 +116,6 @@ function BookingWorkspace({ booking }: { booking: Booking }) {
     try {
       await vehicles.setStatus.mutateAsync({ id: vehicle.id, status: "maintenance" });
       toast.success(`${vehicle.name} moved to maintenance`);
-      void client.invalidateQueries({ queryKey: adminBookingQueryKeys.root() });
       // The confirm button no longer auto-closes the dialog; close it ourselves once the move succeeds.
       maintenanceDialog.close();
     } catch (error) {

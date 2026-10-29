@@ -1,8 +1,7 @@
 "use client";
 
 import { useQueries } from "@tanstack/react-query";
-import { masterDataApi } from "@/features/admin/settings/api/master-data-api";
-import { masterDataQueryKeys } from "@/features/admin/settings/query-keys";
+import { masterDataListQuery } from "@/features/admin/settings/queries";
 import type { MasterItem, MasterKind, MasterPageParams } from "@/features/admin/settings/types/master-data";
 import { capitalize } from "../lib/vehicle-mappers";
 import { vehicleTypes, type VehicleType } from "../types/vehicle";
@@ -24,11 +23,7 @@ function selectable(items: MasterItem[], current: string | undefined, valueOf: (
 
 export function useVehicleOptions() {
   const results = useQueries({
-    queries: kinds.map((kind) => ({
-      queryKey: masterDataQueryKeys.list(kind, params),
-      queryFn: () => masterDataApi.list(kind, params),
-      staleTime: 60_000,
-    })),
+    queries: kinds.map((kind) => ({ ...masterDataListQuery(kind, params), staleTime: 60_000 })),
   });
   const items = (kind: (typeof kinds)[number]) => results[kinds.indexOf(kind)].data?.data ?? [];
 

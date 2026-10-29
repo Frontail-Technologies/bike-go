@@ -2,6 +2,7 @@
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { customersApi } from "../api/customers-api";
+import { customerDetailQuery } from "../queries";
 import { adminCustomerQueryKeys } from "../query-keys";
 import type { CustomerListParams, CustomerUpdateInput, PageParams } from "../types/customer";
 
@@ -14,13 +15,13 @@ export function useCustomerStatsQuery() {
 }
 
 export function useCustomerQuery(id: string) {
-  return useQuery({ queryKey: adminCustomerQueryKeys.detail(id), queryFn: () => customersApi.get(id) });
+  return useQuery(customerDetailQuery(id));
 }
 
 /** The list stays lightweight, so editing loads the full profile first. */
 export function useCustomerLoader() {
   const client = useQueryClient();
-  return (id: string) => client.fetchQuery({ queryKey: adminCustomerQueryKeys.detail(id), queryFn: () => customersApi.get(id), staleTime: 0 });
+  return (id: string) => client.fetchQuery({ ...customerDetailQuery(id), staleTime: 0 });
 }
 
 export function useCustomerActivityQuery(id: string, page: PageParams) {
