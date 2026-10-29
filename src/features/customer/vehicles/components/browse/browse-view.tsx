@@ -18,12 +18,12 @@ import { useTranslations } from "@/i18n/hooks";
 import { favoritesStore } from "@/features/customer/profile/stores/preferences-store";
 import { useVehicleModelsQuery } from "@/features/customer/vehicles/hooks/use-vehicles";
 import { vehicleGroupToMotorcycleGroup } from "@/features/customer/vehicles/lib/vehicle-group-mapper";
-import { cambodiaRentalRange } from "@/lib/cambodia-time";
 import { BikeFilters } from "./bike-filters";
 import { DEFAULT_BROWSE, browseStore } from "../../stores/browse-store";
 import { DEFAULT_FILTERS, activeFilterCount, sortOptions, type SortKey } from "../../lib/filters";
 import { SearchDialog } from "./search-dialog";
 import { SortControl } from "./sort-control";
+import { modelListParams } from "../../lib/browse-params";
 import type { VehicleFilterMasters } from "../../api/vehicle-filter-server-data";
 
 const gridClass = "grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4";
@@ -50,24 +50,9 @@ export function BrowseView({ initialMasters }: { initialMasters: VehicleFilterMa
   const activeDates = requestedStart && requestedEnd ? { start: requestedStart, end: requestedEnd } : dates;
   const activeSort = isSortKey(requestedSort) ? requestedSort : sort;
   const deferredQuery = useDeferredValue(activeQuery.trim());
-  const engine = activeFilters.engine[0];
-  const range: { pickupAt?: string; returnAt?: string } = activeDates ? cambodiaRentalRange(activeDates.start, activeDates.end) : {};
-  const vehicles = useVehicleModelsQuery({
-    page,
-    pageSize: saved ? 100 : 24,
-    q: deferredQuery || undefined,
-    category: activeFilters.category === "all" ? undefined : activeFilters.category,
-    brand: activeFilters.brands.length ? activeFilters.brands : undefined,
-    transmission: activeFilters.transmission.length ? activeFilters.transmission : undefined,
-    minPrice: activeFilters.price[0] * 100,
-    maxPrice: activeFilters.price[1] * 100,
-    minEngineCc: engine === "200-400" ? 200 : engine === "over-400" ? 401 : undefined,
-    maxEngineCc: engine === "under-200" ? 199 : engine === "200-400" ? 400 : undefined,
-    availableOnly: activeFilters.availableOnly || undefined,
-    start: range.pickupAt,
-    end: range.returnAt,
-    sort: activeSort === "price-asc" ? "price_asc" : activeSort === "price-desc" ? "price_desc" : activeSort === "popular" ? "newest" : "name",
-  });
+  const vehicles = useVehicleModelsQuery(
+    modelListParams({ filters: activeFilters, query: deferredQuery, sort: activeSort, dates: activeDates ?? null, page, pageSize: saved ? 100 : 24 }),
+  );
 
   useEffect(() => {
     const category = params.get("category");
