@@ -15,8 +15,6 @@ import {
   SignOutIcon,
   UploadSimpleIcon,
   WarningIcon,
-  BankIcon,
-  FilesIcon,
 } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -38,11 +36,10 @@ import { useCustomerAuthMutations, useCustomerSessionQuery } from "@/features/cu
 import { maskLicence } from "@/features/customer/bookings/hooks/use-booking";
 import { LanguageOptions } from "@/components/shared/language-switcher";
 import { useTranslations } from "@/i18n/hooks";
-import { ApplicationCard } from "@/features/customer/loans/components/application-card";
-import { useLoansQuery } from "@/features/customer/loans/hooks/use-loans";
-import { apiLoanToApplication } from "@/features/customer/loans/lib/loan-mapper";
 import { favoritesStore, profileStore } from "../stores/preferences-store";
+import { features } from "@/lib/features";
 import { initials } from "@/lib/text";
+import { ProfileLoansSection } from "./profile-loans-section";
 import { useCustomerProfileQuery, useUpdateCustomerProfileMutation } from "../hooks/use-profile";
 import { useSaveCustomerLicenceMutation } from "../hooks/use-licence";
 import { enableBrowserNotifications } from "@/features/customer/notifications/lib/browser-notifications";
@@ -138,8 +135,6 @@ export function ProfileView() {
     licence: remoteProfile?.licence ?? null,
     notifications: localProfile.notifications,
   };
-  const loans = useLoansQuery({ page: 1, pageSize: 3 });
-  const applications = (loans.data?.data ?? []).map(apiLoanToApplication);
   const savedCount = favoritesStore.useValue().length;
   const [modal, setModal] = useState<ModalKey>(null);
   const [licenceFront, setLicenceFront] = useState<File | null>(null);
@@ -259,23 +254,7 @@ export function ProfileView() {
             </div>
           </SectionCard>
 
-          <SectionCard id="loans-title" title={t("loanApplications")}>
-            {loans.isPending ? (
-              <BlockSkeleton className="h-24 w-full" />
-            ) : applications.length > 0 ? (
-              <div className="flex flex-col gap-3">
-                {applications.map((application) => (
-                  <ApplicationCard key={application.reference} application={application} />
-                ))}
-                <ListRow icon={<FilesIcon size={20} />} label={t("allApplications")} description={t("inTotal", { count: loans.data?.meta.total ?? applications.length })} href="/loans/applications" />
-              </div>
-            ) : (
-              <div className="flex flex-col gap-2">
-                <p className="text-sm text-subtle">{t("noLoans")}</p>
-                <ListRow icon={<BankIcon size={20} />} label={t("loansForExpats")} description={t("loansHint")} href="/loans" />
-              </div>
-            )}
-          </SectionCard>
+          {features.loans ? <ProfileLoansSection /> : null}
 
           <SectionCard id="help-title" title={t("helpSupport")}>
             <ListRow icon={<LifebuoyIcon size={20} />} label={t("helpCenter")} description={t("helpHint")} href="/help" />

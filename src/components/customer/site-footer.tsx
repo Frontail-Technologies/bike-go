@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Logo } from "@/components/shared/logo";
 import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";
+import { features } from "@/lib/features";
 
 const columns = [
   {
@@ -13,7 +14,7 @@ const columns = [
       { label: "home", href: "/" },
       { label: "bikes", href: "/bikes" },
       { label: "myBookings", href: "/bookings" },
-      { label: "expatLoans", href: "/loans" },
+      ...(features.loans ? [{ label: "expatLoans", href: "/loans" } as const] : []),
       { label: "profile", href: "/profile" },
     ],
   },

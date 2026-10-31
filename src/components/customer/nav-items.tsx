@@ -1,3 +1,4 @@
+import { features } from "@/lib/features";
 import { CalendarCheckIcon, HouseIcon, MotorcycleIcon, UserIcon } from "@phosphor-icons/react/ssr";
 
 export const customerNav = [
@@ -7,7 +8,7 @@ export const customerNav = [
   { href: "/profile", key: "profile", Icon: UserIcon },
 ] as const;
 
-export const headerNav = [...customerNav.slice(0, 3), { href: "/loans", key: "loans" }, customerNav[3]] as const;
+export const headerNav = [...customerNav.slice(0, 3), ...(features.loans ? [{ href: "/loans", key: "loans" } as const] : []), customerNav[3]];
 
 export function isActive(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);

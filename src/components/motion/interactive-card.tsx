@@ -49,7 +49,7 @@ export function InteractiveCard({ children, className, as: Tag = "div", glare = 
           className="pointer-events-none absolute inset-0 rounded-[inherit] opacity-0 transition-opacity duration-200 group-hover:opacity-100 motion-reduce:hidden max-md:hidden [@media(hover:none)]:hidden"
           style={{
             background:
-              "radial-gradient(220px circle at var(--gx, 50%) var(--gy, 0%), rgb(255 196 0 / 0.12), transparent 70%)",
+              "radial-gradient(220px circle at var(--gx, 50%) var(--gy, 0%), rgb(200 16 46 / 0.08), transparent 70%)",
           }}
         />
       ) : null}

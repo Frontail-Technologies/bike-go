@@ -62,7 +62,7 @@ export function ConfirmationView({ reference }: { reference: string }) {
           initial={{ opacity: 0, scale: 0.85 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: duration.reveal, ease }}
-          className="flex size-16 items-center justify-center rounded-full bg-brand text-ink"
+          className="flex size-16 items-center justify-center rounded-full bg-brand text-brand-foreground"
         >
           <CheckIcon size={32} weight="bold" />
         </motion.span>

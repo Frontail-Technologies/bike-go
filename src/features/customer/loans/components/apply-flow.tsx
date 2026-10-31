@@ -418,7 +418,7 @@ function Progress({ step }: { step: number }) {
             <span
               className={cn(
                 "flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-bold transition-colors duration-200 motion-reduce:transition-none",
-                i === step ? "bg-brand text-ink" : i < step ? "bg-brand-soft text-ink" : "border border-line bg-surface text-subtle",
+                i === step ? "bg-brand text-brand-foreground" : i < step ? "bg-brand-soft text-ink" : "border border-line bg-surface text-subtle",
               )}
             >
               {i < step ? <CheckIcon size={16} weight="bold" /> : i + 1}

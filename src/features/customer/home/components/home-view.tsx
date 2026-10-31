@@ -21,6 +21,7 @@ import { useCustomerSessionQuery } from "@/features/customer/auth/hooks/use-cust
 import { LanguageSwitcher } from "@/components/shared/language-switcher";
 import { useTranslations } from "@/i18n/hooks";
 import { CategoryCircles } from "./category-circles";
+import { features } from "@/lib/features";
 import { HomeBanner, HomePromoBanner } from "./home-banner";
 import { useHomeQuery } from "../hooks/use-home-query";
 import type { HomeData } from "../types";
@@ -59,7 +60,7 @@ export function HomeView({ initialData }: HomeViewProps) {
     <>
       <AppBar leading="logo" actions={
           <>
-            {!session.isPending && !session.data ? <Link href="/signin" className="flex h-10 items-center rounded-control bg-brand px-3 text-sm font-bold text-ink outline-none focus-visible:ring-2 focus-visible:ring-ink">{auth("signIn")}</Link> : null}
+            {!session.isPending && !session.data ? <Link href="/signin" className="flex h-10 items-center rounded-control bg-brand px-3 text-sm font-bold text-brand-foreground outline-none focus-visible:ring-2 focus-visible:ring-ink">{auth("signIn")}</Link> : null}
             <LanguageSwitcher />
             <ButtonLink href="/notifications" variant="ghost" iconOnly aria-label={common("notifications")}>
               <BellIcon size={24} />
@@ -107,23 +108,25 @@ export function HomeView({ initialData }: HomeViewProps) {
         )}
       </section>
 
-      <Reveal>
-        <Link
-          href="/loans"
-          className="flex items-center gap-4 rounded-card border border-line bg-surface p-4 shadow-card outline-none transition-transform duration-150 focus-visible:ring-2 focus-visible:ring-ink active:scale-[0.99] motion-reduce:transition-none"
-        >
-          <span className="flex size-14 shrink-0 items-center justify-center rounded-control bg-brand-soft">
-            <BankIcon size={28} />
-          </span>
-          <span className="flex min-w-0 flex-1 flex-col">
-            <span className="text-base font-bold">{t("loanTitle")}</span>
-            <span className="text-sm text-subtle">{t("loanText")}</span>
-          </span>
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand">
-            <ArrowRightIcon size={18} weight="bold" />
-          </span>
-        </Link>
-      </Reveal>
+      {features.loans ? (
+        <Reveal>
+          <Link
+            href="/loans"
+            className="flex items-center gap-4 rounded-card border border-line bg-surface p-4 shadow-card outline-none transition-transform duration-150 focus-visible:ring-2 focus-visible:ring-ink active:scale-[0.99] motion-reduce:transition-none"
+          >
+            <span className="flex size-14 shrink-0 items-center justify-center rounded-control bg-brand-soft">
+              <BankIcon size={28} />
+            </span>
+            <span className="flex min-w-0 flex-1 flex-col">
+              <span className="text-base font-bold">{t("loanTitle")}</span>
+              <span className="text-sm text-subtle">{t("loanText")}</span>
+            </span>
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand text-brand-foreground">
+              <ArrowRightIcon size={18} weight="bold" />
+            </span>
+          </Link>
+        </Reveal>
+      ) : null}
 
       <Reveal>
         <section aria-labelledby="featured" className="flex flex-col gap-4">

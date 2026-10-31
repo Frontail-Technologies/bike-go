@@ -230,7 +230,7 @@ export function LoansLanding({ banner }: { banner?: PublicBanner }) {
                   key={step}
                   className="flex items-start gap-3 md:rounded-card md:border md:border-line md:bg-surface md:p-4"
                 >
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-extrabold">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-extrabold text-brand-foreground">
                     {i + 1}
                   </span>
                   <div>

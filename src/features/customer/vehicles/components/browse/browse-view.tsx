@@ -104,7 +104,7 @@ export function BrowseView({ initialMasters }: { initialMasters: VehicleFilterMa
               {phoneCount ? (
                 <span
                   aria-hidden
-                  className="pointer-events-none absolute top-1 right-0.5 flex size-4 items-center justify-center rounded-full bg-brand text-[10px] font-bold text-ink"
+                  className="pointer-events-none absolute top-1 right-0.5 flex size-4 items-center justify-center rounded-full bg-brand text-[10px] font-bold text-brand-foreground"
                 >
                   {phoneCount}
                 </span>

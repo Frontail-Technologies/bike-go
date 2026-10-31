@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { features } from "@/lib/features";
 
 export function middleware(request: NextRequest) {
   const host = request.headers.get("host") ?? "";
@@ -18,6 +19,12 @@ export function middleware(request: NextRequest) {
   if (isAdminPath) {
     const url = request.nextUrl.clone();
     url.host = configuredAdminHost || `admin.${host}`;
+    return NextResponse.redirect(url);
+  }
+
+  if (!features.loans && (pathname === "/loans" || pathname.startsWith("/loans/"))) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/";
     return NextResponse.redirect(url);
   }
 

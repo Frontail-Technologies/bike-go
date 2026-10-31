@@ -13,7 +13,7 @@ export default function NotFound() {
       <div aria-hidden className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_82%_12%,rgba(244,201,0,0.16),transparent_28rem),radial-gradient(circle_at_12%_88%,rgba(37,99,185,0.07),transparent_26rem)]" />
       <header className="mx-auto flex w-full max-w-7xl items-center px-5 py-5 sm:px-8 lg:px-10">
         <Link href="/" className="inline-flex min-h-11 items-center gap-2 rounded-xl pr-3 font-extrabold outline-none focus-visible:ring-3 focus-visible:ring-[#dcae00]/45">
-          <Image src="/icon.svg" width={36} height={36} alt="" aria-hidden />
+          <Image src="/brand/logo.png" width={36} height={36} alt="" aria-hidden />
           <span className="text-lg tracking-tight">RideGo</span>
         </Link>
       </header>

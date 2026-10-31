@@ -49,11 +49,11 @@ export function timelineFor(a: LoanApplication, { t, note }: Pick<Text, "t" | "n
 }
 
 const dot: Record<StepState, string> = {
-  done: "bg-brand text-ink",
+  done: "bg-brand text-brand-foreground",
   current: "border-2 border-brand bg-surface text-ink",
   todo: "border-2 border-line bg-surface text-transparent",
   rejected: "bg-danger text-white",
-  attention: "bg-brand text-ink",
+  attention: "bg-brand text-brand-foreground",
 };
 
 export function LoanTimeline({ application }: { application: LoanApplication }) {

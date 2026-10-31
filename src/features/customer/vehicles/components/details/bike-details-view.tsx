@@ -218,7 +218,7 @@ export function BikeDetailsView({ bike, location }: { bike: Motorcycle; location
                   <ul className="flex flex-col gap-3 border-t border-line pt-4">
                     {bike.highlights.map((highlight) => (
                       <li key={highlight} className="flex items-start gap-3 text-sm leading-6 font-medium">
-                        <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-brand text-ink">
+                        <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-brand text-brand-foreground">
                           <CheckIcon size={12} weight="bold" />
                         </span>
                         {highlight}

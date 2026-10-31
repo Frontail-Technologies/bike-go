@@ -88,7 +88,7 @@ export function CustomerHeader({ className }: { className?: string }) {
               </Avatar>
             </Link>
           ) : (
-            <Link href="/signin" className="hidden h-10 items-center rounded-control bg-brand px-4 text-sm font-bold text-ink outline-none transition-transform focus-visible:ring-2 focus-visible:ring-ink active:scale-[0.97] md:flex">
+            <Link href="/signin" className="hidden h-10 items-center rounded-control bg-brand px-4 text-sm font-bold text-brand-foreground outline-none transition-transform focus-visible:ring-2 focus-visible:ring-ink active:scale-[0.97] md:flex">
               {auth("signIn")}
             </Link>
           )}

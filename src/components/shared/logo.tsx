@@ -1,6 +1,6 @@
 "use client";
 
-import { MotorcycleIcon } from "@phosphor-icons/react/ssr";
+import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "@/i18n/hooks";
 import { cn } from "@/lib/cn";
@@ -14,10 +14,11 @@ export function Logo({ href = "/", className }: { href?: string; className?: str
       aria-label={t("logoHome")}
       className={cn("inline-flex min-h-11 items-center gap-2 rounded-control outline-none focus-visible:ring-2 focus-visible:ring-ink", className)}
     >
-      <span className="flex size-8 items-center justify-center rounded-[10px] bg-brand text-ink">
-        <MotorcycleIcon size={20} weight="fill" />
+      <Image src="/brand/logo.png" alt="" width={40} height={40} priority className="size-10 shrink-0" />
+      <span className="flex flex-col leading-none">
+        <span className="text-lg font-extrabold tracking-tight text-brand">CAN</span>
+        <span className="text-[10px] font-bold tracking-wide text-gold uppercase">Motorbike · Car</span>
       </span>
-      <span className="text-lg font-extrabold tracking-tight">RideGo</span>
     </Link>
   );
 }

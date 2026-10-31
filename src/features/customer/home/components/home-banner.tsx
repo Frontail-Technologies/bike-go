@@ -29,7 +29,7 @@ export function HomePromoBanner({ banner }: { banner: PublicBanner }) {
         {banner.subtitle ? <p className="text-sm text-white/80 md:text-base">{banner.subtitle}</p> : null}
       </div>
       {banner.ctaLabel && banner.ctaUrl ? (
-        <Link href={banner.ctaUrl} className="ml-auto flex h-11 shrink-0 items-center rounded-control bg-brand px-4 text-sm font-semibold text-ink outline-none transition-transform duration-150 focus-visible:ring-2 focus-visible:ring-white active:scale-[0.97] motion-reduce:transition-none md:h-12 md:px-6 md:text-base">
+        <Link href={banner.ctaUrl} className="ml-auto flex h-11 shrink-0 items-center rounded-control bg-brand px-4 text-sm font-semibold text-brand-foreground outline-none transition-transform duration-150 focus-visible:ring-2 focus-visible:ring-white active:scale-[0.97] motion-reduce:transition-none md:h-12 md:px-6 md:text-base">
           {banner.ctaLabel}
         </Link>
       ) : null}

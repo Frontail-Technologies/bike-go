@@ -46,7 +46,7 @@ export function LoanOptionsCarousel() {
           {loanTypes.map((type) => (
             <li key={type.id} className="w-[46%] min-w-0 shrink-0 sm:w-[34%] md:w-auto">
               <div className="flex h-full flex-col gap-3 rounded-card border border-line bg-surface p-4 shadow-card">
-                <span className="flex size-14 items-center justify-center rounded-full bg-brand-soft text-[#b45309]">{icons[type.id]}</span>
+                <span className="flex size-14 items-center justify-center rounded-full bg-brand-soft text-brand">{icons[type.id]}</span>
                 <div>
                   <p className="text-base leading-5 font-bold">{typeName(type.id)}</p>
                   <p className="tabular mt-1 text-sm text-subtle">{t("upTo", { amount: formatPrice(type.maxAmount) })}</p>

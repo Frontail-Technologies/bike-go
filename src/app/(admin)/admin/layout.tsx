@@ -1,5 +1,5 @@
 import { AdminQueryProvider } from "@/components/admin/providers/admin-query-provider";
-import { BrandLoader } from "@/components/customer/brand-loader";
+import { AdminShellSkeleton } from "@/components/admin/feedback/admin-shell-skeleton";
 import { getAdminSessionServer } from "@/features/admin/auth/api/admin-session-server";
 import { AdminRouteBoundary } from "@/features/admin/auth/components/admin-route-boundary";
 import { adminAuthQueryKeys } from "@/features/admin/auth/query-keys";
@@ -30,7 +30,7 @@ async function HydratedAdmin({ children }: { children: React.ReactNode }) {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <AdminQueryProvider>
-      <Suspense fallback={<BrandLoader className="min-h-dvh" />}>
+      <Suspense fallback={<AdminShellSkeleton />}>
         <HydratedAdmin>{children}</HydratedAdmin>
       </Suspense>
     </AdminQueryProvider>

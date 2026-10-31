@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   description: "Premium motorcycle rentals with flexible bookings.",
   applicationName: "RideGo",
   appleWebApp: { capable: true, title: "RideGo", statusBarStyle: "default" },
-  icons: { icon: [{ url: "/icon.svg", type: "image/svg+xml" }], apple: "/icons/apple-touch-icon.png" },
+  icons: { icon: [{ url: "/brand/logo.png", type: "image/png" }], apple: "/icons/apple-touch-icon.png" },
   formatDetection: { telephone: false },
   openGraph: { siteName: "RideGo", type: "website" },
   twitter: { card: "summary_large_image" },

@@ -122,7 +122,7 @@ export function FeaturedBikeCarousel({ bikes, hrefFor = (bike) => `/bikes/${bike
                       <PriceDisplay amount={bike.pricePerDay} size="md" accent />
                       <Link
                         href={hrefFor(bike)}
-                        className="flex h-11 items-center rounded-control bg-brand px-4 text-sm font-semibold text-ink outline-none transition-transform duration-150 focus-visible:ring-2 focus-visible:ring-ink active:scale-[0.97] motion-reduce:transition-none"
+                        className="flex h-11 items-center rounded-control bg-brand px-4 text-sm font-semibold text-brand-foreground outline-none transition-transform duration-150 focus-visible:ring-2 focus-visible:ring-ink active:scale-[0.97] motion-reduce:transition-none"
                       >
                         {t("common.book")}
                       </Link>

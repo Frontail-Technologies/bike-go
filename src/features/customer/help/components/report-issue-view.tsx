@@ -72,7 +72,7 @@ export function ReportIssueView() {
       <>
         <AppBar leading="back" backFallback="/help" title={t("reportTitle")} />
         <Screen enter="slide" className="flex flex-col items-center gap-4 pt-10 text-center md:max-w-xl">
-          <span className="flex size-16 items-center justify-center rounded-full bg-brand text-ink">
+          <span className="flex size-16 items-center justify-center rounded-full bg-brand text-brand-foreground">
             <CheckIcon size={32} weight="bold" />
           </span>
           <h2 className="text-2xl leading-8 font-extrabold tracking-tight">{t("reportSent")}</h2>

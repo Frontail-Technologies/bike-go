@@ -30,7 +30,7 @@ export function timelineFor(b: CustomerBooking, t: T): Step[] {
 }
 
 const dot: Record<StepState, string> = {
-  done: "bg-brand text-ink",
+  done: "bg-brand text-brand-foreground",
   current: "border-2 border-brand bg-surface text-ink",
   todo: "border-2 border-line bg-surface text-transparent",
   cancelled: "bg-danger text-ink",

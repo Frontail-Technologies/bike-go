@@ -35,7 +35,7 @@ function ScooterArt({ color }: { color: string }) {
   );
 }
 
-export function BikeArt({ color = "#FFC400", className, title, variant = "motorcycle" }: BikeArtProps) {
+export function BikeArt({ color = "#C8102E", className, title, variant = "motorcycle" }: BikeArtProps) {
   return (
     <svg
       viewBox="0 0 400 300"
