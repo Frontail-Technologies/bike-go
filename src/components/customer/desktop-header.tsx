@@ -56,7 +56,7 @@ export function CustomerHeader({ className }: { className?: string }) {
                     className={cn(
                       "relative isolate flex min-h-11 items-center rounded-control px-4 text-sm outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ink",
                       active
-                        ? "font-bold text-ink"
+                        ? "font-bold text-brand-foreground"
                         : "font-medium text-subtle hover:bg-surface-secondary hover:text-ink",
                     )}
                   >

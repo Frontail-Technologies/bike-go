@@ -33,7 +33,7 @@ export function Tabs({ items, selectedKey, defaultSelectedKey, onSelectionChange
         <AnimatedSelection>
           <HeroTabs.List aria-label={props["aria-label"]}>
             {items.map((item) => (
-              <HeroTabs.Tab key={item.id} id={item.id} className="isolate min-h-10 gap-2 font-semibold">
+              <HeroTabs.Tab key={item.id} id={item.id} className="isolate min-h-10 gap-2 font-semibold data-[selected=true]:text-brand-foreground">
                 {({ isSelected }) => (
                   <>
                     {isSelected ? <SelectionIndicator className="bg-brand shadow-card" /> : null}
