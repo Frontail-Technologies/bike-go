@@ -16,8 +16,8 @@ export function Logo({ href = "/", className }: { href?: string; className?: str
     >
       <Image src="/brand/logo.png" alt="" width={40} height={40} priority className="size-10 shrink-0" />
       <span className="flex flex-col leading-none">
-        <span className="text-lg font-extrabold tracking-tight text-brand">CAN</span>
-        <span className="text-[10px] font-bold tracking-wide text-gold uppercase">Motorbike · Car</span>
+        <span className="text-lg font-extrabold tracking-tight text-crimson">CAN</span>
+        <span className="text-[10px] font-bold tracking-wide text-brand uppercase">Motorbike · Car</span>
       </span>
     </Link>
   );

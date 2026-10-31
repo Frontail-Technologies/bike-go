@@ -85,7 +85,7 @@ export function WelcomeScreen() {
               className="relative mb-[46dvh] w-[118%] max-w-[560px] md:mb-0 md:w-4/5"
             >
               <BikeArt
-                color="#C8102E"
+                color="#F2B200"
                 className="drop-shadow-[0_24px_40px_rgb(0_0_0/0.5)]"
               />
             </div>

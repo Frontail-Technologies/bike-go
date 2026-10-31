@@ -60,7 +60,7 @@ export function apiBookingToView(value: ApiBooking): { booking: CustomerBooking;
     pricePerDay: value.pricing.dailyRateMinor / 100,
     deposit: value.pricing.securityDepositMinor / 100,
     engineCc: 0, powerBhp: 0, torqueNm: 0, mileageKmpl: 0, gears: 0, weightKg: 0, fuelTankL: 0,
-    transmission: "manual", color: "#C8102E", colorways: ["#C8102E"], images: [], location: value.pickupLocation.city,
+    transmission: "manual", color: "#F2B200", colorways: ["#F2B200"], images: [], location: value.pickupLocation.city,
     description: "", highlights: [], available: true,
   };
   return { booking, bike };

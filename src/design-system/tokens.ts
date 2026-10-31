@@ -1,6 +1,6 @@
 export const colors = {
-  brand: "#C8102E",
-  gold: "#E8A900",
+  brand: "#F2B200",
+  crimson: "#C8102E",
   ink: "#111111",
   canvas: "#F7F8FA",
   surface: "#FFFFFF",
