@@ -1,6 +1,5 @@
 "use client";
 
-import { Spinner } from "@heroui/react";
 import { TelegramLogoIcon } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -77,7 +76,7 @@ export function TelegramLoginButton({
       isDisabled={isDisabled || pending}
       onPress={() => void signIn()}
     >
-      {pending ? <Spinner color="current" size="sm" /> : <TelegramLogoIcon size={20} weight="fill" />}
+      {pending ? null : <TelegramLogoIcon size={20} weight="fill" />}
       {label}
     </Button>
   );
